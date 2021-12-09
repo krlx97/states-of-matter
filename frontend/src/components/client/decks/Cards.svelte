@@ -1,0 +1,104 @@
+<script lang="ts">
+  import {Card} from "components";
+  import {cards} from "data";
+  import {decksStore} from "stores/view";
+
+  let klass = 0;
+
+  const onAddToDeck = (card): void => {
+    const {id, klass, name} = card;
+
+    if ($decksStore.deckCards.length >= 30) { return; }
+
+    decksStore.update((store) => {
+      const deckCard = store.deckCards.find((deckCard) => deckCard.id === id);
+
+      if (deckCard) {
+        if (deckCard.amount < 2) { deckCard.amount += 1; }
+      } else {
+        const amount = 1;
+        store.deckCards.push({klass, id, name, amount});
+      }
+
+      // store.cardsAmount = store.deckCards.reduce((acc, {amount}) => acc += amount, 0);
+
+      return store;
+    });
+  };
+</script>
+
+<style lang="scss">
+  @import "../../../styles/variables";
+
+  .cardss {
+    display: flex;
+    flex-direction: column;
+  }
+  .cards {
+    height: calc($game-card-height * 2 + $spacing-md * 3);
+    padding: $spacing-md;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: $spacing-md;
+    box-sizing: border-box;
+    overflow-y: scroll;
+
+    scrollbar-width: thin;
+    scrollbar-color: dark;
+  }
+
+  .klasses {
+    display: flex;
+    justify-content: space-evenly;
+
+    &__klass {
+      display: flex;
+      filter: grayscale(1);
+      cursor: pointer;
+      transition: filter 225ms ease;
+
+      &:hover {
+        filter: grayscale(0);
+      }
+
+      &-selected {
+        filter: grayscale(0);
+      }
+
+      img {
+        height: 32px;
+        width: 32px;
+      }
+    }
+  }
+</style>
+
+<div class="cardss">
+  <div class="klasses">
+    <div class="klasses__klass" class:klasses__klass-selected={klass === 0} on:click={() => klass = 0}>
+      <img class="cards__header__class-img" src="assets/classes/{0}.png" alt="A">
+    </div>
+    <div class="klasses__klass" class:klasses__klass-selected={klass === 1} on:click={() => klass = 1}>
+      <img class="cards__header__class-img" src="assets/classes/{1}.png" alt="B">
+    </div>
+    <div class="klasses__klass" class:klasses__klass-selected={klass === 2} on:click={() => klass = 2}>
+      <img class="cards__header__class-img" src="assets/classes/{2}.png" alt="C">
+    </div>
+    <div class="klasses__klass" class:klasses__klass-selected={klass === 3} on:click={() => klass = 3}>
+      <img class="cards__header__class-img" src="assets/classes/{3}.png" alt="D">
+    </div>
+    <div class="klasses__klass" class:klasses__klass-selected={klass === 4} on:click={() => klass = 4}>
+      <img class="cards__header__class-img" src="assets/classes/{4}.png" alt="E">
+    </div>
+  </div>
+  <div class="cards">
+    {#each cards as card}
+      {#if card.klass === klass}
+        <div on:click={() => onAddToDeck(card)}>
+          <Card {card}/>
+        </div>
+      {/if}
+    {/each}
+  </div>
+</div>

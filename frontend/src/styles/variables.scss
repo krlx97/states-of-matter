@@ -1,0 +1,41 @@
+$game-card-height: 192px;
+$game-card-width: 160px;
+
+$game-field-height: 192px;
+$game-field-width: 160px;
+
+$spacing-sm: 0.7em;
+$spacing-md: 0.8em;
+$spacing-lg: 1em;
+
+$solid: rgb(241, 186, 88);
+$liquid: rgb(121, 108, 255);
+$gas: rgb(134, 83, 15);
+$plasma: rgb(233, 52, 27);
+
+$purple: rgb(121, 108, 255);
+$blue: rgb(24, 157, 231);
+$green: rgb(32, 153, 93);
+$orange: rgb(236, 141, 52);
+$yellow: rgb(241, 186, 88);
+$red: rgb(233, 52, 27);
+
+$dark-grey: rgb(33, 33, 33);
+$grey: rgb(48, 48, 48);
+$light-grey: rgb(66, 66, 66);
+
+$font-sm: 0.7rem;
+$font-md: 0.8rem;
+$font-lg: 1rem;
+
+$elevation-sm: 0 3px 1px -2px rgba(0 0 0 / 20%), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+$elevation-md:
+  0 2px 4px -1px rgba(0,0,0,.2),
+  0 4px 5px 0 rgba(0,0,0,.14),
+  0 1px 10px 0 rgba(0,0,0,.12);
+$elevation-lg:
+  0 5px 5px -3px rgba(0,0,0,.2),
+  0 8px 10px 1px rgba(0,0,0,.14),
+  0 3px 14px 2px rgba(0,0,0,.12);
+
+$ease-in-out-quart: 0.76, 0, 0.24, 1;

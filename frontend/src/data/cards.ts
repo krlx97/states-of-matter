@@ -1,0 +1,526 @@
+import type {Card} from "models/view";
+import {Klass, CardType} from "enums";
+
+const cards: Array<Card> = [{
+  id: 0,
+  klass: Klass.NEUTRAL,
+  type: CardType.MINION,
+  name: "Neutral card 1",
+  damage: 1,
+  health: 1,
+  manaCost: 1,
+  effect: "Neutral card 1 effect",
+}, {
+  id: 1,
+  klass: Klass.NEUTRAL,
+  type: CardType.MINION,
+  name: "Neutral card 2",
+  damage: 2,
+  health: 2,
+  manaCost: 2,
+  effect: "Neutral card 2 effect",
+}, {
+  id: 2,
+  klass: Klass.NEUTRAL,
+  type: CardType.MINION,
+  name: "Neutral card 3",
+  damage: 3,
+  health: 3,
+  manaCost: 3,
+  effect: "Neutral card 3 effect",
+}, {
+  id: 3,
+  klass: Klass.NEUTRAL,
+  type: CardType.MINION,
+  name: "Neutral card 4",
+  damage: 4,
+  health: 4,
+  manaCost: 4,
+  effect: "Neutral card 4 effect",
+}, {
+  id: 4,
+  klass: Klass.NEUTRAL,
+  type: CardType.MINION,
+  name: "Neutral card 5",
+  damage: 5,
+  health: 5,
+  manaCost: 5,
+  effect: "Neutral card 5 effect",
+}, {
+  id: 5,
+  klass: Klass.NEUTRAL,
+  type: CardType.MINION,
+  name: "Neutral card 6",
+  damage: 6,
+  health: 6,
+  manaCost: 6,
+  effect: "Neutral card 6 effect",
+}, {
+  id: 6,
+  klass: Klass.NEUTRAL,
+  type: CardType.MAGIC,
+  name: "Neutral card 7",
+  manaCost: 7,
+  effect: "Neutral card 7 effect",
+}, {
+  id: 7,
+  klass: Klass.NEUTRAL,
+  type: CardType.MAGIC,
+  name: "Neutral card 8",
+  manaCost: 8,
+  effect: "Neutral card 8 effect",
+}, {
+  id: 8,
+  klass: Klass.NEUTRAL,
+  type: CardType.MAGIC,
+  name: "Neutral card 9",
+  manaCost: 9,
+  effect: "Neutral card 9 effect",
+}, {
+  id: 9,
+  klass: Klass.NEUTRAL,
+  type: CardType.TRAP,
+  name: "Neutral card 10",
+  manaCost: 10,
+  effect: "Neutral card 10 effect",
+}, {
+  id: 10,
+  klass: Klass.NEUTRAL,
+  type: CardType.TRAP,
+  name: "Neutral card 11",
+  manaCost: 11,
+  effect: "Neutral card 11 effect",
+}, {
+  id: 11,
+  klass: Klass.NEUTRAL,
+  type: CardType.TRAP,
+  name: "Neutral card 12",
+  manaCost: 12,
+  effect: "Neutral card 12 effect",
+}, {
+  id: 50,
+  klass: Klass.SOLID,
+  type: CardType.MINION,
+  name: "Solid card 1",
+  damage: 1,
+  health: 1,
+  manaCost: 1,
+  effect: "Solid card 1 effect",
+}, {
+  id: 51,
+  klass: Klass.SOLID,
+  type: CardType.MINION,
+  name: "Solid card 2",
+  damage: 2,
+  health: 2,
+  manaCost: 2,
+  effect: "Solid card 2 effect",
+}, {
+  id: 52,
+  klass: Klass.SOLID,
+  type: CardType.MINION,
+  name: "Solid card 3",
+  damage: 3,
+  health: 3,
+  manaCost: 3,
+  effect: "Solid card 3 effect",
+}, {
+  id: 53,
+  klass: Klass.SOLID,
+  type: CardType.MINION,
+  name: "Solid card 4",
+  damage: 4,
+  health: 4,
+  manaCost: 4,
+  effect: "Solid card 4 effect",
+}, {
+  id: 54,
+  klass: Klass.SOLID,
+  type: CardType.MINION,
+  name: "Solid card 5",
+  damage: 5,
+  health: 5,
+  manaCost: 5,
+  effect: "Solid card 5 effect",
+}, {
+  id: 55,
+  klass: Klass.SOLID,
+  type: CardType.MINION,
+  name: "Solid card 6",
+  damage: 6,
+  health: 6,
+  manaCost: 6,
+  effect: "Solid card 6 effect",
+}, {
+  id: 56,
+  klass: Klass.SOLID,
+  type: CardType.MAGIC,
+  name: "Solid card 7",
+  manaCost: 7,
+  effect: "Solid card 7 effect",
+}, {
+  id: 57,
+  klass: Klass.SOLID,
+  type: CardType.MAGIC,
+  name: "Solid card 8",
+  manaCost: 8,
+  effect: "Solid card 8 effect",
+}, {
+  id: 58,
+  klass: Klass.SOLID,
+  type: CardType.MAGIC,
+  name: "Solid card 9",
+  manaCost: 9,
+  effect: "Solid card 9 effect",
+}, {
+  id: 59,
+  klass: Klass.SOLID,
+  type: CardType.TRAP,
+  name: "Solid card 10",
+  manaCost: 10,
+  effect: "Solid card 10 effect",
+}, {
+  id: 60,
+  klass: Klass.SOLID,
+  type: CardType.TRAP,
+  name: "Solid card 11",
+  manaCost: 11,
+  effect: "Solid card 11 effect",
+}, {
+  id: 61,
+  klass: Klass.SOLID,
+  type: CardType.TRAP,
+  name: "Solid card 12",
+  manaCost: 12,
+  effect: "Solid card 12 effect",
+}, {
+  id: 100,
+  klass: Klass.LIQUID,
+  type: CardType.MINION,
+  name: "Liquid card 1",
+  damage: 1,
+  health: 1,
+  manaCost: 1,
+  effect: "Liquid card 1 effect",
+}, {
+  id: 101,
+  klass: Klass.LIQUID,
+  type: CardType.MINION,
+  name: "Liquid card 2",
+  damage: 2,
+  health: 2,
+  manaCost: 2,
+  effect: "Liquid card 2 effect",
+}, {
+  id: 102,
+  klass: Klass.LIQUID,
+  type: CardType.MINION,
+  name: "Liquid card 3",
+  damage: 3,
+  health: 3,
+  manaCost: 3,
+  effect: "Liquid card 3 effect",
+}, {
+  id: 103,
+  klass: Klass.LIQUID,
+  type: CardType.MINION,
+  name: "Liquid card 4",
+  damage: 4,
+  health: 4,
+  manaCost: 4,
+  effect: "Liquid card 4 effect",
+}, {
+  id: 104,
+  klass: Klass.LIQUID,
+  type: CardType.MINION,
+  name: "Liquid card 5",
+  damage: 5,
+  health: 5,
+  manaCost: 5,
+  effect: "Liquid card 5 effect",
+}, {
+  id: 105,
+  klass: Klass.LIQUID,
+  type: CardType.MINION,
+  name: "Liquid card 6",
+  damage: 6,
+  health: 6,
+  manaCost: 6,
+  effect: "Liquid card 6 effect",
+}, {
+  id: 106,
+  klass: Klass.LIQUID,
+  type: CardType.MAGIC,
+  name: "Liquid card 7",
+  manaCost: 7,
+  effect: "Liquid card 7 effect",
+}, {
+  id: 107,
+  klass: Klass.LIQUID,
+  type: CardType.MAGIC,
+  name: "Liquid card 8",
+  manaCost: 8,
+  effect: "Liquid card 8 effect",
+}, {
+  id: 108,
+  klass: Klass.LIQUID,
+  type: CardType.MAGIC,
+  name: "Liquid card 9",
+  manaCost: 9,
+  effect: "Liquid card 9 effect",
+}, {
+  id: 109,
+  klass: Klass.LIQUID,
+  type: CardType.TRAP,
+  name: "Liquid card 10",
+  manaCost: 10,
+  effect: "Liquid card 10 effect",
+}, {
+  id: 110,
+  klass: Klass.LIQUID,
+  type: CardType.TRAP,
+  name: "Liquid card 11",
+  manaCost: 11,
+  effect: "Liquid card 11 effect",
+}, {
+  id: 111,
+  klass: Klass.LIQUID,
+  type: CardType.TRAP,
+  name: "Liquid card 12",
+  manaCost: 12,
+  effect: "Liquid card 12 effect",
+}, {
+  id: 150,
+  klass: Klass.GAS,
+  type: CardType.MINION,
+  name: "Gas card 1",
+  damage: 1,
+  health: 1,
+  manaCost: 1,
+  effect: "Gas card 1 effect",
+}, {
+  id: 151,
+  klass: Klass.GAS,
+  type: CardType.MINION,
+  name: "Gas card 2",
+  damage: 2,
+  health: 2,
+  manaCost: 2,
+  effect: "Gas card 2 effect",
+}, {
+  id: 152,
+  klass: Klass.GAS,
+  type: CardType.MINION,
+  name: "Gas card 3",
+  damage: 3,
+  health: 3,
+  manaCost: 3,
+  effect: "Gas card 3 effect",
+}, {
+  id: 153,
+  klass: Klass.GAS,
+  type: CardType.MINION,
+  name: "Gas card 4",
+  damage: 4,
+  health: 4,
+  manaCost: 4,
+  effect: "Gas card 4 effect",
+}, {
+  id: 154,
+  klass: Klass.GAS,
+  type: CardType.MINION,
+  name: "Gas card 5",
+  damage: 5,
+  health: 5,
+  manaCost: 5,
+  effect: "Gas card 5 effect",
+}, {
+  id: 155,
+  klass: Klass.GAS,
+  type: CardType.MINION,
+  name: "Gas card 6",
+  damage: 6,
+  health: 6,
+  manaCost: 6,
+  effect: "Gas card 6 effect",
+}, {
+  id: 156,
+  klass: Klass.GAS,
+  type: CardType.MAGIC,
+  name: "Gas card 7",
+  manaCost: 7,
+  effect: "Gas card 7 effect",
+}, {
+  id: 157,
+  klass: Klass.GAS,
+  type: CardType.MAGIC,
+  name: "Gas card 8",
+  manaCost: 8,
+  effect: "Gas card 8 effect",
+}, {
+  id: 158,
+  klass: Klass.GAS,
+  type: CardType.MAGIC,
+  name: "Gas card 9",
+  manaCost: 9,
+  effect: "Gas card 9 effect",
+}, {
+  id: 159,
+  klass: Klass.GAS,
+  type: CardType.TRAP,
+  name: "Gas card 10",
+  manaCost: 10,
+  effect: "Gas card 10 effect",
+}, {
+  id: 160,
+  klass: Klass.GAS,
+  type: CardType.TRAP,
+  name: "Gas card 11",
+  manaCost: 11,
+  effect: "Gas card 11 effect",
+}, {
+  id: 161,
+  klass: Klass.GAS,
+  type: CardType.TRAP,
+  name: "Gas card 12",
+  manaCost: 12,
+  effect: "Gas card 12 effect",
+}, {
+  id: 200,
+  klass: Klass.PLASMA,
+  type: CardType.MINION,
+  name: "Plasma card 1",
+  damage: 1,
+  health: 1,
+  manaCost: 1,
+  effect: `
+    If Plasma card 1 procs
+    <span class="f--red"><i class="fas fa-khanda"></i></span>,
+    it can attack again.
+  `,
+}, {
+  id: 201,
+  klass: Klass.PLASMA,
+  type: CardType.MINION,
+  name: "Plasma card 2",
+  damage: 2,
+  health: 2,
+  manaCost: 2,
+  effect: `
+    When summoned, 10% of your Life Points are transfered into *cardname*
+    damage
+  `,
+}, {
+  id: 202,
+  klass: Klass.PLASMA,
+  type: CardType.MINION,
+  name: "Plasma card 3",
+  damage: 3,
+  health: 3,
+  manaCost: 3,
+  effect: `
+    Gains
+    <span class="f--red">+1% <i class="fas fa-khanda"></i></span>
+    for each
+    <span class="f--green">1% missing <i class="fas fa-heart"></i></span>,
+    and converts excess
+    <span class="f--red"><i class="fas fa-khanda"></i></span>
+    to
+    <span class="f--orange"><i class="fas fa-fire"></i></span>.
+  `,
+}, {
+  id: 203,
+  klass: Klass.PLASMA,
+  type: CardType.MINION,
+  name: "Plasma card 4",
+  damage: 4,
+  health: 4,
+  manaCost: 4,
+  effect: `
+    Gains <span class="f--red">+20% <i class="fas fa-khanda"></i></span> for
+    each Minion on your field, self included.
+  `,
+}, {
+  id: 204,
+  klass: Klass.PLASMA,
+  type: CardType.MINION,
+  name: "Plasma card 5",
+  damage: 5,
+  health: 5,
+  manaCost: 5,
+  effect: `
+    Executes Minions below
+    <span class="f--green">5% <i class="fas fa-heart"></i></span>
+    after combat.
+    <span class="f--red"><i class="fas fa-khanda"></i></span>
+    procs execute Minions below
+    <span class="f--green">10% <i class="fas fa-heart"></i></span>
+    instead. Works only on minions.
+  `,
+}, {
+  id: 205,
+  klass: Klass.PLASMA,
+  type: CardType.MINION,
+  name: "Plasma card 6",
+  damage: 6,
+  health: 6,
+  manaCost: 6,
+  effect: `
+    If Plasma card 6 procs
+    <span class="f--red"><i class="fas fa-khanda"></i></span>
+    , the opposing card is stunned.
+    <br>
+    <i><b>* Stunned</b>: Not able to attack for 1 turn.</i>
+  `,
+}, {
+  id: 206,
+  klass: Klass.PLASMA,
+  type: CardType.MAGIC,
+  name: "Plasma card 7",
+  manaCost: 7,
+  effect: `
+    Give one minion
+    <span class="f--red">+6/6 <i class="fas fa-khanda"></i></span>.
+  `,
+}, {
+  id: 207,
+  klass: Klass.PLASMA,
+  type: CardType.MAGIC,
+  name: "Plasma card 8",
+  manaCost: 8,
+  effect: "Plasma card 8 effect",
+}, {
+  id: 208,
+  klass: Klass.PLASMA,
+  type: CardType.MAGIC,
+  name: "Plasma card 9",
+  manaCost: 9,
+  effect: "Plasma card 9 effect",
+}, {
+  id: 209,
+  klass: Klass.PLASMA,
+  type: CardType.TRAP,
+  name: "Plasma card 10",
+  manaCost: 10,
+  effect: `
+    The next Minion your opponent attacks will gain
+    <span class="f--red">+6/6 <i class="fas fa-khanda"></i></span>
+    until the end of their turn.
+  `,
+}, {
+  id: 210,
+  klass: Klass.PLASMA,
+  type: CardType.TRAP,
+  name: "Plasma card 11",
+  manaCost: 11,
+  effect: "Plasma card 11 effect",
+}, {
+  id: 211,
+  klass: Klass.PLASMA,
+  type: CardType.TRAP,
+  name: "Plasma card 12",
+  manaCost: 12,
+  effect: "Plasma card 12 effect",
+},];
+
+export default cards;

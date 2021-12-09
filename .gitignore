@@ -1,0 +1,11 @@
+.vscode
+
+backend/dist
+backend/node_modules
+
+contract/inc
+contract/som.abi
+contract/som.wasm
+
+frontend/dist/build
+frontend/node_modules

@@ -1,5 +1,5 @@
 interface SetDeckKlass {
-  id: number;
+  deckId: number;
   klass: number;
 }
 

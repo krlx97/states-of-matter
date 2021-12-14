@@ -26,15 +26,15 @@ const block: Request<Block> = async (services, params) => {
     }
   });
 
-  const isDeletedChat = await chatService.delete({players: [username, sender.username]});
+  const isDeletedChat = await chatService.delete({players: {$all: [username, sender.username]}});
 
   if (!isUpdatedSender || !isUpdatedReceiver || !isDeletedChat) { return; }
 
   ioService.emit("blockSender", {username});
 
-  if (!receiver.socketId) { return; }
+  // if (!receiver.socketId) { return; }
 
-  ioService.emitTo(socketId, "blockReceiver", {username: sender.username});
+  ioService.emitTo(receiver.socketId, "blockReceiver", {username: sender.username});
 };
 
 export default block;

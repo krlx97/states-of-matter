@@ -1,25 +1,7 @@
 <script lang="ts">
-  import Avatars from "./Avatars.svelte";
-
-  const navLinks = [
-    {ref: undefined, name: "Avatars"},
-    {ref: undefined, name: "Card Skins"},
-    {ref: undefined, name: "Card Back Skins"}
-  ];
-  let view = "Deck";
-
-  const setNavActive = (ref) => {
-    navLinks.forEach((navLink) => {
-      navLink.ref.classList.remove("f--purple");
-    });
-
-    ref.classList.add("f--purple");
-  };
-
-  const gotoView = (ref, name) => {
-    view = name;
-    setNavActive(ref);
-  };
+  import FungibleTokens from "./FungibleTokens.svelte";
+  import NonFungibleTokens from "./NonFungibleTokens.svelte";
+  import Wallet from "./Wallet.svelte";
 </script>
 
 <style lang="scss">
@@ -29,45 +11,36 @@
   .collection {
     height: 100%;
     width: 100%;
-    @include d-flex(column, space-between, center);
-  }
+    display: flex;
+    flex-direction: column;
 
-  nav {
-    padding: $spacing-md;
-    display: flex;
+    border: 2px solid red;
     box-sizing: border-box;
-  }
-  main {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .coming-soon {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 4rem;
+
+    &__tokens {
+      flex-grow: 1;
+      display: flex;
+      justify-content: space-evenly;
+
+      &__fungible {
+        flex-shrink: 1;
+      }
+
+      &__non-fungible {
+        flex-grow: 1;
+      }
+    }
   }
 </style>
 
 <div class="collection">
-  <nav>
-    {#each navLinks as {ref, name}}
-      <div on:click={() => gotoView(ref, name)}>
-        <i class="fas fa-circle fa-fw" bind:this={ref}></i> {name}
-      </div>
-    {/each}
-  </nav>
-  <main>
-    {#if view === "Avatars"}
-      <Avatars/>
-    {:else if view === "Card Skins"}
-      <p class="coming-soon">Card Skins coming soon... 😉</p>
-    {:else if view === "Card Back Skins"}
-      <p class="coming-soon">Card Back Skins coming soon... 😉</p>
-    {/if}
-  </main>
+  <Wallet/>
+  <div class="collection__tokens">
+    <div class="collection__tokens__fungible">
+      <FungibleTokens/>
+    </div>
+    <div class="collection__tokens__non-fungible">
+      <NonFungibleTokens/>
+    </div>
+  </div>
 </div>

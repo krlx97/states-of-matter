@@ -8,19 +8,23 @@ const solidHero: Hero = {
   health: 1500,
   mana: 100,
   passive: {
-    name: "Passive",
+    name: "Thick Armor",
     amount: 10,
     info: `
-      Solid Hero and Minions have
-      <span class="f--yellow">Damage Reduction <i class="fas fa-shield-alt fa-fw"></i></span>,
-      reducing all incoming damage by a flat amount.
+      Solid Hero and Minions take
+      <span class="f--yellow">% Reduced Damage <i class="fas fa-shield-alt fa-fw"></i></span>,
+      when defending.
     `
   },
   active: {
-    name: "Effect",
+    name: "Taunt",
     manaCost: 10,
     info: `
-      Solid Hero and Minions reflect the damage that they block to the attacker.
+      Solid Hero can apply a Taunt buff on Solid Minions or himself, giving it
+      additional
+      <span class="f--yellow"><i class="fas fa-shield-alt fa-fw"></i></span>,
+      and forcing the enemy Hero and Minions to attack that minion for their
+      next turn.
     `
   },
   special: {
@@ -70,18 +74,18 @@ const gasHero: Hero = {
     `,
     amount: 1,
     info: `
-      Gas Hero and Minions attacks apply stacks of
+      When attacking, Gas Hero and Minions apply
       <span class="f--gas"><i class="fas fa-radiation fa-fw"></i></span>
-      to the entire enemy field, dealing
+      debuff to the entire enemy field, dealing
       <span class="f--orange">1 <i class="fas fa-fire fa-fw"></i></span>
-      per stack.
+      each turn to the affected targets. This effect can stack.
     `
   },
   active: {
     name: "Active",
     manaCost: 25,
     info: `
-      When a Gas Minion dies, 
+      ...
     `
   },
   special: {
@@ -102,23 +106,24 @@ const plasmaHero: Hero = {
     `,
     amount: 10,
     info: `
-    <br>
-      Plasma Hero and Minion attacks apply stacks of
-      <span class="f--red"><i class="fas fa-burn fa-fw"></i></span>,
-      dealing
+      <br>
+      When attacking, Plasma Hero and Minions apply
+      <span class="f--red"><i class="fas fa-burn fa-fw"></i></span>
+      debuff, which deals
       <span class="f--orange">1 <i class="fas fa-fire fa-fw"></i></span>
-      to the cards affected each turn per stack.
+      to the affected Minions or Hero each turn. This effect can stack.
     `
   },
   active: {
-    name: "Active",
+    name: "Unstable Core",
     manaCost: 50,
     info: `
-      When an enemy minion affected by
-      <span class="f--red"><i class="fas fa-burn fa-fw"></i></span>
-      dies, the remaining
-      <span class="f--red"><i class="fas fa-burn fa-fw"></i></span>
-      stacks get transfered to another random enemy Minion.
+      Plasma Hero applies Unstable Core debuff on one enemy Minion or Hero.
+      Plasma Hero and Minions attacking the affected target will deal additional
+      <span class="f--orange">10% <i class="fas fa-fire fa-fw"></i></span>,
+      and apply
+      <span class="f--red">3 <i class="fas fa-burn fa-fw"></i></span>
+      additional stacks until the end of your turn.
     `
   },
   special: {
@@ -127,11 +132,8 @@ const plasmaHero: Hero = {
   },
 }
 
-const heroes = new Map([
-  [1, solidHero],
-  [2, liquidHero],
-  [3, gasHero],
-  [4, plasmaHero]
-]);
+const heroes: Array<Hero> = [
+  solidHero, liquidHero, gasHero, plasmaHero
+]
 
 export default heroes;

@@ -2,7 +2,7 @@ import type {Request} from "../../../models";
 import type {AcceptFriend} from "./acceptFriend.models";
 
 const acceptFriend: Request<AcceptFriend> = async (services, params) => {
-  const {ioService, playerService} = services;
+  const {chatService, ioService, playerService} = services;
   const {username} = params;
   const {socketId} = ioService;
 
@@ -24,6 +24,13 @@ const acceptFriend: Request<AcceptFriend> = async (services, params) => {
   }, {returnDocument: "after"});
 
   if (!receiver) { return; }
+
+  const isInsertedChat = await chatService.insert({
+    players: [sender.username, receiver.username],
+    messages: []
+  });
+
+  if (!isInsertedChat) { return; }
 
   ioService.emit("acceptFriendSender", {
     username: receiver.username,

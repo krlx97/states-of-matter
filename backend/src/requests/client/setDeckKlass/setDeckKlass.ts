@@ -3,12 +3,12 @@ import type {SetDeckKlass} from "./setDeckKlass.models";
 
 const setDeckKlass: Request<SetDeckKlass> = async (services, params) => {
   const {ioService, playerService} = services;
-  const {id, klass} = params;
+  const {deckId, klass} = params;
   const {socketId} = ioService;
 
   const isUpdated = await playerService.update({
     socketId,
-    "decks.id": id
+    "decks.id": deckId
   }, {
     $set: {
       "decks.$.klass": klass
@@ -17,7 +17,7 @@ const setDeckKlass: Request<SetDeckKlass> = async (services, params) => {
 
   if (!isUpdated) { return; }
 
-  ioService.emit("setDeckKlass", {id, klass});
+  ioService.emit("setDeckKlass", {deckId, klass});
 };
 
 export default setDeckKlass;

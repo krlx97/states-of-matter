@@ -1,3 +1,4 @@
+import {PlayerStatus} from "../../../enums/index.js";
 import type {Request} from "../../../models";
 
 const leaveLobby: Request = async (services) => {
@@ -25,7 +26,14 @@ const leaveLobby: Request = async (services) => {
     }
   }, {returnDocument: "after"});
 
-  if (!updated) { return; }
+  const isPlayerUpdated = await playerService.update({socketId}, {
+    $set: {
+      lobbyId: 0,
+      status: PlayerStatus.ONLINE
+    }
+  });
+
+  if (!updated || !isPlayerUpdated) { return; }
 
   ioService.emit("leaveLobbySender");
 

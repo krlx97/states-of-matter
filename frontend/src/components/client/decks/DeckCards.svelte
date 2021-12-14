@@ -7,9 +7,9 @@
     socketService.emit("saveDeck", {cards});
   };
 
-  const removeFromDeck = (event): void => {
+  const removeFromDeck = (id: number): void => {
     decksStore.update((store) => {
-      const deckCard = store.deckCards.find((deckCard) => deckCard.id === event.detail);
+      const deckCard = store.deckCards.find((deckCard) => deckCard.id === id);
 
       if (deckCard.amount > 1) {
         deckCard.amount -= 1;
@@ -102,7 +102,7 @@
   </div>
   <div class="deck__cards">
     {#each $decksStore.deckCards as card}
-      <div class="card" on:click={removeFromDeck}>
+      <div class="card" on:click={() => removeFromDeck(card.id)}>
         <img
           class="card__img"
           src="assets/cards/{card.klass}/{card.id}.jpg"
@@ -112,7 +112,6 @@
           <span>{card.amount} / 2</span>
         </div>
       </div>
-      <!-- <DeckCard {card} on:removeFromDeck={removeFromDeck}/> -->
     {/each}
   </div>
 </div>

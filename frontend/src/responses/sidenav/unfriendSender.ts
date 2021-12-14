@@ -3,15 +3,15 @@ import {playerStore} from "stores/data";
 import {socialStore} from "stores/view";
 
 interface UnfriendSender {
-  friendname: string;
+  username: string;
 }
 
 const unfriendSender = (params: UnfriendSender): void => {
-  const {friendname} = params;
+  const {username} = params;
 
   playerStore.update((store) => {
     const {friends} = store.social;
-    const i = friends.indexOf(friendname);
+    const i = friends.indexOf(username);
 
     friends.splice(i, 1);
 
@@ -20,12 +20,12 @@ const unfriendSender = (params: UnfriendSender): void => {
 
   socialStore.update((store) => {
     const {chat, friends} = store;
-    const friend = friends.find((friend) => friend.username === friendname);
+    const friend = friends.find((friend) => friend.username === username);
     const i = friends.indexOf(friend);
 
     friends.splice(i, 1);
 
-    if (chat.username === friendname) chat.isOpen = false;
+    if (chat.username === username) chat.isOpen = false;
 
     return store;
   });

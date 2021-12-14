@@ -22,7 +22,7 @@ const unfriend: Request<Unfriend> = async (services, params) => {
 
   if (!receiver) { return; }
 
-  const isDeletedChat = await chatService.delete({players: [username, sender.username]});
+  const isDeletedChat = await chatService.delete({players: {$all: [username, sender.username]}});
 
   if (!isDeletedChat) { return; }
 

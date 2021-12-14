@@ -15,7 +15,7 @@
 
 <style lang="scss">
   form {
-    width: 256px;
+    width: 320px;
   }
   span {
     cursor: pointer;

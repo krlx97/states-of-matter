@@ -28,12 +28,13 @@
     width: 100vw;
     @include d-flex(row, center, center);
     background-color: $light-grey;
-    background-image: url("/assets/wallpapers/game.jpg");
+    // background-image: url("/assets/wallpapers/game.jpg");
   }
   .game {
     position: relative;
-    height: 900px;
-    width: 1600px;
+    // aspect-ratio: 16/9;
+    height: 100vh;
+    width: 100vw;
     display: flex;
     background-color: rgb(var(--grey));
     color: white;
@@ -45,7 +46,7 @@
   }
 </style>
 
-<div class="game__wrapper">
+<!-- <div class="game__wrapper"> -->
   <div class="game">
     {#if status === 0}
       <Auth/>
@@ -65,4 +66,4 @@
     <Notifications/>
     <Modals/>
   </div>
-</div>
+<!-- </div> -->

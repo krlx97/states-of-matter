@@ -15,7 +15,7 @@ const addFriend: Request<AddFriend> = async (services, params) => {
     ioService.notification("You can't add yourself as a friend.");
     return;
   }
-  if (receiver.social.blocked.includes(username)) {
+  if (receiver.social.blocked.includes(sender.username)) {
     ioService.notification("This player has blocked you.");
     return;
   }
@@ -23,7 +23,7 @@ const addFriend: Request<AddFriend> = async (services, params) => {
     ioService.notification("You have blocked this player.");
     return;
   }
-  if (receiver.social.requests.includes(username)) {
+  if (receiver.social.requests.includes(sender.username)) {
     ioService.notification("You have already sent the request to this player.");
     return;
   }

@@ -3,7 +3,15 @@ import type {Request} from "../../../models/index.js";
 import type {Signin} from "./signin.models";
 
 const signin: Request<Signin> = async (services, params) => {
-  const {blockchainService, chatService, ioService, playerService} = services;
+  const {
+    blockchainService,
+    chatService,
+    gameService,
+    ioService,
+    lobbyService,
+    playerService
+  } = services;
+
   const {username, publicKey, signature} = params;
   let lobby;
   let game;
@@ -13,12 +21,23 @@ const signin: Request<Signin> = async (services, params) => {
   // if (!transaction) { return; }
 
   const {socketId} = ioService;
-  const player = await playerService.findAndUpdate({username}, {
+  const player = await playerService.findAndUpdate({username}, [{
     $set: {
       socketId,
-      status: PlayerStatus.ONLINE
+      status: {
+        $switch: {
+          branches: [{
+            case: {$gt: ["$lobbyId", 0]},
+            then: PlayerStatus.INLOBBY
+          }, {
+            case: {$gt: ["$gameId", 0]},
+            then: PlayerStatus.INGAME
+          }],
+          default: PlayerStatus.ONLINE
+        }
+      }
     }
-  }, {returnDocument: "after"});
+  }], {returnDocument: "after"});
 
   if (!player) { return; }
 
@@ -28,7 +47,7 @@ const signin: Request<Signin> = async (services, params) => {
   for (const friendname of friends) {
     const [friend, chat] = await Promise.all([
       playerService.find({username: friendname}),
-      chatService.find({players: [username, friendname]})
+      chatService.find({players: {$all: [username, friendname]}})
     ]);
 
     if (!friend || !chat) { return; }
@@ -39,14 +58,16 @@ const signin: Request<Signin> = async (services, params) => {
     friendsView.push({username: friendname, status, avatarId, messages});
   }
 
-  if (player.lobbyId) {
-    // lobby = await blockchainService.findLobby(player.account.lobby_id);
+  const {lobbyId, gameId} = player;
 
-    // if (!lobby) { return; }
-  } else if (player.gameId) {
-    // game = await mongoService.findGame({id: player.account.game_id});
+  if (lobbyId) {
+    lobby = await lobbyService.find({lobbyId});
 
-    // if (!game) { return; }
+    if (!lobby) { return; }
+  } else if (gameId) {
+    game = await gameService.find({gameId});
+
+    if (!game) { return; }
   }
 
   ioService.emit("signin", {player, friends: friendsView, lobby, game});

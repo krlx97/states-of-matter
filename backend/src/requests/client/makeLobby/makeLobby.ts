@@ -1,9 +1,11 @@
 import {randomInt} from "crypto";
+import {PlayerStatus} from "../../../enums/index.js";
 import type {Request} from "../../../models";
 
 const makeLobby: Request = async (services) => {
   const {ioService, lobbyService, playerService} = services;
   const {socketId} = ioService;
+
   const player = await playerService.find({socketId});
 
   if (!player) { return; }
@@ -20,16 +22,24 @@ const makeLobby: Request = async (services) => {
   const {username, avatarId} = player;
   const lobbyId = randomInt(1, 1000000);
 
-  const isInserted = await lobbyService.insert({
-    lobbyId,
-    host: {username, avatarId},
-    challengee: {
-      username: "",
-      avatarId: 0
-    }
-  });
+  const [isInsertedLobby, isUpdatedPlayer] = await Promise.all([
+    lobbyService.insert({
+      lobbyId,
+      host: {username, avatarId},
+      challengee: {
+        username: "",
+        avatarId: 0
+      }
+    }),
+    playerService.update({socketId}, {
+      $set: {
+        lobbyId,
+        status: PlayerStatus.INLOBBY
+      }
+    })
+  ]);
 
-  if (!isInserted) { return; }
+  if (!isInsertedLobby || !isUpdatedPlayer) { return; }
 
   const lobby = await lobbyService.find({lobbyId});
 

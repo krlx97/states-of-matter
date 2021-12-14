@@ -1,5 +1,6 @@
 <script lang="ts">
   import {miscService, socketService} from "services";
+  import {playerStore} from "stores/data";
   import {decksStore} from "stores/view";
 
   const selectDeck = (deckId: number): void => {
@@ -8,10 +9,6 @@
 
   const changeDeckName = (id: number): void => {
     miscService.openModal("changeDeckName", {id});
-  };
-
-  const changeDeckClass = (id: number): void => {
-    miscService.openModal("setDeckKlass", {id});
   };
 </script>
 
@@ -22,6 +19,11 @@
     padding: $spacing-md;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  .selected {
+    border-bottom: 2px solid $purple;
     box-sizing: border-box;
   }
 
@@ -67,12 +69,8 @@
 <div class="decks">
   {#each $decksStore.deckSlots as deck}
 
-    <div class="deck">
-      <img
-        on:click={() => selectDeck(deck.id)}
-        class="deck__img"
-        src="assets/classes/{deck.klass}.png"
-        alt="Class">
+    <div class="deck" class:selected={deck.id === $playerStore.deckId} on:click={() => selectDeck(deck.id)}>
+      <img class="deck__img" src="assets/classes/{deck.klass}.png" alt="Class"/>
 
       <div class="deck__footer">
         <div class="deck__footer__info">
@@ -88,9 +86,6 @@
         </div>
 
         <div class="deck__footer__actions">
-          <button class="btn--icon" on:click={() => changeDeckClass(deck.id)}>
-            <i class="fas fa-exchange-alt fa-fw"></i>
-          </button>
           <button class="btn--icon" on:click={() => changeDeckName(deck.id)}>
             <i class="fas fa-edit fa-fw"></i>
           </button>

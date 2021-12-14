@@ -22,9 +22,13 @@
 
 <style>
   .wallet {
-    height: 100%;
+    /* height: 100%; */
     width: 100%;
+    
     padding: var(--spacing-md);
+    box-sizing: border-box;
+
+    border: 2px solid green;
     box-sizing: border-box;
   }
 
@@ -39,6 +43,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    
   }
   .wallet__key__header {
     width: 100%;

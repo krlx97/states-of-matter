@@ -33,7 +33,7 @@ interface Player {
 }
 
 interface Game extends Document {
-  id: number;
+  gameId: number;
   playerA: Player;
   playerB: Player;
 }

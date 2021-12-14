@@ -1,32 +1,81 @@
 <script lang="ts">
   import Collection from "./collection/Collection.svelte";
   import Decks from "./decks/Decks.svelte";
-  import Header from "./Header.svelte";
   import Play from "./play/Play.svelte";
   import Leaderboards from "./Leaderboards.svelte";
   import PatchNotes from "./PatchNotes.svelte";
   import Marketplace from "./Marketplace.svelte";
-  import Wallet from "./Wallet.svelte";
+  // import Wallet from "./collection/Wallet.svelte";
+  import Governance from "./Governance.svelte";
 
-  let view = "Collection";
+  let view = "Decks";
+
+  const views = [
+    "Play", "Decks", "Collection", "Marketplace", "Leaderboards", "Governance"
+  ];
 </script>
 
-<style>
+<style lang="scss">
   .client {
     position: relative;
     height: 100%;
     width: 100%;
     display: flex;
   }
-  
   .client__container {
     width: 100%;
   }
   .client__container__bar {
     height: 128px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid rgb(var(--light-grey));
+    box-sizing: border-box;
   }
   .client__container__view {
     height: calc(100% - 128px);
+  }
+
+  nav {
+    display: flex;
+  }
+  ul {
+    list-style-type: none;
+    display: flex;
+
+  }
+  .link--active {
+    border-bottom: 2px solid rgb(var(--purple));
+  }
+  li {
+    // border: 1px solid red;
+    padding: 1em;
+  }
+  li:hover {
+    background-color: rgb(var(--purple));
+    cursor: pointer;
+  }
+
+  .header__currencies {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    // border: 2px solid red;
+    margin-right: 2em;
+    padding: 1em;
+  }
+  .header__currency {
+    display: flex;
+    align-items: center;
+    font-size: 2rem;
+
+    .icon {
+      height: 48px;
+      width: 48px;
+      // margin-right: 0.7em;
+    }
   }
 </style>
 
@@ -35,16 +84,23 @@
   <div class="client__container">
 
     <div class="client__container__bar">
-      <Header
-        on:gotoPlay={() => view = "Play"}
-        on:gotoDecks={() => view = "Decks"}
-        on:gotoCollection={() => view = "Collection"}
-        on:gotoMarketplace={() => view = "Marketplace"}
-        on:gotoLeaderboards={() => view = "Leaderboards"}
-        on:gotoPatchNotes={() => view = "PatchNotes"}
-        on:gotoWallet={() => view = "Wallet"}
-        on:gotoDevUI={() => view = "DevUI"}
-      />
+      <nav>
+        <ul class="links">
+          {#each views as wiew}
+            <li class="link" class:link--active={view === wiew} on:click={() => view = wiew}>{wiew}</li>
+          {/each}
+        </ul>
+      </nav>
+      <div class="header__currencies">
+        <div class="header__currency">
+          <img class="icon" src="assets/currencies/shard.png" alt="SOM"/>
+          123123.465
+        </div>
+        <div class="header__currency">
+          <img class="icon" src="assets/currencies/som.png" alt="SOM"/>
+          1324
+        </div>
+      </div>
     </div>
 
     <div class="client__container__view">
@@ -60,8 +116,10 @@
         <Leaderboards/>
       {:else if view === "PatchNotes"}
         <PatchNotes/>
-      {:else if view === "Wallet"}
-        <Wallet/>
+      <!-- {:else if view === "Wallet"}
+        <Wallet/> -->
+      {:else if view === "Governance"}
+        <Governance/>
       {/if}
     </div>
 

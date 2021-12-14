@@ -23,6 +23,13 @@ const exitGame: Request<ExitGame> = async (services, params) => {
 
   if (!isDeleted) { return; }
 
+  const [isUpdatedPlayerA, isUpdatedPlayerB] = await Promise.all([
+    playerService.update({username: game.playerA.username}, {$set: {gameId: 0}}),
+    playerService.update({username: game.playerB.username}, {$set: {gameId: 0}}),
+  ]);
+
+  if (!isUpdatedPlayerA || !isUpdatedPlayerB) { return; }
+
   ioService.emit("exitGameSender");
 
   const {username} = game.playerB;

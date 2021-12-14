@@ -42,6 +42,75 @@
   @import "../../styles/mixins";
   @import "../../styles/variables";
 
+  .card {
+    position: relative;
+    height: $game-card-height;
+    width: $game-card-width;
+    box-shadow: $elevation-sm;
+    box-sizing: border-box;
+    transition: box-shadow 225ms ease-in-out;
+
+    &:hover {
+      box-shadow: $elevation-lg;
+      cursor: pointer;
+    }
+
+    &__img {
+      display: block;
+      height: 176px;
+      width: 100%;
+    }
+
+    &__attrs {
+      @include d-flex(row, center, center);
+      background-color: $dark-grey;
+    }
+  }
+
+  .tooltip {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 128px;
+    padding: $spacing-sm;
+    background-color: $light-grey;
+    box-shadow: $elevation-lg;
+    box-sizing: border-box;
+    font-size: $font-md;
+  }
+
+  .stat {
+    position: relative;
+    height: 32px;
+    width: 32px;
+    @include d-flex(column, center, center);
+    font-size: $font-sm;
+
+    span {
+      color: white;
+    }
+    &:last-child { margin-bottom: 0; }
+
+    &__type {
+      color: white;
+      &:hover .tooltip { display: initial; }
+    }
+    &__damage { color: $orange }
+    &__health { color: $green }
+    &__mana { color: $blue }
+    &__solid { color: $solid }
+    &__liquid { color: $liquid }
+    &__gas { color: $gas }
+    &__plasma { color: $plasma }
+  }
+</style>
+
+<!-- 
+<style lang="scss">
+  @import "../../styles/mixins";
+  @import "../../styles/variables";
+
   $passive-dimension: 40px;
   $ability-dimension: 48px;
 
@@ -165,9 +234,9 @@
       z-index: 1000;
     }
   }
-</style>
+</style> -->
 
-<div class="hero">
+<!-- <div class="hero">
 
   <div class="hero__header">
     {hero.name}
@@ -230,7 +299,7 @@
           class:f--plasma={hero.klass === heroKlass.PLASMA}>
           {@html hero.active.name}
         </span><br>
-        <!-- [<span class="f--blue">{hero.active.manaCost} <i class="fas fa-battery-full"></i></span>] -->
+        [<span class="f--blue">{hero.active.manaCost} <i class="fas fa-battery-full"></i></span>]
         {@html hero.active.info}
       </div>
 
@@ -247,4 +316,57 @@
     </div>
   </div>
 
+</div> -->
+
+
+
+<div class="card">
+
+  <img
+    class="card__img"
+    src="assets/classes/{hero.klass}_hero.jpg"
+    alt={hero.name}/>
+
+  <div class="card__attrs">
+    <div class="stat stat__type">
+      <i class="fas fa-mask fa-fw"></i>
+
+      <div class="tooltip">
+        <h3>
+          {hero.name}
+        </h3>
+        <!-- {@html card.effect} -->
+      </div>
+    </div>
+
+    <div class="stat stat__mana">
+      <i class="fas fa-battery-half fa-fw"></i> <span>7</span>
+    </div>
+
+    <div class="stat stat__health">
+      <i class="fas fa-heart fa-fw"></i> <span>{hero.health}</span>
+    </div>
+
+    <div class="stat stat__damage">
+        <i class="fas fa-fire fa-fw"></i> <span>{hero.damage}</span>
+    </div>
+
+    {#if hero.klass === 1}
+      <div class="stat stat__solid">
+        <i class="fas fa-shield-alt fa-fw"></i> <span>4</span>
+      </div>
+    {:else if hero.klass === 2}
+      <div class="stat stat__liquid">
+        <i class="fas fa-tint fa-fw"></i> <span>4</span>
+      </div>
+    {:else if hero.klass === 3}
+      <div class="stat stat__gas">
+        <i class="fas fa-radiation fa-fw"></i> <span>4</span>
+      </div>
+    {:else if hero.klass === 4}
+      <div class="stat stat__plasma">
+        <i class="fas fa-khanda fa-fw"></i> <span>4</span>
+      </div>
+    {/if}
+  </div>
 </div>

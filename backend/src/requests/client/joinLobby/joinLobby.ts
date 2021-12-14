@@ -1,3 +1,4 @@
+import {PlayerStatus} from "../../../enums/index.js";
 import type {Request} from "../../../models";
 import type {JoinLobby} from "./joinLobby.models";
 
@@ -40,7 +41,14 @@ const joinLobby: Request<JoinLobby> = async (services, params) => {
     }
   }, {returnDocument: "after"});
 
-  if (!updated) { return; }
+  const isPlayerUpdated = await playerService.update({socketId}, {
+    $set: {
+      lobbyId,
+      status: PlayerStatus.INLOBBY
+    }
+  });
+
+  if (!updated || !isPlayerUpdated) { return; }
 
   ioService.emit("joinLobbySender", {lobby: updated});
 

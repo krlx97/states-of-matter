@@ -1,9 +1,7 @@
 import {playerStore} from "stores/data";
 import {socialStore} from "stores/view";
 
-interface UnfriendReceiver {
-  username: string;
-}
+interface UnfriendReceiver { username: string; }
 
 const unfriendReceiver = (params: UnfriendReceiver): void => {
   const {username} = params;

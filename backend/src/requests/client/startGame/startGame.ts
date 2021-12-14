@@ -1,3 +1,4 @@
+import { PlayerStatus } from "../../../enums/index.js";
 import type {Request} from "../../../models";
 import type {StartGame} from "./startGame.models";
 
@@ -6,12 +7,25 @@ const startGame: Request<StartGame> = async (services, params) => {
   const {lobbyId} = params;
 
   const lobby = await lobbyService.find({lobbyId});
+  const isDeleted = await lobbyService.delete({lobbyId});
 
-  if (!lobby) { return; }
+  if (!lobby || !isDeleted) { return; }
 
   const [playerA, playerB] = await Promise.all([
-    playerService.find({username: lobby.host.username}),
-    playerService.find({username: lobby.challengee.username})
+    playerService.findAndUpdate({username: lobby.host.username}, {
+      $set: {
+        lobbyId: 0,
+        gameId: lobbyId,
+        status: PlayerStatus.INGAME
+      }
+    }, {returnDocument: "after"}),
+    playerService.findAndUpdate({username: lobby.challengee.username}, {
+      $set: {
+        lobbyId: 0,
+        gameId: lobbyId,
+        status: PlayerStatus.INGAME
+      }
+    }, {returnDocument: "after"})
   ]);
 
   if (!playerA || !playerB) { return; }
@@ -73,11 +87,11 @@ const startGame: Request<StartGame> = async (services, params) => {
   playerBDeck.pop();
 
   const game = {
-    id: lobby.lobby_id,
+    gameId: lobby.lobbyId,
     playerA: {
       username: lobby.host.username,
       hero: {
-        id: playerA.account.deck_id,
+        id: 2, // should be deck.klass
         health: 600,
         maxHealth: 600,
         mana: 100,
@@ -100,7 +114,7 @@ const startGame: Request<StartGame> = async (services, params) => {
     playerB: {
       username: lobby.challengee.username,
       hero: {
-        id: playerA.account.deck_id,
+        id: 4, // should be deck.klass
         health: 600,
         maxHealth: 600,
         mana: 100,

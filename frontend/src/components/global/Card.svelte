@@ -21,17 +21,17 @@
 
   .card {
     position: relative;
-    height: $game-card-height;
+    height: calc($game-card-height + 32px);
     width: $game-card-width;
     transform-style: preserve-3d;
     transform-origin: center center;
     // transition: transform 1s linear;
-    box-shadow: $elevation-sm;
+    // box-shadow: $elevation-sm;
     box-sizing: border-box;
     transition: box-shadow 225ms ease-in-out, transform 450ms ease-in-out;
 
     &:hover {
-      box-shadow: $elevation-lg;
+      // box-shadow: $elevation-lg;
       cursor: pointer;
     }
 
@@ -50,11 +50,12 @@
 
     &__img {
       display: block;
-      height: 100%;
-      width: 100%;
+      height: $game-card-height;
+      width: $game-card-width;
     }
 
     &__attrs {
+      height: 32px;
       @include d-flex(row, center, center);
       background-color: $dark-grey;
     }

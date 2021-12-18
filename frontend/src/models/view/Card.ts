@@ -1,6 +1,3 @@
-enum cardKlass {NEUTRAL, SOLID, LIQUID, GAS, PLASMA};
-enum cardType {MINION, MAGIC, TRAP};
-
 interface Card {
   id: number;
   klass: number;

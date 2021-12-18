@@ -14,13 +14,11 @@
 
   .fields {
     position: relative;
-    height: 100%;
-    padding: $spacing-md;
     @include d-flex(column, initial, initial);
 
     &__top {
-      margin-bottom: $spacing-md;
-      @include d-grid(7, 1, 0 1em);
+      margin-bottom: $spacing-sm;
+      @include d-grid(7, 1, 0 $spacing-sm);
     }
 
     &__bot {
@@ -32,11 +30,11 @@
 <div class="fields">
   <div class="fields__top">
     <PlayerMagicField/>
-    <PlayerMinionField field="a"/>
-    <PlayerMinionField field="b"/>
+    <PlayerMinionField field="A"/>
+    <PlayerMinionField field="B"/>
     <PlayerHero/>
-    <PlayerMinionField field="c"/>
-    <PlayerMinionField field="d"/>
+    <PlayerMinionField field="C"/>
+    <PlayerMinionField field="D"/>
     <PlayerTrapField/>
   </div>
   <div class="fields__bot">

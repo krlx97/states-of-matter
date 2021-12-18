@@ -15,11 +15,13 @@ interface DecksStore {
     name: string;
     amount: number;
   }>;
+  cardsInDeck: number;
 }
 
 const decksStore: Writable<DecksStore> = writable({
   deckSlots: [],
-  deckCards: []
+  deckCards: [],
+  cardsInDeck: 0,
 });
 
 export default decksStore;

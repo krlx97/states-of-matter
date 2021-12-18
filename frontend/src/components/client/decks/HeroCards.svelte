@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {Hero} from "components";
+  import {HeroComponent} from "components";
   import {heroes} from "data";
   import type {Klass} from "enums";
   import {socketService} from "services";
@@ -29,7 +29,7 @@
 <div class="decks">
   {#each heroes as hero}
     <div class="decks__hero" on:click={() => setDeckKlass(hero.klass)}>
-      <Hero {hero}/>
+      <HeroComponent {hero}/>
     </div>
   {/each}
 </div>

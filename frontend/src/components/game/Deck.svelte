@@ -8,12 +8,12 @@
 
   .player__deck {
     position: relative;
-    height: $game-field-height;
-    width: $game-field-width;
+    height: calc($game-card-height + 32px);
+    width: $game-card-width;
   }
   .player__deck__img {
-    height: $game-field-height;
-    width: $game-field-width;
+    height: calc($game-card-height + 32px);
+    width: $game-card-width;
   }
 
   .numofcards {
@@ -21,7 +21,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    text-shadow: 0 0 2px black;
+    text-shadow: 2px 2px 4px black;
   }
 </style>
 

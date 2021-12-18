@@ -3,11 +3,11 @@
   @import "../../../styles/variables";
 
   .graveyard {
-    height: $game-field-height;
-    width: $game-field-width;
+    height: calc($game-card-height + 32px);
+    width: $game-card-width;
     @include d-flex(row, center, center);
     border: 2px solid $purple;
-    box-shadow: $elevation-sm;
+    box-sizing: border-box;
     color: white;
   }
 </style>

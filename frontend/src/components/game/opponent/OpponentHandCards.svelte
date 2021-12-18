@@ -11,17 +11,17 @@
     display: flex;
   }
   .player__hand__card {
-    height: $game-field-height;
-    width: $game-field-width;
+    height: calc($game-card-height + 32px);
+    width: $game-card-width;
     transition: transform 225ms cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
   .player__hand__card:not(:first-child) {
-    margin-left: math.div(-$game-field-width, 2);
+    margin-left: math.div(-$game-card-width, 2);
   }
 
   .player__deck__img {
-    height: $game-field-height;
-    width: $game-field-width;
+    height: calc($game-card-height + 32px);
+    width: $game-card-width;
   }
 </style>
 

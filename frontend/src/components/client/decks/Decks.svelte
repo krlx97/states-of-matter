@@ -56,15 +56,11 @@
     align-items: center;
     justify-content: center;
 
-    &__list, &__deck {
-      height: 100%;
-
-      border: 1px solid $purple;
-      box-sizing: border-box;
-    }
+    &__list, &__deck { height: 100%; }
 
     &__cards {
       height: 100%;
+      margin: 0 $spacing-md;
       display: flex;
       flex-direction: column;
       justify-content: space-between;

@@ -19,7 +19,7 @@
   const passiveMouseMove = (event: MouseEvent): void => {
     const {offsetX, offsetY} = event;
 
-    passiveTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
+    passiveTooltip.style.bottom = `calc(48px + ${-offsetY}px)`;
     passiveTooltip.style.left = `calc(-80px + ${offsetX}px)`;
   };
   const damageMouseMove = (event: MouseEvent): void => {
@@ -44,7 +44,7 @@
 
   .card {
     position: relative;
-    height: $game-card-height;
+    height: calc($game-card-height + 32px);
     width: $game-card-width;
     box-shadow: $elevation-sm;
     box-sizing: border-box;
@@ -57,11 +57,12 @@
 
     &__img {
       display: block;
-      height: 176px;
-      width: 100%;
+      height: $game-card-height;
+      width: $game-card-width;
     }
 
     &__attrs {
+      height: 32px;
       @include d-flex(row, center, center);
       background-color: $dark-grey;
     }
@@ -70,27 +71,27 @@
   .tooltip {
     display: none;
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 100%;
-    width: 128px;
+    width: 160px;
     padding: $spacing-sm;
     background-color: $light-grey;
     box-shadow: $elevation-lg;
     box-sizing: border-box;
-    font-size: $font-md;
+    font-size: $font-sm;
   }
 
   .stat {
     position: relative;
     height: 32px;
     width: 32px;
-    @include d-flex(column, center, center);
+    @include d-flex(column, center, space-evenly);
     font-size: $font-sm;
 
     span {
       color: white;
     }
-    &:last-child { margin-bottom: 0; }
+    // &:last-child { margin-bottom: 0; }
 
     &__type {
       color: white;
@@ -328,14 +329,22 @@
     alt={hero.name}/>
 
   <div class="card__attrs">
-    <div class="stat stat__type">
+
+    <div class="stat stat__type" on:mousemove={passiveMouseMove}>
       <i class="fas fa-mask fa-fw"></i>
 
-      <div class="tooltip">
+      <div class="tooltip" bind:this={passiveTooltip}>
         <h3>
           {hero.name}
         </h3>
-        <!-- {@html card.effect} -->
+        <br/>
+        <p>
+          {@html hero.passive.info}
+        </p>
+        <hr/>
+        <p>
+          {@html hero.active.info}
+        </p>
       </div>
     </div>
 

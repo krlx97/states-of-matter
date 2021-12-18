@@ -1,3 +1,3 @@
-import selectedCard from "./selectedCard";
+import selectedHandCard from "./selectedHandCard";
 
-export {selectedCard};
+export {selectedHandCard};

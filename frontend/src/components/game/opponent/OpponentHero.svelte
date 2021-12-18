@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {Hero} from "components";
+  import {HeroComponent} from "components";
   import {heroes} from "data";
   import {gameStore, playerStore} from "stores/data";
 </script>
@@ -8,15 +8,15 @@
   @import "../../../styles/variables";
 
   .hero {
-    height: $game-field-height;
-    width: $game-field-width;
+    height: $game-card-height;
+    width: $game-card-width;
   }
 </style>
 
 <div class="hero">
   {#if $gameStore.playerA.username !== $playerStore.username}
-    <Hero hero={heroes.find((hero) => hero.klass === $gameStore.playerA.hero.id)}/>
+    <HeroComponent hero={heroes.find((hero) => hero.klass === $gameStore.playerA.hero.id)}/>
   {:else if $gameStore.playerB.username !== $playerStore.username}
-    <Hero hero={heroes.find((hero) => hero.klass === $gameStore.playerB.hero.id)}/>
+    <HeroComponent hero={heroes.find((hero) => hero.klass === $gameStore.playerB.hero.id)}/>
   {/if}
 </div>

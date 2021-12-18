@@ -1,5 +1,5 @@
 interface PlayCard {
-  field: string;
+  field: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap";
   gid: number;
   id: number;
 }

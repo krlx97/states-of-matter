@@ -1,17 +1,21 @@
 <script lang="ts">
-  import {Card} from "components";
+  import {CardComponent} from "components";
   import {cards} from "data";
+  import {playerStore} from "stores/data";
   import {decksStore} from "stores/view";
 
   let klass = 0;
 
   const onAddToDeck = (card): void => {
     const {id, klass, name} = card;
+    const {deckId} = $playerStore;
+    const deckSlot = $decksStore.deckSlots.find((deckSlot) => deckSlot.id === deckId);
 
-    if ($decksStore.deckCards.length >= 30) { return; }
+    if (deckSlot.cardsInDeck >= 30) { return; }
 
     decksStore.update((store) => {
       const deckCard = store.deckCards.find((deckCard) => deckCard.id === id);
+      const deckSlot = store.deckSlots.find((deckSlot) => deckSlot.id === deckId);
 
       if (deckCard) {
         if (deckCard.amount < 2) { deckCard.amount += 1; }
@@ -20,7 +24,8 @@
         store.deckCards.push({klass, id, name, amount});
       }
 
-      // store.cardsAmount = store.deckCards.reduce((acc, {amount}) => acc += amount, 0);
+      deckSlot.cardsInDeck = store.deckCards.reduce((acc, {amount}) => acc += amount, 0);
+      // deckSlot.cardsInDeck += 1;
 
       return store;
     });
@@ -96,7 +101,7 @@
     {#each cards as card}
       {#if card.klass === klass}
         <div on:click={() => onAddToDeck(card)}>
-          <Card {card}/>
+          <CardComponent {card}/>
         </div>
       {/if}
     {/each}

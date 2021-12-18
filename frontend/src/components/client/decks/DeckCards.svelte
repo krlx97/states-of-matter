@@ -1,5 +1,6 @@
 <script lang="ts">
   import {socketService} from "services";
+import { playerStore } from "stores/data";
   import {decksStore} from "stores/view";
 
   const saveDeck = (): void => {
@@ -8,8 +9,11 @@
   };
 
   const removeFromDeck = (id: number): void => {
+    const {deckId} = $playerStore;
+
     decksStore.update((store) => {
       const deckCard = store.deckCards.find((deckCard) => deckCard.id === id);
+      const deckSlot = store.deckSlots.find((deckSlot) => deckSlot.id === deckId);
 
       if (deckCard.amount > 1) {
         deckCard.amount -= 1;
@@ -18,7 +22,8 @@
         store.deckCards.splice(i, 1);
       }
 
-      // store.cardsAmount = store.deckCards.reduce((acc, {amount}) => acc += amount, 0);
+      deckSlot.cardsInDeck = store.deckCards.reduce((acc, {amount}) => acc += amount, 0);
+      // deckSlot.cardsInDeck -= 1;
 
       return store;
     });
@@ -26,6 +31,7 @@
 
   const clearDeck = (): void => {
     $decksStore.deckCards = [];
+    $decksStore.cardsInDeck = 0;
   };
 </script>
 
@@ -33,6 +39,7 @@
     @import "../../../styles/variables";
 
   .deck {
+    height: 100%;
     position: relative;
     width: calc(256px + $spacing-md * 2);
     display: flex;
@@ -47,10 +54,12 @@
   }
   .deck__cards {
     margin-top: $spacing-md;
-    height: calc($game-card-height * 3 + $spacing-md * 4);
+    // height: calc($game-card-height * 3 + $spacing-md * 4);
     width: calc(248px + 16px * 2);
     overflow-y: scroll;
     box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: dark;
   }
   .deck__cards::-webkit-scrollbar {
     width: 8px;
@@ -69,10 +78,11 @@
     margin: 0 $spacing-md $spacing-md $spacing-md;
     display: flex;
     align-items: center;
-    background-color: $light-grey;
+    background-color: $dark-grey;
     border-radius: 4px;
+    box-shadow: $elevation-sm;
     cursor: pointer;
-    overflow: hidden;
+    // overflow: hidden;
 
     &__img {
       height: 48px;
@@ -88,9 +98,9 @@
 
 <div class="deck">
   <div class="deck__toolbar">
-    <div>
+    <!-- <div>
       {$decksStore.deckCards.length} / 30
-    </div>
+    </div> -->
     <div>
       <button class="btn--icon" title="Clear deck" on:click={clearDeck}>
         <i class="fas fa-trash fa-fw"></i>

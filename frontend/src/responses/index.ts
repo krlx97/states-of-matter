@@ -22,6 +22,7 @@ import startGameSender from "./client/startGameSender";
 // Game
 import exitGameReceiver from "./game/exitGameReceiver";
 import exitGameSender from "./game/exitGameSender";
+import playCardSender from "./game/playCardSender";
 // Sidenav
 import acceptFriendReceiver from "./sidenav/acceptFriendReceiver";
 import acceptFriendSender from "./sidenav/acceptFriendSender";
@@ -61,6 +62,7 @@ const responses = {
   // Game
   exitGameReceiver,
   exitGameSender,
+  playCardSender,
   // Sidenav
   acceptFriendReceiver,
   acceptFriendSender,

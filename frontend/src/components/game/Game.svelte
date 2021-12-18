@@ -1,13 +1,9 @@
 <script lang="ts">
-  import {setContext} from "svelte";
   import {socketService} from "services";
   import {gameStore, playerStore} from "stores/data";
-  import {selectedCard} from "./stores";
 
-  import OpponentFields from "./opponent/OpponentFields.svelte";
-  import PlayerFields from "./player/PlayerFields.svelte";
-
-  setContext("selectedCard", selectedCard);
+  import OpponentFieldsComponent from "./opponent/OpponentFields.svelte";
+  import PlayerFieldsComponent from "./player/PlayerFields.svelte";
 
   const onEndGame = (): void => {
     const {gameId} = $gameStore;
@@ -35,9 +31,11 @@
 
 <div class="game">
   {#if $gameStore.playerA.username === $playerStore.username}
-    <button class="btn-end btn--raised-accent" on:click={onEndGame}>END GAME</button>
+    <button class="btn-end btn--raised-accent" on:click={onEndGame}>
+      END GAME
+    </button>
   {/if}
 
-  <OpponentFields/>
-  <PlayerFields/>
+  <OpponentFieldsComponent/>
+  <PlayerFieldsComponent/>
 </div>

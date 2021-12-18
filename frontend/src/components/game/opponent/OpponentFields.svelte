@@ -14,17 +14,16 @@
 
   .fields {
     position: relative;
-    height: 100%;
-    padding: $spacing-md;
+    margin-bottom: $spacing-sm;
     @include d-flex(column, initial, initial);
 
     &__top {
+      margin-bottom: $spacing-sm;
       @include d-flex(row, initial, space-between);
     }
 
     &__bot {
-      margin-bottom: $spacing-md;
-      @include d-grid(7, 1, 0 1em);
+      @include d-grid(7, 1, 0 $spacing-sm);
     }
   }
 </style>
@@ -37,11 +36,11 @@
   </div>
   <div class="fields__bot">
     <OpponentTrapField/>
-    <OpponentMinionField field="a"/>
-    <OpponentMinionField field="b"/>
+    <OpponentMinionField field="D"/>
+    <OpponentMinionField field="C"/>
     <OpponentHero/>
-    <OpponentMinionField field="c"/>
-    <OpponentMinionField field="d"/>
+    <OpponentMinionField field="B"/>
+    <OpponentMinionField field="A"/>
     <OpponentMagicField/>
   </div>
 </div>

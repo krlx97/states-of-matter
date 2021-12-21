@@ -16,6 +16,7 @@ import setDeckKlass from "./client/setDeckKlass/setDeckKlass.js";
 import setDeckName from "./client/setDeckName/setDeckName.js";
 import startGame from "./client/startGame/startGame.js";
 // Game
+import drawCard from "./game/drawCard/drawCard.js";
 import exitGame from "./game/exitGame/exitGame.js";
 import playCard from "./game/playCard/playCard.js";
 // Sidenav
@@ -48,6 +49,7 @@ const events = {
   setDeckName,
   startGame,
   // Game
+  drawCard,
   exitGame,
   playCard,
   // Sidenav

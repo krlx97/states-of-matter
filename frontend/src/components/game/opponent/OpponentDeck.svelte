@@ -1,6 +1,5 @@
 <script lang="ts">
-import { socketService } from "services";
-
+  import {socketService} from "services";
   import {gameStore, playerStore} from "stores/data";
 
   const onDrawCard = (): void => {
@@ -10,14 +9,15 @@ import { socketService } from "services";
 </script>
 
 <style lang="scss">
-  @import "../../styles/mixins";
-  @import "../../styles/variables";
+  @import "../../../styles/mixins";
+  @import "../../../styles/variables";
 
   .player__deck {
     position: relative;
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
+    height: $card-height;
+    width: $card-width;
   }
+
   .player__deck__img {
     height: calc($game-card-height + 32px);
     width: $game-card-width;
@@ -34,7 +34,7 @@ import { socketService } from "services";
 
 <div class="player__deck" on:click={onDrawCard}>
   <div class="numofcards">
-    {#if $gameStore.playerA.username === $playerStore.username}
+    {#if $gameStore.playerA.username !== $playerStore.username}
       {$gameStore.playerA.deck.length} / 30
     {:else}
       {$gameStore.playerB.deck.length} / 30

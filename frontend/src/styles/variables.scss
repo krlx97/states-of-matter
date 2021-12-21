@@ -1,5 +1,17 @@
-$game-card-height: 180px; // 5:6
+@use "sass:math";
+
+$game-card-height: 180px;
 $game-card-width: 150px;
+
+// 5:6, 1920x1080
+$card-img-height: 180px;
+$card-img-width: 150px;
+
+$card-footer-height: 32px;
+$card-footer-width: 150px;
+
+$card-height: calc(180px + 32px);
+$card-width: 150px;
 
 $spacing-sm: 0.7em;
 $spacing-md: 0.8em;
@@ -35,4 +47,4 @@ $elevation-lg:
   0 8px 10px 1px rgba(0,0,0,.14),
   0 3px 14px 2px rgba(0,0,0,.12);
 
-$ease-in-out-quart: 0.76, 0, 0.24, 1;
+$ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);

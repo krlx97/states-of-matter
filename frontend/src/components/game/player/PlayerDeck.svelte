@@ -1,6 +1,5 @@
 <script lang="ts">
-import { socketService } from "services";
-
+  import {socketService} from "services";
   import {gameStore, playerStore} from "stores/data";
 
   const onDrawCard = (): void => {
@@ -10,14 +9,15 @@ import { socketService } from "services";
 </script>
 
 <style lang="scss">
-  @import "../../styles/mixins";
-  @import "../../styles/variables";
+  @import "../../../styles/mixins";
+  @import "../../../styles/variables";
 
   .player__deck {
     position: relative;
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
+    height: $card-height;
+    width: $card-width;
   }
+
   .player__deck__img {
     height: calc($game-card-height + 32px);
     width: $game-card-width;

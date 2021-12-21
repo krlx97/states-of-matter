@@ -1,12 +1,20 @@
 <script lang="ts">
+import { passives } from "data";
+
   import {CardType} from "enums";
   import type {Card} from "models/view";
 
   let card: Card;
   let isFlipped = false;
+  let passiveTooltip: HTMLElement;
 
-  const flip = () => {
-    isFlipped = !isFlipped;
+  const flip = () => { isFlipped = !isFlipped; };
+
+  const passiveMouseMove = (event: MouseEvent): void => {
+    const {offsetX, offsetY} = event;
+
+    passiveTooltip.style.bottom = `calc(48px + ${-offsetY}px)`;
+    passiveTooltip.style.left = `calc(-80px + ${offsetX}px)`;
   };
 
   export {card};
@@ -17,21 +25,20 @@
   @import "../../styles/variables";
 
   .scene { perspective: 1280px; }
-  .rotated {transform: rotateY(180deg);}
+  .rotated { transform: rotateY(180deg); }
 
   .card {
     position: relative;
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
+    height: $card-height;
+    width: $card-width;
     transform-style: preserve-3d;
     transform-origin: center center;
-    // transition: transform 1s linear;
-    // box-shadow: $elevation-sm;
+    box-shadow: $elevation-sm;
     box-sizing: border-box;
-    transition: box-shadow 225ms ease-in-out, transform 450ms ease-in-out;
+    transition: box-shadow 225ms ease-in-out, transform 450ms $ease-in-out-quart;
 
     &:hover {
-      // box-shadow: $elevation-lg;
+      box-shadow: $elevation-lg;
       cursor: pointer;
     }
 
@@ -50,8 +57,8 @@
 
     &__img {
       display: block;
-      height: $game-card-height;
-      width: $game-card-width;
+      height: $card-img-height;
+      width: $card-img-width;
     }
 
     &__attrs {
@@ -59,6 +66,19 @@
       @include d-flex(row, center, center);
       background-color: $dark-grey;
     }
+  }
+
+  .tooltip2 {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 100%;
+    width: 160px;
+    padding: $spacing-sm;
+    background-color: $light-grey;
+    box-shadow: $elevation-lg;
+    box-sizing: border-box;
+    font-size: $font-sm;
   }
 
   .tooltip {
@@ -96,17 +116,21 @@
     &__solid { color: $solid }
     &__liquid { color: $liquid }
     &__gas { color: $gas }
-    &__plasma { color: $plasma }
+    &__plasma {
+      color: $plasma;
+      &:hover .tooltip2 {display: initial}
+    }
   }
 </style>
 
 <div class="scene" on:contextmenu|preventDefault={flip}>
-  <div class="card" class:rotated={isFlipped} >
+  <div class="card" class:rotated={isFlipped}>
     <div class="card--front">
       <img
-      class="card__img"
-      src="assets/cards/{card.klass}/{card.id}.jpg"
-      alt={card.name}/>
+        class="card__img"
+        src="assets/cards/{card.klass}/{card.id}.jpg"
+        alt={card.name}/>
+
       <div class="card__attrs">
         <div class="stat stat__type">
           <i
@@ -132,9 +156,8 @@
           <div class="stat stat__health">
             <i class="fas fa-heart fa-fw"></i> <span>{card.health}00</span>
           </div>
-
           <div class="stat stat__damage">
-              <i class="fas fa-fire fa-fw"></i> <span>{card.damage}0</span>
+            <i class="fas fa-fire fa-fw"></i> <span>{card.damage}0</span>
           </div>
 
           {#if card.klass === 1}
@@ -150,13 +173,16 @@
               <i class="fas fa-radiation fa-fw"></i> <span>4</span>
             </div>
           {:else if card.klass === 4}
-            <div class="stat stat__plasma">
+            <div class="stat stat__plasma" on:mousemove={passiveMouseMove}>
               <i class="fas fa-khanda fa-fw"></i> <span>4</span>
+
+              <div class="tooltip2" bind:this={passiveTooltip}>
+                {@html passives.find((passive) => passive.klass === card.klass).text}
+              </div>
             </div>
           {/if}
         {/if}
       </div>
-     
     </div>
 
     <div class="card--back">

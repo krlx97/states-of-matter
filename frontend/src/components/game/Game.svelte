@@ -15,11 +15,16 @@
   @import "../../styles/mixins";
   @import "../../styles/variables";
 
+  // .scene { perspective: 1280px; }
+
   .game {
     position: relative;
     height: 100%;
     width: 100%;
+    // transform-style: preserve-3d;
+    // transform-origin: center center;
     @include d-flex(column, center, center);
+    // transform: perspective(1280px) rotateX(25deg);
   }
 
   .btn-end {
@@ -29,13 +34,15 @@
   }
 </style>
 
-<div class="game">
-  {#if $gameStore.playerA.username === $playerStore.username}
-    <button class="btn-end btn--raised-accent" on:click={onEndGame}>
-      END GAME
-    </button>
-  {/if}
-
-  <OpponentFieldsComponent/>
-  <PlayerFieldsComponent/>
-</div>
+<!-- <div class="scene"> -->
+  <div class="game">
+    {#if $gameStore.playerA.username === $playerStore.username}
+      <button class="btn-end btn--raised-accent" on:click={onEndGame}>
+        END GAME
+      </button>
+    {/if}
+  
+    <OpponentFieldsComponent/>
+    <PlayerFieldsComponent/>
+  </div>
+<!-- </div> -->

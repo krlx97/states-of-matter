@@ -20,8 +20,11 @@ import setDeckName from "./client/setDeckName";
 import startGameReceiver from "./client/startGameReceiver";
 import startGameSender from "./client/startGameSender";
 // Game
+import drawCardReceiver from "./game/drawCardReceiver";
+import drawCardSender from "./game/drawCardSender";
 import exitGameReceiver from "./game/exitGameReceiver";
 import exitGameSender from "./game/exitGameSender";
+import playCardReceiver from "./game/playCardReceiver";
 import playCardSender from "./game/playCardSender";
 // Sidenav
 import acceptFriendReceiver from "./sidenav/acceptFriendReceiver";
@@ -60,8 +63,11 @@ const responses = {
   startGameReceiver,
   startGameSender,
   // Game
+  drawCardReceiver,
+  drawCardSender,
   exitGameReceiver,
   exitGameSender,
+  playCardReceiver,
   playCardSender,
   // Sidenav
   acceptFriendReceiver,

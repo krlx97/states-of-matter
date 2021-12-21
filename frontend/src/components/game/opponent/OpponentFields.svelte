@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Deck from "../Deck.svelte";
+  import OpponentDeck from "./OpponentDeck.svelte";
   import OpponentHero from "./OpponentHero.svelte";
   import OpponentGraveyard from "./OpponentGraveyard.svelte";
   import OpponentHandCards from "./OpponentHandCards.svelte";
@@ -30,7 +30,7 @@
 
 <div class="fields">
   <div class="fields__top">
-    <Deck/>
+    <OpponentDeck/>
     <OpponentHandCards/>
     <OpponentGraveyard/>
   </div>

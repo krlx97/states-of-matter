@@ -3,11 +3,6 @@
 import { playerStore } from "stores/data";
   import {decksStore} from "stores/view";
 
-  const saveDeck = (): void => {
-    const cards = $decksStore.deckCards.map(({id, amount}) => ({id, amount}));
-    socketService.emit("saveDeck", {cards});
-  };
-
   const removeFromDeck = (id: number): void => {
     const {deckId} = $playerStore;
 
@@ -27,11 +22,6 @@ import { playerStore } from "stores/data";
 
       return store;
     });
-  };
-
-  const clearDeck = (): void => {
-    $decksStore.deckCards = [];
-    $decksStore.cardsInDeck = 0;
   };
 </script>
 
@@ -97,19 +87,6 @@ import { playerStore } from "stores/data";
 </style>
 
 <div class="deck">
-  <div class="deck__toolbar">
-    <!-- <div>
-      {$decksStore.deckCards.length} / 30
-    </div> -->
-    <div>
-      <button class="btn--icon" title="Clear deck" on:click={clearDeck}>
-        <i class="fas fa-trash fa-fw"></i>
-      </button>
-      <button class="btn--icon" title="Save deck" on:click={saveDeck}>
-        <i class="fas fa-save fa-fw"></i>
-      </button>
-    </div>
-  </div>
   <div class="deck__cards">
     {#each $decksStore.deckCards as card}
       <div class="card" on:click={() => removeFromDeck(card.id)}>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Deck from "../Deck.svelte";
+  import PlayerDeck from "./PlayerDeck.svelte";
   import PlayerGraveyard from "./PlayerGraveyard.svelte";
   import PlayerHero from "./PlayerHero.svelte";
   import PlayerMagicField from "./PlayerMagicField.svelte";
@@ -40,6 +40,6 @@
   <div class="fields__bot">
     <PlayerGraveyard/>
     <PlayerHandCards/>
-    <Deck/>
+    <PlayerDeck/>
   </div>
 </div>

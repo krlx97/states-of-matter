@@ -1,11 +1,12 @@
 <script lang="ts">
+  import {Button} from "components";
   import {miscService, socketService} from "services";
 
   const onMakeLobby = (): void => { socketService.emit("makeLobby"); };
   const onJoinLobby = (): void => { miscService.openModal("joinLobby"); };
 </script>
 
-<style>
+<style lang="scss">
   .play-screens {
     display: flex;
     height: 100%;
@@ -37,7 +38,6 @@
 </style>
 
 <div class="play-screens">
-
   <div class="play-screen casual">
     <h1>CASUAL</h1>
     <p>Play for fun</p>
@@ -54,9 +54,12 @@
     <h1>CUSTOM</h1>
     <p>Challenge your friends</p>
     <div>
-      <button class="btn--raised-accent" on:click={onMakeLobby}>MAKE</button>
-      <button class="btn--basic-accent" on:click={onJoinLobby}>JOIN</button>
+      <Button color="green" on:click={onMakeLobby}>
+        MAKE
+      </Button>
+      <Button style="outlined" color="green" on:click={onJoinLobby}>
+        JOIN
+      </Button>
     </div>
   </div>
-
 </div>

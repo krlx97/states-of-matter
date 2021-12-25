@@ -1,15 +1,15 @@
 <script lang="ts">
-  import Lobby from "./Lobby.svelte";
-  import SelectMode from "./SelectMode.svelte";
   import {PlayerStatus} from "enums";
   import {playerStore} from "stores/data";
+  import Lobby from "./Lobby.svelte";
+  import SelectMode from "./SelectMode.svelte";
 </script>
 
-<style>
+<style lang="scss">
   .play {
-    display: flex;
     height: 100%;
     width: 100%;
+    display: flex;
   }
 </style>
 

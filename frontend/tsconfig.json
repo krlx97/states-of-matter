@@ -15,7 +15,12 @@
       "responses": ["responses"],
       "services": ["services"],
       "stores/data": ["stores/data"],
-      "stores/view": ["stores/view"]
+      "stores/view": ["stores/view"],
+
+      "models": ["models/module"],
+
+      "game/stores": ["components/game/shared/stores/module"],
+      "game/responses": ["components/game/shared/responses/module"]
     }
   }
 }

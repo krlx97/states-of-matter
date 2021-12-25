@@ -1,12 +1,19 @@
 <script lang="ts">
+    import {ProgressBar} from "components";
   import type {Hero} from "models/view";
+  import {game} from "game/stores";
+
+  let hero: Hero;
+  let health: number = hero.health;
+  let mana: number = hero.health;
+  let isHealthBarVisible = false;
+  let isManaBarVisible = false;
 
   let abilityTooltip: HTMLElement;
   let passiveTooltip: HTMLElement;
   let damageTooltip: HTMLElement;
   let manaTooltip: HTMLElement;
 
-  let hero: Hero;
   enum heroKlass {SOLID = 1, LIQUID = 2, GAS = 3, PLASMA = 4};
 
   const abilityMouseMove = (event: MouseEvent): void => {
@@ -35,7 +42,7 @@
     manaTooltip.style.left = `calc(-80px + ${offsetX}px)`;
   };
 
-  export {hero};
+  export {hero, health, mana,isHealthBarVisible, isManaBarVisible};
 </script>
 
 <style lang="scss">
@@ -59,6 +66,24 @@
       display: block;
       height: $game-card-height;
       width: $game-card-width;
+    }
+
+    &__bar {
+      position: absolute;
+      bottom: 48px;
+      left: 50%;
+      width: 80%;
+      box-shadow: $elevation-sm;
+      transform: translateX(-50%);
+    }
+
+    &__manabar {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      width: 70%;
+      box-shadow: $elevation-sm;
+      transform: translateX(-50%);
     }
 
     &__attrs {
@@ -326,7 +351,19 @@
   <img
     class="card__img"
     src="assets/classes/{hero.klass}_hero.jpg"
-    alt={hero.name}/>
+    alt={hero.name}
+  />
+
+  {#if isHealthBarVisible}
+    <div class="card__bar">
+      <ProgressBar size="md" progress={health / hero.health * 100} color="green"/>
+    </div>
+  {/if}
+  {#if isManaBarVisible}
+    <div class="card__manabar">
+      <ProgressBar size="sm" progress={mana / hero.mana * 100} color="blue"/>
+    </div>
+  {/if}
 
   <div class="card__attrs">
 
@@ -349,11 +386,11 @@
     </div>
 
     <div class="stat stat__mana">
-      <i class="fas fa-battery-half fa-fw"></i> <span>7</span>
+      <i class="fas fa-battery-half fa-fw"></i> <span>{mana || hero.mana}</span>
     </div>
 
     <div class="stat stat__health">
-      <i class="fas fa-heart fa-fw"></i> <span>{hero.health}</span>
+      <i class="fas fa-heart fa-fw"></i> <span>{health || hero.health}</span>
     </div>
 
     <div class="stat stat__damage">

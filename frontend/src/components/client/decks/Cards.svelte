@@ -40,7 +40,7 @@
     flex-direction: column;
   }
   .cards {
-    height: calc($game-card-height * 2 + $spacing-md * 3);
+    height: calc($card-height * 2 + $spacing-md * 3);
     padding: $spacing-md;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -51,6 +51,18 @@
 
     scrollbar-width: thin;
     scrollbar-color: dark;
+  }
+  .cards::-webkit-scrollbar {
+    width: 8px;
+  }
+  .cards::-webkit-scrollbar-track {
+    background-color: $dark-grey;
+  }
+  .cards::-webkit-scrollbar-thumb {
+    background-color: $light-grey;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    box-sizing: border-box;
   }
 
   .klasses {

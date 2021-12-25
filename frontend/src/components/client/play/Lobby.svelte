@@ -1,8 +1,9 @@
 <script lang="ts">
+  import {Button, Text} from "components";
   import {eccService, socketService} from "services";
   import {lobbyStore, playerStore} from "stores/data";
 
-  const start = (): void => {
+  const onStartGame = (): void => {
     const {publicKey, privateKey} = $playerStore;
     const {lobbyId} = $lobbyStore;
     const signature = eccService.sign(`startgame:${lobbyId}`, privateKey);
@@ -14,7 +15,7 @@
   const onLeaveLobby = (): void => { socketService.emit("leaveLobby"); };
 </script>
 
-<style>
+<style lang="scss">
   .lobby {
     width: 100%;
     display: flex;
@@ -45,60 +46,75 @@
     border-radius: 50%;
   }
   .host__avatar {
+    height: 64px;
+    width: 64px;
     margin-right: var(--spacing-sm);
   }
   .challengee__avatar {
+    height: 64px;
+    width: 64px;
     margin-left: var(--spacing-sm);
   }
 
   .vs {
     margin: 0 var(--spacing-md);
-    animation: glow 10s cubic-bezier(var(--ease-in-out-quart)) 0s infinite alternate;
-  }
-  @keyframes glow {
-    from {
-      color: rgb(var(--green));
-      text-shadow: 0 0 16px rgb(var(--green));
-    } to {
-      color: rgb(var(--purple));
-      text-shadow: 0 0 16px rgb(var(--purple));
-    }
   }
 </style>
 
 <div class="lobby">
 
   <h3>
-    Game ID #<span class="f--purple">{$lobbyStore.lobbyId}</span>
+    <Text>Lobby ID:</Text>
+    <Text color="purple">{$lobbyStore.lobbyId}</Text>
   </h3>
 
   <div class="players">
 
     <div class="host">
-      <img class="host__avatar" src="assets/avatars/{$lobbyStore.host.avatarId}.jpg" alt="Host avatar" height="64" width="64">
-      <p>
-        {$lobbyStore.host.username}<br>
-        <span class="f--purple">Host</span>
-      </p>
+      <img
+        class="host__avatar"
+        src="assets/avatars/{$lobbyStore.host.avatarId}.jpg"
+        alt="Host avatar"
+      />
+
+      <div>
+        <Text>{$lobbyStore.host.username}</Text>
+        <br/>
+        <Text color="purple">Host</Text>
+      </div>
     </div>
 
-    <h1 class="vs">VS</h1>
+    <h1 class="vs">
+      VS
+    </h1>
 
     <div class="challengee">
-      <p>
-        {$lobbyStore.challengee.username ? $lobbyStore.challengee.username : "Awaiting..."}<br>
-        <span class="f--green">Challengee</span>
-      </p>
-      <img class="challengee__avatar" src="assets/avatars/{$lobbyStore.challengee.username ? $lobbyStore.challengee.avatarId : "unknown"}.jpg" alt="Challengee avatar" height="64" width="64">
+      <div>
+        {$lobbyStore.challengee.username ? $lobbyStore.challengee.username : "Awaiting..."}
+        <br/>
+        <Text color="green">Challengee</Text>
+      </div>
+
+      <img
+        class="challengee__avatar"
+        src="assets/avatars/{$lobbyStore.challengee.username ? $lobbyStore.challengee.avatarId : "unknown"}.jpg"
+        alt="Challengee avatar"
+      />
     </div>
   </div>
 
   <div>
     {#if $lobbyStore.host.username === $playerStore.username}
-      <button class="btn--raised-primary" disabled={$lobbyStore.challengee.username === ""} on:click={start}>START GAME</button>
-      <button class="btn--raised-primary" on:click={onDestroyLobby}>DESTROY LOBBY</button>
+      <Button disabled={!$lobbyStore.challengee.username} on:click={onStartGame}>
+        START GAME
+      </Button>
+      <Button on:click={onDestroyLobby}>
+        DESTROY LOBBY
+      </Button>
     {:else}
-      <button class="btn--basic-primary" on:click={onLeaveLobby}>LEAVE LOBBY</button>
+      <Button style="outlined" on:click={onLeaveLobby}>
+        LEAVE LOBBY
+      </Button>
     {/if}
   </div>
 

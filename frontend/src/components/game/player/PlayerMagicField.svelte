@@ -1,6 +1,8 @@
 <script lang="ts">
   import {CardType} from "enums";
-  import {selectedHandCard} from "../stores";
+  import {selectedHandCard} from "game/stores";
+
+  $: summonable = $selectedHandCard.gid !== 0 && $selectedHandCard.type === CardType.MAGIC;
 </script>
 
 <style lang="scss">
@@ -8,29 +10,22 @@
   @import "../../../styles/variables";
 
   .field {
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
-    @include d-flex(row, center, center);
+    height: $card-height;
+    width: $card-width;
+    @include flex($align-items: center, $justify-content: center);
     background-color: $green;
     box-shadow: $elevation-sm;
   }
 
-  .summonable {
-    animation: glow 1s ease-in-out infinite;
-  }
+  .summonable {animation: glow 900ms $ease-in-out-quart infinite}
+
   @keyframes glow {
-    0% {
-      box-shadow: 0 0 0 0 rgb(var(--green));
-    } 50% {
-      box-shadow: 0 0 4px 2px rgb(var(--green));
-    } 100% {
-      box-shadow: 0 0 0 0 rgb(var(--green));
-    }
+    0%    {box-shadow: 0 0 4px 2px $green}
+    50%   {box-shadow: 0 0 8px 4px $green}
+    100%  {box-shadow: 0 0 4px 2px $green}
   }
 </style>
 
-<div
-  class="field"
-  class:summonable={$selectedHandCard.gid !== 0 && $selectedHandCard.type === CardType.MAGIC}>
+<div class="field" class:summonable>
   <span>Magic Field</span>
 </div>

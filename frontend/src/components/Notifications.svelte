@@ -7,7 +7,7 @@
   const inFly: FlyParams = {x: 100, duration: 225};
 </script>
 
-<style>
+<style lang="scss">
   .notifications {
     position: absolute;
     bottom: 0;

@@ -60,6 +60,8 @@ const signin: Request<Signin> = async (services, params) => {
 
   const {lobbyId, gameId} = player;
 
+  let gameView;
+
   if (lobbyId) {
     lobby = await lobbyService.find({lobbyId});
 
@@ -68,9 +70,31 @@ const signin: Request<Signin> = async (services, params) => {
     game = await gameService.find({gameId});
 
     if (!game) { return; }
+
+    if (player.username === game.playerA.username) {
+      gameView = {
+        gameId: game.gameId,
+        player: game.playerA,
+        opponent: {
+          ...game.playerB,
+          deck: game.playerB.deck.length,
+          hand: game.playerB.hand.length
+        }
+      };
+    } else {
+      gameView = {
+        gameId: game.gameId,
+        player: game.playerB,
+        opponent: {
+          ...game.playerA,
+          deck: game.playerA.deck.length,
+          hand: game.playerA.hand.length
+        }
+      };
+    }
   }
 
-  ioService.emit("signin", {player, friends: friendsView, lobby, game});
+  ioService.emit("signin", {player, friends: friendsView, lobby, game: gameView});
 };
 
 export default signin;

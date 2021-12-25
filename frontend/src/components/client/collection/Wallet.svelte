@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {FontAwesome} from "components";
+  import {Button, Text, FontAwesome} from "components";
   import {miscService} from "services";
   import {playerStore} from "stores/data";
 
@@ -20,7 +20,7 @@
   };
 </script>
 
-<style>
+<style lang="scss">
   .wallet {
     /* height: 100%; */
     width: 100%;
@@ -63,9 +63,9 @@
           Public Key
         </p>
         <div class="wallet__key__header__actions">
-          <button class="btn--icon" on:click={onCopyPublicKey}>
+          <Button style="icon" on:click={onCopyPublicKey}>
             <FontAwesome icon="copy"/>
-          </button>
+          </Button>
         </div>
       </header>
       <h3 class="key f--purple">
@@ -79,22 +79,22 @@
           Private Key
         </p>
         <div class="wallet__key__header__actions">
-          <button class="btn--icon" on:click={onTogglePrivateKeyVisible}>
+          <Button style="icon" on:click={onTogglePrivateKeyVisible}>
             <FontAwesome icon={isPrivateKeyVisible ? "eye" : "eye-slash"}/>
-          </button>
-          <button class="btn--icon" on:click={onCopyPrivateKey}>
+          </Button>
+          <Button style="icon" on:click={onCopyPrivateKey}>
             <FontAwesome icon="copy"/>
-          </button>
+          </Button>
         </div>
       </header>
 
-      <h3 class="key f--purple">
+      <Text color="purple" font="monospace">
         {#if isPrivateKeyVisible}
           {$playerStore.privateKey}
         {:else}
           {$playerStore.privateKey.split("").map(() => "*").join("")}
         {/if}
-      </h3>
+      </Text>
     </div>
 
   </div>

@@ -1,22 +1,24 @@
 <script lang="ts">
   import {HeroComponent} from "components";
   import {heroes} from "data";
-  import {gameStore, playerStore} from "stores/data";
+  import {game} from "game/stores";
 </script>
 
 <style lang="scss">
   @import "../../../styles/variables";
 
   .hero {
-    height: $game-card-height;
-    width: $game-card-width;
+    height: $card-height;
+    width: $card-width;
   }
 </style>
 
 <div class="hero">
-  {#if $gameStore.playerA.username === $playerStore.username}
-    <HeroComponent hero={heroes.find((hero) => hero.klass === $gameStore.playerA.hero.id)}/>
-  {:else if $gameStore.playerB.username === $playerStore.username}
-    <HeroComponent hero={heroes.find((hero) => hero.klass === $gameStore.playerB.hero.id)}/>
-  {/if}
+  <HeroComponent
+    hero={heroes.find((hero) => hero.klass === $game.player.hero.id)}
+    health={$game.player.hero.health}
+    mana={$game.player.hero.mana}
+    isHealthBarVisible={true}
+    isManaBarVisible={true}
+  />
 </div>

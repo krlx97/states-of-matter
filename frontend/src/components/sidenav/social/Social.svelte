@@ -5,7 +5,7 @@
   import Block from "./Block.svelte";
   import Friend from "./Friend.svelte";
   import Request from "./Request.svelte";
-  import {FontAwesome} from "components";
+  import {Button, FontAwesome} from "components";
   import {miscService} from "services";
   import {playerStore} from "stores/data";
   import {socialStore} from "stores/view";
@@ -66,12 +66,12 @@
         Friends <b>{$playerStore.social.friends.length}</b>
       </p>
       <div>
-        <button class="btn--icon-accent" on:click={addFriendModal}>
+        <Button style="icon" on:click={addFriendModal}>
           <FontAwesome icon="user-plus"/>
-        </button>
-        <button class="btn--icon" on:click={toggleFriends}>
+        </Button>
+        <Button style="icon" on:click={toggleFriends}>
           <FontAwesome icon={friendsToggleIcon}/>
-        </button>
+        </Button>
       </div>
     </header>
     {#if isFriendsToggled}

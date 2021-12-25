@@ -1,25 +1,23 @@
 import {io} from "socket.io-client";
 
-class SocketService {
-  private readonly _socket = io("ws://localhost:4200");
+const socket = io("ws://localhost:4200");
 
-  get socketId () {
-    return this._socket.id;
-  }
+const socketService = {
+  emit (event: string, data?: object): void {
+    socket.emit(event, data);
+  },
 
-  public emit (event: string, data: object = {}): void {
-    this._socket.emit(event, data);
-  }
-
-  public listenToResponses (responses): void {
+  listenToResponses (responses: any): void {
     Object.keys(responses).forEach((response) => {
-      this._socket.on(response, (params = {}) => {
+      socket.on(response, (params = {}) => {
         responses[response](params);
       });
     });
-  };
-}
+  },
 
-const socketService = new SocketService();
+  unlisten (responses: any): void {
+    Object.keys(responses).forEach((response) => { socket.off(response); });
+  }
+}
 
 export default socketService;

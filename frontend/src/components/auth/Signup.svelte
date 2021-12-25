@@ -17,7 +17,7 @@
   const onGotoSignin = (): void => { dispatch("gotoSignin"); };
 </script>
 
-<style>
+<style lang="scss">
   form {
     width: 320px;
   }

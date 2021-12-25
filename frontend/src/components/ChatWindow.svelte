@@ -78,7 +78,7 @@
   });
 </script>
 
-<style>
+<style lang="scss">
   .chat {
     position: absolute;
     bottom: 0;

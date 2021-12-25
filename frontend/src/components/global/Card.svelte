@@ -1,12 +1,15 @@
 <script lang="ts">
-import { passives } from "data";
-
+  import {ProgressBar} from "components";
+  import {passives} from "data";
   import {CardType} from "enums";
   import type {Card} from "models/view";
 
-  let card: Card;
-  let isFlipped = false;
-  let passiveTooltip: HTMLElement;
+  let card: Card,
+      health: number,
+      damage: number,
+      isFlipped = false,
+      isHealthBarVisible = false,
+      passiveTooltip: HTMLElement;
 
   const flip = () => { isFlipped = !isFlipped; };
 
@@ -17,7 +20,7 @@ import { passives } from "data";
     passiveTooltip.style.left = `calc(-80px + ${offsetX}px)`;
   };
 
-  export {card};
+  export {card, health, damage, isHealthBarVisible};
 </script>
 
 <style lang="scss">
@@ -49,10 +52,25 @@ import { passives } from "data";
       backface-visibility: hidden;
     }
 
-    &--back { transform: rotateY(-180deg); }
+    &--back {
+      transform: rotateY(-180deg);
+
+      &__img {
+        height: $card-height;
+      }
+    }
     &--front {
       display: flex;
       flex-direction: column;
+    }
+
+    &__bar {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      width: 80%;
+      box-shadow: $elevation-sm;
+      transform: translateX(-50%);
     }
 
     &__img {
@@ -129,7 +147,14 @@ import { passives } from "data";
       <img
         class="card__img"
         src="assets/cards/{card.klass}/{card.id}.jpg"
-        alt={card.name}/>
+        alt={card.name}
+      />
+
+      {#if isHealthBarVisible}
+        <div class="card__bar">
+          <ProgressBar progress={health / card.health * 100} color="green"/>
+        </div>
+      {/if}
 
       <div class="card__attrs">
         <div class="stat stat__type">
@@ -154,10 +179,10 @@ import { passives } from "data";
 
         {#if card.type === CardType.MINION}
           <div class="stat stat__health">
-            <i class="fas fa-heart fa-fw"></i> <span>{card.health}00</span>
+            <i class="fas fa-heart fa-fw"></i> <span>{health || card.health}</span>
           </div>
           <div class="stat stat__damage">
-            <i class="fas fa-fire fa-fw"></i> <span>{card.damage}0</span>
+            <i class="fas fa-fire fa-fw"></i> <span>{damage || card.damage}</span>
           </div>
 
           {#if card.klass === 1}
@@ -187,9 +212,10 @@ import { passives } from "data";
 
     <div class="card--back">
       <img
-        class="card__img"
+        class="card--back__img"
         src="assets/card-backs/default.jpg"
-        alt="Card back"/>
+        alt="Card back"
+      />
     </div>
   </div>
 </div>

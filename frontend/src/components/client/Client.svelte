@@ -1,17 +1,20 @@
 <script lang="ts">
+  import Governance from "./Governance.svelte";
+  import Leaderboards from "./Leaderboards.svelte";
+  import Market from "./Market.svelte";
   import Collection from "./collection/Collection.svelte";
   import Decks from "./decks/Decks.svelte";
   import Play from "./play/Play.svelte";
-  import Leaderboards from "./Leaderboards.svelte";
-  import PatchNotes from "./PatchNotes.svelte";
-  import Marketplace from "./Marketplace.svelte";
-  // import Wallet from "./collection/Wallet.svelte";
-  import Governance from "./Governance.svelte";
 
   let view = "Decks";
 
   const views = [
-    "Play", "Decks", "Collection", "Marketplace", "Leaderboards", "Governance"
+    "Play",
+    "Decks",
+    "Collection",
+    "Market",
+    "Leaderboards",
+    "Governance"
   ];
 </script>
 
@@ -97,7 +100,7 @@
           123123.465
         </div>
         <div class="header__currency">
-          <img class="icon" src="assets/currencies/som.png" alt="SOM"/>
+          <img class="icon" src="assets/currencies/som.png" alt="AURA"/>
           1324
         </div>
       </div>
@@ -110,14 +113,10 @@
         <Decks/>
       {:else if view === "Collection"}
         <Collection/>
-      {:else if view === "Marketplace"}
-        <Marketplace/>
+      {:else if view === "Market"}
+        <Market/>
       {:else if view === "Leaderboards"}
         <Leaderboards/>
-      {:else if view === "PatchNotes"}
-        <PatchNotes/>
-      <!-- {:else if view === "Wallet"}
-        <Wallet/> -->
       {:else if view === "Governance"}
         <Governance/>
       {/if}

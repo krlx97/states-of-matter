@@ -1,3 +1,5 @@
-import PlayerStatus from "./playerStatus.js";
+import CardKlass from "./CardKlass.js";
+import CardType from "./CardType.js";
+import PlayerStatus from "./PlayerStatus.js";
 
-export {PlayerStatus};
+export {CardKlass, CardType, PlayerStatus};

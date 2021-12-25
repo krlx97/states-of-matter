@@ -1,3 +1,7 @@
+<script lang="ts">
+  import {Button} from "components";
+</script>
+
 <style>
   .footer {
     padding: var(--spacing-sm) 0;
@@ -8,16 +12,16 @@
     box-sizing: border-box;
   }
   .icon {
-    height: 16px;
-    width: 16px;
+    height: 32px;
+    width: 32px;
   }
 </style>
 
 <footer class="footer">
-  <button class="btn--raised">
-    <img class="icon" src="assets/social-media/discussions.png" alt="Discussions"> Discussions
-  </button>
-  <button class="btn--raised">
-    <img class="icon" src="assets/social-media/discord.png" alt="Discord"> Discord
-  </button>
+  <Button style="icon" color="grey">
+    <img class="icon" src="assets/social-media/discussions.png" alt="Discussions"/>
+  </Button>
+  <Button style="icon" color="grey">
+    <img class="icon" src="assets/social-media/discord.png" alt="Discord"/>
+  </Button>
 </footer>

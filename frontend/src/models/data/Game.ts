@@ -1,4 +1,4 @@
-interface Hero {
+interface GameHero {
   id: number;
   health: number;
   maxHealth: number;
@@ -7,34 +7,49 @@ interface Hero {
   passive: number;
 }
 
-interface Card {
-  id: number;
+interface GameCard {
   gid: number;
+  id: number;
+  klass: number;
+  type: number;
+  damage?: number;
+  health?: number;
+  maxHealth?: number;
+  manaCost: number;
 }
 
-interface Fields {
-  magic: Card;
-  minionA: Card;
-  minionB: Card;
-  minionC: Card;
-  minionD: Card;
-  trap: Card;
+interface GameFields {
+  magic: undefined | GameCard;
+  minionA: undefined | GameCard;
+  minionB: undefined | GameCard;
+  minionC: undefined | GameCard;
+  minionD: undefined | GameCard;
+  trap: undefined | GameCard;
 }
 
-interface Player {
+interface GamePlayer {
   username: string;
-  hero: Hero;
-  fields: Fields;
-  deck: Array<Card>;
-  hand: Array<Card>;
-  graveyard: Array<Card>;
+  hero: GameHero;
+  fields: GameFields;
+  deck: Array<GameCard>;
+  hand: Array<GameCard>;
+  graveyard: Array<GameCard>;
+}
+
+interface GameOpponent {
+  username: string;
+  hero: GameHero;
+  fields: GameFields;
+  deck: number;
+  hand: number;
+  graveyard: Array<GameCard>;
 }
 
 interface Game {
   _id?: string;
   gameId: number;
-  playerA: Player;
-  playerB: Player;
+  player: GamePlayer;
+  opponent: GameOpponent;
 }
 
 export type {Game};

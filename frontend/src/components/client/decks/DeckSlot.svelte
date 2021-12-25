@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {ProgressBar} from "components";
+  import {Button, ProgressBar} from "components";
   import {miscService, socketService} from "services";
   import {playerStore} from "stores/data";
   import {decksStore} from "stores/view";
@@ -110,15 +110,15 @@
       <ProgressBar color={"purple"} progress={progress}/>
 
       <div class="deck__footer__actions">
-        <button class="btn--icon" on:click={changeDeckName}>
+        <Button style="icon" color="grey" on:click={changeDeckName}>
           <i class="fas fa-edit fa-fw"></i>
-        </button>
-        <button class="btn--icon" on:click={clearDeck}>
+        </Button>
+        <Button style="icon" color="grey" on:click={clearDeck}>
           <i class="fas fa-trash fa-fw"></i>
-        </button>
-        <button class="btn--icon" on:click={saveDeck}>
+        </Button>
+        <Button style="icon" color="grey" on:click={saveDeck}>
           <i class="fas fa-save fa-fw"></i>
-        </button>
+        </Button>
       </div>
     </div>
 

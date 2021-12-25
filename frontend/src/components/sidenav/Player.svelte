@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte";
+  import {Button} from "components";
   import {PlayerStatus} from "enums";
   import {socketService} from "services";
   import {playerStore} from "stores/data";
@@ -131,9 +132,9 @@
   </div>
 
   <div>
-    <button class="btn--icon-primary" on:click={logout}>
+    <Button style="icon" on:click={logout}>
       <i class="fas fa-power-off"></i>
-    </button>
+    </Button>
   </div>
 
 </div>

@@ -1,22 +1,23 @@
 <script lang="ts">
   import {cards} from "data";
-  import {gameStore, playerStore} from "stores/data";
+  import {game, selectedFieldCard, selectedHandCard} from "game/stores";
   import {CardComponent} from "components";
-
-  $: isntCurrentPlayerA = $gameStore.playerA.username !== $playerStore.username;
-  $: isntCurrentPlayerB = $gameStore.playerB.username !== $playerStore.username;
+  import {socketService} from "services";
 
   let field: string;
 
-  const getCard = (player: string, field: string): any => {
-    const card = cards.find(({id}) => id === $gameStore[player].fields[field].id);
-    const {gid} = $gameStore[player].fields[field];
+  const getCard = (field: string): any => {
+    const card = cards.find(({id}) => id === $game.opponent.fields[field].id);
+    const {gid} = $game.opponent.fields[field];
 
     return {...card, gid};
   };
 
-  const isntEmptyField = (player: string, field: string): boolean => {
-    return $gameStore[player].fields[field].gid !== 0;
+  const onAttackCard = (): void => {
+    socketService.emit("attackCard", {
+      attacker: `minion${$selectedFieldCard.field}`,
+      attacked: `minion${field}`
+    });
   };
 
   export {field};
@@ -26,45 +27,66 @@
   @import "../../../styles/mixins";
   @import "../../../styles/variables";
 
-  .minionfield {
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
+  .field {
+    height: $card-height;
+    width: $card-width;
     @include d-flex(row, center, center);
-    border: 1px solid rgb(var(--orange));
+    border: 1px solid $orange;
     box-sizing: border-box;
+    cursor: not-allowed;
   }
 </style>
 
-<div class="minionfield">
+<div class="field">
   {#if field === "A"}
-    {#if isntCurrentPlayerA && $gameStore.playerA.fields.minionA.gid !== 0}
-      <CardComponent card={getCard("playerA", "minionA")}/>
-    {:else if isntCurrentPlayerB && $gameStore.playerB.fields.minionA.gid !== 0}
-      <CardComponent card={getCard("playerB", "minionA")}/>
+    {#if $game.opponent.fields.minionA}
+      <div on:click={onAttackCard}>
+        <CardComponent
+          card={getCard("minionA")}
+          health={$game.opponent.fields.minionA.health}
+          damage={$game.opponent.fields.minionA.damage}
+          isHealthBarVisible={true}
+        />
+      </div>
     {:else}
       <span class="f--orange">Minion Field {field}</span>
     {/if}
   {:else if field === "B"}
-    {#if isntCurrentPlayerA && $gameStore.playerA.fields.minionB.gid !== 0}
-      <CardComponent card={getCard("playerA", "minionB")}/>
-    {:else if isntCurrentPlayerB && $gameStore.playerB.fields.minionB.gid !== 0}
-      <CardComponent card={getCard("playerB", "minionB")}/>
+    {#if $game.opponent.fields.minionB}
+      <div on:click={onAttackCard}>
+        <CardComponent
+          card={getCard("minionB")}
+          health={$game.opponent.fields.minionB.health}
+          damage={$game.opponent.fields.minionB.damage}
+          isHealthBarVisible={true}
+        />
+      </div>
     {:else}
       <span class="f--orange">Minion Field {field}</span>
     {/if}
   {:else if field === "C"}
-    {#if isntCurrentPlayerA && $gameStore.playerA.fields.minionC.gid !== 0}
-      <CardComponent card={getCard("playerA", "minionC")}/>
-    {:else if isntCurrentPlayerB && $gameStore.playerB.fields.minionC.gid !== 0}
-      <CardComponent card={getCard("playerB", "minionC")}/>
+    {#if $game.opponent.fields.minionC}
+      <div on:click={onAttackCard}>
+        <CardComponent
+          card={getCard("minionC")}
+          health={$game.opponent.fields.minionC.health}
+          damage={$game.opponent.fields.minionC.damage}
+          isHealthBarVisible={true}
+        />
+      </div>
     {:else}
       <span class="f--orange">Minion Field {field}</span>
     {/if}
   {:else if field === "D"}
-    {#if isntCurrentPlayerA && $gameStore.playerA.fields.minionD.gid !== 0}
-      <CardComponent card={getCard("playerA", "minionD")}/>
-    {:else if isntCurrentPlayerB && $gameStore.playerB.fields.minionD.gid !== 0}
-      <CardComponent card={getCard("playerB", "minionD")}/>
+    {#if $game.opponent.fields.minionD}
+      <div on:click={onAttackCard}>
+        <CardComponent
+          card={getCard("minionD")}
+          health={$game.opponent.fields.minionD.health}
+          damage={$game.opponent.fields.minionD.damage}
+          isHealthBarVisible={true}
+        />
+      </div>
     {:else}
       <span class="f--orange">Minion Field {field}</span>
     {/if}

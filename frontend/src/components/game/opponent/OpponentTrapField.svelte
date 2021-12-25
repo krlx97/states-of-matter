@@ -2,7 +2,7 @@
   @import "../../../styles/mixins";
   @import "../../../styles/variables";
 
-  .trapfield {
+  .field {
     height: calc($game-card-height + 32px);
     width: $game-card-width;
     @include d-flex(row, center, center);
@@ -11,6 +11,6 @@
   }
 </style>
 
-<div class="trapfield">
+<div class="field">
   <span class="f--red">Trap Field</span>
 </div>

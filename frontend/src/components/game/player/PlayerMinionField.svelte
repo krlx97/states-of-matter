@@ -2,32 +2,41 @@
   import {get} from "svelte/store";
   import {cards} from "data";
   import {socketService} from "services";
-  import {gameStore, playerStore} from "stores/data";
-  import {selectedHandCard} from "../stores";
+  import {game, selectedFieldCard, selectedHandCard} from "game/stores";
   import {CardComponent} from "components";
   import {CardType} from "enums";
-
-  $: isCurrentPlayerA = $gameStore.playerA.username === $playerStore.username;
-  $: isCurrentPlayerB = $gameStore.playerB.username === $playerStore.username;
 
   let field: string;
 
   const onPlayCard = (): void => {
+    if ($selectedHandCard.type !== CardType.MINION) { return; }
+
     const {gid, id} = get(selectedHandCard);
     socketService.emit("playCard", {field: `minion${field}`, gid, id});
+
+    selectedHandCard.update((store) => {
+      store.gid = 0;
+      store.id = 0;
+
+      return store;
+    });
   };
 
-  const getCard = (player: string, field: string): any => {
-    const card = cards.find(({id}) => id === $gameStore[player].fields[field].id);
-    const gid = $gameStore[player].fields[field].gid;
+  const getCard = (field: string): any => {
+    const card = cards.find(({id}) => id === $game.player.fields[field].id);
+    const gid = $game.player.fields[field].gid;
 
     return {...card, gid};
   };
 
-  $: _isntEmptyField = $gameStore
-
-  const isntEmptyField = (player: string, field: string): boolean => {
-    return $gameStore[player].fields[field].gid !== 0;
+  const onAttackSelect = (): void => {
+    if ($selectedFieldCard.field === field) {
+      selectedFieldCard.set({
+        field: ""
+      });
+    } else {
+      selectedFieldCard.set({field});
+    }
   };
 
   export {field};
@@ -38,14 +47,17 @@
   @import "../../../styles/variables";
 
   .minionfield {
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
+    height: $card-height;
+    width: $card-width;
     @include d-flex(row, center, center);
     background-color: $orange;
     box-shadow: $elevation-sm;
     cursor: not-allowed;
   }
 
+  .selected {
+    box-shadow: 0 0 4px 2px $purple;
+  }
   .summonable {
     animation: glow 1s ease-in-out infinite;
     cursor: pointer;
@@ -63,37 +75,59 @@
 
 <div
   class="minionfield"
-  class:summonable={$selectedHandCard.gid !== 0 && $selectedHandCard.type === CardType.MINION}
-  on:click={onPlayCard}>
+  class:summonable={$selectedHandCard.gid && $selectedHandCard.type === CardType.MINION}
+  class:selected={$selectedFieldCard.field === field}
+  on:click={onPlayCard}
+>
   {#if field === "A"}
-    {#if isCurrentPlayerA && $gameStore.playerA.fields.minionA.gid !== 0}
-      <CardComponent card={getCard("playerA", "minionA")}/>
-    {:else if isCurrentPlayerB && $gameStore.playerB.fields.minionA.gid !== 0}
-      <CardComponent card={getCard("playerB", "minionA")}/>
+    {#if $game.player.fields.minionA}
+      <div on:click={onAttackSelect}>
+        <CardComponent
+          card={getCard("minionA")}
+          health={$game.player.fields.minionA.health}
+          damage={$game.player.fields.minionA.damage}
+          isHealthBarVisible={true}
+        />
+      </div>
     {:else}
       <span>Minion Field {field}</span>
     {/if}
   {:else if field === "B"}
-    {#if isCurrentPlayerA && $gameStore.playerA.fields.minionB.gid !== 0}
-      <CardComponent card={getCard("playerA", "minionB")}/>
-    {:else if isCurrentPlayerB && $gameStore.playerB.fields.minionB.gid !== 0}
-      <CardComponent card={getCard("playerB", "minionB")}/>
+    {#if $game.player.fields.minionB}
+      <div on:click={onAttackSelect}>
+        <CardComponent
+          card={getCard("minionB")}
+          health={$game.player.fields.minionB.health}
+          damage={$game.player.fields.minionB.damage}
+          isHealthBarVisible={true}
+        />
+      </div>
     {:else}
       <span>Minion Field {field}</span>
     {/if}
   {:else if field === "C"}
-    {#if isCurrentPlayerA && $gameStore.playerA.fields.minionC.gid !== 0}
-      <CardComponent card={getCard("playerA", "minionC")}/>
-    {:else if isCurrentPlayerB && $gameStore.playerB.fields.minionC.gid !== 0}
-      <CardComponent card={getCard("playerB", "minionC")}/>
+    {#if $game.player.fields.minionC}
+      <div on:click={onAttackSelect}>
+        <CardComponent
+          card={getCard("minionC")}
+          health={$game.player.fields.minionC.health}
+          damage={$game.player.fields.minionC.damage}
+          isHealthBarVisible={true}
+        />
+      </div>
     {:else}
       <span>Minion Field {field}</span>
     {/if}
   {:else if field === "D"}
-    {#if isCurrentPlayerA && $gameStore.playerA.fields.minionD.gid !== 0}
-      <CardComponent card={getCard("playerA", "minionD")}/>
-    {:else if isCurrentPlayerB && $gameStore.playerB.fields.minionD.gid !== 0}
-      <CardComponent card={getCard("playerB", "minionD")}/>
+    {#if $game.player.fields.minionD}
+      <div on:click={onAttackSelect}>
+        <CardComponent
+          card={getCard("minionD")}
+          health={$game.player.fields.minionD.health}
+          damage={$game.player.fields.minionD.damage}
+          isHealthBarVisible={true}
+        />
+      </div>
     {:else}
       <span>Minion Field {field}</span>
     {/if}

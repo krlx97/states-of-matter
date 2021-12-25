@@ -37,7 +37,8 @@
     <div
       class="avatar"
       class:selected={$playerStore.avatarId === avatar}
-      on:click={() => selectAvatar(avatar)}>
+      on:click={() => selectAvatar(avatar)}
+    >
       <img class="avatar__img" src="/assets/avatars/{avatar}.jpg" alt="Avatar {avatar}"/>
     </div>
   {/each}

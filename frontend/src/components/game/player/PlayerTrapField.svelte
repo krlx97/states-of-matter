@@ -1,6 +1,6 @@
 <script lang="ts">
   import {CardType} from "enums";
-  import {selectedHandCard} from "../stores";
+  import {selectedHandCard} from "game/stores";
 </script>
 
 <style lang="scss">
@@ -8,26 +8,19 @@
   @import "../../../styles/variables";
 
   .field {
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
-    @include d-flex(row, center, center);
+    height: $card-height;
+    width: $card-width;
+    @include flex($align-items: center, $justify-content: center);
     background-color: $red;
     box-shadow: $elevation-sm;
   }
 
-  .summonable {
-    animation: glow 1s ease-in-out infinite;
-  }
+  .summonable {animation: glow 1s ease-in-out infinite}
+
   @keyframes glow {
-    0% {
-      box-shadow: 0 0 0 0 rgba(var(--red), 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(var(--red), 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(var(--red), 0);
-    }
+    0%    {box-shadow: 0 0 0 0 rgba(var(--red), 0.4)}
+    70%   {box-shadow: 0 0 0 10px rgba(var(--red), 0)}
+    100%  {box-shadow: 0 0 0 0 rgba(var(--red), 0)}
   }
 </style>
 

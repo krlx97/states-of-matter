@@ -1,6 +1,7 @@
 import {get} from "svelte/store";
 import {socketService} from "services";
-import {gameStore, lobbyStore, playerStore} from "stores/data";
+import {lobbyStore, playerStore} from "stores/data";
+import {game} from "game/stores";
 import {socialStore} from "stores/view";
 
 import type {Game, Lobby, Player} from "models/data";
@@ -14,7 +15,7 @@ interface Params {
 }
 
 const signin = (params: Params): void => {
-  const {player, friends, lobby, game} = params;
+  const {player, friends, lobby, game: gameView} = params;
   const {username, status} = player;
   const {privateKey} = get(playerStore);
 
@@ -30,7 +31,7 @@ const signin = (params: Params): void => {
   });
 
   if (lobby) { lobbyStore.set(lobby); }
-  if (game) { gameStore.set(game); }
+  if (game) { game.set(gameView); }
 
   socketService.emit("updateFriend", {username, status});
 };

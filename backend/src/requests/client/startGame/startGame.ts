@@ -1,6 +1,8 @@
 import { PlayerStatus } from "../../../enums/index.js";
+import cards from "../../../data/cards.js";
 import type {Request} from "../../../models";
 import type {StartGame} from "./startGame.models";
+import type {GamePlayerCard, Game} from "../../../services/GameService/GameService.models";
 
 const startGame: Request<StartGame> = async (services, params) => {
   const {gameService, ioService, lobbyService, playerService} = services;
@@ -28,65 +30,72 @@ const startGame: Request<StartGame> = async (services, params) => {
     }, {returnDocument: "after"})
   ]);
 
-  if (!playerA || !playerB) { return; }
+  if (!playerA || !playerB) return;
 
-  let gid = 0;
-
-  const playerADeck = [];
-  let playerAHand = [];
-  const playerBDeck = [];
-  let playerBHand = [];
+  let gid = 1;
+  let playerADeck: Array<GamePlayerCard> = [];
+  const playerAHand: Array<GamePlayerCard> = [];
+  let playerBDeck: Array<GamePlayerCard> = [];
+  const playerBHand: Array<GamePlayerCard> = [];
 
   for (let i = 0; i < playerA.decks[playerA.deckId].cards.length; i += 1) {
     let id = playerA.decks[playerA.deckId].cards[i].id;
 
-    playerADeck.push({gid, id});
+    const card = cards.find((card) => card.id === id);
+
+    if (!card) return;
+
+    if (card.health) {
+      playerADeck.push({gid, ...card, maxHealth: card.health});
+    } else {
+      playerADeck.push({gid, ...card});
+    }
+
     gid += 1;
 
     if (playerA.decks[playerA.deckId].cards[i].amount > 1) {
-      playerADeck.push({gid, id});
+      if (card.health) {
+        playerADeck.push({gid, ...card, maxHealth: card.health});
+      } else {
+        playerADeck.push({gid, ...card});
+      }
+
       gid += 1;
     }
   }
+
   for (let i = 0; i < playerB.decks[playerB.deckId].cards.length; i += 1) {
     let id = playerB.decks[playerB.deckId].cards[i].id;
+    const card = cards.find((card) => card.id === id);
 
-    playerBDeck.push({gid, id});
+    if (!card) return;
+
+    if (card.health) {
+      playerBDeck.push({gid, ...card, maxHealth: card.health});
+    } else {
+      playerBDeck.push({gid, ...card});
+    }
+
     gid += 1;
 
     if (playerB.decks[playerB.deckId].cards[i].amount > 1) {
-      playerBDeck.push({gid, id});
+      if (card.health) {
+        playerBDeck.push({gid, ...card, maxHealth: card.health});
+      } else {
+        playerBDeck.push({gid, ...card});
+      }
+
       gid += 1;
     }
   }
 
-  playerAHand = [
-    playerADeck[25],
-    playerADeck[26],
-    playerADeck[27],
-    playerADeck[28],
-    playerADeck[29],
-  ];
-  playerADeck.pop();
-  playerADeck.pop();
-  playerADeck.pop();
-  playerADeck.pop();
-  playerADeck.pop();
+  playerAHand.push(...playerADeck.slice(-5));
+  playerBHand.push(...playerBDeck.slice(-5));
 
-  playerBHand = [
-    playerBDeck[25],
-    playerBDeck[26],
-    playerBDeck[27],
-    playerBDeck[28],
-    playerBDeck[29],
-  ];
-  playerBDeck.pop();
-  playerBDeck.pop();
-  playerBDeck.pop();
-  playerBDeck.pop();
-  playerBDeck.pop();
+  playerADeck = playerADeck.slice(0, -5);
+  playerBDeck = playerBDeck.slice(0, -5);
 
-  const game = {
+  const game: Game = {
     gameId: lobby.lobbyId,
     playerA: {
       username: lobby.host.username,
@@ -96,16 +105,15 @@ const startGame: Request<StartGame> = async (services, params) => {
         maxHealth: 600,
         mana: 100,
         maxMana: 100,
-        passive: 25,
-        passiveStacks: 0
+        passive: 25
       },
       fields: {
-        magic: {gid: 0, id: 0},
-        minionA: {gid: 0, id: 0},
-        minionB: {gid: 0, id: 0},
-        minionC: {gid: 0, id: 0},
-        minionD: {gid: 0, id: 0},
-        trap: {gid: 0, id: 0},
+        magic: undefined,
+        minionA: undefined,
+        minionB: undefined,
+        minionC: undefined,
+        minionD: undefined,
+        trap: undefined,
       },
       deck: playerADeck,
       hand: playerAHand,
@@ -119,16 +127,15 @@ const startGame: Request<StartGame> = async (services, params) => {
         maxHealth: 600,
         mana: 100,
         maxMana: 100,
-        passive: 25,
-        passiveStacks: 0
+        passive: 25
       },
       fields: {
-        magic: {gid: 0, id: 0},
-        minionA: {gid: 0, id: 0},
-        minionB: {gid: 0, id: 0},
-        minionC: {gid: 0, id: 0},
-        minionD: {gid: 0, id: 0},
-        trap: {gid: 0, id: 0},
+        magic: undefined,
+        minionA: undefined,
+        minionB: undefined,
+        minionC: undefined,
+        minionD: undefined,
+        trap: undefined,
       },
       deck: playerBDeck,
       hand: playerBHand,
@@ -140,14 +147,114 @@ const startGame: Request<StartGame> = async (services, params) => {
 
   if (!isInserted) { return; }
 
-  ioService.emit("startGameSender", {game});
+  const gameSender = {
+    gameId: lobby.lobbyId,
+    player: {
+      username: lobby.host.username,
+      hero: {
+        id: 2, // should be deck.klass
+        health: 600,
+        maxHealth: 600,
+        mana: 100,
+        maxMana: 100,
+        passive: 25
+      },
+      fields: {
+        magic: undefined,
+        minionA: undefined,
+        minionB: undefined,
+        minionC: undefined,
+        minionD: undefined,
+        trap: undefined
+      },
+      deck: playerADeck,
+      hand: playerAHand,
+      graveyard: []
+    },
+    opponent: {
+      username: lobby.challengee.username,
+      hero: {
+        id: 4, // should be deck.klass
+        health: 600,
+        maxHealth: 600,
+        mana: 100,
+        maxMana: 100,
+        passive: 25
+      },
+      fields: {
+        magic: undefined,
+        minionA: undefined,
+        minionB: undefined,
+        minionC: undefined,
+        minionD: undefined,
+        trap: undefined
+      },
+      deck: playerBDeck.length,
+      hand: playerBHand.length,
+      graveyard: []
+    }
+  };
+
+  const gameReceiver = {
+    gameId: lobby.lobbyId,
+    player: {
+      username: lobby.challengee.username,
+      hero: {
+        id: 4, // should be deck.klass
+        health: 600,
+        maxHealth: 600,
+        mana: 100,
+        maxMana: 100,
+        passive: 25
+      },
+      fields: {
+        magic: undefined,
+        minionA: undefined,
+        minionB: undefined,
+        minionC: undefined,
+        minionD: undefined,
+        trap: undefined,
+      },
+      deck: playerBDeck,
+      hand: playerBHand,
+      graveyard: []
+    },
+    opponent: {
+      username: lobby.host.username,
+      hero: {
+        id: 2, // should be deck.klass
+        health: 600,
+        maxHealth: 600,
+        mana: 100,
+        maxMana: 100,
+        passive: 25
+      },
+      fields: {
+        magic: undefined,
+        minionA: undefined,
+        minionB: undefined,
+        minionC: undefined,
+        minionD: undefined,
+        trap: undefined,
+      },
+      deck: playerADeck.length,
+      hand: playerAHand.length,
+      graveyard: []
+    }
+  };
+
+  ioService.emit("startGameSender", {
+    game: gameSender
+  });
 
   const {username} = lobby.challengee;
   const challengee = await playerService.find({username});
 
   if (!challengee || !challengee.socketId) { return; }
 
-  ioService.emitTo(challengee.socketId, "startGameReceiver", {game});
+  ioService.emitTo(challengee.socketId, "startGameReceiver", {
+    game: gameReceiver
+  });
 };
 
 export default startGame;

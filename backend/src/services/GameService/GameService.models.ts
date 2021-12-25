@@ -1,6 +1,6 @@
 import type {Document} from "mongodb";
 
-interface Hero {
+interface GamePlayerHero {
   id: number;
   health: number;
   maxHealth: number;
@@ -9,33 +9,45 @@ interface Hero {
   passive: number;
 }
 
-interface Card {
-  id: number;
+interface GamePlayerFields {
+  magic: undefined | GamePlayerCard;
+  minionA: undefined | GamePlayerCard;
+  minionB: undefined | GamePlayerCard;
+  minionC: undefined | GamePlayerCard;
+  minionD: undefined | GamePlayerCard;
+  trap: undefined | GamePlayerCard;
+}
+
+interface GamePlayerCard {
   gid: number;
+  id: number;
+  klass: number;
+  type: number;
+  damage?: number;
+  health?: number;
+  maxHealth?: number;
+  manaCost: number;
 }
 
-interface Fields {
-  magic: Card;
-  minionA: Card;
-  minionB: Card;
-  minionC: Card;
-  minionD: Card;
-  trap: Card;
-}
-
-interface Player {
+interface GamePlayer {
   username: string;
-  hero: Hero;
-  fields: Fields;
-  deck: Array<Card>;
-  hand: Array<Card>;
-  graveyard: Array<Card>;
+  hero: GamePlayerHero;
+  fields: GamePlayerFields;
+  deck: Array<GamePlayerCard>;
+  hand: Array<GamePlayerCard>;
+  graveyard: Array<GamePlayerCard>;
 }
 
 interface Game extends Document {
   gameId: number;
-  playerA: Player;
-  playerB: Player;
+  playerA: GamePlayer;
+  playerB: GamePlayer;
 }
 
-export type {Game};
+export type {
+  GamePlayerHero,
+  GamePlayerFields,
+  GamePlayerCard,
+  GamePlayer,
+  Game
+};

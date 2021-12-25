@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {gameStore, playerStore} from "stores/data";
+  import {game} from "game/stores";
 </script>
 
 <style lang="scss">
@@ -11,32 +11,24 @@
     display: flex;
   }
   .player__hand__card {
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
+    height: $card-height;
+    width: $card-width;
     transition: transform 225ms cubic-bezier(0.455, 0.03, 0.515, 0.955);
   }
   .player__hand__card:not(:first-child) {
-    margin-left: math.div(-$game-card-width, 2);
+    margin-left: math.div(-$card-width, 2);
   }
 
   .player__deck__img {
-    height: calc($game-card-height + 32px);
-    width: $game-card-width;
+    height: $card-height;
+    width: $card-width;
   }
 </style>
 
 <div class="player__hand">
-  {#if $gameStore.playerA.username !== $playerStore.username}
-    {#each $gameStore.playerA.hand as {id, gid}}
-      <div class="player__hand__card">
-        <img class="player__deck__img" src="assets/card-backs/default.jpg" alt="">
-      </div>
-    {/each}
-  {:else if $gameStore.playerB.username !== $playerStore.username}
-    {#each $gameStore.playerB.hand as {id, gid}}
-      <div class="player__hand__card">
-        <img class="player__deck__img" src="assets/card-backs/default.jpg" alt="">
-      </div>
-    {/each}
-  {/if}
+  {#each Array($game.opponent.hand) as _}
+    <div class="player__hand__card">
+      <img class="player__deck__img" src="assets/card-backs/default.jpg" alt="">
+    </div>
+  {/each}
 </div>

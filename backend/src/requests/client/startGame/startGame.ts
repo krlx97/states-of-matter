@@ -1,8 +1,18 @@
-import { PlayerStatus } from "../../../enums/index.js";
+import {randomInt} from "crypto";
+import {PlayerStatus} from "../../../enums/index.js";
 import cards from "../../../data/cards.js";
 import type {Request} from "../../../models";
 import type {StartGame} from "./startGame.models";
 import type {GamePlayerCard, Game} from "../../../services/GameService/GameService.models";
+
+function shuffleArray(array: Array<GamePlayerCard>) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = randomInt(0, i + 1);
+    const temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+}
 
 const startGame: Request<StartGame> = async (services, params) => {
   const {gameService, ioService, lobbyService, playerService} = services;
@@ -88,6 +98,10 @@ const startGame: Request<StartGame> = async (services, params) => {
       gid += 1;
     }
   }
+
+  // playerB.decks[playerB.deckId].cards.
+  shuffleArray(playerADeck)
+  shuffleArray(playerBDeck)
 
   playerAHand.push(...playerADeck.slice(-5));
   playerBHand.push(...playerBDeck.slice(-5));

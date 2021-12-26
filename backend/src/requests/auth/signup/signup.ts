@@ -6,6 +6,9 @@ const signup: Request<Signup> = async (services, params) => {
   const {blockchainService, ioService, playerService} = services;
   const {username, publicKey, privateKeyHash} = params;
 
+  const player = await playerService.find({username});
+  if (player) return;
+
   const [transaction, isInserted] = await Promise.all([
     blockchainService.transact("signup", {publicKey}),
     playerService.insert({

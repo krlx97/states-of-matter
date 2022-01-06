@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {Modal} from "components";
+  import {Button, FontAwesome, Modal, Text} from "components";
   import {socketService} from "services";
 
   let username = "";
@@ -17,10 +17,10 @@
 </style>
 
 <Modal>
-  <form>
+  <form on:submit|preventDefault={onAddFriend}>
     <input class="input--green" placeholder="Username" bind:value={username}>
-    <button class="btn--raised-accent" on:click={onAddFriend}>
-      <i class="fas fa-paper-plane fa-fw"></i> SEND
-    </button>
+    <Button type="submit">
+      <FontAwesome icon="paper-plane"/> <Text>SEND</Text>
+    </Button>
   </form>
 </Modal>

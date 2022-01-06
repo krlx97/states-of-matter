@@ -108,7 +108,7 @@
   <div class="player__main">
     <img
       class="player__main__img"
-      src="assets/avatars/{$playerStore.avatarId}.jpg"
+      src="assets/avatars/{$playerStore.avatarId}.png"
       alt="Avatar">
 
     <div class="player__main__bar">

@@ -74,6 +74,7 @@ const signin: Request<Signin> = async (services, params) => {
     if (player.username === game.playerA.username) {
       gameView = {
         gameId: game.gameId,
+        currentPlayer: game.currentPlayer,
         player: game.playerA,
         opponent: {
           ...game.playerB,
@@ -84,6 +85,7 @@ const signin: Request<Signin> = async (services, params) => {
     } else {
       gameView = {
         gameId: game.gameId,
+        currentPlayer: game.currentPlayer,
         player: game.playerB,
         opponent: {
           ...game.playerA,

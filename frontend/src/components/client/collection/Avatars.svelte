@@ -2,7 +2,7 @@
   import {socketService} from "services";
   import {playerStore} from "stores/data";
 
-  const avatars = [0, 1, 2];
+  const avatars = [0, 1, 2, 3, 4];
 
   const selectAvatar = (avatarId: number): void => {
     socketService.emit("setAvatar", {avatarId});
@@ -39,7 +39,7 @@
       class:selected={$playerStore.avatarId === avatar}
       on:click={() => selectAvatar(avatar)}
     >
-      <img class="avatar__img" src="/assets/avatars/{avatar}.jpg" alt="Avatar {avatar}"/>
+      <img class="avatar__img" src="/assets/avatars/{avatar}.png" alt="Avatar {avatar}"/>
     </div>
   {/each}
 </div>

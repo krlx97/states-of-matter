@@ -15,74 +15,74 @@ const cards: Array<Card> = [{
   id: 0,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  damage: 1,
-  health: 1,
-  manaCost: 1
+  damage: 10,
+  health: 70,
+  manaCost: 30
 }, {
   id: 1,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  damage: 2,
-  health: 2,
-  manaCost: 2
+  damage: 11,
+  health: 80,
+  manaCost: 35
 }, {
   id: 2,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  damage: 3,
-  health: 3,
-  manaCost: 3
+  damage: 12,
+  health: 90,
+  manaCost: 40
 }, {
   id: 3,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  damage: 4,
-  health: 4,
-  manaCost: 4
+  damage: 13,
+  health: 100,
+  manaCost: 45
 }, {
   id: 4,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  damage: 5,
-  health: 5,
-  manaCost: 5
+  damage: 14,
+  health: 110,
+  manaCost: 50
 }, {
   id: 5,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  damage: 6,
-  health: 6,
-  manaCost: 6
+  damage: 15,
+  health: 120,
+  manaCost: 55
 }, {
   id: 6,
   klass: CardKlass.NEUTRAL,
   type: CardType.MAGIC,
-  manaCost: 7
+  manaCost: 60
 }, {
   id: 7,
   klass: CardKlass.NEUTRAL,
   type: CardType.MAGIC,
-  manaCost: 8
+  manaCost: 60
 }, {
   id: 8,
   klass: CardKlass.NEUTRAL,
   type: CardType.MAGIC,
-  manaCost: 9
+  manaCost: 60
 }, {
   id: 9,
   klass: CardKlass.NEUTRAL,
   type: CardType.TRAP,
-  manaCost: 10
+  manaCost: 60
 }, {
   id: 10,
   klass: CardKlass.NEUTRAL,
   type: CardType.TRAP,
-  manaCost: 11
+  manaCost: 60
 }, {
   id: 11,
   klass: CardKlass.NEUTRAL,
   type: CardType.TRAP,
-  manaCost: 12
+  manaCost: 60
 }, {
   id: 50,
   klass: CardKlass.SOLID,

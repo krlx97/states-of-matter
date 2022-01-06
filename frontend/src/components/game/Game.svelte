@@ -2,13 +2,13 @@
   import {onDestroy, onMount} from "svelte";
   import {socketService} from "services";
   import responses from "game/responses";
-  import {game} from "game/stores";
-  import Opponent from "./opponent/Opponent.svelte";
-  import Player from "./player/Player.svelte";
+  import {gameStore} from "game/stores";
+  import Opponent from "./components/opponent/Opponent.svelte";
+  import Player from "./components/player/Player.svelte";
   import {Button} from "components";
 
   const onEndGame = (): void => {
-    const {gameId} = $game;
+    const {gameId} = $gameStore;
     socketService.emit("exitGame", {gameId});
   };
 
@@ -35,11 +35,11 @@
 </style>
 
 <div class="game">
-  <div class="game__btn">
+  <!-- <div class="game__btn">
     <Button on:click={onEndGame}>
       END GAME
     </Button>
-  </div>
+  </div> -->
 
   <Opponent/>
   <Player/>

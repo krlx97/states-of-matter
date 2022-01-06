@@ -41,6 +41,7 @@
     box-shadow: $elevation-lg;
     // overflow: hidden;
 
+    // &__content {width: 100%}
     &__content { width: calc(100% - 320px); }
     &__sidenav { width: 320px; }
   }

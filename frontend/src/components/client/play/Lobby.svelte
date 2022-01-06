@@ -42,19 +42,9 @@
   .challengee {
     justify-content: flex-end;
   }
-  .host__avatar, .challengee__avatar {
-    border-radius: 50%;
-  }
-  .host__avatar {
-    height: 64px;
-    width: 64px;
-    margin-right: var(--spacing-sm);
-  }
-  .challengee__avatar {
-    height: 64px;
-    width: 64px;
-    margin-left: var(--spacing-sm);
-  }
+  .host__avatar, .challengee__avatar {border-radius: 50%}
+  .host__avatar {margin-right: var(--spacing-sm)}
+  .challengee__avatar {margin-left: var(--spacing-sm)}
 
   .vs {
     margin: 0 var(--spacing-md);
@@ -73,7 +63,7 @@
     <div class="host">
       <img
         class="host__avatar"
-        src="assets/avatars/{$lobbyStore.host.avatarId}.jpg"
+        src="assets/avatars/{$lobbyStore.host.avatarId}.png"
         alt="Host avatar"
       />
 
@@ -97,7 +87,7 @@
 
       <img
         class="challengee__avatar"
-        src="assets/avatars/{$lobbyStore.challengee.username ? $lobbyStore.challengee.avatarId : "unknown"}.jpg"
+        src="assets/avatars/{$lobbyStore.challengee.username ? $lobbyStore.challengee.avatarId : "unknown"}.png"
         alt="Challengee avatar"
       />
     </div>

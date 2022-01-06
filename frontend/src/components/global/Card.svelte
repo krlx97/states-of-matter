@@ -1,7 +1,7 @@
 <script lang="ts">
-  import {ProgressBar} from "components";
+  import {ProgressBar, Text, Img} from "components";
   import {passives} from "data";
-  import {CardType} from "enums";
+  import {CardType, Klass} from "enums";
   import type {Card} from "models/view";
 
   let card: Card,
@@ -11,13 +11,19 @@
       isHealthBarVisible = false,
       passiveTooltip: HTMLElement;
 
-  const flip = () => { isFlipped = !isFlipped; };
+  let isNeutral = card.klass === Klass.NEUTRAL;
+  let isSolid = card.klass === Klass.SOLID;
+  let isLiquid = card.klass === Klass.LIQUID;
+  let isGas = card.klass === Klass.GAS;
+  let isPlasma = card.klass === Klass.PLASMA;
+
+  const flip = (): void => { isFlipped = !isFlipped; };
 
   const passiveMouseMove = (event: MouseEvent): void => {
     const {offsetX, offsetY} = event;
 
-    passiveTooltip.style.bottom = `calc(48px + ${-offsetY}px)`;
-    passiveTooltip.style.left = `calc(-80px + ${offsetX}px)`;
+    passiveTooltip.style.top = `calc(24px + ${offsetY}px)`;
+    passiveTooltip.style.left = `calc(-12px + ${offsetX}px)`;
   };
 
   export {card, health, damage, isHealthBarVisible};
@@ -27,8 +33,34 @@
   @import "../../styles/mixins";
   @import "../../styles/variables";
 
-  .scene { perspective: 1280px; }
-  .rotated { transform: rotateY(180deg); }
+  .scene {perspective: 1280px}
+  .rotated {transform: rotateY(180deg)}
+
+  .isNeutral {
+    // box-shadow: 0 0 4px 0 rgb(253, 253, 253);
+    color: rgb(253, 253, 253);
+    box-sizing: border-box;
+  }
+  .isSolid {
+    // box-shadow: 0 0 4px 0 rgb(255, 107, 107);
+    color: rgb(255, 107, 107);
+    box-sizing: border-box;
+  }
+  .isLiquid {
+    // box-shadow: 0 0 4px 0 rgb(176, 230, 255);
+    color: rgb(176, 230, 255);
+    box-sizing: border-box;
+  }
+  .isGas {
+    // box-shadow: 0 0 4px 0 rgb(168, 222, 84);
+    color: rgb(168, 222, 84);
+    box-sizing: border-box;
+  }
+  .isPlasma {
+    // box-shadow: 0 0 4px 0 rgb(179, 104, 243);
+    color: rgb(179, 104, 243);
+    box-sizing: border-box;
+  }
 
   .card {
     position: relative;
@@ -36,12 +68,11 @@
     width: $card-width;
     transform-style: preserve-3d;
     transform-origin: center center;
-    box-shadow: $elevation-sm;
-    box-sizing: border-box;
+    // box-shadow: $elevation-sm;
     transition: box-shadow 225ms ease-in-out, transform 450ms $ease-in-out-quart;
 
     &:hover {
-      box-shadow: $elevation-lg;
+      // box-shadow: $elevation-lg;
       cursor: pointer;
     }
 
@@ -57,6 +88,7 @@
 
       &__img {
         height: $card-height;
+        width: $card-width;
       }
     }
     &--front {
@@ -66,22 +98,23 @@
 
     &__bar {
       position: absolute;
-      bottom: 36px;
+      bottom: 48px;
       left: 50%;
       width: 80%;
       box-shadow: $elevation-sm;
       transform: translateX(-50%);
     }
 
-    &__img {
-      display: block;
-      height: $card-img-height;
-      width: $card-img-width;
+    &__header {
+      height: 36px;
+      @include flex($align-items: center);
+      background-color: $dark-grey;
+      padding-left: 4px;
     }
 
     &__attrs {
-      height: 32px;
-      @include d-flex(row, center, center);
+      height: 36px;
+      @include flex($justify-content: space-evenly);
       background-color: $dark-grey;
     }
   }
@@ -89,66 +122,74 @@
   .tooltip2 {
     display: none;
     position: absolute;
-    bottom: 0;
-    left: 100%;
-    width: 160px;
-    padding: $spacing-sm;
-    background-color: $light-grey;
-    box-shadow: $elevation-lg;
-    box-sizing: border-box;
-    font-size: $font-sm;
-  }
-
-  .tooltip {
-    display: none;
-    position: absolute;
     top: 0;
-    left: 100%;
-    width: 128px;
-    padding: $spacing-sm;
+    left: 0;
+    width: 144px;
+    padding: $spacing-xsm;
     background-color: $light-grey;
     box-shadow: $elevation-lg;
     box-sizing: border-box;
-    font-size: $font-md;
+    z-index: 100;
   }
 
   .stat {
     position: relative;
-    height: 32px;
-    width: 32px;
     @include d-flex(column, center, center);
-    font-size: $font-sm;
 
     span {
       color: white;
     }
     &:last-child { margin-bottom: 0; }
 
-    &__type {
-      color: white;
-      &:hover .tooltip { display: initial; }
-    }
-    &__damage { color: $orange }
-    &__health { color: $green }
-    &__mana { color: $blue }
-    &__solid { color: $solid }
-    &__liquid { color: $liquid }
-    &__gas { color: $gas }
-    &__plasma {
-      color: $plasma;
-      &:hover .tooltip2 {display: initial}
-    }
+    &__type { position: relative; &:hover .tooltip2 {display: initial} z-index: 101; margin-right: 4px; }
+    &__damage { &:hover .tooltip2 {display: initial} }
+    &__health { &:hover .tooltip2 {display: initial} }
+    &__mana { &:hover .tooltip2 {display: initial} }
+    &__solid { &:hover .tooltip2 {display: initial} }
+    &__liquid { &:hover .tooltip2 {display: initial} }
+    &__gas { &:hover .tooltip2 {display: initial} }
+    &__plasma { &:hover .tooltip2 {display: initial} }
   }
 </style>
 
 <div class="scene" on:contextmenu|preventDefault={flip}>
   <div class="card" class:rotated={isFlipped}>
     <div class="card--front">
-      <img
-        class="card__img"
-        src="assets/cards/{card.klass}/{card.id}.jpg"
-        alt={card.name}
-      />
+      <div class="card__header">
+
+        <div class="stat__type" on:mousemove={passiveMouseMove}>
+
+          {#if card.type === CardType.MINION}
+            <Img src="attrs/minion.png" alt="Minion"/>
+          {:else if card.type === CardType.MAGIC}
+            <Img src="attrs/magic.png" alt="Magic"/>
+          {:else}
+            <Img src="attrs/trap.png" alt="Trap"/>
+          {/if}
+
+          <div class="tooltip2" bind:this={passiveTooltip}>
+            <Text color="purple" size="xsm">Passive:</Text>
+            <br/>
+            {#if card.klass !== Klass.NEUTRAL}
+              <Text size="sm">
+                {@html passives.find((passive) => passive.klass === card.klass).text}
+              </Text>
+            {:else}
+              <Text size="sm">No passive.</Text>
+            {/if}
+            <hr/>
+            <Text color="green" size="xsm">Effect:</Text>
+            <br/>
+            <Text size="sm">{@html card.effect}</Text>
+          </div>
+
+        </div>
+
+        <span class:isNeutral class:isSolid class:isLiquid class:isGas class:isPlasma>{card.name}</span>
+
+      </div>
+
+      <Img src="cards/{card.klass}/{card.id}.jpg" alt={card.name}/>
 
       {#if isHealthBarVisible}
         <div class="card__bar">
@@ -157,45 +198,47 @@
       {/if}
 
       <div class="card__attrs">
-        <div class="stat stat__type">
-          <i
-            class="fas fa-fw"
-            class:fa-star={card.type === CardType.MINION}
-            class:fa-magic={card.type === CardType.MAGIC}
-            class:fa-skull-crossbones={card.type === CardType.TRAP}>
-          </i>
-
-          <div class="tooltip">
-            <h3>
-              {card.name}
-            </h3>
-            {@html card.effect}
-          </div>
-        </div>
 
         <div class="stat stat__mana">
-          <i class="fas fa-battery-half fa-fw"></i> <span>7</span>
+          <Img src="attrs/manacost.png" alt="Mana Cost"/>
+          <Text size="xsm">{card.manaCost}</Text>
         </div>
 
         {#if card.type === CardType.MINION}
           <div class="stat stat__health">
-            <i class="fas fa-heart fa-fw"></i> <span>{health || card.health}</span>
-          </div>
-          <div class="stat stat__damage">
-            <i class="fas fa-fire fa-fw"></i> <span>{damage || card.damage}</span>
+            <Img src="attrs/health.png" alt="Health"/>
+            <Text size="xsm">{health || card.health}</Text>
           </div>
 
-          {#if card.klass === 1}
-            <div class="stat stat__solid">
-              <i class="fas fa-shield-alt fa-fw"></i> <span>4</span>
+          <div class="stat stat__damage">
+            <Img src="attrs/damage.png" alt="Damage"/>
+            <Text size="xsm">{damage || card.damage}</Text>
+          </div>
+
+          <!-- {#if card.klass === 1}
+            <div class="stat stat__solid" on:mousemove={passiveMouseMove}>
+              <Img src="attrs/solid.png" alt="Solid"/>
+              <Text>4</Text>
+
+              <div class="tooltip2" bind:this={passiveTooltip}>
+                {@html passives.find((passive) => passive.klass === card.klass).text}
+              </div>
             </div>
           {:else if card.klass === 2}
-            <div class="stat stat__liquid">
+            <div class="stat stat__liquid" on:mousemove={passiveMouseMove}>
               <i class="fas fa-tint fa-fw"></i> <span>4</span>
+
+              <div class="tooltip2" bind:this={passiveTooltip}>
+                {@html passives.find((passive) => passive.klass === card.klass).text}
+              </div>
             </div>
           {:else if card.klass === 3}
-            <div class="stat stat__gas">
+            <div class="stat stat__gas" on:mousemove={passiveMouseMove}>
               <i class="fas fa-radiation fa-fw"></i> <span>4</span>
+
+              <div class="tooltip2" bind:this={passiveTooltip}>
+                {@html passives.find((passive) => passive.klass === card.klass).text}
+              </div>
             </div>
           {:else if card.klass === 4}
             <div class="stat stat__plasma" on:mousemove={passiveMouseMove}>
@@ -205,17 +248,13 @@
                 {@html passives.find((passive) => passive.klass === card.klass).text}
               </div>
             </div>
-          {/if}
+          {/if} -->
         {/if}
       </div>
     </div>
 
     <div class="card--back">
-      <img
-        class="card--back__img"
-        src="assets/card-backs/default.jpg"
-        alt="Card back"
-      />
+      <Img src="card-backs/default.jpg" alt="Card back"/>
     </div>
   </div>
 </div>

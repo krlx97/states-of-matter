@@ -5,7 +5,7 @@ import type {Request} from "../../../models";
 import type {StartGame} from "./startGame.models";
 import type {GamePlayerCard, Game} from "../../../services/GameService/GameService.models";
 
-function shuffleArray(array: Array<GamePlayerCard>) {
+function shuffleArray (array: Array<GamePlayerCard>) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = randomInt(0, i + 1);
     const temp = array[i];
@@ -111,6 +111,7 @@ const startGame: Request<StartGame> = async (services, params) => {
 
   const game: Game = {
     gameId: lobby.lobbyId,
+    currentPlayer: lobby.host.username,
     playerA: {
       username: lobby.host.username,
       hero: {
@@ -119,6 +120,7 @@ const startGame: Request<StartGame> = async (services, params) => {
         maxHealth: 600,
         mana: 100,
         maxMana: 100,
+        damage: 30,
         passive: 25
       },
       fields: {
@@ -141,6 +143,7 @@ const startGame: Request<StartGame> = async (services, params) => {
         maxHealth: 600,
         mana: 100,
         maxMana: 100,
+        damage: 20,
         passive: 25
       },
       fields: {
@@ -163,6 +166,7 @@ const startGame: Request<StartGame> = async (services, params) => {
 
   const gameSender = {
     gameId: lobby.lobbyId,
+    currentPlayer: lobby.host.username,
     player: {
       username: lobby.host.username,
       hero: {
@@ -171,6 +175,7 @@ const startGame: Request<StartGame> = async (services, params) => {
         maxHealth: 600,
         mana: 100,
         maxMana: 100,
+        damage: 30,
         passive: 25
       },
       fields: {
@@ -193,6 +198,7 @@ const startGame: Request<StartGame> = async (services, params) => {
         maxHealth: 600,
         mana: 100,
         maxMana: 100,
+        damage: 20,
         passive: 25
       },
       fields: {
@@ -211,6 +217,7 @@ const startGame: Request<StartGame> = async (services, params) => {
 
   const gameReceiver = {
     gameId: lobby.lobbyId,
+    currentPlayer: lobby.host.username,
     player: {
       username: lobby.challengee.username,
       hero: {
@@ -219,6 +226,7 @@ const startGame: Request<StartGame> = async (services, params) => {
         maxHealth: 600,
         mana: 100,
         maxMana: 100,
+        damage: 20,
         passive: 25
       },
       fields: {
@@ -241,6 +249,7 @@ const startGame: Request<StartGame> = async (services, params) => {
         maxHealth: 600,
         mana: 100,
         maxMana: 100,
+        damage: 30,
         passive: 25
       },
       fields: {

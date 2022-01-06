@@ -3,19 +3,25 @@
 $game-card-height: 180px;
 $game-card-width: 150px;
 
+
+
+
+
 // 5:6, 1920x1080
-$card-img-height: 180px;
-$card-img-width: 150px;
+$card-img-height: 144px;
+$card-img-width: 144px;
 
-$card-footer-height: 32px;
-$card-footer-width: 150px;
+$card-footer-height: 36px;
+$card-footer-width: 144px;
 
-$card-height: calc(180px + 32px);
-$card-width: 150px;
+$card-height: 216px;
+$card-width: 144px;
 
-$spacing-sm: 0.7em;
-$spacing-md: 0.8em;
-$spacing-lg: 1em;
+
+
+
+
+
 
 $solid: rgb(241, 186, 88);
 $liquid: rgb(121, 108, 255);
@@ -33,9 +39,17 @@ $dark-grey: rgb(32, 32, 32);
 $grey: rgb(48, 48, 48);
 $light-grey: rgb(64, 64, 64);
 
-$font-sm: 0.7rem;
-$font-md: 0.8rem;
-$font-lg: 1rem;
+$spacing-xsm: 0.75em;
+$spacing-sm: 0.875em;
+$spacing-md: 1em;
+$spacing-lg: 1.125em;
+$spacing-xlg: 1.25em;
+
+$font-xsm: 0.75rem;
+$font-sm: 0.875rem;
+$font-md: 1rem;
+$font-lg: 1.125rem;
+$font-xlg: 1.25rem;
 
 $elevation-sm: 0 3px 1px -2px rgba(0 0 0 / 20%), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
 $elevation-md:

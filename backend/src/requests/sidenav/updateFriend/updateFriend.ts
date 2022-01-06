@@ -1,11 +1,8 @@
 import type {Request} from "../../../models";
-import type {UpdateFriend} from "./updateFriend.models";
 
-const updateFriend: Request<UpdateFriend> = async (services, params) => {
+const updateFriend: Request = async (services) => {
   const {ioService, playerService} = services;
-  // const {username} = params;
   const {socketId} = ioService;
-
   const player = await playerService.find({socketId});
 
   if (!player) { return; }

@@ -6,6 +6,7 @@ interface GamePlayerHero {
   maxHealth: number;
   mana: number;
   maxMana: number;
+  damage: number;
   passive: number;
 }
 
@@ -40,6 +41,7 @@ interface GamePlayer {
 
 interface Game extends Document {
   gameId: number;
+  currentPlayer: string;
   playerA: GamePlayer;
   playerB: GamePlayer;
 }

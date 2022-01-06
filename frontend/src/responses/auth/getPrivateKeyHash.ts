@@ -1,10 +1,11 @@
 import {get} from "svelte/store";
 import {cryptoService, eccService, miscService, socketService} from "services";
 import {authStore, playerStore} from "stores/data";
+import type {Res} from "models";
 
 interface Params { privateKeyHash: string; }
 
-const getPrivateKeyHash = (params: Params): void => {
+const getPrivateKeyHash: Res<Params> = (params) => {
   const {privateKeyHash} = params;
   const {username, password} = get(authStore).signinForm;
   const privateKey = cryptoService.decrypt(privateKeyHash, password);

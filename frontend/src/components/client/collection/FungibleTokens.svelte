@@ -1,7 +1,8 @@
 <script lang="ts">
   const tokens = [
-    {name: "Telos", token: "TLOS", amount: 1337.1337},
-    {name: "Fragments of Matter", token: "FOM", amount: 61234.1234},
+    {name: "Telos", token: "tlos", amount: 1337.1337},
+    {name: "EOS", token: "eos", amount: 420.69},
+    {name: "State of Matter", token: "somt", amount: 61234.1234},
     {name: "Atmos", token: "ATMOS", amount: 3490.1234}
   ];
 </script>
@@ -28,8 +29,8 @@
       &:last-child { margin-bottom: 0; }
 
       &__img {
-        height: 48px;
-        width: 48px;
+        // height: 48px;
+        // width: 48px;
         margin-right: $spacing-md;
       }
 

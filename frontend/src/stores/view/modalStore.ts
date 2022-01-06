@@ -11,6 +11,7 @@ interface Modals {
   setDeckKlass: boolean;
   tip: boolean;
   unfriend: boolean;
+  graveyard: boolean;
 }
 interface ModalStore {
   data: any;
@@ -29,7 +30,8 @@ const modalStore: Writable<ModalStore> = writable({
     joinLobby: false,
     setDeckKlass: false,
     tip: false,
-    unfriend: false
+    unfriend: false,
+    graveyard: false
   }
 });
 

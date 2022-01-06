@@ -53,8 +53,7 @@
     }
 
     &__img {
-      height: 64px;
-      width: 64px;
+      
       cursor: pointer;
 
       // border: 1px solid red;
@@ -90,7 +89,7 @@
 </style>
 
 <div class="deck" class:selected={deck.id === $playerStore.deckId}>
-  <img class="deck__img" src="assets/classes/{deck.klass}.png" alt="Class" on:click={selectDeck}/>
+  <img class="deck__img" src="assets/classes/64/{deck.klass}.png" alt="Class" on:click={selectDeck}/>
 
   <div class="deck__footer">
     <div class="deck__footer__info">

@@ -28,7 +28,7 @@ const playCard: Request<PlayCard> = async (services, params) => {
 
     if (!handCard) { return; }
     if (fields[field]) { return; }
-    if (!handCard.manaCost || handCard.manaCost >= hero.mana) { return; }
+    if (!handCard.manaCost || handCard.manaCost > hero.mana) { return; }
 
     hero.mana -= handCard.manaCost;
     fields[field] = handCard;
@@ -46,7 +46,7 @@ const playCard: Request<PlayCard> = async (services, params) => {
 
     if (!handCard) { return; }
     if (fields[field]) { return; }
-    if (!handCard.manaCost || handCard.manaCost >= hero.mana) { return; }
+    if (!handCard.manaCost || handCard.manaCost > hero.mana) { return; }
 
     hero.mana -= handCard.manaCost;
     fields[field] = handCard;

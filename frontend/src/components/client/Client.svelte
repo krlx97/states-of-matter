@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {Text} from "components";
   import Governance from "./Governance.svelte";
   import Leaderboards from "./Leaderboards.svelte";
   import Market from "./Market.svelte";
@@ -19,6 +20,9 @@
 </script>
 
 <style lang="scss">
+  @import "../../styles/variables";
+  @import "../../styles/mixins";
+
   .client {
     position: relative;
     height: 100%;
@@ -33,7 +37,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 2px solid rgb(var(--light-grey));
+    border-bottom: 2px solid $light-grey;
     box-sizing: border-box;
   }
   .client__container__view {
@@ -49,35 +53,22 @@
 
   }
   .link--active {
-    border-bottom: 2px solid rgb(var(--purple));
+    border-bottom: 2px solid $purple;
   }
-  li {
-    // border: 1px solid red;
-    padding: 1em;
-  }
+  li { padding: 1em }
   li:hover {
-    background-color: rgb(var(--purple));
+    background-color: $purple;
     cursor: pointer;
   }
 
-  .header__currencies {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    // border: 2px solid red;
-    margin-right: 2em;
-    padding: 1em;
-  }
+  .header__currencies { display: flex }
   .header__currency {
-    display: flex;
-    align-items: center;
-    font-size: 2rem;
+    width: 160px;
+    @include flex(column, center, center);
+    font-size: $font-lg;
 
-    .icon {
-      height: 48px;
-      width: 48px;
-      // margin-right: 0.7em;
+    img {
+      margin-bottom: $spacing-sm;
     }
   }
 </style>
@@ -96,12 +87,12 @@
       </nav>
       <div class="header__currencies">
         <div class="header__currency">
-          <img class="icon" src="assets/currencies/shard.png" alt="SOM"/>
-          123123.465
+          <img src="assets/currencies/somt.png" alt="SOMT"/>
+          <Text>123123456.4657</Text>
         </div>
         <div class="header__currency">
-          <img class="icon" src="assets/currencies/som.png" alt="AURA"/>
-          1324
+          <img src="assets/currencies/soma.png" alt="SOMA"/>
+          <Text>1324</Text>
         </div>
       </div>
     </div>

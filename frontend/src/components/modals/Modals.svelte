@@ -6,6 +6,7 @@
   import JoinLobby from "./JoinLobby.svelte";
   import Tip from "./Tip.svelte";
   import Unfriend from "./Unfriend.svelte";
+  import Graveyard from "./Graveyard.svelte";
 
   import modal from "stores/view/modalStore";
 </script>
@@ -38,4 +39,8 @@
 
 {#if $modal.list.unfriend}
   <Unfriend/>
+{/if}
+
+{#if $modal.list.graveyard}
+  <Graveyard/>
 {/if}

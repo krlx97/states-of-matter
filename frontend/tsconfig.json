@@ -19,8 +19,9 @@
 
       "models": ["models/module"],
 
-      "game/stores": ["components/game/shared/stores/module"],
-      "game/responses": ["components/game/shared/responses/module"]
+      "game/stores": ["components/game/stores/module"],
+      "game/responses": ["components/game/responses/module"],
+      "game/stores/*": ["components/game/stores/*"]
     }
   }
 }

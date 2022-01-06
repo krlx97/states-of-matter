@@ -1,15 +1,10 @@
 <script lang="ts">
-  import {createEventDispatcher} from "svelte";
-
   let style: "raised" | "outlined" | "icon" = "raised";
   let color: "purple" | "green" | "grey" = "purple";
+  let type: "button" | "submit" = "button";
   let disabled = false;
 
-  const dispatch = createEventDispatcher();
-
-  const onClick = (): void => { dispatch("click"); };
-
-  export {style, color, disabled};
+  export {style, color, type, disabled};
 </script>
 
 <style lang="scss">
@@ -40,10 +35,7 @@
 
   .btn--raised-purple {background-color: $purple}
   .btn--raised-green {background-color: $green}
-  .btn--raised-grey {
-    background-color: $dark-grey;
-    // color: $dark-grey;
-  }
+  .btn--raised-grey {background-color: $dark-grey}
   .btn--icon-purple {color: $purple}
   .btn--icon-green {color: $green}
   .btn--icon-grey {color: white}
@@ -58,6 +50,6 @@
   }
 </style>
 
-<button class={`btn--${style}-${color}`} on:click={onClick} {disabled}>
+<button class={`btn--${style}-${color}`} on:click|preventDefault {disabled}>
   <slot/>
 </button>

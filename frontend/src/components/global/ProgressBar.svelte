@@ -1,6 +1,6 @@
 <script lang="ts">
   let color: "purple" | "green" | "blue" = "purple";
-  let size: "sm" | "md" | "lg" = "sm";
+  let size: "sm" | "md" | "lg" = "md";
   let progress: number = 0;
 
   export {color, size, progress};
@@ -28,8 +28,8 @@
     }
   }
 
-  .green {background-color: $green}
-  .blue {background-color: $blue}
+  .green {background-color: rgb(133, 199, 0)}
+  .blue {background-color: rgb(0, 174, 191)}
   .purple {background-color: $purple}
 </style>
 

@@ -18,6 +18,7 @@ import startGame from "./client/startGame/startGame.js";
 // Game
 import attackCard from "./game/attackCard/attackCard.js";
 import drawCard from "./game/drawCard/drawCard.js";
+import endTurn from "./game/endTurn/endTurn.js";
 import exitGame from "./game/exitGame/exitGame.js";
 import playCard from "./game/playCard/playCard.js";
 // Sidenav
@@ -52,6 +53,7 @@ const events = {
   // Game
   attackCard,
   drawCard,
+  endTurn,
   exitGame,
   playCard,
   // Sidenav

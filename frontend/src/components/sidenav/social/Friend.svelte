@@ -71,7 +71,7 @@
     <div class="friend__main__avatar">
       <img
         class="friend__main__avatar__img"
-        src="assets/avatars/{friend.avatarId}.jpg"
+        src="assets/avatars/{friend.avatarId}.png"
         alt="{friend.username} avatar">
     </div>
 

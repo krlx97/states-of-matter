@@ -43,15 +43,10 @@
   --ease-in-out-quart: 0.76, 0, 0.24, 1;
 }
 
-/* God forgive me */
-* {
-  -webkit-font-smoothing: antialiased;
-}
-
 body {
   margin: 0;
   font-family: "Exo 2", sans-serif;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .f--purple {

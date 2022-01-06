@@ -2,7 +2,7 @@ import {get} from "svelte/store";
 import {PlayerStatus} from "enums";
 import {socketService} from "services";
 import {playerStore} from "stores/data";
-import {game} from "game/stores";
+import {gameStore} from "game/stores";
 
 interface Params { game: any; }
 
@@ -14,7 +14,7 @@ const startGameReceiver = (params: Params): void => {
     return player;
   });
 
-  game.set(params.game);
+  gameStore.set(params.game);
   socketService.emit("updateFriend", {username});
 };
 

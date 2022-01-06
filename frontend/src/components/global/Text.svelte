@@ -1,13 +1,16 @@
 <script lang="ts">
   let color: "white" | "purple" | "blue" | "red" | "green" | "yellow" | "orange" = "white";
   let font: "default" | "monospace" = "default";
+  let size: "xsm" | "sm" | "md" | "lg" | "xlg" = "md";
+  let isMonospace = false;
 
-
-  export {color, font};
+  export {color, font, size, isMonospace};
 </script>
 
 <style lang="scss">
   @import "../../styles/variables";
+
+  .isMonospace {font-family: monospace}
 
   .white {color: white}
   .purple {color: $purple}
@@ -18,10 +21,15 @@
   .red {color: $red}
   .grey {color: $dark-grey}
 
-  .solid {color: rgb(241, 186, 88)}
-  .liquid {color: rgb(121, 108, 255)}
-  .gas {color: rgb(134, 83, 15)}
-  .plasma {color: rgb(233, 52, 27)}
+  .xsm {font-size: $font-xsm}
+  .sm {font-size: $font-sm}
+  .md {font-size: $font-md}
+  .lg {font-size: $font-lg}
+  .xlg {font-size: $font-xlg}
 </style>
 
-<span class={color} style={`font-family: ${font === "monospace" ? "monospace" : ""}`}><slot/></span>
+<span
+  class={`${color} ${size}`}
+  class:isMonospace
+  style={`font-family: ${font === "monospace" ? "monospace" : ""}`}
+><slot/></span>

@@ -15,7 +15,7 @@
     align-items: center;
     justify-content: center;
     background-color: rgba(0, 0, 0, 0.6);
-    z-index: 5;
+    z-index: 100;
   }
   .modal {
     /* width: 320px; */
@@ -23,12 +23,12 @@
     background-color: rgb(var(--light-grey));
     border-radius: 4px;
     box-shadow: var(--elevation-lg);
-    z-index: 6;
+    z-index: 101;
   }
 </style>
 
-<div class="wrapper--modal" on:click={exit}>
-  <div class="modal" on:click|preventDefault|stopPropagation={() => false}>
+<div class="wrapper--modal" on:click|self={exit}>
+  <div class="modal">
     <slot/>
   </div>
 </div>

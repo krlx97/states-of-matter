@@ -1,5 +1,6 @@
 <script lang="ts">
   import {createEventDispatcher} from "svelte";
+  import {Button} from "components";
   import {cryptoService, eccService, socketService} from "services";
   import {authStore} from "stores/data";
 
@@ -20,9 +21,14 @@
 <style lang="scss">
   form {
     width: 320px;
+    margin-bottom: 1em;
   }
   span {
     cursor: pointer;
+  }
+  .form__btn {
+    display: flex;
+    justify-content: center;
   }
 </style>
 
@@ -54,13 +60,14 @@
       bind:value={$authStore.signupForm.password}>
   </div>
 
-  <div class="form__field">
-    <button class="form__field__submit btn--raised-primary" on:click|preventDefault={onSignup}>
+  <div class="form__btn">
+    <Button on:click={onSignup}>
       SIGN UP
-    </button>
+    </Button>
   </div>
 
 </form>
+
 <p>
   Already have an account?
   <span class="f--purple" on:click={onGotoSignin}>Sign in</span>

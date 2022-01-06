@@ -4,6 +4,7 @@ interface GameHero {
   maxHealth: number;
   mana: number;
   maxMana: number;
+  damage: number;
   passive: number;
 }
 
@@ -48,6 +49,7 @@ interface GameOpponent {
 interface Game {
   _id?: string;
   gameId: number;
+  currentPlayer: string;
   player: GamePlayer;
   opponent: GameOpponent;
 }

@@ -7,5 +7,6 @@ import CardComponent from "./global/Card.svelte";
 import ComingSoon from "./global/ComingSoon.svelte";
 import HeroComponent from "./global/Hero.svelte";
 import Text from "./global/Text.svelte";
+import Img from "./global/Img.svelte";
 
-export {Button, ProgressBar, CardComponent, ComingSoon, HeroComponent, FontAwesome, Modal, Tooltip, Text};
+export {Button, ProgressBar, CardComponent, ComingSoon, HeroComponent, FontAwesome, Modal, Tooltip, Text, Img};

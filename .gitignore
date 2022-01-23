@@ -1,11 +1,11 @@
 .vscode
 
-backend/dist
-backend/node_modules
-
-contract/inc
 contract/som.abi
 contract/som.wasm
 
-frontend/dist/build
-frontend/node_modules
+app/node_modules
+app/backend/dist
+app/frontend/dist/build
+
+app/shared/dist
+app/shared/tsconfig.tsbuildinfo

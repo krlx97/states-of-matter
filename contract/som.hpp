@@ -11,7 +11,8 @@ CONTRACT som : public contract {
       contract(receiver, code, ds),
       players_table(receiver, receiver.value),
       lobbies_table(receiver, receiver.value),
-      games_table(receiver, receiver.value) {};
+      games_table(receiver, receiver.value),
+      balances_table(receiver, receiver.value) {};
 
     struct account_t {
       uint8_t status;
@@ -87,6 +88,17 @@ CONTRACT som : public contract {
     ACTION rmlobby(uint64_t lobby_id);
     ACTION rmgame(uint64_t game_id);
 
+    [[eosio::on_notify("*::transfer")]]
+    void deposit (name from, name to, asset quantity, string memo) {
+      if (from == _self || to != _self) { return; }
+
+       auto balance = balances_table.find(from.value);
+
+       balances_table.modify(balance, _self, [&](auto &row) {
+         row.funds.amount += quantity.amount;
+       });
+    }
+
     struct hero_t {
       uint16_t health;
       uint8_t damage;
@@ -143,11 +155,19 @@ CONTRACT som : public contract {
       TABLE_PRIMARY_KEY(game_id);
     };
 
+    TABLE balance {
+      name username;
+      asset funds;
+      TABLE_PRIMARY_KEY(username.value);
+    };
+
     typedef multi_index<"players"_n, player, index_by_public_key<player>> players;
     typedef multi_index<"lobbies"_n, lobby> lobbies;
     typedef multi_index<"games"_n, game> games;
+    typedef multi_index<"balance"_n, balance> balances;
 
     players players_table;
     lobbies lobbies_table;
     games games_table;
+    balances balances_table;
 };

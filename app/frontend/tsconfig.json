@@ -1,0 +1,35 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "include": ["src/**/*"],
+  "exclude": ["dist/*"],
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "data": ["shared/data"],
+      "models": ["shared/models"],
+      "responses": ["shared/responses"],
+      "services": ["shared/services"],
+
+      "auth/responses": ["auth/shared/responses"],
+      "auth/stores": ["auth/shared/stores"],
+
+      "ui/*": ["ui/*"],
+
+      "client/responses": ["client/shared/responses"],
+      "client/stores": ["client/shared/stores"],
+
+      "game/models/*": ["game/shared/models/*"],
+      "game/responses": ["game/shared/responses"],
+      "game/stores": ["game/shared/stores"],
+
+      "sidenav/responses": ["sidenav/shared/responses"],
+
+      "models/data": ["shared/models/data"],
+      "models/data/*": ["shared/models/data/*"],
+      "models/view": ["shared/models/view"],
+      "models/view/*": ["shared/models/view/*"],
+      "stores/data": ["shared/stores/data"],
+      "stores/view": ["shared/stores/view"]
+    }
+  }
+}

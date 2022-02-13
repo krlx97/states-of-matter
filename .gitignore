@@ -4,8 +4,8 @@ contract/som.abi
 contract/som.wasm
 
 app/node_modules
-app/backend/dist
-app/frontend/dist/build
+# app/backend/dist
+# app/frontend/dist/build
 
-app/shared/dist
-app/shared/tsconfig.tsbuildinfo
+# app/shared/dist
+# app/shared/tsconfig.tsbuildinfo

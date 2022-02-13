@@ -44,6 +44,9 @@ interface PlayCardReq {
   gid: number;
   id?: number;
 }
+interface HoverCardReq {
+  field: string;
+}
 // -------------------- SIDENAV --------------------
 interface AcceptFriendReq {
   username: string;
@@ -89,6 +92,7 @@ export type {
   // GAME
   AttackCardReq,
   PlayCardReq,
+  HoverCardReq,
   // SIDENAV
   AcceptFriendReq,
   AddFriendReq,
@@ -98,5 +102,5 @@ export type {
   UnblockReq,
   UnfriendReq,
   // GLOBAL
-  SendChatMsgReq,
+  SendChatMsgReq
 };

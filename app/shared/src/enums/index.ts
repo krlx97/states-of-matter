@@ -34,6 +34,8 @@ enum SocketEvent {
   END_TURN = "endTurn",
   END_TURN_OPPONENT = "endTurnOpponent",
   END_TURN_PLAYER = "endTurnPlayer",
+  HOVER_CARD = "hoverCard",
+  UNHOVER_CARD = "unhoverCard",
   PLAY_CARD = "playCard",
   PLAY_CARD_RECEIVER = "playCardReceiver",
   PLAY_CARD_SENDER = "playCardSender",

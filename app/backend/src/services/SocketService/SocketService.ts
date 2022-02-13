@@ -31,7 +31,8 @@ import type {
   UnfriendReceiverRes,
   UnfriendSenderRes,
   SendChatMsgReceiverRes,
-  SendChatMsgSenderRes
+  SendChatMsgSenderRes,
+  HoverCardRes
 } from "@som/shared/interfaces/responses";
 
 
@@ -61,6 +62,8 @@ interface SocketEvents {
   attackCardSender (params: AttackCardSenderRes): void;
   endTurnOpponent (): void;
   endTurnPlayer (): void;
+  hoverCard (params: HoverCardRes): void;
+  unhoverCard (): void;
   playCardReceiver (params: PlayCardReceiverRes): void;
   playCardSender (params: PlayCardSenderRes): void;
   endGame (): void;
@@ -134,6 +137,8 @@ class SocketService extends Service {
       attackCardSender (params)     { emitter.emit(SocketEvent.ATTACK_CARD_SENDER, params);     },
       endTurnOpponent ()            { emitter.emit(SocketEvent.END_TURN_OPPONENT);              },
       endTurnPlayer ()              { emitter.emit(SocketEvent.END_TURN_PLAYER);                },
+      hoverCard (params)            { emitter.emit(SocketEvent.HOVER_CARD, params);             },
+      unhoverCard ()                { emitter.emit(SocketEvent.UNHOVER_CARD); },
       playCardReceiver (params)     { emitter.emit(SocketEvent.PLAY_CARD_RECEIVER, params);     },
       playCardSender (params)       { emitter.emit(SocketEvent.PLAY_CARD_SENDER, params);       },
       endGame ()                    { emitter.emit(SocketEvent.END_GAME);                       },

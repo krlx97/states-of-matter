@@ -1,12 +1,20 @@
 <script lang="ts">
   import {CardType} from "@som/shared/enums";
-  import {selectedCardStore} from "game/stores";
+  import {gameStore, selectedCardStore} from "game/stores";
+  import { socketService } from "services";
+  import { playerStore } from "stores/data";
 
   import Text from "../../ui/Text.svelte";
 
-  $: isSummonable =
-    $selectedCardStore.hand.gid !== 0 &&
-    $selectedCardStore.hand.type === CardType.MAGIC;
+  $: isSummonable = $selectedCardStore.hand.gid !== 0 && $selectedCardStore.hand.type === CardType.MAGIC;
+  $: isCurrentPlayer = $gameStore.currentPlayer === $playerStore.username;
+
+  const onMouseEnter = (): void => {
+    if (isCurrentPlayer) { socketService.hoverCard({field: "magic"}); }
+  }
+  const onMouseLeave = (): void => {
+    if (isCurrentPlayer) { socketService.unhoverCard(); }
+  }
 </script>
 
 <style lang="scss">
@@ -30,6 +38,6 @@
   }
 </style>
 
-<div class="field" class:isSummonable>
+<div class="field" class:isSummonable on:mouseenter={onMouseEnter} on:mouseleave={onMouseLeave}>
   <Text>Magic Field</Text>
 </div>

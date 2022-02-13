@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte";
   import {socketService} from "services";
+  import {playerStore} from "stores/data";
   import * as responses from "client/responses";
 
   import Governance from "./Governance.svelte";
@@ -9,6 +10,7 @@
   import Collection from "./collection/Collection.svelte";
   import Decks from "./decks/Decks.svelte";
   import Play from "./play/Play.svelte";
+  import Img from "../ui/Img.svelte";
   import Text from "../ui/Text.svelte";
 
   const views = [
@@ -22,8 +24,8 @@
 
   let currentView = views[0];
 
-  onMount(() => { socketService.listen(responses); });
-  onDestroy(() => { socketService.forget(responses); });
+  onMount((): void => { socketService.listen(responses); });
+  onDestroy((): void => { socketService.forget(responses); });
 </script>
 
 <style lang="scss">
@@ -83,12 +85,12 @@
 
     <div class="client__header__currencies">
       <div class="client__header__currency">
-        <img src="assets/currencies/somt.png" alt="SOMT"/>
-        <Text>123123456.4657</Text>
+        <Img src="currencies/LMT.png" alt="LMT"/>
+        <Text>{$playerStore.wallet[1]}</Text>
       </div>
       <div class="client__header__currency">
-        <img src="assets/currencies/soma.png" alt="SOMA"/>
-        <Text>1324</Text>
+        <Img src="currencies/DMT.png" alt="DMT"/>
+        <Text>0</Text>
       </div>
     </div>
 

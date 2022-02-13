@@ -34,6 +34,8 @@ interface Player {
   gameId: number;
   decks: PlayerDeck[];
   social: PlayerSocial;
+  wallet: Array<any>;
+  last_nonce: number;
 }
 
 export type {PlayerDeckCard, PlayerDeck, PlayerSocial, Player};

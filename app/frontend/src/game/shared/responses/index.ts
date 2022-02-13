@@ -3,8 +3,10 @@ import attackCardSender from "./attackCardSender";
 import endGame from "./endGame";
 import endTurnOpponent from "./endTurnOpponent";
 import endTurnPlayer from "./endTurnPlayer";
+import hoverCard from "./hoverCard";
 import playCardReceiver from "./playCardReceiver";
 import playCardSender from "./playCardSender";
+import unhoverCard from "./unhoverCard";
 
 export {
   attackCardReceiver,
@@ -12,6 +14,8 @@ export {
   endGame,
   endTurnOpponent,
   endTurnPlayer,
+  hoverCard,
   playCardReceiver,
-  playCardSender
+  playCardSender,
+  unhoverCard
 };

@@ -24,14 +24,11 @@
 </script>
 
 <style lang="scss">
-  .wallet {
-    /* height: 100%; */
-    width: 100%;
-    
-    padding: var(--spacing-md);
-    box-sizing: border-box;
+  @import "../../shared/styles/variables";
 
-    border: 2px solid green;
+  .wallet {
+    padding: $spacing-md;
+    border-bottom: 2px solid $light-grey;
     box-sizing: border-box;
   }
 

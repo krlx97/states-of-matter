@@ -21,7 +21,9 @@ const playerStore: Writable<Player> = writable({
     friends: [],
     requests: [],
     blocked: []
-  }
+  },
+  wallet: [],
+  last_nonce: 0
 });
 
 export default playerStore;

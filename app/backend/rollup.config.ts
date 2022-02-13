@@ -21,9 +21,7 @@ export default defineConfig({
     "@som/shared/enums"
   ],
   plugins: [
+    run(),
     typescript(),
-    run({
-      allowRestarts: true
-    }),
   ]
 });

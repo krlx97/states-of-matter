@@ -3,14 +3,18 @@ import type {SignupReq} from "@som/shared/interfaces/requests";
 import type {SocketRequest} from "models";
 
 const signup: SocketRequest<SignupReq> = async (services, params) => {
-  const {/*blockchainService, */playerService, socketService} = services;
+  const {blockchainService, playerService, socketService} = services;
   const {username, publicKey, privateKeyHash} = params;
   const player = await playerService.find({username});
 
-  if (player) { return; }
+  if (player) {
+    const msg = "Username taken.";
+    socketService.emit().notification({msg});
+    return;
+  }
 
-  const [/*transaction, */isInserted] = await Promise.all([
-    // blockchainService.transact("signup", {publicKey}),
+  const [transaction, isInserted] = await Promise.all([
+    blockchainService.transact("signup", {username, public_key: publicKey}),
     playerService.insert({
       socketId: "",
       username,
@@ -33,7 +37,7 @@ const signup: SocketRequest<SignupReq> = async (services, params) => {
     })
   ]);
 
-  if (/*!transaction || */!isInserted) { return; }
+  if (!transaction || !isInserted) { return; }
 
   const msg = "Account created successfully, you can now sign in.";
   socketService.emit().notification({msg});

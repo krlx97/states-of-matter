@@ -2,6 +2,8 @@
   import {gameStore} from "game/stores";
   import {playerStore} from "stores/data";
 
+  import FontAwesome from "../../ui/FontAwesome.svelte";
+
   import PlayerDeck from "./PlayerDeck.svelte";
   import PlayerGraveyard from "./PlayerGraveyard.svelte";
   import PlayerHandCards from "./PlayerHandCards.svelte";
@@ -17,14 +19,14 @@
 
   .fields {
     position: relative;
-    @include flex($flex-direction: column);
+    @include flex(column);
 
     &__top {
       margin-bottom: $spacing-sm;
-      @include d-grid(7, 1, 0 $spacing-sm);
+      @include grid(7, 1, 0 $spacing-sm);
     }
 
-    &__bot {@include flex($justify-content: space-between)}
+    &__bot { @include flex($justify-content: space-between); }
 
     &__turn {
       position: absolute;
@@ -44,6 +46,7 @@
     <PlayerMinionField field="D"/>
     <PlayerTrapField/>
   </div>
+
   <div class="fields__bot">
     <PlayerGraveyard/>
     <PlayerHandCards/>
@@ -52,7 +55,7 @@
 
   {#if $gameStore.currentPlayer === $playerStore.username}
     <div class="fields__turn">
-      <i class="fas fa-arrow-left"></i>
+      <FontAwesome icon="arrow-left"/>
     </div>
   {/if}
 </div>

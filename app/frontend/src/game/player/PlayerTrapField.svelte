@@ -1,6 +1,18 @@
 <script lang="ts">
   import {CardType} from "@som/shared/enums";
-  import {selectedCardStore} from "game/stores";
+  import {gameStore, selectedCardStore} from "game/stores";
+  import {socketService} from "services";
+  import {playerStore} from "stores/data";
+
+  $: isCurrentPlayer = $gameStore.currentPlayer === $playerStore.username;
+  $: isSummonable = $selectedCardStore.hand.gid !== 0 && $selectedCardStore.hand.type === CardType.TRAP;
+
+  const onMouseEnter = (): void => {
+    if (isCurrentPlayer) { socketService.hoverCard({field: "trap"}); }
+  }
+  const onMouseLeave = (): void => {
+    if (isCurrentPlayer) { socketService.unhoverCard(); }
+  }
 </script>
 
 <style lang="scss">
@@ -15,7 +27,7 @@
     box-shadow: $elevation-sm;
   }
 
-  .summonable {animation: glow 1s $ease-in-out-quart infinite}
+  .isSummonable {animation: glow 1s $ease-in-out-quart infinite}
 
   @keyframes glow {
     0%    {box-shadow: 0 0 4px 2px $red}
@@ -26,6 +38,9 @@
 
 <div
   class="field"
-  class:summonable={$selectedCardStore.hand.gid !== 0 && $selectedCardStore.hand.type === CardType.TRAP}>
+  class:isSummonable
+  on:mouseenter={onMouseEnter}
+  on:mouseleave={onMouseLeave}
+>
   <span>Trap Field</span>
 </div>

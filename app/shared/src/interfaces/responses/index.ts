@@ -44,6 +44,9 @@ interface AttackCardSenderRes {
   attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
   attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
 }
+interface HoverCardRes {
+  field: string;
+}
 interface PlayCardReceiverRes {
   field: string;
   card: any;
@@ -130,6 +133,7 @@ export type {
   // GAME
   AttackCardReceiverRes,
   AttackCardSenderRes,
+  HoverCardRes,
   PlayCardReceiverRes,
   PlayCardSenderRes,
   // SIDENAV

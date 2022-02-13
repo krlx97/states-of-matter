@@ -1,7 +1,7 @@
 <script lang="ts">
   import Avatar from "./Avatar.svelte";
 
-  const avatarsIds = [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4];
+  const avatarsIds = [0, 1, 2, 3, 4];
 </script>
 
 <style lang="scss">

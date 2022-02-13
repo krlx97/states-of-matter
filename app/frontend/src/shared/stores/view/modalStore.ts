@@ -1,5 +1,4 @@
 import {writable} from "svelte/store";
-
 import type {Writable} from "svelte/store";
 
 interface Modals {
@@ -12,7 +11,9 @@ interface Modals {
   tip: boolean;
   unfriend: boolean;
   graveyard: boolean;
+  sendToken: boolean;
 }
+
 interface ModalStore {
   data: any;
   current: string;
@@ -31,7 +32,8 @@ const modalStore: Writable<ModalStore> = writable({
     setDeckKlass: false,
     tip: false,
     unfriend: false,
-    graveyard: false
+    graveyard: false,
+    sendToken: false
   }
 });
 

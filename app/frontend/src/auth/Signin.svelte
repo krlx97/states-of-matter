@@ -4,6 +4,8 @@
   import {authStore} from "auth/stores";
 
   import Button from "../ui/Button.svelte";
+  import Form from "../ui/Form.svelte";
+  import Input from "../ui/Input.svelte";
   import Text from "../ui/Text.svelte";
 
   const dispatch = createEventDispatcher();
@@ -19,11 +21,6 @@
 <style lang="scss">
   @import "../shared/styles/variables";
 
-  form {
-    width: 320px;
-    margin-bottom: $spacing-md;
-  }
-  span {cursor: pointer}
 
   .form__btn {
     display: flex;
@@ -31,41 +28,31 @@
   }
 </style>
 
-<form>
+<Form on:submit={onSignin}>
   <Text size="xlg">Sign in</Text>
 
-  <div class="form__field">
-    <label for="signinUsername">Username</label>
-    <input
-      id="signinUsername"
-      placeholder="Username"
-      name="username"
-      type="text"
-      maxlength="16"
-      bind:value={$authStore.signinForm.username}
-    />
-  </div>
+  <hr/>
 
-  <div class="form__field">
-    <label for="signinPassword">Password</label>
-    <input
-      id="signinPassword"
-      placeholder="Password"
-      name="password"
-      type="password"
-      bind:value={$authStore.signinForm.password}
-    />
-  </div>
+  <Input
+    placeholder="Username"
+    maxlength={16}
+    bind:value={$authStore.signinForm.username}/>
 
-  <div class="form__btn">
-    <Button on:click={onSignin}>
+  <Input
+    placeholder="Password"
+    type="password"
+    maxlength={32}
+    bind:value={$authStore.signinForm.password}/>
+
+  <!-- <div class="form__btn"> -->
+    <Button type="submit">
       SIGN IN
     </Button>
-  </div>
+  <!-- </div> -->
 
-</form>
+</Form>
 
-<p>
+<div>
   Dont have an account?
-  <span class="f--purple" on:click={onGotoSignup}>Sign up</span>
-</p>
+  <div style="text-decoration: underline" on:click={onGotoSignup}>Sign up</div>
+</div>

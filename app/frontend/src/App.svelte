@@ -18,6 +18,16 @@
   onDestroy((): void => { socketService.forget(responses); });
 </script>
 
+<svelte:head>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Exo 2", sans-serif;
+      line-height: 1;
+    }
+  </style>
+</svelte:head>
+
 <style lang="scss">
   @import "./shared/styles/mixins";
   @import "./shared/styles/variables";
@@ -28,7 +38,8 @@
     width: 100vw;
     @include flex(row, center, center);
     color: white;
-    background-image: url("/assets/wp.jpg");
+    background-color: $dark-grey;
+    // background-image: url("/assets/wp.jpg");
 
     &--inner {
       position: relative;
@@ -36,7 +47,7 @@
       width: 1600px;
       @include flex();
       box-shadow: $elevation-lg;
-      background-color: rgba(48, 48, 48, 0.98);
+      background-color: $grey;
     }
 
     &__content {width: calc(100% - 320px)}

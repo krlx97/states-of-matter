@@ -20,6 +20,8 @@
   }
   nav {
     display: flex;
+
+    div {padding: 1em;}
   }
   .selected {
     border-bottom: 2px solid $purple;
@@ -28,7 +30,7 @@
 </style>
 
 <div class="non-fungible__tokens">
-  <h3>Non Fungible Tokens</h3>
+  <div>Skins</div>
 
   <nav>
     {#each navs as nav}

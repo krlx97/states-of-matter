@@ -45,8 +45,11 @@ const signin: SocketRequest<SigninReq> = async (services, params) => {
     returnDocument: "after"
   });
 
-  if (!player) { return; }
+  const playerOnchain = await blockchainService.findPlayer(username);
 
+  if (!player || !playerOnchain) { return; }
+
+  const {wallet, last_nonce} = playerOnchain;
   const {friends} = player.social;
   const friendsView: Array<any> = [];
 
@@ -109,7 +112,7 @@ const signin: SocketRequest<SigninReq> = async (services, params) => {
   }
 
   socketService.emit().signin({
-    player,
+    player: {...player, wallet, last_nonce},
     friends: friendsView,
     lobby,
     game: gameView

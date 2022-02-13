@@ -63,4 +63,4 @@ ioServer.on("connection", (socket): void => {
   });
 });
 
-httpServer.listen(port);
+httpServer.listen(port, () => {console.log("Running.")});

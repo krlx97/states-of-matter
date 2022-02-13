@@ -13,13 +13,17 @@ import leaveLobby from "./client/leaveLobby";
 import makeLobby from "./client/makeLobby";
 import saveDeck from "./client/saveDeck";
 import selectDeck from "./client/selectDeck";
+import sendToken from "./client/sendToken";
 import setDeckKlass from "./client/setDeckKlass";
 import setDeckName from "./client/setDeckName";
 import startGame from "./client/startGame";
+import withdrawToken from "./client/withdrawToken";
 // Game
 import attackCard from "./game/attackCard";
 import endTurn from "./game/endTurn";
+import hoverCard from "./game/hoverCard";
 import playCard from "./game/playCard";
+import unhoverCard from "./game/unhoverCard";
 // Sidenav
 import acceptFriend from "./sidenav/acceptFriend";
 import addFriend from "./sidenav/addFriend";
@@ -46,13 +50,17 @@ export {
   makeLobby,
   saveDeck,
   selectDeck,
+  sendToken,
   setDeckKlass,
   setDeckName,
   startGame,
+  withdrawToken,
   // Game
   attackCard,
   endTurn,
+  hoverCard,
   playCard,
+  unhoverCard,
   // Sidenav
   acceptFriend,
   addFriend,

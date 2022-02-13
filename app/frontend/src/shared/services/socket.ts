@@ -8,6 +8,7 @@ import type {
   BlockReq,
   DeclineFriendReq,
   GetPrivateKeyHashReq,
+  HoverCardReq,
   JoinLobbyReq,
   PlayCardReq,
   SaveDeckReq,
@@ -66,6 +67,14 @@ class SocketService {
   public leaveLobby (): void {
     this._socket.emit(SocketEvent.LEAVE_LOBBY);
   }
+
+
+  public sendToken (params: any): void {
+    this._socket.emit("sendToken", params);
+  }
+  public withdrawToken (params: any): void {
+    this._socket.emit("withdrawToken", params);
+  }
   // ------------------------------ GAME ------------------------------
   public attackCard (params: AttackCardReq): void {
     this._socket.emit(SocketEvent.ATTACK_CARD, params);
@@ -75,6 +84,12 @@ class SocketService {
   }
   public endTurn (): void {
     this._socket.emit(SocketEvent.END_TURN);
+  }
+  public hoverCard (params: HoverCardReq): void {
+    this._socket.emit(SocketEvent.HOVER_CARD, params);
+  }
+  public unhoverCard (): void {
+    this._socket.emit(SocketEvent.UNHOVER_CARD);
   }
   // ------------------------------ SIDENAV ------------------------------
   public addFriend (params: AddFriendReq): void {

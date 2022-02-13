@@ -53,6 +53,13 @@
     }
   };
 
+  const mouseEnter = (): void => {
+    if (isCurrentPlayer) { socketService.hoverCard({field}); }
+  }
+  const onMouseLeave = (): void => {
+    if (isCurrentPlayer) { socketService.unhoverCard(); }
+  }
+
   export {field};
 </script>
 
@@ -86,7 +93,7 @@
 
 {#if field === "A"}
   {#if $gameStore.player.fields.minionA}
-    <div class="field" class:isSelected on:click={onAttackSelect}>
+    <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <Card
         card={getCard("minionA")}
         health={$gameStore.player.fields.minionA.health}
@@ -95,13 +102,13 @@
       />
     </div>
   {:else}
-    <div class="field" class:isSummonable on:click={onPlayCard}>
+    <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <span>Minion Field {field}</span>
     </div>
   {/if}
 {:else if field === "B"}
   {#if $gameStore.player.fields.minionB}
-    <div class="field" class:isSelected on:click={onAttackSelect}>
+    <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <Card
         card={getCard("minionB")}
         health={$gameStore.player.fields.minionB.health}
@@ -110,13 +117,13 @@
       />
     </div>
   {:else}
-  <div class="field" class:isSummonable on:click={onPlayCard}>
+  <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
     <span>Minion Field {field}</span>
   </div>
   {/if}
 {:else if field === "C"}
   {#if $gameStore.player.fields.minionC}
-    <div class="field" class:isSelected on:click={onAttackSelect}>
+    <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <Card
         card={getCard("minionC")}
         health={$gameStore.player.fields.minionC.health}
@@ -125,13 +132,13 @@
       />
     </div>
   {:else}
-  <div class="field" class:isSummonable on:click={onPlayCard}>
+  <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
     <span>Minion Field {field}</span>
   </div>
   {/if}
 {:else if field === "D"}
   {#if $gameStore.player.fields.minionD}
-    <div class="field" class:isSelected on:click={onAttackSelect}>
+    <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <Card
         card={getCard("minionD")}
         health={$gameStore.player.fields.minionD.health}
@@ -140,7 +147,7 @@
       />
     </div>
   {:else}
-  <div class="field" class:isSummonable on:click={onPlayCard}>
+  <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
     <span>Minion Field {field}</span>
   </div>
   {/if}

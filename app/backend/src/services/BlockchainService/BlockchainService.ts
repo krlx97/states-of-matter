@@ -11,25 +11,25 @@ import type {TransactResult} from "eosjs/dist/eosjs-api-interfaces";
 // import type {Game, Lobby, Player} from "models"
 
 class BlockchainService extends Service {
-  // public async findPlayer (username: string): Promise<Player | undefined> {
-  //   const {contractAccount} = settings.eos;
-  //   let table!: GetTableRowsResult;
+  public async findPlayer (username: string): Promise<any | undefined> {
+    const {contractAccount} = settings.eos;
+    let table!: GetTableRowsResult;
 
-  //   try {
-  //     table = await this._apis.eos.rpc.get_table_rows({
-  //       code: contractAccount,
-  //       scope: contractAccount,
-  //       table: "players",
-  //       lower_bound: username,
-  //       upper_bound: username,
-  //       limit: 1
-  //     });
-  //   } catch (error) {
-  //     this._handleError(error);
-  //   }
+    try {
+      table = await this._apis.eos.rpc.get_table_rows({
+        code: contractAccount,
+        scope: contractAccount,
+        table: "players",
+        lower_bound: username,
+        upper_bound: username,
+        limit: 1
+      });
+    } catch (error) {
+      this._handleError(error);
+    }
 
-  //   return table.rows[0];
-  // }
+    return table.rows[0];
+  }
 
   // public async findLobby (lobby_id: number): Promise<Lobby | undefined> {
   //   const {contractAccount} = settings.eos;

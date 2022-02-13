@@ -1,12 +1,14 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
   import {socketService} from "services";
-  import {gameStore, selectedCardStore} from "game/stores";
+  import {gameStore, hoveredCardStore, selectedCardStore} from "game/stores";
   import {playerStore} from "stores/data";
 
   import Card from "../../ui/Card.svelte";
 
   let field: string;
+
+  $: isHovered = field === $hoveredCardStore.field;
 
   const getCard = (field: string): any => {
     const card = cards.find(({id}) => id === $gameStore.opponent.fields[field].id);
@@ -37,6 +39,10 @@
   @import "../../shared/styles/mixins";
   @import "../../shared/styles/variables";
 
+  .isHovered {
+    box-shadow: 0 0 4px 8px white;
+  }
+
   .field {
     height: $card-height;
     width: $card-width;
@@ -47,8 +53,8 @@
   }
 </style>
 
-<div class="field">
-  {#if field === "A"}
+{#if field === "A"}
+  <div class="field" class:isHovered>
     {#if $gameStore.opponent.fields.minionA}
       <div on:click={onAttackCard}>
         <Card
@@ -61,7 +67,9 @@
     {:else}
       <span class="f--orange">Minion Field {field}</span>
     {/if}
-  {:else if field === "B"}
+  </div>
+{:else if field === "B"}
+  <div class="field" class:isHovered>
     {#if $gameStore.opponent.fields.minionB}
       <div on:click={onAttackCard}>
         <Card
@@ -74,7 +82,9 @@
     {:else}
       <span class="f--orange">Minion Field {field}</span>
     {/if}
-  {:else if field === "C"}
+  </div>
+{:else if field === "C"}
+  <div class="field" class:isHovered>
     {#if $gameStore.opponent.fields.minionC}
       <div on:click={onAttackCard}>
         <Card
@@ -87,7 +97,9 @@
     {:else}
       <span class="f--orange">Minion Field {field}</span>
     {/if}
-  {:else if field === "D"}
+  </div>
+{:else if field === "D"}
+  <div class="field" class:isHovered>
     {#if $gameStore.opponent.fields.minionD}
       <div on:click={onAttackCard}>
         <Card
@@ -100,5 +112,5 @@
     {:else}
       <span class="f--orange">Minion Field {field}</span>
     {/if}
-  {/if}
-</div>
+  </div>
+{/if}

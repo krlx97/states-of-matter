@@ -1,68 +1,69 @@
-import type {PlayCardReq} from "@som/shared/interfaces/requests";
 import type {SocketRequest} from "models";
-import type {GamePlayerCard} from "../../services/GameService/GameService.models"
+import type {GamePlayerCard} from "../../services/MongoService/GameService.models"
 
-const playCard: SocketRequest<PlayCardReq> = async (services, params) => {
-  const {gameService, playerService, socketService} = services;
-  const {field, gid, id} = params;
-  const {socketId} = socketService;
-  const player = await playerService.find({socketId});
+export const playCard: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$games, $players} = mongoService;
+  const {io, socket, socketId} = socketService;
 
-  if (!player) { return; }
+  socket.on("playCard", async (params) => {
+    const {field, gid, id} = params;
+    const $player = await $players.findOne({socketId});
 
-  const {gameId} = player;
-  const game = await gameService.find({gameId});
+    if (!$player) { return; }
 
-  if (!game) { return; }
+    const {gameId} = $player;
+    const $game = await $games.findOne({gameId});
 
-  let opponentUsername = "";
-  let card: GamePlayerCard;
+    if (!$game) { return; }
 
-  if (player.username === game.playerA.username) {
-    opponentUsername = game.playerB.username;
+    let opponentUsername = "";
+    let card: GamePlayerCard;
 
-    const {playerA} = game;
-    const {hand, fields, hero} = playerA;
-    const handCard = hand.find((card) => card.gid === gid);
+    if ($player.username === $game.playerA.username) {
+      opponentUsername = $game.playerB.username;
 
-    if (!handCard) { return; }
-    if (fields[field]) { return; }
-    if (!handCard.manaCost || handCard.manaCost > hero.mana) { return; }
+      const {playerA} = $game;
+      const {hand, fields, hero} = playerA;
+      const handCard = hand.find((card) => card.gid === gid);
 
-    hero.mana -= handCard.manaCost;
-    fields[field] = handCard;
-    hand.splice(hand.indexOf(handCard), 1);
-    card = handCard;
+      if (!handCard) { return; }
+      if (fields[field]) { return; }
+      if (!handCard.manaCost || handCard.manaCost > hero.mana) { return; }
 
-    await gameService.update({gameId}, {$set: {playerA}});
-  } else {
-    opponentUsername = game.playerA.username;
+      hero.mana -= handCard.manaCost;
+      fields[field] = handCard;
+      hand.splice(hand.indexOf(handCard), 1);
+      card = handCard;
 
-    const {playerB} = game;
-    const {hand, fields, hero} = playerB;
-    const handCard = hand.find((card) => card.gid === gid);
+      await $games.updateOne({gameId}, {$set: {playerA}});
+    } else {
+      opponentUsername = $game.playerA.username;
 
-    if (!handCard) { return; }
-    if (fields[field]) { return; }
-    if (!handCard.manaCost || handCard.manaCost > hero.mana) { return; }
+      const {playerB} = $game;
+      const {hand, fields, hero} = playerB;
+      const handCard = hand.find((card) => card.gid === gid);
 
-    hero.mana -= handCard.manaCost;
-    fields[field] = handCard;
-    hand.splice(hand.indexOf(handCard), 1);
-    card = handCard;
+      if (!handCard) { return; }
+      if (fields[field]) { return; }
+      if (!handCard.manaCost || handCard.manaCost > hero.mana) { return; }
 
-    await gameService.update({gameId}, {$set: {playerB}});
-  }
+      hero.mana -= handCard.manaCost;
+      fields[field] = handCard;
+      hand.splice(hand.indexOf(handCard), 1);
+      card = handCard;
 
-  socketService.emit().playCardSender({field, gid});
+      await $games.updateOne({gameId}, {$set: {playerB}});
+    }
 
-  const opponent = await playerService.find({
-    username: opponentUsername
+    socket.emit("playCardPlayer", {field, gid});
+
+    const opponent = await $players.findOne({
+      username: opponentUsername
+    });
+
+    if (!opponent || !opponent.socketId) { return; }
+
+    io.to(opponent.socketId).emit("playCardOpponent", {field, card});
   });
-
-  if (!opponent || !opponent.socketId) { return; }
-
-  socketService.emit(opponent.socketId).playCardReceiver({field, card});
 };
-
-export default playCard;

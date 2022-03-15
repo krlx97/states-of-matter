@@ -1,4 +1,6 @@
 import {createServer} from "http";
+import process from "process";
+
 import {Api, JsonRpc} from "eosjs";
 import {JsSignatureProvider} from "eosjs/dist/eosjs-jssig.js";
 import {MongoClient} from "mongodb";
@@ -6,17 +8,9 @@ import fetch from "node-fetch";
 import {Server} from "socket.io";
 
 import settings from "settings";
-import * as requests from "requests";
-import {
-  BlockchainService,
-  ChatService,
-  GameService,
-  SocketService,
-  LobbyService,
-  PlayerService
-} from "services";
-
-import type {Apis, Services, SocketRequestParams} from "models";
+import {requests} from "requests";
+import {EosService, MongoService, SocketService} from "services";
+import type {Services} from "models";
 
 const {
   mongo: {uri},
@@ -31,36 +25,29 @@ const ioServer = new Server(httpServer, opts);
 const mongoClient = await MongoClient.connect(uri);
 const mongoDb = mongoClient.db("som");
 
-const rpc = new JsonRpc(endpoint, {fetch});
-const signatureProvider = new JsSignatureProvider([contractKey]);
-const textDecoder = new TextDecoder();
-const textEncoder = new TextEncoder();
-const eosApi = new Api({rpc, signatureProvider, textDecoder, textEncoder});
-
-const requestKeys = Object.keys(requests) as Array<keyof typeof requests>;
-
-ioServer.on("connection", (socket): void => {
-  const apis: Apis = {
-    eos: eosApi,
-    mongo: mongoDb,
-    socket,
-    io: ioServer
-  };
-
-  const services: Services = {
-    blockchainService: new BlockchainService(apis),
-    chatService: new ChatService(apis, "chats"),
-    gameService: new GameService(apis, "games"),
-    lobbyService: new LobbyService(apis, "lobbies"),
-    playerService: new PlayerService(apis, "players"),
-    socketService: new SocketService(apis)
-  };
-
-  requestKeys.forEach((request): void => {
-    socket.on(request, (params: SocketRequestParams): void => {
-      requests[request](services, params);
-    });
-  });
+const eosApi = new Api({
+  rpc: new JsonRpc(endpoint, {fetch}),
+  signatureProvider: new JsSignatureProvider([contractKey]),
+  textDecoder: new TextDecoder(),
+  textEncoder: new TextEncoder()
 });
 
-httpServer.listen(port, () => {console.log("Running.")});
+const eosService = new EosService(eosApi);
+const mongoService = new MongoService(mongoDb);
+
+ioServer.on("connection", (socket) => {
+  const socketService = new SocketService(ioServer, socket);
+  const services: Services = {eosService, mongoService, socketService};
+
+  requests.forEach((request) => { request(services); });
+});
+
+process.on("unhandledRejection", async (reason, promise) => {
+  const occuredAt = Date.now();
+
+  await mongoDb.collection("errors").insertOne({occuredAt, promise, reason});
+
+  console.log("Error!\n", {reason, promise});
+});
+
+httpServer.listen(port);

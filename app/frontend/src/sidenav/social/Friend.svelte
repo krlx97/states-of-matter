@@ -4,17 +4,13 @@
   import FontAwesome from "../../ui/FontAwesome.svelte";
   import type {Friend} from "models/view/Social";
 
-  let friend: Friend;
-  let isActionsVisible = false;
+  import Button from "../../ui/Button.svelte";
+  import Text from "../../ui/Text.svelte";
 
-  const onToggleActions = (): void => {
-    isActionsVisible = !isActionsVisible;
-  };
+  let friend: Friend;
 
   const onChat = (): void => {
     const {username, status, avatarId, messages} = friend;
-
-    isActionsVisible = !isActionsVisible;
 
     if ($socialStore.chat.username === username) {
       $socialStore.chat.isOpen = true;
@@ -27,18 +23,18 @@
   export {friend};
 </script>
 
-<style>
+<style lang="scss">
+  @import "../../shared/styles/mixins";
+  @import "../../shared/styles/variables";
+
   .friend {
-    margin-bottom: var(--spacing-sm);
-    padding: var(--spacing-sm);
+    margin: $spacing-md;
+    padding: $spacing-md;
     display: flex;
     flex-direction: column;
-    background-color: rgb(var(--light-grey));
+    background-color: $light-grey;
     border-radius: 4px;
-    box-shadow: var(--elevation-sm);
-  }
-  .friend:nth-last-child(1) {
-    margin-bottom: 0;
+    box-shadow: $elevation-sm;
   }
 
   .friend__main {
@@ -56,11 +52,11 @@
     border-radius: 50%;
   }
   .friend__main__info {
-    margin-left: var(--spacing-sm);
+    margin-left: $spacing-sm;
     flex-grow: 1;
   }
   .friend__main__info__username {
-    margin-bottom: var(--spacing-xsm);
+    margin-bottom: $spacing-xsm;
   }
 </style>
 
@@ -76,25 +72,25 @@
     </div>
 
     <div class="friend__main__info">
-      <p class="friend__main__info__username">
+      <Text>
         {friend.username}
-      </p>
-      <p>
+      </Text>
+      <Text>
         {#if friend.status === PlayerStatus.OFFLINE}
-          <span class="f--grey"><FontAwesome icon="circle"/> Offline</span>
+          <Text color="grey"><FontAwesome icon="circle"/> Offline</Text>
         {:else if friend.status === PlayerStatus.ONLINE}
-          <span class="f--green"><FontAwesome icon="circle"/> Online</span>
+          <Text color="green"><FontAwesome icon="circle"/> Online</Text>
         {:else if friend.status === PlayerStatus.INLOBBY}
-          <span class="f--blue"><FontAwesome icon="circle"/> In lobby</span>
+          <Text color="blue"><FontAwesome icon="circle"/> In lobby</Text>
         {:else if friend.status === PlayerStatus.INGAME}
-          <span class="f--orange"><FontAwesome icon="circle"/> In game</span>
+          <Text color="orange"><FontAwesome icon="circle"/> In game</Text>
         {/if}
-      </p>
+      </Text>
     </div>
 
-    <button class="btn--icon" on:click={onChat}>
-      <FontAwesome icon={isActionsVisible ? "times" : "comment"}/>
-    </button>
+    <Button style="icon" on:click={onChat}>
+      <FontAwesome icon="comment"/>
+    </Button>
 
   </div>
 </div>

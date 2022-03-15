@@ -1,5 +1,3 @@
-import type {SocketRequest} from "models";
+import type {Services} from "models";
 
-const signout: SocketRequest = async (services) => {};
-
-export default signout;
+export const signout = (services: Services) => {};

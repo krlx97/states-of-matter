@@ -33,7 +33,7 @@ const write = async (fileName: string): Promise<void> => {
     };
 
     export default ${camelCase};
-  `);
+  `.trim());
 
   await rebuildIndex(PascalCase);
 };
@@ -49,7 +49,7 @@ const rebuildIndex = async (fileName: string) => {
 
     requestz +=
       `interface ${fileName}Req {\n` +
-        `${x.map((req) => `  ${req}: ${request.req[req]};\n`).join("")}` +
+        `${x.map((req) => ` ${req}: ${request.req[req]};\n`).join("")}` +
       `}\n`;
   });
 

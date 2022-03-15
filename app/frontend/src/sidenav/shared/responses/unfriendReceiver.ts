@@ -23,7 +23,7 @@ const unfriendReceiver: Res<UnfriendReceiverRes> = (params) => {
 
     friends.splice(i, 1);
 
-    if (chat.username === username) chat.isOpen = false;
+    if (chat.username === username) { chat.isOpen = false; }
 
     return store;
   });

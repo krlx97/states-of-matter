@@ -1,27 +1,28 @@
-import type {SaveDeckReq} from "@som/shared/interfaces/requests";
 import type {SocketRequest} from "models";
 
-const saveDeck: SocketRequest<SaveDeckReq> = async (services, params) => {
-  const {playerService, socketService} = services;
-  const {cards} = params;
-  const {socketId} = socketService;
-  const player = await playerService.find({socketId});
+export const saveDeck: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$players} = mongoService;
+  const {socket, socketId} = socketService;
 
-  if (!player) { return; }
+  socket.on("saveDeck", async (params) => {
+    const {cards} = params;
+    const player = await $players.findOne({socketId});
 
-  const {deckId} = player;
-  const isUpdated = await playerService.update({
-    socketId,
-    "decks.id": deckId
-  }, {
-    $set: {
-      "decks.$.cards": cards
-    }
+    if (!player) { return; }
+
+    const {deckId} = player;
+    const updatePlayer = await $players.updateOne({
+      socketId,
+      "decks.id": deckId
+    }, {
+      $set: {
+        "decks.$.cards": cards
+      }
+    });
+
+    if (!updatePlayer.modifiedCount) { return; }
+
+    socket.emit("saveDeck", {cards});
   });
-
-  if (!isUpdated) { return; }
-
-  socketService.emit().saveDeck({cards});
 };
-
-export default saveDeck;

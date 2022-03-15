@@ -12,6 +12,7 @@ export default defineConfig({
   external: [
     "crypto",
     "http",
+    "process",
     "eosjs",
     "eosjs/dist/eosjs-jssig.js",
     "mongodb",
@@ -20,8 +21,5 @@ export default defineConfig({
     "@som/shared/data",
     "@som/shared/enums"
   ],
-  plugins: [
-    run(),
-    typescript(),
-  ]
+  plugins: [run(), typescript()]
 });

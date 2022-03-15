@@ -1,19 +1,20 @@
-import type {GetPrivateKeyHashReq} from "@som/shared/interfaces/requests";
 import type {SocketRequest} from "models";
 
-const getPrivateKeyHash: SocketRequest<GetPrivateKeyHashReq> = async (services, params) => {
-  const {playerService, socketService} = services;
-  const {username} = params;
-  const player = await playerService.find({username});
+export const getPrivateKeyHash: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$players} = mongoService;
+  const {socket} = socketService;
 
-  if (!player) {
-    const msg = "Player not found.";
-    socketService.emit().notification({msg});
-    return
-  }
+  socket.on("getPrivateKeyHash", async (params) => {
+    const {username} = params;
+    const $player = await $players.findOne({username});
 
-  const {privateKeyHash} = player;
-  socketService.emit().getPrivateKeyHash({privateKeyHash});
+    if (!$player) {
+      socket.emit("notification", "Player not found.");
+      return;
+    }
+
+    const {privateKeyHash} = $player;
+    socket.emit("getPrivateKeyHash", {privateKeyHash});
+  });
 };
-
-export default getPrivateKeyHash;

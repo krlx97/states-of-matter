@@ -3,11 +3,16 @@
 </script>
 
 <style lang="scss">
+  @import "../shared/styles/mixins";
   @import "../shared/styles/variables";
 
   form {
-    padding: $spacing-md;
-    box-sizing: border-box;
+    width: 320px;
+    // padding: $spacing-md;
+    @include flex(column, center);
+    // box-sizing: border-box;
+
+    // border: 1px solid red;
   }
 </style>
 

@@ -105,7 +105,7 @@
         <Text size="lg">Token not tradeable.</Text>
       {:else}
         <Form on:submit={onSendToken}>
-          <Input placeholder="To" bind:value={form.to}/>
+          <Input placeholder="To" maxlength={12} bind:value={form.to}/>
           <!-- <Input placeholder="Game Wallet" type="radio" value={false} bind:group={form.isWithdraw}/>
           <Input placeholder="Telos Wallet" type="radio" value={true} bind:group={form.isWithdraw}/> -->
           <Input placeholder="Amount" bind:value={form.amount}/>

@@ -6,6 +6,7 @@ import type {Res} from "models";
 
 const acceptFriendSender: Res<AcceptFriendSenderRes> = (params) => {
   const {username, avatarId, status} = params;
+  const messages = [];
 
   playerStore.update((store) => {
     const {friends, requests} = store.social;
@@ -18,7 +19,7 @@ const acceptFriendSender: Res<AcceptFriendSenderRes> = (params) => {
   });
 
   socialStore.update((store) => {
-    store.friends.push({username, status, avatarId, messages: []});
+    store.friends.push({username, status, avatarId, messages});
     return store;
   });
 };

@@ -1,42 +1,44 @@
-import type {UnfriendReq} from "@som/shared/interfaces/requests";
-import type {SocketRequest} from "models";
+import type {Services} from "models";
+import type {Player} from "services/MongoService/PlayerService.models";
 
-const unfriend: SocketRequest<UnfriendReq> = async (services, params) => {
-  const {chatService, playerService, socketService} = services;
-  const {username} = params;
-  const {socketId} = socketService;
-  const sender = await playerService.findAndUpdate({socketId}, {
-    $pull: {
-      "social.friends": username
-    }
-  }, {
-    returnDocument: "after"
-  });
+export const unfriend = (services: Services): void => {
+  const {mongoService, socketService} = services;
+  const {$chats, $players} = mongoService;
+  const {io, socket, socketId} = socketService;
 
-  if (!sender) { return; }
+  socket.on("unfriend", async (params) => {
+    const {username} = params;
+    const sender = await $players.findOneAndUpdate({socketId}, {
+      $pull: {
+        "social.friends": username
+      } as Partial<Player>
+    }, {
+      returnDocument: "after"
+    });
 
-  const receiver = await playerService.findAndUpdate({username}, {
-    $pull: {
-      "social.friends": sender.username
-    }
-  }, {
-    returnDocument: "after"
-  });
+    if (!sender.value) { return; }
 
-  if (!receiver) { return; }
+    const receiver = await $players.findOneAndUpdate({username}, [{
+      $pull: {
+        "social.friends": sender.value.username
+      }
+    }], {
+      returnDocument: "after"
+    });
 
-  const isDeletedChat = await chatService.delete({
-    players: {
-      $all: [username, sender.username]
-    }
-  });
+    if (!receiver.value) { return; }
 
-  if (!isDeletedChat) { return; }
+    const deleteChat = await $chats.deleteOne({
+      players: {
+        $all: [username, sender.value.username]
+      }
+    });
 
-  socketService.emit().unfriendSender({username});
-  socketService.emit(receiver.socketId).unfriendReceiver({
-    username: sender.username
+    if (!deleteChat.deletedCount) { return; }
+
+    socket.emit("unfriendSender", {username});
+    io.to(receiver.value.socketId).emit("unfriendReceiver", {
+      username: sender.value.username
+    });
   });
 };
-
-export default unfriend;

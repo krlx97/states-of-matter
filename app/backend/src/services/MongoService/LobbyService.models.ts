@@ -2,6 +2,7 @@ import type {Document} from "mongodb";
 
 interface LobbyPlayer {
   username: string;
+  socketId: string;
   avatarId: number;
 }
 

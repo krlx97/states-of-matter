@@ -4,11 +4,9 @@ import type {UnblockRes} from "@som/shared/interfaces/responses";
 import type {Res} from "models";
 
 const unblock: Res<UnblockRes> = (params) => {
-  const {friendname} = params;
-
   playerStore.update((player) => {
     const {blocked} = player.social;
-    const i = blocked.indexOf(friendname);
+    const i = blocked.indexOf(params.friendname);
 
     blocked.splice(i, 1);
 

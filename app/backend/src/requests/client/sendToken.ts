@@ -1,11 +1,15 @@
 import type {SocketRequest} from "models";
 
-const sendToken: SocketRequest<any> = async (services, params) => {
-  const {blockchainService} = services;
+export const sendToken: SocketRequest = (services) => {
+  const {eosService, socketService} = services;
+  const {socket} = socketService;
 
-  const transaction = await blockchainService.transact("transfer", params);
+  socket.on("sendToken", async (params) => {
+    const transaction = await eosService.transact("transfer", params);
 
-  if (!transaction) { return; }
+    if (!transaction) {
+      socket.emit("notification", "Error sending token.");
+      return;
+    }
+  });
 };
-
-export default sendToken;

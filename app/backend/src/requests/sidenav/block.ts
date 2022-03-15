@@ -1,47 +1,49 @@
-import type {BlockReq} from "@som/shared/interfaces/requests";
 import type {SocketRequest} from "models";
 
-const block: SocketRequest<BlockReq> = async (services, params) => {
-  const {chatService, playerService, socketService} = services;
-  const {username} = params;
-  const {socketId} = socketService;
-  const [sender, receiver] = await Promise.all([
-    playerService.find({socketId}),
-    playerService.find({username})
-  ]);
+export const block: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$chats, $players} = mongoService;
+  const {io, socket, socketId} = socketService;
 
-  if (!sender || !receiver) { return; }
+  socket.on("block", async (params) => {
+    const {username} = params;
+    const [sender, receiver] = await Promise.all([
+      $players.findOne({socketId}),
+      $players.findOne({username})
+    ]);
 
-  const [isUpdatedSender, isUpdatedReceiver, isDeletedChat] = await Promise.all([
-    playerService.update({socketId}, {
-      $pull: {
-        "social.friends": username
-      },
-      $push: {
-        "social.blocked": username
-      }
-    }),
-    playerService.update({username}, {
-      $pull: {
-        "social.friends": sender.username
-      }
-    }),
-    chatService.delete({
-      players: {
-        $all: [username, sender.username]
-      }
-    })
-  ]);
+    if (!sender || !receiver) { return; }
 
-  if (!isUpdatedSender || !isUpdatedReceiver || !isDeletedChat) { return; }
+    const [isUpdatedSender, isUpdatedReceiver, isDeletedChat] = await Promise.all([
+      $players.updateOne({socketId}, {
+        $pull: {
+          "social.friends": username
+        },
+        $push: {
+          "social.blocked": username
+        }
+      }),
+      $players.updateOne({username}, {
+        $pull: {
+          "social.friends": sender.username
+        }
+      }),
+      $chats.deleteOne({
+        players: {
+          $all: [receiver.username, sender.username]
+        }
+      })
+    ]);
 
-  socketService.emit().blockFriendSender({username});
+    if (
+      !isUpdatedSender.modifiedCount ||
+      !isUpdatedReceiver.modifiedCount ||
+      !isDeletedChat.deletedCount
+    ) { return; }
 
-  if (!receiver.socketId) { return; }
-
-  socketService.emit(receiver.socketId).blockFriendReceiver({
-    username: sender.username
+    socket.emit("blockSender", {username});
+    io.to(receiver.socketId).emit("blockReceiver", {
+      username: sender.username
+    });
   });
 };
-
-export default block;

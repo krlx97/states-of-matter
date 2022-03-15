@@ -7,6 +7,8 @@
 
   import Button from "../../ui/Button.svelte";
   import FontAwesome from "../../ui/FontAwesome.svelte";
+  import Text from "../../ui/Text.svelte";
+
   import Block from "./Block.svelte";
   import Friend from "./Friend.svelte";
   import Request from "./Request.svelte";
@@ -17,57 +19,44 @@
   let isRequestsToggled = false;
   let isBlockedToggled = false;
 
-  $: friendsToggleIcon = isFriendsToggled ? "chevron-up" : "chevron-down";
-  $: requestsToggleIcon = isRequestsToggled ? "chevron-up" : "chevron-down";
-  $: blockedToggleIcon = isBlockedToggled ? "chevron-up" : "chevron-down";
-
   const transitionSlide: SlideParams = {
     duration: 333,
     easing: quadInOut
   }
 
-  const addFriendModal = (): void => {
-    miscService.openModal("addFriend");
-  };
+  $: friendsToggleIcon = isFriendsToggled ? "chevron-up" : "chevron-down";
+  $: requestsToggleIcon = isRequestsToggled ? "chevron-up" : "chevron-down";
+  $: blockedToggleIcon = isBlockedToggled ? "chevron-up" : "chevron-down";
 
-  const toggleFriends = (): void => {
-    isFriendsToggled = !isFriendsToggled;
-  };
-
-  const toggleRequests = (): void => {
-    isRequestsToggled = !isRequestsToggled;
-  };
-
-  const toggleBlocked = (): void => {
-    isBlockedToggled = !isBlockedToggled;
-  };
+  const addFriendModal = (): void => { miscService.openModal("addFriend"); };
+  const toggleFriends = (): void => { isFriendsToggled = !isFriendsToggled; };
+  const toggleRequests = (): void => { isRequestsToggled = !isRequestsToggled; };
+  const toggleBlocked = (): void => { isBlockedToggled = !isBlockedToggled; };
 </script>
 
-<style>
-  main {
+<style lang="scss">
+  @import "../../shared/styles/mixins";
+  @import "../../shared/styles/variables";
+
+  .social {
     flex-grow: 1;
-  }
-  section {
-    border-bottom: 1px solid rgb(var(--light-grey));
-  }
-  header {
-    padding: var(--spacing-sm);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .list {
-    padding: var(--spacing-sm);
+
+    &__section {
+      border-bottom: 2px solid $light-grey;
+
+      &__toolbar {
+        padding: $spacing-sm;
+        @include flex($align-items: center, $justify-content: space-between);
+      }
+    }
   }
 </style>
 
-<main>
+<div class="social">
 
-  <section>
-    <header>
-      <p>
-        Friends <b>{$playerStore.social.friends.length}</b>
-      </p>
+  <div class="social__section">
+    <div class="social__section__toolbar">
+      <Text size="xlg">Friends <b>{$playerStore.social.friends.length}</b></Text>
       <div>
         <Button style="icon" on:click={addFriendModal}>
           <FontAwesome icon="user-plus"/>
@@ -76,62 +65,58 @@
           <FontAwesome icon={friendsToggleIcon}/>
         </Button>
       </div>
-    </header>
+    </div>
     {#if isFriendsToggled}
-      <div class="list" transition:slide={transitionSlide}>
+      <div transition:slide={transitionSlide}>
         {#if $playerStore.social.friends.length}
           {#each $socialStore.friends as friend}
             <Friend {friend}/>
           {/each}
         {:else}
-          <span>You have no friends 😭</span>
+          <Text>You have no friends 😭</Text>
         {/if}
       </div>
     {/if}
-  </section>
+  </div>
 
-  <section>
-    <header>
-      <p>
-        Requests <b>{$playerStore.social.requests.length}</b>
-      </p>
-      <button class="btn--icon" on:click={toggleRequests}>
+  <div class="social__section">
+    <div class="social__section__toolbar">
+      <Text size="xlg">Requests <b>{$playerStore.social.requests.length}</b></Text>
+      <Button style="icon" on:click={toggleRequests}>
         <FontAwesome icon={requestsToggleIcon}/>
-      </button>
-    </header>
+      </Button>
+    </div>
     {#if isRequestsToggled}
-      <div class="list" transition:slide={transitionSlide}>
+      <div transition:slide={transitionSlide}>
         {#if $playerStore.social.requests.length}
           {#each $playerStore.social.requests as username}
             <Request {username}/>
           {/each}
         {:else}
-          <span>You have no friend requests 😢</span>
+          <Text>You have no friend requests 😢</Text>
         {/if}
       </div>
     {/if}
-  </section>
+  </div>
 
-  <section>
-    <header>
-      <p>
-        Blocked <b>{$playerStore.social.blocked.length}</b>
-      </p>
-      <button class="btn--icon" on:click={toggleBlocked}>
+  <div class="social__section">
+    <div class="social__section__toolbar">
+      <Text size="xlg">Blocked <b>{$playerStore.social.blocked.length}</b></Text>
+      <Button style="icon" on:click={toggleBlocked}>
         <FontAwesome icon={blockedToggleIcon}/>
-      </button>
-    </header>
+      </Button>
+    </div>
     {#if isBlockedToggled}
-      <div class="list" transition:slide={transitionSlide}>
+      <div transition:slide={transitionSlide}>
         {#if $playerStore.social.blocked.length}
           {#each $playerStore.social.blocked as username}
             <Block {username}/>
           {/each}
         {:else}
-          <span>You haven't blocked anyone yet 😊</span>
+          <Text>You haven't blocked anyone yet 😊</Text>
         {/if}
       </div>
     {/if}
-  </section>
+  </div>
 
-</main>
+</div>

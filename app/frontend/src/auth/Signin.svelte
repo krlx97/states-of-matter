@@ -18,41 +18,21 @@
   const onGotoSignup = (): void => { dispatch("gotoSignup"); };
 </script>
 
-<style lang="scss">
-  @import "../shared/styles/variables";
-
-
-  .form__btn {
-    display: flex;
-    justify-content: center;
-  }
-</style>
-
-<Form on:submit={onSignin}>
+<div>
   <Text size="xlg">Sign in</Text>
 
-  <hr/>
+  <br/>
 
-  <Input
-    placeholder="Username"
-    maxlength={16}
-    bind:value={$authStore.signinForm.username}/>
+  <Form on:submit={onSignin}>
+    <Input placeholder="Username" maxlength={16} bind:value={$authStore.signinForm.username}/>
+    <Input placeholder="Password" type="password" maxlength={32} bind:value={$authStore.signinForm.password}/>
+    <Button type="submit">SIGN IN</Button>
+  </Form>
 
-  <Input
-    placeholder="Password"
-    type="password"
-    maxlength={32}
-    bind:value={$authStore.signinForm.password}/>
+  <br/>
 
-  <!-- <div class="form__btn"> -->
-    <Button type="submit">
-      SIGN IN
-    </Button>
-  <!-- </div> -->
-
-</Form>
-
-<div>
-  Dont have an account?
-  <div style="text-decoration: underline" on:click={onGotoSignup}>Sign up</div>
+  <Text>
+    Dont have an account?
+    <Text color="purple" isUnderline={true} on:click={onGotoSignup}>Sign up</Text>
+  </Text>
 </div>

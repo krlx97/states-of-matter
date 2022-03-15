@@ -1,51 +1,54 @@
-import type {AcceptFriendReq} from "@som/shared/interfaces/requests";
 import type {SocketRequest} from "models";
+import { UpdateFilter } from "mongodb";
+import { Player } from "services/MongoService/PlayerService.models";
 
-const acceptFriend: SocketRequest<AcceptFriendReq> = async (services, params) => {
-  const {chatService, playerService, socketService} = services;
-  const {username} = params;
-  const {socketId} = socketService;
-  const sender = await playerService.findAndUpdate({socketId}, {
-    $pull: {
-      "social.requests": username
-    },
-    $push: {
-      "social.friends": username
-    }
-  }, {
-    returnDocument: "after"
-  });
+export const acceptFriend: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$chats, $players} = mongoService;
+  const {io, socket, socketId} = socketService;
 
-  if (!sender) { return; }
+  socket.on("acceptFriend", async (params) => {
+    const {username} = params;
+    const $sender = await $players.findOneAndUpdate({socketId}, {
+      $pull: {
+        "social.requests": username
+      },
+      $push: {
+        "social.friends": username
+      }
+    } as UpdateFilter<Player> | Partial<Player>, { // bug: https://github.com/Automattic/mongoose/issues/10075
+      returnDocument: "after"
+    });
 
-  const receiver = await playerService.findAndUpdate({username}, {
-    $push: {
-      "social.friends": sender.username
-    }
-  }, {
-    returnDocument: "after"
-  });
+    if (!$sender.value) { return; }
 
-  if (!receiver) { return; }
+    const receiver = await $players.findOneAndUpdate({username}, {
+      $push: {
+        "social.friends": $sender.value.username
+      }
+    } as UpdateFilter<Player> | Partial<Player>, {
+      returnDocument: "after"
+    });
 
-  const isInsertedChat = await chatService.insert({
-    players: [sender.username, receiver.username],
-    messages: []
-  });
+    if (!receiver.value) { return; }
 
-  if (!isInsertedChat) { return; }
+    const insertChat = await $chats.insertOne({
+      players: [$sender.value.username, receiver.value.username],
+      messages: []
+    });
 
-  socketService.emit().acceptFriendSender({
-    username: receiver.username,
-    avatarId: receiver.avatarId,
-    status: receiver.status
-  });
+    if (!insertChat.insertedId) { return; }
 
-  socketService.emit(receiver.socketId).acceptFriendReceiver({
-    username: sender.username,
-    avatarId: sender.avatarId,
-    status: sender.status
+    socket.emit("acceptFriendSender", {
+      username: receiver.value.username,
+      avatarId: receiver.value.avatarId,
+      status: receiver.value.status
+    });
+
+    io.to(receiver.value.socketId).emit("acceptFriendReceiver", {
+      username: $sender.value.username,
+      avatarId: $sender.value.avatarId,
+      status: $sender.value.status
+    });
   });
 };
-
-export default acceptFriend;

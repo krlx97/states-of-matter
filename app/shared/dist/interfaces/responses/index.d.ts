@@ -1,3 +1,157 @@
+interface UpdateFriend {
+    username: string;
+    status: number;
+}
+interface SendChatMsgReceiver {
+    sender: string;
+    text: string;
+    date: Date;
+}
+interface SendChatMsgSender {
+    sender: string;
+    receiver: string;
+    text: string;
+    date: Date;
+}
+interface GetPrivateKeyHash {
+    privateKeyHash: string;
+}
+interface Signin {
+    player: any;
+    friends: any[];
+    lobby: any | undefined;
+    game: any | undefined;
+}
+interface JoinLobbyReceiver {
+    challengee: any;
+}
+interface JoinLobbySender {
+    lobby: any;
+}
+interface MakeLobby {
+    lobby: any;
+}
+interface SaveDeck {
+    cards: Array<any>;
+}
+interface SelectDeck {
+    deckId: number;
+}
+interface SetDeckKlass {
+    deckId: number;
+    klass: number;
+}
+interface SetDeckName {
+    id: number;
+    name: string;
+}
+interface StartGame {
+    game: any;
+}
+interface AttackCardReceiver {
+    attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+    attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+}
+interface AttackCardSender {
+    attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+    attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+}
+interface HoverCard {
+    field: string;
+}
+interface PlayCardReceiver {
+    field: string;
+    card: any;
+}
+interface PlayCardSender {
+    field: string;
+    gid: number;
+}
+interface AcceptFriendReceiver {
+    username: string;
+    avatarId: number;
+    status: number;
+}
+interface AcceptFriendSender {
+    username: string;
+    avatarId: number;
+    status: number;
+}
+interface AddFriend {
+    username: string;
+}
+interface BlockReceiver {
+    username: string;
+}
+interface BlockSender {
+    username: string;
+}
+interface DeclineFriend {
+    username: string;
+}
+interface SetAvatarReceiver {
+    username: string;
+    avatarId: number;
+}
+interface SetAvatarSender {
+    avatarId: number;
+}
+interface Unblock {
+    friendname: string;
+}
+interface UnfriendReceiver {
+    username: string;
+}
+interface UnfriendSender {
+    username: string;
+}
+interface UpdateFriend {
+    username: string;
+    status: number;
+}
+declare type Callback<Params> = (params: Params) => Promise<void>;
+export interface SocketResponses {
+    notification: Callback<string>;
+    updateStatus: Callback<UpdateFriend>;
+    sendChatMsgReceiver: Callback<SendChatMsgReceiver>;
+    sendChatMsgSender: Callback<SendChatMsgSender>;
+    getPrivateKeyHash: Callback<GetPrivateKeyHash>;
+    signin: Callback<Signin>;
+    destroyLobby: () => Promise<void>;
+    joinLobbyReceiver: Callback<JoinLobbyReceiver>;
+    joinLobbySender: Callback<JoinLobbySender>;
+    leaveLobbyReceiver: () => Promise<void>;
+    leaveLobbySender: () => Promise<void>;
+    makeLobby: Callback<MakeLobby>;
+    saveDeck: Callback<SaveDeck>;
+    selectDeck: Callback<SelectDeck>;
+    setDeckKlass: Callback<SetDeckKlass>;
+    setDeckName: Callback<SetDeckName>;
+    startGame: Callback<StartGame>;
+    endGame: () => Promise<void>;
+    attackCardReceiver: Callback<AttackCardReceiver>;
+    attackCardSender: Callback<AttackCardSender>;
+    endTurnPlayer: () => Promise<void>;
+    endTurnOpponent: () => Promise<void>;
+    hoverCard: Callback<HoverCard>;
+    playCardPlayer: Callback<PlayCardSender>;
+    playCardOpponent: Callback<PlayCardReceiver>;
+    unhoverCard: () => Promise<void>;
+    acceptFriendReceiver: Callback<AcceptFriendReceiver>;
+    acceptFriendSender: Callback<AcceptFriendSender>;
+    addFriend: Callback<AddFriend>;
+    blockReceiver: Callback<BlockReceiver>;
+    blockSender: Callback<BlockSender>;
+    declineFriend: Callback<DeclineFriend>;
+    setAvatarReceiver: Callback<SetAvatarReceiver>;
+    setAvatarSender: Callback<SetAvatarSender>;
+    unblock: Callback<Unblock>;
+    unfriendReceiver: Callback<UnfriendReceiver>;
+    unfriendSender: Callback<UnfriendSender>;
+}
+/**
+ * BELOW TYPES SHOULD BE DELETED BUT ONLY AFTER FRONTEND REFACTOR
+ */
 interface GetPrivateKeyHashRes {
     privateKeyHash: string;
 }

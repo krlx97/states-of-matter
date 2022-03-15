@@ -1,5 +1,4 @@
 import settings from "settings";
-import Service from "../Service";
 
 import type {
   GetTableRowsResult,
@@ -8,15 +7,22 @@ import type {
 } from "eosjs/dist/eosjs-rpc-interfaces";
 
 import type {TransactResult} from "eosjs/dist/eosjs-api-interfaces";
+import type {Api} from "eosjs";
 // import type {Game, Lobby, Player} from "models"
 
-class BlockchainService extends Service {
+export class EosService {
+  private readonly _api: Api
+
+  constructor (api: Api) {
+    this._api = api;
+  }
+
   public async findPlayer (username: string): Promise<any | undefined> {
     const {contractAccount} = settings.eos;
     let table!: GetTableRowsResult;
 
     try {
-      table = await this._apis.eos.rpc.get_table_rows({
+      table = await this._api.rpc.get_table_rows({
         code: contractAccount,
         scope: contractAccount,
         table: "players",
@@ -25,7 +31,7 @@ class BlockchainService extends Service {
         limit: 1
       });
     } catch (error) {
-      this._handleError(error);
+      console.error(error);
     }
 
     return table.rows[0];
@@ -77,7 +83,7 @@ class BlockchainService extends Service {
     let transaction!: TransactResult | ReadOnlyTransactResult | PushTransactionArgs;
 
     try {
-      transaction = await this._apis.eos.transact({
+      transaction = await this._api.transact({
         actions: [{
           account: contractAccount,
           name: action,
@@ -92,11 +98,9 @@ class BlockchainService extends Service {
         expireSeconds: 30
       });
     } catch (error) {
-      this._handleError(error);
+      console.error(error);
     }
 
     return transaction;
   }
 }
-
-export default BlockchainService;

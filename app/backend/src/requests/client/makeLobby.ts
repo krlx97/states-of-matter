@@ -2,50 +2,53 @@ import {randomInt} from "crypto";
 import {PlayerStatus} from "@som/shared/enums";
 import type {SocketRequest} from "models";
 
-const makeLobby: SocketRequest = async (services) => {
-  const {lobbyService, playerService, socketService} = services;
-  const {socketId} = socketService;
-  const player = await playerService.find({socketId});
+export const makeLobby: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$lobbies, $players} = mongoService;
+  const {socket, socketId} = socketService;
 
-  if (!player) { return; }
+  socket.on("makeLobby", async () => {
+    const player = await $players.findOne({socketId});
 
-  if (player.lobbyId) {
-    const msg = "You are already in a lobby.";
-    socketService.emit().notification({msg});
-    return;
-  }
+    if (!player) {
+      socket.emit("notification", "Player not found.");
+      return;
+    }
+    if (player.lobbyId) {
+      socket.emit("notification", "You are already in a lobby.");
+      return;
+    }
+    if (player.gameId) {
+      socket.emit("notification", "You can't make a lobby while in game.");
+      return;
+    }
 
-  if (player.gameId) {
-    const msg = "You can't make a lobby while in game.";
-    socketService.emit().notification({msg});
-  }
-
-  const {username, avatarId} = player;
-  const lobbyId = randomInt(1, 1000000);
-  const [isInsertedLobby, isUpdatedPlayer] = await Promise.all([
-    lobbyService.insert({
-      lobbyId,
-      host: {username, avatarId},
-      challengee: {
-        username: "",
-        avatarId: 0
-      }
-    }),
-    playerService.update({socketId}, {
-      $set: {
+    const {username, avatarId} = player;
+    const lobbyId = randomInt(1, 1000000);
+    const [insertLobby, updatePlayer] = await Promise.all([
+      $lobbies.insertOne({
         lobbyId,
-        status: PlayerStatus.INLOBBY
-      }
-    })
-  ]);
+        host: {username, socketId, avatarId},
+        challengee: {
+          username: "",
+          socketId: "",
+          avatarId: 0
+        }
+      }),
+      $players.updateOne({socketId}, {
+        $set: {
+          lobbyId,
+          status: PlayerStatus.INLOBBY
+        }
+      })
+    ]);
 
-  if (!isInsertedLobby || !isUpdatedPlayer) { return; }
+    if (!insertLobby.insertedId || !updatePlayer.modifiedCount) { return; }
 
-  const lobby = await lobbyService.find({lobbyId});
+    const lobby = await $lobbies.findOne({lobbyId});
 
-  if (!lobby) { return; }
+    if (!lobby) { return; }
 
-  socketService.emit().makeLobby({lobby});
+    socket.emit("makeLobby", {lobby});
+  });
 };
-
-export default makeLobby;

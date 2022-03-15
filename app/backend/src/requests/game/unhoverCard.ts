@@ -1,32 +1,34 @@
 import {SocketRequest} from "models";
 
-const unhoverCard: SocketRequest = async (services) => {
-  const {gameService, playerService, socketService} = services;
-  const {socketId} = socketService;
-  const player = await playerService.find({socketId});
+export const unhoverCard: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$games, $players} = mongoService;
+  const {io, socket, socketId} = socketService;
 
-  if (!player) { return; }
+  socket.on("unhoverCard", async () => {
+    const $player = await $players.findOne({socketId});
 
-  const {gameId} = player;
-  const game = await gameService.find({gameId});
+    if (!$player) { return; }
 
-  if (!game) { return; }
+    const {gameId} = $player;
+    const $game = await $games.findOne({gameId});
 
-  let opponentName: string;
+    if (!$game) { return; }
 
-  if (game.playerA.username === player.username) {
-    opponentName = game.playerB.username;
-  } else {
-    opponentName = game.playerA.username;
-  }
+    let opponentName: string;
 
-  const opponent = await playerService.find({
-    username: opponentName
+    if ($game.playerA.username === $player.username) {
+      opponentName = $game.playerB.username;
+    } else {
+      opponentName = $game.playerA.username;
+    }
+
+    const opponent = await $players.findOne({
+      username: opponentName
+    });
+
+    if (!opponent || !opponent.socketId) { return; }
+
+    io.to(opponent.socketId).emit("unhoverCard");
   });
-
-  if (!opponent || !opponent.socketId) { return; }
-
-  socketService.emit(opponent.socketId).unhoverCard();
 };
-
-export default unhoverCard;

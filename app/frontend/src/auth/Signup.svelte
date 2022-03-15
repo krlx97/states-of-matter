@@ -4,6 +4,9 @@
   import {authStore} from "auth/stores";
 
   import Button from "../ui/Button.svelte";
+  import Form from "../ui/Form.svelte";
+  import Input from "../ui/Input.svelte";
+  import Text from "../ui/Text.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -35,43 +38,18 @@
   }
 </style>
 
-<form>
-  <h3>Sign up</h3>
+<div>
+  <Text size="lg">Sign up</Text>
 
-  <div class="form__field">
-    <label for="signupUsername">Username</label>
-    <input
-      id="signupUsername"
-      placeholder="Username"
-      name="username"
-      type="text"
-      maxlength="12"
-      bind:value={$authStore.signupForm.username}>
-    <p>
-      <i>* Characters allowed: a-z 1-5 . (dot)</i><br>
-      <i>* Maximum 12 characters</i><br>
-    </p>
-  </div>
+  <Form>
+    <Input placeholder="Username" maxlength={12} bind:value={$authStore.signupForm.username}/>
+    <Text>a-z 1-5 . (12 chars)</Text>
+    <Input placeholder="Password" type="password" maxlength={32} bind:value={$authStore.signupForm.password}/>
+    <Button on:click={onSignup}>SIGN UP</Button>
+  </Form>
 
-  <div class="form__field">
-    <label for="signupPassword">Password</label>
-    <input
-      id="signupPassword"
-      placeholder="Password"
-      name="password"
-      type="password"
-      bind:value={$authStore.signupForm.password}>
-  </div>
-
-  <div class="form__btn">
-    <Button on:click={onSignup}>
-      SIGN UP
-    </Button>
-  </div>
-
-</form>
-
-<p>
-  Already have an account?
-  <span class="f--purple" on:click={onGotoSignin}>Sign in</span>
-</p>
+  <Text>
+    Already have an account?
+    <Text color="purple" isUnderline={true} on:click={onGotoSignin}>Sign in</Text>
+  </Text>
+</div>

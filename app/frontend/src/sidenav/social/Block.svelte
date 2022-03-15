@@ -1,6 +1,8 @@
 <script type="ts">
   import {socketService} from "shared/services";
+  import Button from "../../ui/Button.svelte";
   import FontAwesome from "../../ui/FontAwesome.svelte";
+  import Text from "../../ui/Text.svelte";
 
   let username: string;
 
@@ -9,27 +11,23 @@
   export {username};
 </script>
 
-<style>
+<style lang="scss">
+  @import "../../shared/styles/mixins";
+  @import "../../shared/styles/variables";
+
   .block {
-    margin-bottom: var(--spacing-sm);
-    padding: var(--spacing-sm);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: rgb(var(--light-grey));
+    margin: $spacing-md;
+    padding: $spacing-md;
+    @include flex($align-items: center, $justify-content: space-between);
+    background-color: $light-grey;
     border-radius: 4px;
-    box-shadow: var(--elevation-sm);
-  }
-  .block:nth-last-child(1) {
-    margin-bottom: 0;
+    box-shadow: $elevation-sm;
   }
 </style>
 
 <div class="block">
-  <p>
-    {username}
-  </p>
-  <button class="btn--icon-accent" on:click={onUnblock}>
+  <Text>{username}</Text>
+  <Button style="icon" on:click={onUnblock}>
     <FontAwesome icon="trash"/>
-  </button>
+  </Button>
 </div>

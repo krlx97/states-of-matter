@@ -1,4 +1,110 @@
-import type { PlayerDeckCard } from "@som/backend/src/services/PlayerService/PlayerService.models";
+interface SendChatMsg {
+    sender: string;
+    receiver: string;
+    text: string;
+    date: Date;
+}
+interface GetPrivateKeyHash {
+    username: string;
+}
+interface Signin {
+    username: string;
+    publicKey: string;
+    signature: string;
+}
+interface Signup {
+    username: string;
+    publicKey: string;
+    privateKeyHash: string;
+}
+interface JoinLobby {
+    lobbyId: number;
+}
+interface SaveDeck {
+    cards: Array<any>;
+}
+interface SelectDeck {
+    deckId: number;
+}
+interface SendToken {
+}
+interface SetDeckKlass {
+    deckId: number;
+    klass: number;
+}
+interface SetDeckName {
+    id: number;
+    name: string;
+}
+interface StartGame {
+    lobbyId: number;
+}
+interface AttackCard {
+    attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+    attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+}
+interface PlayCard {
+    field: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap";
+    gid: number;
+    id?: number;
+}
+interface HoverCard {
+    field: string;
+}
+interface AcceptFriend {
+    username: string;
+}
+interface AddFriend {
+    username: string;
+}
+interface Block {
+    username: string;
+}
+interface DeclineFriend {
+    username: string;
+}
+interface SetAvatar {
+    avatarId: number;
+}
+interface Unblock {
+    username: string;
+}
+interface Unfriend {
+    username: string;
+}
+declare type Callback<Params> = (params: Params) => Promise<void>;
+export interface SocketRequests {
+    sendChatMsg: Callback<SendChatMsg>;
+    updateStatus: () => Promise<void>;
+    getPrivateKeyHash: Callback<GetPrivateKeyHash>;
+    signin: Callback<Signin>;
+    signup: Callback<Signup>;
+    destroyLobby: () => Promise<void>;
+    joinLobby: Callback<JoinLobby>;
+    leaveLobby: () => Promise<void>;
+    makeLobby: () => Promise<void>;
+    saveDeck: Callback<SaveDeck>;
+    selectDeck: Callback<SelectDeck>;
+    sendToken: Callback<SendToken>;
+    setDeckKlass: Callback<SetDeckKlass>;
+    setDeckName: Callback<SetDeckName>;
+    startGame: Callback<StartGame>;
+    attackCard: Callback<AttackCard>;
+    endTurn: () => Promise<void>;
+    hoverCard: Callback<HoverCard>;
+    playCard: Callback<PlayCard>;
+    unhoverCard: () => Promise<void>;
+    acceptFriend: Callback<AcceptFriend>;
+    addFriend: Callback<AddFriend>;
+    block: Callback<Block>;
+    declineFriend: Callback<DeclineFriend>;
+    setAvatar: Callback<SetAvatar>;
+    unblock: Callback<Unblock>;
+    unfriend: Callback<Unfriend>;
+}
+/**
+ * BELOW TYPES SHOULD BE DELETED BUT ONLY AFTER FRONTEND REFACTOR
+ */
 interface GetPrivateKeyHashReq {
     username: string;
 }
@@ -16,7 +122,7 @@ interface JoinLobbyReq {
     lobbyId: number;
 }
 interface SaveDeckReq {
-    cards: Array<PlayerDeckCard>;
+    cards: Array<any>;
 }
 interface SelectDeckReq {
     deckId: number;

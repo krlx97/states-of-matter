@@ -1,19 +1,22 @@
-import type {UnblockReq} from "@som/shared/interfaces/requests";
-import type {SocketRequest} from "models";
+import type {Services} from "models";
 
-const unblock: SocketRequest<UnblockReq> = async (services, params) => {
-  const {playerService, socketService} = services;
-  const {username} = params;
-  const {socketId} = socketService;
-  const isUpdated = playerService.update({socketId}, {
-    $pull: {
-      "social.blocked": username
-    }
+export const unblock = (services: Services): void => {
+  const {mongoService, socketService} = services;
+  const {$players} = mongoService;
+  const {socket, socketId} = socketService;
+
+  socket.on("unblock", async (params) => {
+    const {username} = params;
+    const updatePlayer = await $players.updateOne({socketId}, {
+      $pull: {
+        "social.blocked": username
+      }
+    });
+
+    if (!updatePlayer.modifiedCount) { return; }
+
+    socket.emit("unblock", {
+      friendname: username
+    });
   });
-
-  if (!isUpdated) { return; }
-
-  socketService.emit().unblockFriend({username} as any); // ;w;
 };
-
-export default unblock;

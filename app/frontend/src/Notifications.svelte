@@ -1,10 +1,12 @@
 <script lang="ts">
   import {fade, fly} from "svelte/transition";
   import {notificationStore} from "stores/view";
-
   import type {FlyParams} from "svelte/transition";
 
-  const inFly: FlyParams = {x: 100, duration: 225};
+  const inFly: FlyParams = {
+    x: 100,
+    duration: 225
+  };
 </script>
 
 <style lang="scss">

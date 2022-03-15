@@ -11,18 +11,20 @@
   onDestroy((): void => { socketService.forget(responses); });
 </script>
 
-<style>
-  .friends {
+<style lang="scss">
+  @import "../shared/styles/mixins";
+  @import "../shared/styles/variables";
+
+  .sidenav {
     height: 100%;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    border-left: 2px solid rgb(var(--light-grey));
+    @include flex(column);
+    border-left: 2px solid $light-grey;
     box-sizing: border-box;
   }
 </style>
 
-<div class="friends">
+<div class="sidenav">
   <Player/>
   <Social/>
   <Footer/>

@@ -1,9 +1,10 @@
 <script lang="ts">
-  let color: "white" | "purple" | "blue" | "red" | "green" | "yellow" | "orange" = "white";
+  let color: "grey" | "white" | "purple" | "blue" | "red" | "green" | "yellow" | "orange" = "white";
   let size: "xsm" | "sm" | "md" | "lg" | "xlg" = "md";
   let isMonospace = false;
+  let isUnderline = false;
 
-  export {color, size, isMonospace};
+  export {color, size, isMonospace, isUnderline};
 </script>
 
 <style lang="scss">
@@ -13,7 +14,8 @@
     display: block;
   }
 
-  .isMonospace {font-family: monospace}
+  .isMonospace {font-family: monospace;}
+  .isUnderline {text-decoration: underline;}
 
   .white {color: white}
   .purple {color: $purple}
@@ -31,4 +33,4 @@
   .xlg {font-size: $font-xlg}
 </style>
 
-<span class={`${color} ${size}`} class:isMonospace><slot/></span>
+<span class={`${color} ${size}`} class:isMonospace class:isUnderline on:click><slot/></span>

@@ -1,70 +1,65 @@
 import {PlayerStatus} from "@som/shared/enums";
-import type {JoinLobbyReq} from "@som/shared/interfaces/requests";
 import type {SocketRequest} from "models";
 
-const joinLobby: SocketRequest<JoinLobbyReq> = async (services, params) => {
-  console.log("joinLobby")
-  const {lobbyService, playerService, socketService} = services;
-  const {lobbyId} = params;
-  const {socketId} = socketService;
+export const joinLobby: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$lobbies, $players} = mongoService;
+  const {io, socket, socketId} = socketService;
 
-  const [player, lobby] = await Promise.all([
-    playerService.find({socketId}),
-    lobbyService.find({lobbyId})
-  ]);
+  socket.on("joinLobby", async (params) => {
+    const {lobbyId} = params;
+    const [$player, $lobby] = await Promise.all([
+      $players.findOne({socketId}),
+      $lobbies.findOne({lobbyId})
+    ]);
 
-  if (!player) { return; }
-
-  if (!lobby) {
-    const msg = "Lobby not found.";
-    socketService.emit().notification({msg});
-    return;
-  }
-
-  if (player.lobbyId > 0) {
-    const msg = "You are already in a lobby.";
-    socketService.emit().notification({msg});
-    return;
-  }
-
-  if (player.gameId > 0) {
-    const msg = "You can't join a lobby while in game.";
-    socketService.emit().notification({msg});
-    return;
-  }
-
-  if (lobby.challengee.username) {
-    const msg = "Lobby is full.";
-    socketService.emit().notification({msg});
-    return;
-  }
-
-  const {username, avatarId} = player;
-
-  const updated = await lobbyService.findAndUpdate({lobbyId}, {
-    $set: {
-      challengee: {username, avatarId}
+    if (!$player) {
+      socket.emit("notification", "Player not found.");
+      return;
     }
-  }, {returnDocument: "after"});
-
-  const isPlayerUpdated = await playerService.update({socketId}, {
-    $set: {
-      lobbyId,
-      status: PlayerStatus.INLOBBY
+    if (!$lobby) {
+      socket.emit("notification", "Lobby not found.");
+      return;
     }
+    if ($player.lobbyId) {
+      socket.emit("notification", "You are already in a lobby.");
+      return;
+    }
+    if ($player.gameId) {
+      socket.emit("notification", "You can't join a lobby while in game.");
+      return;
+    }
+    if ($lobby.challengee.username) {
+      socket.emit("notification", "Lobby is full.");
+      return;
+    }
+
+    const {username, avatarId} = $player;
+    const [modifiedLobby, updatedPlayer] = await Promise.all([
+      $lobbies.findOneAndUpdate({lobbyId}, {
+        $set: {
+          challengee: {username, socketId, avatarId}
+        }
+      }, {
+        returnDocument: "after"
+      }),
+      $players.updateOne({socketId}, {
+        $set: {
+          lobbyId,
+          status: PlayerStatus.INLOBBY
+        }
+      })
+    ]);
+
+    if (!modifiedLobby.value || !updatedPlayer.modifiedCount) {
+      socket.emit("notification", "Error joining lobby.");
+      return;
+    }
+
+    const lobby = modifiedLobby.value;
+    const {challengee} = modifiedLobby.value;
+
+    socket.emit("joinLobbySender", {lobby});
+    io.to($lobby.host.socketId).emit("joinLobbyReceiver", {challengee});
   });
-
-  if (!updated || !isPlayerUpdated) { return; }
-
-  socketService.emit().joinLobbySender({lobby: updated});
-
-  const host = await playerService.find({username: updated.host.username});
-
-  if (!host || !host.socketId) { return; }
-
-  const {challengee} = updated;
-
-  socketService.emit(host.socketId).joinLobbyReceiver({challengee});
 };
-
-export default joinLobby;

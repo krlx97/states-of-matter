@@ -12,6 +12,7 @@
   @import "../shared/styles/variables";
 
   label {
+    width: 100%;
     margin-bottom: $spacing-md;
     display: block;
 

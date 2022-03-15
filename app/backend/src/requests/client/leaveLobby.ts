@@ -1,55 +1,52 @@
 import {PlayerStatus} from "@som/shared/enums";
 import type {SocketRequest} from "models";
 
-const leaveLobby: SocketRequest = async (services) => {
-  const {lobbyService, playerService, socketService} = services;
-  const {socketId} = socketService;
-  const player = await playerService.find({socketId});
+export const leaveLobby: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$lobbies, $players} = mongoService;
+  const {io, socket, socketId} = socketService;
 
-  if (!player) { return; }
+  socket.on("leaveLobby", async () => {
+    const $player = await $players.findOne({socketId});
 
-  const {lobbyId} = player;
+    if (!$player) {
+      socket.emit("notification", "Player not found.");
+      return;
+    }
+    if (!$player.lobbyId) {
+      socket.emit("notification", "You are not in a lobby.");
+      return;
+    }
 
-  if (lobbyId <= 0) {
-    const msg = "You are not in a lobby.";
-    socketService.emit().notification({msg});
-    return;
-  }
+    const {lobbyId} = $player;
+    const $lobby = await $lobbies.findOne({lobbyId});
 
-  const lobby = await lobbyService.find({lobbyId});
+    if (!$lobby) {
+      socket.emit("notification", "Lobby not found.");
+      return;
+    }
 
-  if (!lobby) { return; }
-
-  const [updatedLobby, isUpdatedPlayer] = await Promise.all([
-    lobbyService.findAndUpdate({lobbyId}, {
-      $set: {
-        challengee: {
-          username: "",
-          avatarId: 0
+    const [$updateLobby, $updatePlayer] = await Promise.all([
+      $lobbies.updateOne({lobbyId}, {
+        $set: {
+          challengee: {
+            username: "",
+            socketId: "",
+            avatarId: 0
+          }
         }
-      }
-    }, {
-      returnDocument: "after"
-    }),
-    playerService.update({socketId}, {
-      $set: {
-        lobbyId: 0,
-        status: PlayerStatus.ONLINE
-      }
-    })
-  ]);
+      }),
+      $players.updateOne({socketId}, {
+        $set: {
+          lobbyId: 0,
+          status: PlayerStatus.ONLINE
+        }
+      })
+    ]);
 
-  if (!updatedLobby || !isUpdatedPlayer) { return; }
+    if (!$updateLobby.modifiedCount || !$updatePlayer.modifiedCount) { return; }
 
-  socketService.emit().leaveLobbySender();
-
-  const host = await playerService.find({
-    username: updatedLobby.host.username
+    socket.emit("leaveLobbySender");
+    io.to($lobby.host.socketId).emit("leaveLobbyReceiver");
   });
-
-  if (!host || !host.socketId) { return; }
-
-  socketService.emit(host.socketId).leaveLobbyReceiver();
 };
-
-export default leaveLobby;

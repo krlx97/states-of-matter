@@ -6,6 +6,8 @@
   import {socialStore} from "stores/view";
 
   import Button from "../ui/Button.svelte";
+  import Img from "../ui/Img.svelte";
+  import Text from "../ui/Text.svelte";
 
   const logout = (): void => {
     socketService.signout();
@@ -16,6 +18,7 @@
       username: "",
       publicKey: "",
       privateKey: "",
+      last_nonce: 0,
       privateKeyHash: "",
       status: PlayerStatus.OFFLINE,
       xp: 0,
@@ -29,7 +32,8 @@
         friends: [],
         requests: [],
         blocked: []
-      }
+      },
+      wallet: []
     };
 
     $socialStore = {
@@ -57,19 +61,21 @@
   });
 </script>
 
-<style>
+<style lang="scss">
+  @import "../shared/styles/mixins";
+  @import "../shared/styles/variables";
+
   .player {
     height: 128px;
-    padding: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    border-bottom: 2px solid rgb(var(--light-grey));
+    padding: $spacing-md;
+    @include flex($align-items: center);
+    border-bottom: 2px solid $light-grey;
     box-sizing: border-box;
   }
 
   .player__main {
     position: relative;
-    margin-right: var(--spacing-md);
+    margin-right: $spacing-md;
   }
   .player__main__img {
     height: 96px;
@@ -85,12 +91,7 @@
 
   .player__account {
     flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  .player__account__username {
-    font-size: var(--font-lg);
-    margin-bottom: var(--spacing-sm);
+    @include flex(column);
   }
 
   #xpProgress {
@@ -117,15 +118,9 @@
   </div>
 
   <div class="player__account">
-    <div class="player__account__username">
-      {$playerStore.username}
-    </div>
-    <div>
-      Level {$playerStore.lv}
-    </div>
-    <div>
-      <span class="f--purple">{$playerStore.xp} / {xpRequired}</span>
-    </div>
+    <Text size="lg">{$playerStore.username}</Text>
+    <Text>Level {$playerStore.lv}</Text>
+    <Text color="purple">{$playerStore.xp} / {xpRequired}</Text>
   </div>
 
   <div>

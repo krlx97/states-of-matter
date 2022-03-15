@@ -1,22 +1,23 @@
-import type {SetDeckNameReq} from "@som/shared/interfaces/requests";
 import type {SocketRequest} from "models";
 
-const setDeckName: SocketRequest<SetDeckNameReq> = async (services, params) => {
-  const {playerService, socketService} = services;
-  const {id, name} = params;
-  const {socketId} = socketService;
-  const isUpdated = await playerService.update({
-    socketId,
-    "decks.id": id
-  }, {
-    $set: {
-      "decks.$.name": name
-    }
+export const setDeckName: SocketRequest = (services) => {
+  const {mongoService, socketService} = services;
+  const {$players} = mongoService;
+  const {socket, socketId} = socketService;
+
+  socket.on("setDeckName", async (params) => {
+    const {id, name} = params;
+    const $updatePlayer = await $players.updateOne({
+      socketId,
+      "decks.id": id
+    }, {
+      $set: {
+        "decks.$.name": name
+      }
+    });
+
+    if (!$updatePlayer.modifiedCount) { return; }
+
+    socket.emit("setDeckName", {id, name});
   });
-
-  if (!isUpdated) { return; }
-
-  socketService.emit().setDeckName({id, name});
 };
-
-export default setDeckName;

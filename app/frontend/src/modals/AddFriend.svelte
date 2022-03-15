@@ -2,27 +2,26 @@
   import {socketService} from "services";
 
   import Button from "../ui/Button.svelte";
-  import FontAwesome from "../ui/FontAwesome.svelte";
+  // import FontAwesome from "../ui/FontAwesome.svelte";
+  import Form from "../ui/Form.svelte";
+  import Input from "../ui/Input.svelte";
   import Modal from "../ui/Modal.svelte";
-  import Text from "../ui/Text.svelte";
+  // import Text from "../ui/Text.svelte";
 
   let username = "";
 
   const onAddFriend = (): void => { socketService.addFriend({username}); };
 </script>
 
-<style lang="scss">
+<!-- <style lang="scss">
   @import "../shared/styles/mixins";
 
   form {@include flex()}
-</style>
+</style> -->
 
 <Modal>
-  <form on:submit|preventDefault={onAddFriend}>
-    <input class="input--green" placeholder="Username" bind:value={username}>
-    <Button type="submit">
-      <FontAwesome icon="paper-plane"/>
-      <Text>SEND</Text>
-    </Button>
-  </form>
+  <Form on:submit={onAddFriend}>
+    <Input placeholder="Username" bind:value={username}/>
+    <Button type="submit">SEND</Button>
+  </Form>
 </Modal>

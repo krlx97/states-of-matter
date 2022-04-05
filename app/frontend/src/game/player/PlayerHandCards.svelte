@@ -1,11 +1,9 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
-  import {gameStore, selectedCardStore} from "game/stores";
-  import {playerStore} from "stores/data";
-
+  import {gameStore, selectedCardStore, playerStore} from "stores";
   import Card from "../../ui/Card.svelte";
 
-  const selectCard = (id: number, gid: number): void => {
+  const selectCard = (id: number, gid: number) => {
     if ($gameStore.currentPlayer !== $playerStore.username) { return; }
     if ($selectedCardStore.field !== "") { $selectedCardStore.field = ""; }
 
@@ -36,6 +34,10 @@
 
   .hand {
     display: flex;
+    position: absolute;
+    bottom: -144px;
+    left: 50%;
+    transform: translateX(-50%);
 
     &__card {
       height: $card-height;
@@ -59,8 +61,7 @@
     <div
       class="hand__card"
       class:selected={gid === $selectedCardStore.hand.gid}
-      on:click={() => selectCard(id, gid)}
-    >
+      on:click={() => selectCard(id, gid)}>
       <Card card={getCard(id)} health={1} damage={1}/>
     </div>
   {/each}

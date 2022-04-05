@@ -1,8 +1,7 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
   import {miscService} from "services";
-  import {gameStore} from "game/stores";
-
+  import {gameStore} from "stores";
   import Card from "../../ui/Card.svelte";
 
   const onViewGraveyard = (): void => {
@@ -15,8 +14,8 @@
   @import "../../shared/styles/variables";
 
   .graveyard {
-    height: $card-height;
-    width: $card-width;
+    height: $card-height-sm;
+    width: $card-width-sm;
     @include flex($align-items: center, $justify-content: center);
     border: 2px solid $purple;
     box-sizing: border-box;

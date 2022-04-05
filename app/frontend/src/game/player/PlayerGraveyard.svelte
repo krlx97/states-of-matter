@@ -1,11 +1,10 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
   import {miscService} from "services";
-  import {gameStore} from "game/stores";
-
+  import {gameStore} from "stores";
   import Card from "../../ui/Card.svelte";
 
-  const onViewGraveyard = (): void => {
+  const onViewGraveyard = () => {
     miscService.openModal("graveyard", $gameStore.player.graveyard);
   };
 </script>

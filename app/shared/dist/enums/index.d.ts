@@ -1,71 +1,26 @@
-declare enum CardType {
-    MINION = 0,
-    MAGIC = 1,
-    TRAP = 2
+export declare enum CardType {
+    HERO = 0,
+    MINION = 1,
+    MAGIC = 2,
+    TRAP = 3
 }
-declare enum CardKlass {
+export declare enum CardKlass {
     NEUTRAL = 0,
     SOLID = 1,
     LIQUID = 2,
     GAS = 3,
     PLASMA = 4
 }
-declare enum PlayerStatus {
+export declare enum PlayerStatus {
     OFFLINE = 0,
     ONLINE = 1,
     INQUEUE = 2,
     INLOBBY = 3,
     INGAME = 4
 }
-declare enum SocketEvent {
-    NOTIFICATION = "notification",
-    SEND_CHAT_MSG = "sendChatMsg",
-    SEND_CHAT_MSG_RECEIVER = "sendChatMsgReceiver",
-    SEND_CHAT_MSG_SENDER = "sendChatMsgSender",
-    UPDATE_FRIEND = "updateFriend",
-    GET_PRIVATE_KEY_HASH = "getPrivateKeyHash",
-    SIGNIN = "signin",
-    SIGNUP = "signup",
-    DESTROY_LOBBY = "destroyLobby",
-    JOIN_LOBBY = "joinLobby",
-    JOIN_LOBBY_RECEIVER = "joinLobbyReceiver",
-    JOIN_LOBBY_SENDER = "joinLobbySender",
-    LEAVE_LOBBY = "leaveLobby",
-    LEAVE_LOBBY_RECEIVER = "leaveLobbyReceiver",
-    LEAVE_LOBBY_SENDER = "leaveLobbySender",
-    MAKE_LOBBY = "makeLobby",
-    SAVE_DECK = "saveDeck",
-    SELECT_DECK = "selectDeck",
-    SET_DECK_KLASS = "setDeckKlass",
-    SET_DECK_NAME = "setDeckName",
-    START_GAME = "startGame",
-    ATTACK_CARD = "attackCard",
-    ATTACK_CARD_RECEIVER = "attackCardReceiver",
-    ATTACK_CARD_SENDER = "attackCardSender",
-    END_TURN = "endTurn",
-    END_TURN_OPPONENT = "endTurnOpponent",
-    END_TURN_PLAYER = "endTurnPlayer",
-    HOVER_CARD = "hoverCard",
-    UNHOVER_CARD = "unhoverCard",
-    PLAY_CARD = "playCard",
-    PLAY_CARD_RECEIVER = "playCardReceiver",
-    PLAY_CARD_SENDER = "playCardSender",
-    END_GAME = "endGame",
-    ACCEPT_FRIEND = "acceptFriend",
-    ACCEPT_FRIEND_RECEIVER = "acceptFriendReceiver",
-    ACCEPT_FRIEND_SENDER = "acceptFriendSender",
-    ADD_FRIEND = "addFriend",
-    BLOCK_FRIEND = "block",
-    BLOCK_FRIEND_SENDER = "blockSender",
-    BLOCK_FRIEND_RECEIVER = "blockReceiver",
-    DECLINE_FRIEND = "declineFriend",
-    SET_AVATAR = "setAvatar",
-    SET_AVATAR_RECEIVER = "setAvatarReceiver",
-    SET_AVATAR_SENDER = "setAvatarSender",
-    SIGNOUT = "signout",
-    UNBLOCK_FRIEND = "unblock",
-    UNFRIEND = "unfriend",
-    UNFRIEND_RECEIVER = "unfriendReceiver",
-    UNFRIEND_SENDER = "unfriendSender"
+export declare enum Effect {
+    ASCENSION = 0,
+    BLIND = 1,
+    COMMAND = 2,
+    CHARGE = 3
 }
-export { CardType, CardKlass, PlayerStatus, SocketEvent };

@@ -1,17 +1,16 @@
 <script lang="ts">
   import {CardType} from "@som/shared/enums";
-  import {gameStore, selectedCardStore} from "game/stores";
+  import {gameStore, selectedCardStore, playerStore} from "stores";
   import {socketService} from "services";
-  import {playerStore} from "stores/data";
 
   $: isCurrentPlayer = $gameStore.currentPlayer === $playerStore.username;
   $: isSummonable = $selectedCardStore.hand.gid !== 0 && $selectedCardStore.hand.type === CardType.TRAP;
 
-  const onMouseEnter = (): void => {
-    if (isCurrentPlayer) { socketService.hoverCard({field: "trap"}); }
+  const onMouseEnter = () => {
+    if (isCurrentPlayer) { socketService.socket.emit("hoverCard", {field: "trap"}); }
   }
-  const onMouseLeave = (): void => {
-    if (isCurrentPlayer) { socketService.unhoverCard(); }
+  const onMouseLeave = () => {
+    if (isCurrentPlayer) { socketService.socket.emit("unhoverCard"); }
   }
 </script>
 

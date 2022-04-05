@@ -1,7 +1,7 @@
 <script lang="ts">
   import {miscService} from "services";
 
-  const onExit = (): void => { miscService.closeModal(); };
+  const onExit = () => { miscService.closeModal(); };
 </script>
 
 <style lang="scss">

@@ -1,6 +1,5 @@
 <script lang="ts">
-  import {modalStore} from "stores/view";
-
+  import {modalStore} from "stores";
   import AddFriend from "./AddFriend.svelte";
   import Block from "./Block.svelte";
   import ChangeDeckName from "./ChangeDeckName.svelte";

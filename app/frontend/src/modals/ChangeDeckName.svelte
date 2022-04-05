@@ -1,14 +1,13 @@
 <script lang="ts">
   import {socketService} from "services";
-  import {modalStore} from "stores/view";
-
+  import {modalStore} from "stores";
   import Modal from "../ui/Modal.svelte";
 
   let name = "";
 
   const onSetDeckName = (): void => {
     const {id} = $modalStore.data;
-    socketService.setDeckName({id, name});
+    socketService.socket.emit("setDeckName", {id, name});
   };
 </script>
 

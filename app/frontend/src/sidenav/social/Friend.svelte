@@ -1,11 +1,8 @@
 <script lang="ts">
   import {PlayerStatus} from "@som/shared/enums";
-  import {socialStore} from "stores/view";
-  import FontAwesome from "../../ui/FontAwesome.svelte";
-  import type {Friend} from "models/view/Social";
-
-  import Button from "../../ui/Button.svelte";
-  import Text from "../../ui/Text.svelte";
+  import {socialStore} from "stores";
+  import {Button, FontAwesome, Text} from "ui";
+  import type {Friend} from "../../shared/models/view/Social";
 
   let friend: Friend;
 

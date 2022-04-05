@@ -2,8 +2,7 @@
   import ProgressBar from "./ProgressBar.svelte";
   import Text from "./Text.svelte";
   import Img from "./Img.svelte";
-
-  import type {Hero} from "models/view";
+  import type {Hero} from "../shared/models/view";
 
   let hero: Hero;
   let health: number = hero.health;
@@ -53,8 +52,8 @@
 
   .card {
     position: relative;
-    height: $card-height;
-    width: $card-width;
+    height: 100%;
+    width: 100%;
     box-shadow: $elevation-sm;
     transition: box-shadow 225ms ease-in-out;
 
@@ -155,7 +154,7 @@
 
   {#if isHealthBarVisible}
     <div class="card__bar">
-      <ProgressBar size="md" progress={health / hero.health * 100} color="green"/>
+      <ProgressBar size="sm" progress={health / hero.health * 100} color="green"/>
     </div>
   {/if}
   {#if isManaBarVisible}

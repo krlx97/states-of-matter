@@ -1,6 +1,5 @@
 <script lang="ts">
-  import {modalStore} from "stores/view";
-
+  import {modalStore} from "stores";
   import Modal from "../ui/Modal.svelte";
   import Card from "../ui/Card.svelte";
 </script>

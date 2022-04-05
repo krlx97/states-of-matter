@@ -1,9 +1,7 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte";
-  import {socketService} from "services";
-  import {playerStore} from "stores/data";
-  import * as responses from "responses";
-
+  import {onMount} from "svelte";
+  import {playerStore} from "stores";
+  import {responses} from "responses";
   import ChatWindow from "./ChatWindow.svelte";
   import Modals from "./modals/Modals.svelte";
   import Notifications from "./Notifications.svelte";
@@ -14,8 +12,9 @@
 
   $: status = $playerStore.status;
 
-  onMount((): void => { socketService.listen(responses); });
-  onDestroy((): void => { socketService.forget(responses); });
+  onMount(() => {
+    responses.forEach((response) => response());
+  });
 </script>
 
 <svelte:head>
@@ -59,17 +58,15 @@
   <div class="app--inner">
     {#if status === 0}
       <Auth/>
-    {:else}
+    {:else if status === 1 || status === 2 || status === 3}
       <div class="app__content">
-        {#if status === 1 || status === 2 || status === 3}
-          <Client/>
-        {:else if status === 4}
-          <Game/>
-        {/if}
+        <Client/>
+        <div class="app__sidenav">
+          <Sidenav/>
+        </div>
       </div>
-      <div class="app__sidenav">
-        <Sidenav/>
-      </div>
+    {:else if status === 4}
+      <Game/>
     {/if}
     <ChatWindow/>
     <Notifications/>

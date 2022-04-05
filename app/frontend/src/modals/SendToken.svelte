@@ -1,7 +1,6 @@
 <script lang="ts">
   import {eccService, socketService} from "services";
-  import {playerStore} from "stores/data";
-
+  import {playerStore} from "stores";
   import Button from "../ui/Button.svelte";
   import Modal from "../ui/Modal.svelte";
   import Text from "../ui/Text.svelte";
@@ -25,7 +24,7 @@
     const {username, publicKey, privateKey} = $playerStore;
     const signature = eccService.sign(`sendToken`, privateKey);
 
-    socketService.sendToken({
+    socketService.socket.emit("sendToken", {
       chain_id: form.chain.id,
       relayer: "admin",
       from: username,

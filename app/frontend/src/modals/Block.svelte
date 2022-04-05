@@ -1,12 +1,11 @@
 <script lang="ts">
   import {socketService} from "services";
-  import {modalStore} from "stores/view";
-
+  import {modalStore} from "stores";
   import Modal from "../ui/Modal.svelte";
 
-  const onBlock = (): void => {
+  const onBlock = () => {
     const {username} = $modalStore.data;
-    socketService.blockFriend({username});
+    socketService.socket.emit("block", {username});
   };
 </script>
 

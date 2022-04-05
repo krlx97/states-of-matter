@@ -1,9 +1,6 @@
 <script lang="ts">
-  import {gameStore} from "game/stores";
-  import {playerStore} from "stores/data";
-
+  import {gameStore, playerStore} from "stores";
   import FontAwesome from "../../ui/FontAwesome.svelte";
-
   import PlayerDeck from "./PlayerDeck.svelte";
   import PlayerGraveyard from "./PlayerGraveyard.svelte";
   import PlayerHandCards from "./PlayerHandCards.svelte";
@@ -17,44 +14,37 @@
   @import "../../shared/styles/mixins";
   @import "../../shared/styles/variables";
 
-  .fields {
+  .fields-wrapper {
     position: relative;
-    @include flex(column);
-
-    &__top {
-      margin-bottom: $spacing-sm;
-      @include grid(7, 1, 0 $spacing-sm);
-    }
-
-    &__bot { @include flex($justify-content: space-between); }
-
-    &__turn {
-      position: absolute;
-      top: 50%;
-      left: 105%;
-    }
+    height: 50%;
+    @include flex($align-items: center, $justify-content: center);
+    overflow: hidden;
+  }
+  .fields {@include grid(7, 1, 0 $spacing-sm);}
+  .turn {
+    position: absolute;
+    top: 50%;
+    left: 105%;
   }
 </style>
 
-<div class="fields">
-  <div class="fields__top">
-    <PlayerMagicField/>
+<div class="fields-wrapper">
+  <div class="fields">
+    <PlayerGraveyard/>
     <PlayerMinionField field="A"/>
     <PlayerMinionField field="B"/>
     <PlayerHero/>
     <PlayerMinionField field="C"/>
     <PlayerMinionField field="D"/>
-    <PlayerTrapField/>
-  </div>
-
-  <div class="fields__bot">
-    <PlayerGraveyard/>
-    <PlayerHandCards/>
+    <!-- <PlayerMinionField field="E"/>
+    <PlayerMinionField field="F"/> -->
     <PlayerDeck/>
   </div>
 
+  <PlayerHandCards/>
+
   {#if $gameStore.currentPlayer === $playerStore.username}
-    <div class="fields__turn">
+    <div class="turn">
       <FontAwesome icon="arrow-left"/>
     </div>
   {/if}

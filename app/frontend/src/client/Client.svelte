@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte";
-  import {socketService} from "services";
-  import {playerStore} from "stores/data";
-  import * as responses from "client/responses";
-
+  import {playerStore} from "stores";
   import Governance from "./Governance.svelte";
   import Leaderboards from "./Leaderboards.svelte";
   import Market from "./Market.svelte";
@@ -23,9 +19,6 @@
   ];
 
   let currentView = views[0];
-
-  onMount((): void => { socketService.listen(responses); });
-  onDestroy((): void => { socketService.forget(responses); });
 </script>
 
 <style lang="scss">
@@ -54,35 +47,27 @@
     &__content {height: calc(100% - 128px)}
   }
 
-  nav {display: flex;}
-  ul {
-    list-style-type: none;
-    display: flex;
-  }
+  .links {display: flex}
   .link--active {border-bottom: 2px solid $purple;}
-  li { padding: 1em }
-  li:hover {
+  .link { padding: 1em }
+  .link:hover {
     background-color: $purple;
     cursor: pointer;
   }
 </style>
 
 <div class="client">
-
   <div class="client__header">
-
-    <nav>
-      <ul class="links">
-        {#each views as view}
-          <li
-            class="link"
-            class:link--active={view.name === currentView.name}
-            on:click={() => currentView = view}
-          >{view.name}</li>
-        {/each}
-      </ul>
-    </nav>
-
+    <div class="links">
+      {#each views as view}
+        <div
+          class="link"
+          class:link--active={view.name === currentView.name}
+          on:click={() => currentView = view}>
+          {view.name}
+        </div>
+      {/each}
+    </div>
     <div class="client__header__currencies">
       <div class="client__header__currency">
         <Img src="currencies/LMT.png" alt="LMT"/>
@@ -93,11 +78,8 @@
         <Text>0</Text>
       </div>
     </div>
-
   </div>
-
   <div class="client__content">
     <svelte:component this={currentView.component}/>
   </div>
-
 </div>

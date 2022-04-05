@@ -1,12 +1,10 @@
 <script lang="ts">
   import {heroes} from "@som/shared/data";
-  import {gameStore, selectedCardStore} from "game/stores";
   import {socketService} from "services";
-  import {playerStore} from "stores/data";
+  import {gameStore, selectedCardStore, playerStore} from "stores";
+  import Hero from "../../ui/HeroSm.svelte";
 
-  import Hero from "../../ui/Hero.svelte";
-
-  const onAttackCard = (): void => {
+  const onAttackCard = () => {
     if ($gameStore.currentPlayer !== $playerStore.username) { return; }
 
     let attacker: any; // ;w;
@@ -18,7 +16,7 @@
       attacker = `minion${$selectedCardStore.field}`;
     }
 
-    socketService.attackCard({attacker, attacked});
+    socketService.socket.emit("attackCard", {attacker, attacked});
   };
 </script>
 
@@ -26,8 +24,9 @@
   @import "../../shared/styles/variables";
 
   .hero {
-    height: $card-height;
-    width: $card-width;
+    height: $card-height-sm;
+    width: $card-width-sm;
+    overflow: hidden;
   }
 </style>
 

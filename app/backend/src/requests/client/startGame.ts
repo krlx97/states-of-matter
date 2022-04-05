@@ -1,10 +1,10 @@
 import {randomInt} from "crypto";
 import {cards} from "@som/shared/data";
-import {PlayerStatus} from "@som/shared/enums";
+import {CardType, PlayerStatus} from "@som/shared/enums";
+import type {GamePlayerMinion, GamePlayerMagic, GamePlayerTrap, Game} from "@som/shared/interfaces/mongo";
 import type {SocketRequest} from "models";
-import type {GamePlayerCard, Game} from "../../services/MongoService/GameService.models";
 
-function shuffleArray (array: Array<GamePlayerCard>): void {
+function shuffleArray (array: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap>): void {
   for (let i = array.length - 1; i > 0; i--) {
     const j = randomInt(0, i + 1);
     const temp = array[i];
@@ -53,10 +53,10 @@ export const startGame: SocketRequest = (services) => {
     if (!playerA.value || !playerB.value) return;
 
     let gid = 1;
-    let playerADeck: Array<GamePlayerCard> = [];
-    const playerAHand: Array<GamePlayerCard> = [];
-    let playerBDeck: Array<GamePlayerCard> = [];
-    const playerBHand: Array<GamePlayerCard> = [];
+    let playerADeck: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap> = [];
+    const playerAHand: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap> = [];
+    let playerBDeck: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap> = [];
+    const playerBHand: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap> = [];
 
     for (let i = 0; i < playerA.value.decks[playerA.value.deckId].cards.length; i += 1) {
       let id = playerA.value.decks[playerA.value.deckId].cards[i].id;
@@ -123,48 +123,54 @@ export const startGame: SocketRequest = (services) => {
       currentPlayer: $lobby.host.username,
       playerA: {
         username: $lobby.host.username,
-        hero: {
-          id: 2, // should be deck.klass
-          health: 600,
-          maxHealth: 600,
-          mana: 100,
-          maxMana: 100,
-          damage: 30,
-          passive: 25
-        },
         fields: {
-          magic: undefined,
+          hero: {
+            id: 2, // should be deck.klass
+            type: CardType.HERO,
+            health: 600,
+            maxHealth: 600,
+            mana: 100,
+            maxMana: 100,
+            damage: 30,
+            passive: 25
+          },
           minionA: undefined,
           minionB: undefined,
           minionC: undefined,
           minionD: undefined,
-          trap: undefined,
+          minionE: undefined,
+          minionF: undefined,
+          magic: undefined,
+          trap: undefined
         },
-        deck: playerADeck,
         hand: playerAHand,
+        deck: playerADeck,
         graveyard: []
       },
       playerB: {
         username: $lobby.challengee.username,
-        hero: {
-          id: 4, // should be deck.klass
-          health: 600,
-          maxHealth: 600,
-          mana: 100,
-          maxMana: 100,
-          damage: 20,
-          passive: 25
-        },
         fields: {
-          magic: undefined,
+          hero: {
+            id: 4, // should be deck.klass
+            type: CardType.HERO,
+            health: 600,
+            maxHealth: 600,
+            mana: 100,
+            maxMana: 100,
+            damage: 20,
+            passive: 25
+          },
           minionA: undefined,
           minionB: undefined,
           minionC: undefined,
           minionD: undefined,
-          trap: undefined,
+          minionE: undefined,
+          minionF: undefined,
+          magic: undefined,
+          trap: undefined
         },
-        deck: playerBDeck,
         hand: playerBHand,
+        deck: playerBDeck,
         graveyard: []
       },
     };
@@ -178,48 +184,54 @@ export const startGame: SocketRequest = (services) => {
       currentPlayer: $lobby.host.username,
       player: {
         username: $lobby.host.username,
-        hero: {
-          id: 2, // should be deck.klass
-          health: 600,
-          maxHealth: 600,
-          mana: 100,
-          maxMana: 100,
-          damage: 30,
-          passive: 25
-        },
         fields: {
-          magic: undefined,
+          hero: {
+            id: 2, // should be deck.klass
+            type: CardType.HERO,
+            health: 600,
+            maxHealth: 600,
+            mana: 100,
+            maxMana: 100,
+            damage: 30,
+            passive: 25
+          },
           minionA: undefined,
           minionB: undefined,
           minionC: undefined,
           minionD: undefined,
+          minionE: undefined,
+          minionF: undefined,
+          magic: undefined,
           trap: undefined
         },
-        deck: playerADeck,
         hand: playerAHand,
+        deck: playerADeck,
         graveyard: []
       },
       opponent: {
         username: $lobby.challengee.username,
-        hero: {
-          id: 4, // should be deck.klass
-          health: 600,
-          maxHealth: 600,
-          mana: 100,
-          maxMana: 100,
-          damage: 20,
-          passive: 25
-        },
         fields: {
-          magic: undefined,
+          hero: {
+            id: 4, // should be deck.klass
+            type: CardType.HERO,
+            health: 600,
+            maxHealth: 600,
+            mana: 100,
+            maxMana: 100,
+            damage: 20,
+            passive: 25
+          },
           minionA: undefined,
           minionB: undefined,
           minionC: undefined,
           minionD: undefined,
+          minionE: undefined,
+          minionF: undefined,
+          magic: undefined,
           trap: undefined
         },
-        deck: playerBDeck.length,
         hand: playerBHand.length,
+        deck: playerBDeck.length,
         graveyard: []
       }
     };
@@ -229,48 +241,54 @@ export const startGame: SocketRequest = (services) => {
       currentPlayer: $lobby.host.username,
       player: {
         username: $lobby.challengee.username,
-        hero: {
-          id: 4, // should be deck.klass
-          health: 600,
-          maxHealth: 600,
-          mana: 100,
-          maxMana: 100,
-          damage: 20,
-          passive: 25
-        },
         fields: {
-          magic: undefined,
+          hero: {
+            id: 4, // should be deck.klass
+            type: CardType.HERO,
+            health: 600,
+            maxHealth: 600,
+            mana: 100,
+            maxMana: 100,
+            damage: 20,
+            passive: 25
+          },
           minionA: undefined,
           minionB: undefined,
           minionC: undefined,
           minionD: undefined,
+          minionE: undefined,
+          minionF: undefined,
+          magic: undefined,
           trap: undefined,
         },
-        deck: playerBDeck,
         hand: playerBHand,
+        deck: playerBDeck,
         graveyard: []
       },
       opponent: {
         username: $lobby.host.username,
-        hero: {
-          id: 2, // should be deck.klass
-          health: 600,
-          maxHealth: 600,
-          mana: 100,
-          maxMana: 100,
-          damage: 30,
-          passive: 25
-        },
         fields: {
-          magic: undefined,
+          hero: {
+            id: 2, // should be deck.klass
+            type: CardType.HERO,
+            health: 600,
+            maxHealth: 600,
+            mana: 100,
+            maxMana: 100,
+            damage: 30,
+            passive: 25
+          },
           minionA: undefined,
           minionB: undefined,
           minionC: undefined,
           minionD: undefined,
+          minionE: undefined,
+          minionF: undefined,
+          magic: undefined,
           trap: undefined,
         },
-        deck: playerADeck.length,
         hand: playerAHand.length,
+        deck: playerADeck.length,
         graveyard: []
       }
     };

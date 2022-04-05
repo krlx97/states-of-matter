@@ -10,12 +10,12 @@
   @import "../shared/styles/variables";
 
   .progress-bar {
-    &--sm {height: 8px}
+    &--sm {height: 6px}
     &--md {height: 12px}
     &--lg {height: 16px}
 
     background-color: $dark-grey;
-    border: 2px solid $light-grey;
+    border: 1px solid $light-grey;
     border-radius: 2px;
     box-sizing: border-box;
 

@@ -1,8 +1,8 @@
 <script lang="ts">
   import {socketService} from "services";
-  import {gameStore} from "game/stores";
+  import {gameStore} from "stores";
 
-  const onEndTurn = (): void => { socketService.endTurn(); };
+  const onEndTurn = () => { socketService.socket.emit("endTurn"); };
 </script>
 
 <style lang="scss">

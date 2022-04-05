@@ -2,16 +2,15 @@
   import {onMount} from "svelte";
   import {PlayerStatus} from "@som/shared/enums";
   import {socketService} from "services";
-  import {playerStore} from "stores/data";
-  import {socialStore} from "stores/view";
+  import {playerStore, socialStore} from "stores";
 
   import Button from "../ui/Button.svelte";
   import Img from "../ui/Img.svelte";
   import Text from "../ui/Text.svelte";
 
   const logout = (): void => {
-    socketService.signout();
-    socketService.updateStatus();
+    // socketService.socket.emit("signout");
+    socketService.socket.emit("updateStatus");
 
     $playerStore = {
       socketId: "",

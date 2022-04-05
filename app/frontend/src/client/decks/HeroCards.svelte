@@ -1,13 +1,13 @@
 <script lang="ts">
   import {heroes} from "@som/shared/data";
   import {socketService} from "services";
-  import {playerStore} from "stores/data";
+  import {playerStore} from "stores"
   import Hero from "../../ui/Hero.svelte";
   import type {CardKlass} from "@som/shared/enums";
 
-  const setDeckKlass = (klass: CardKlass): void => {
+  const setDeckKlass = (klass: CardKlass) => {
     const {deckId} = $playerStore;
-    socketService.setDeckKlass({deckId, klass});
+    socketService.socket.emit("setDeckKlass", {deckId, klass});
   };
 </script>
 

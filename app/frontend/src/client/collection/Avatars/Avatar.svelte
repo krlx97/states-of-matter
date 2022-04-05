@@ -1,16 +1,15 @@
 <script lang="ts">
   import {socketService} from "services";
-  import {playerStore} from "stores/data";
+  import {playerStore} from "stores";
+  import {Img} from "ui";
 
-  import Img from "../../../ui/Img.svelte";
-
-  let avatarId: number;
+  export let avatarId: number;
 
   $: isSelected = $playerStore.avatarId === avatarId;
 
-  const onSetAvatar = (): void => { socketService.setAvatar({avatarId}); };
-
-  export {avatarId};
+  const onSetAvatar = () => {
+    socketService.socket.emit("setAvatar", {avatarId});
+  };
 </script>
 
 <style lang="scss">

@@ -1,8 +1,6 @@
 <script lang="ts">
   import {heroes} from "@som/shared/data";
-  import {gameStore, selectedCardStore} from "game/stores";
-  import {playerStore} from "stores/data";
-
+  import {gameStore, selectedCardStore, playerStore} from "stores";
   import Hero from "../../ui/Hero.svelte";
 
   $: isSelected = $selectedCardStore.field === "hero";

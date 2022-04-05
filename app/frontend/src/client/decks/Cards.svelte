@@ -1,8 +1,6 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
-  import {playerStore} from "stores/data";
-  import {decksStore} from "client/stores";
-
+  import {decksStore, playerStore} from "stores";
   import Card from "../../ui/Card.svelte";
   import Img from "../../ui/Img.svelte";
 

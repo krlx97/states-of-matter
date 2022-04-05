@@ -2,14 +2,12 @@
   import {CardType} from "@som/shared/enums";
   import {cards} from "@som/shared/data";
   import {socketService} from "services";
-  import {gameStore, selectedCardStore} from "game/stores";
-  import {playerStore} from "stores/data";
-
+  import {gameStore, selectedCardStore, playerStore} from "stores";
   import Card from "../../ui/Card.svelte";
 
-  import type {SelectedCardField} from "game/models/selectedCard";
+  export let field: "a" | "b" | "c" | "d";
 
-  let field: SelectedCardField;
+  const {socket} = socketService;
 
   $: isSelected = $selectedCardStore.field === field;
 
@@ -34,10 +32,9 @@
     if ($selectedCardStore.field !== "") { $selectedCardStore.field = ""; }
 
     const {gid} = $selectedCardStore.hand;
-
     const _field: any = `minion${field}`;
 
-    socketService.playCard({field: _field, gid});
+    socket.emit("playCard", {field: _field, gid});
 
     $selectedCardStore.hand.gid = 0;
   };
@@ -54,13 +51,11 @@
   };
 
   const mouseEnter = (): void => {
-    if (isCurrentPlayer) { socketService.hoverCard({field}); }
+    if (isCurrentPlayer) { socket.emit("hoverCard", {field}); }
   }
   const onMouseLeave = (): void => {
-    if (isCurrentPlayer) { socketService.unhoverCard(); }
+    if (isCurrentPlayer) { socket.emit("unhoverCard"); }
   }
-
-  export {field};
 </script>
 
 <style lang="scss">
@@ -71,7 +66,7 @@
     height: $card-height;
     width: $card-width;
     @include d-flex(row, center, center);
-    background-color: $orange;
+    // background-color: $orange;
     box-shadow: $elevation-sm;
     cursor: not-allowed;
   }
@@ -91,7 +86,7 @@
   }
 </style>
 
-{#if field === "A"}
+{#if field === "a"}
   {#if $gameStore.player.fields.minionA}
     <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <Card
@@ -106,7 +101,7 @@
       <span>Minion Field {field}</span>
     </div>
   {/if}
-{:else if field === "B"}
+{:else if field === "b"}
   {#if $gameStore.player.fields.minionB}
     <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <Card
@@ -117,11 +112,11 @@
       />
     </div>
   {:else}
-  <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-    <span>Minion Field {field}</span>
-  </div>
+    <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
+      <span>Minion Field {field}</span>
+    </div>
   {/if}
-{:else if field === "C"}
+{:else if field === "c"}
   {#if $gameStore.player.fields.minionC}
     <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <Card
@@ -132,11 +127,11 @@
       />
     </div>
   {:else}
-  <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-    <span>Minion Field {field}</span>
-  </div>
+    <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
+      <span>Minion Field {field}</span>
+    </div>
   {/if}
-{:else if field === "D"}
+{:else if field === "d"}
   {#if $gameStore.player.fields.minionD}
     <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
       <Card
@@ -147,8 +142,8 @@
       />
     </div>
   {:else}
-  <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-    <span>Minion Field {field}</span>
-  </div>
+    <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
+      <span>Minion Field {field}</span>
+    </div>
   {/if}
 {/if}

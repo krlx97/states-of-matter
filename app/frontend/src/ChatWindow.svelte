@@ -1,9 +1,7 @@
 <script lang="ts">
   import {beforeUpdate, afterUpdate, onMount} from "svelte";
   import {miscService, socketService} from "services";
-  import {playerStore} from "stores/data";
-  import {chatStore, socialStore} from "stores/view";
-
+  import {playerStore, socialStore, chatStore} from "stores";
   import FontAwesome from "./ui/FontAwesome.svelte";
 
   let text = "";
@@ -37,7 +35,7 @@
       const receiver = $socialStore.chat.username;
       const date = new Date();
 
-      socketService.sendChatMsg({sender, receiver, text, date});
+      socketService.socket.emit("sendChatMsg", {sender, receiver, text, date});
       text = "";
     }
   };

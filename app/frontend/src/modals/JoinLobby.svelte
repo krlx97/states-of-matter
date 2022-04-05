@@ -1,14 +1,13 @@
 <script lang="ts">
   import {socketService} from "services";
-
   import Modal from "../ui/Modal.svelte";
   import Button from "../ui/Button.svelte";
   import Text from "../ui/Text.svelte";
 
   let lobbyId: number;
 
-  const onJoinLobby = (): void => {
-    socketService.joinLobby({lobbyId});
+  const onJoinLobby = () => {
+    socketService.socket.emit("joinLobby", {lobbyId});
   };
 </script>
 

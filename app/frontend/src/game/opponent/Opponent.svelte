@@ -1,7 +1,5 @@
 <script lang="ts">
-  import {playerStore} from "stores/data";
-  import {gameStore} from "game/stores";
-
+  import {gameStore, playerStore} from "stores";
   import OpponentDeck from "./OpponentDeck.svelte";
   import OpponentGraveyard from "./OpponentGraveyard.svelte";
   import OpponentHandCards from "./OpponentHandCards.svelte";
@@ -15,44 +13,39 @@
   @import "../../shared/styles/mixins";
   @import "../../shared/styles/variables";
 
-  .fields {
+  .fields-wrapper {
     position: relative;
-    margin-bottom: $spacing-sm;
-    @include flex(column);
-
-    &__top {
-      margin-bottom: $spacing-sm;
-      @include flex($justify-content: space-between);
-    }
-
-    &__bot {@include d-grid(7, 1, 0 $spacing-sm)}
-
-    &__turn {
-      position: absolute;
-      top: 50%;
-      left: 105%;
-    }
+    height: 50%;
+    @include flex($align-items: center, $justify-content: center);
+    overflow: hidden;
+  }
+  .fields {
+    @include grid(7, 1, 0 $spacing-sm);
+  }
+  .turn {
+    position: absolute;
+    top: 50%;
+    left: 105%;
   }
 </style>
 
-<div class="fields">
-  <div class="fields__top">
+<div class="fields-wrapper">
+  <div class="fields">
     <OpponentDeck/>
-    <OpponentHandCards/>
-    <OpponentGraveyard/>
-  </div>
-  <div class="fields__bot">
-    <OpponentTrapField/>
+    <!-- <OpponentMinionField field="F"/>
+    <OpponentMinionField field="E"/> -->
     <OpponentMinionField field="D"/>
     <OpponentMinionField field="C"/>
     <OpponentHero/>
     <OpponentMinionField field="B"/>
     <OpponentMinionField field="A"/>
-    <OpponentMagicField/>
+    <OpponentGraveyard/>
   </div>
 
+  <OpponentHandCards/>
+
   {#if $gameStore.currentPlayer !== $playerStore.username}
-    <div class="fields__turn">
+    <div class="turn">
       <i class="fas fa-arrow-left"></i>
     </div>
   {/if}

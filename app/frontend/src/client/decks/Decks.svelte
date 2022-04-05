@@ -1,9 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte";
   import {cards} from "@som/shared/data";
-  import {playerStore} from "stores/data";
-  import {decksStore} from "client/stores";
-
+  import {decksStore, playerStore} from "stores";
   import Cards from "./Cards.svelte";
   import DeckCards from "./DeckCards.svelte";
   import DeckSlots from "./DeckSlots.svelte";

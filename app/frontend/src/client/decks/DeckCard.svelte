@@ -1,7 +1,5 @@
 <script lang="ts">
-  import {decksStore} from "client/stores";
-  import {playerStore} from "stores/data";
-
+  import {decksStore, playerStore} from "stores";
   import Text from "../../ui/Text.svelte";
 
   let card: any;

@@ -9,7 +9,7 @@ import {Server} from "socket.io";
 
 import settings from "settings";
 import {requests} from "requests";
-import {EosService, MongoService, SocketService} from "services";
+import {EosService, MongoService, SocketService, GameEngine} from "services";
 import type {Services} from "models";
 
 const {
@@ -34,10 +34,11 @@ const eosApi = new Api({
 
 const eosService = new EosService(eosApi);
 const mongoService = new MongoService(mongoDb);
+const gameEngine = new GameEngine();
 
 ioServer.on("connection", (socket) => {
   const socketService = new SocketService(ioServer, socket);
-  const services: Services = {eosService, mongoService, socketService};
+  const services: Services = {eosService, mongoService, socketService,  gameEngine};
 
   requests.forEach((request) => { request(services); });
 });

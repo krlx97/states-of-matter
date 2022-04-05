@@ -1,19 +1,14 @@
 <script lang="ts">
   import {quadInOut} from "svelte/easing";
-  import {slide} from "svelte/transition";
-  import {miscService} from "shared/services";
-  import {playerStore} from "stores/data";
-  import {socialStore} from "stores/view";
-
+  import {slide, type SlideParams} from "svelte/transition";
+  import {miscService} from "services";
+  import {playerStore, socialStore} from "stores"
   import Button from "../../ui/Button.svelte";
   import FontAwesome from "../../ui/FontAwesome.svelte";
   import Text from "../../ui/Text.svelte";
-
   import Block from "./Block.svelte";
   import Friend from "./Friend.svelte";
   import Request from "./Request.svelte";
-
-  import type {SlideParams} from "svelte/transition";
 
   let isFriendsToggled = true;
   let isRequestsToggled = false;
@@ -28,10 +23,10 @@
   $: requestsToggleIcon = isRequestsToggled ? "chevron-up" : "chevron-down";
   $: blockedToggleIcon = isBlockedToggled ? "chevron-up" : "chevron-down";
 
-  const addFriendModal = (): void => { miscService.openModal("addFriend"); };
-  const toggleFriends = (): void => { isFriendsToggled = !isFriendsToggled; };
-  const toggleRequests = (): void => { isRequestsToggled = !isRequestsToggled; };
-  const toggleBlocked = (): void => { isBlockedToggled = !isBlockedToggled; };
+  const addFriendModal = () => { miscService.openModal("addFriend"); };
+  const toggleFriends = () => { isFriendsToggled = !isFriendsToggled; };
+  const toggleRequests = () => { isRequestsToggled = !isRequestsToggled; };
+  const toggleBlocked = () => { isBlockedToggled = !isBlockedToggled; };
 </script>
 
 <style lang="scss">

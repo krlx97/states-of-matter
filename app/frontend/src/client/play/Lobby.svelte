@@ -1,6 +1,6 @@
 <script lang="ts">
   import {eccService, socketService} from "services";
-  import {lobbyStore, playerStore} from "stores/data";
+  import {lobbyStore, playerStore} from "stores";
   import Button from "../../ui/Button.svelte";
   import Text from "../../ui/Text.svelte";
 
@@ -9,11 +9,11 @@
     const {lobbyId} = $lobbyStore;
     const signature = eccService.sign(`startgame:${lobbyId}`, privateKey);
 
-    socketService.startGame({lobbyId});
+    socketService.socket.emit("startGame", {lobbyId});
   };
 
-  const onDestroyLobby = (): void => { socketService.destroyLobby(); };
-  const onLeaveLobby = (): void => { socketService.leaveLobby(); };
+  const onDestroyLobby = (): void => { socketService.socket.emit("destroyLobby"); };
+  const onLeaveLobby = (): void => { socketService.socket.emit("leaveLobby"); };
 </script>
 
 <style lang="scss">

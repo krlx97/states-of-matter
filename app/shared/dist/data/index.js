@@ -1,4 +1,4 @@
-import { CardKlass, CardType } from "../enums/index.js";
+import { CardKlass, CardType, Effect } from "../enums/index.js";
 const cards = [{
         id: 0,
         klass: CardKlass.NEUTRAL,
@@ -7,7 +7,8 @@ const cards = [{
         damage: 10,
         health: 70,
         manaCost: 30,
-        effect: "Neutral card 1 effect",
+        effect: "Neutral card 1 can attack twice.",
+        effects: [Effect.CHARGE]
     }, {
         id: 1,
         klass: CardKlass.NEUTRAL,
@@ -17,6 +18,7 @@ const cards = [{
         health: 80,
         manaCost: 35,
         effect: "Neutral card 2 effect",
+        effects: [Effect.ASCENSION]
     }, {
         id: 2,
         klass: CardKlass.NEUTRAL,
@@ -26,6 +28,7 @@ const cards = [{
         health: 90,
         manaCost: 40,
         effect: "Neutral card 3 effect",
+        effects: [Effect.BLIND]
     }, {
         id: 3,
         klass: CardKlass.NEUTRAL,
@@ -35,6 +38,7 @@ const cards = [{
         health: 100,
         manaCost: 45,
         effect: "Neutral card 4 effect",
+        effects: [Effect.COMMAND]
     }, {
         id: 4,
         klass: CardKlass.NEUTRAL,
@@ -44,6 +48,7 @@ const cards = [{
         health: 110,
         manaCost: 50,
         effect: "Neutral card 5 effect",
+        effects: []
     }, {
         id: 5,
         klass: CardKlass.NEUTRAL,
@@ -53,6 +58,7 @@ const cards = [{
         health: 120,
         manaCost: 55,
         effect: "Neutral card 6 effect",
+        effects: []
     }, {
         id: 6,
         klass: CardKlass.NEUTRAL,
@@ -60,6 +66,7 @@ const cards = [{
         name: "Neutral card 7",
         manaCost: 60,
         effect: "Neutral card 7 effect",
+        effects: []
     }, {
         id: 7,
         klass: CardKlass.NEUTRAL,
@@ -67,6 +74,7 @@ const cards = [{
         name: "Neutral card 8",
         manaCost: 60,
         effect: "Neutral card 8 effect",
+        effects: []
     }, {
         id: 8,
         klass: CardKlass.NEUTRAL,
@@ -74,6 +82,7 @@ const cards = [{
         name: "Neutral card 9",
         manaCost: 60,
         effect: "Neutral card 9 effect",
+        effects: []
     }, {
         id: 9,
         klass: CardKlass.NEUTRAL,
@@ -81,6 +90,7 @@ const cards = [{
         name: "Neutral card 10",
         manaCost: 60,
         effect: "Neutral card 10 effect",
+        effects: []
     }, {
         id: 10,
         klass: CardKlass.NEUTRAL,
@@ -88,6 +98,7 @@ const cards = [{
         name: "Neutral card 11",
         manaCost: 60,
         effect: "Neutral card 11 effect",
+        effects: []
     }, {
         id: 11,
         klass: CardKlass.NEUTRAL,
@@ -95,6 +106,7 @@ const cards = [{
         name: "Neutral card 12",
         manaCost: 60,
         effect: "Neutral card 12 effect",
+        effects: []
     }, {
         id: 50,
         klass: CardKlass.SOLID,
@@ -104,6 +116,7 @@ const cards = [{
         health: 1,
         manaCost: 1,
         effect: "Solid card 1 effect",
+        effects: []
     }, {
         id: 51,
         klass: CardKlass.SOLID,
@@ -113,6 +126,7 @@ const cards = [{
         health: 2,
         manaCost: 2,
         effect: "Solid card 2 effect",
+        effects: []
     }, {
         id: 52,
         klass: CardKlass.SOLID,
@@ -122,6 +136,7 @@ const cards = [{
         health: 3,
         manaCost: 3,
         effect: "Solid card 3 effect",
+        effects: []
     }, {
         id: 53,
         klass: CardKlass.SOLID,
@@ -131,6 +146,7 @@ const cards = [{
         health: 4,
         manaCost: 4,
         effect: "Solid card 4 effect",
+        effects: []
     }, {
         id: 54,
         klass: CardKlass.SOLID,
@@ -140,6 +156,7 @@ const cards = [{
         health: 5,
         manaCost: 5,
         effect: "Solid card 5 effect",
+        effects: []
     }, {
         id: 55,
         klass: CardKlass.SOLID,
@@ -149,6 +166,7 @@ const cards = [{
         health: 6,
         manaCost: 6,
         effect: "Solid card 6 effect",
+        effects: []
     }, {
         id: 56,
         klass: CardKlass.SOLID,
@@ -156,6 +174,7 @@ const cards = [{
         name: "Solid card 7",
         manaCost: 7,
         effect: "Solid card 7 effect",
+        effects: []
     }, {
         id: 57,
         klass: CardKlass.SOLID,
@@ -163,6 +182,7 @@ const cards = [{
         name: "Solid card 8",
         manaCost: 8,
         effect: "Solid card 8 effect",
+        effects: []
     }, {
         id: 58,
         klass: CardKlass.SOLID,
@@ -170,6 +190,7 @@ const cards = [{
         name: "Solid card 9",
         manaCost: 9,
         effect: "Solid card 9 effect",
+        effects: []
     }, {
         id: 59,
         klass: CardKlass.SOLID,
@@ -177,6 +198,7 @@ const cards = [{
         name: "Solid card 10",
         manaCost: 10,
         effect: "Solid card 10 effect",
+        effects: []
     }, {
         id: 60,
         klass: CardKlass.SOLID,
@@ -184,6 +206,7 @@ const cards = [{
         name: "Solid card 11",
         manaCost: 11,
         effect: "Solid card 11 effect",
+        effects: []
     }, {
         id: 61,
         klass: CardKlass.SOLID,
@@ -191,6 +214,7 @@ const cards = [{
         name: "Solid card 12",
         manaCost: 12,
         effect: "Solid card 12 effect",
+        effects: []
     }, {
         id: 100,
         klass: CardKlass.LIQUID,
@@ -200,6 +224,7 @@ const cards = [{
         health: 1,
         manaCost: 1,
         effect: "Liquid card 1 effect",
+        effects: []
     }, {
         id: 101,
         klass: CardKlass.LIQUID,
@@ -209,6 +234,7 @@ const cards = [{
         health: 2,
         manaCost: 2,
         effect: "Liquid card 2 effect",
+        effects: []
     }, {
         id: 102,
         klass: CardKlass.LIQUID,
@@ -218,6 +244,7 @@ const cards = [{
         health: 3,
         manaCost: 3,
         effect: "Liquid card 3 effect",
+        effects: []
     }, {
         id: 103,
         klass: CardKlass.LIQUID,
@@ -227,6 +254,7 @@ const cards = [{
         health: 4,
         manaCost: 4,
         effect: "Liquid card 4 effect",
+        effects: []
     }, {
         id: 104,
         klass: CardKlass.LIQUID,
@@ -236,6 +264,7 @@ const cards = [{
         health: 5,
         manaCost: 5,
         effect: "Liquid card 5 effect",
+        effects: []
     }, {
         id: 105,
         klass: CardKlass.LIQUID,
@@ -245,6 +274,7 @@ const cards = [{
         health: 6,
         manaCost: 6,
         effect: "Liquid card 6 effect",
+        effects: []
     }, {
         id: 106,
         klass: CardKlass.LIQUID,
@@ -252,6 +282,7 @@ const cards = [{
         name: "Liquid card 7",
         manaCost: 7,
         effect: "Liquid card 7 effect",
+        effects: []
     }, {
         id: 107,
         klass: CardKlass.LIQUID,
@@ -259,6 +290,7 @@ const cards = [{
         name: "Liquid card 8",
         manaCost: 8,
         effect: "Liquid card 8 effect",
+        effects: []
     }, {
         id: 108,
         klass: CardKlass.LIQUID,
@@ -266,6 +298,7 @@ const cards = [{
         name: "Liquid card 9",
         manaCost: 9,
         effect: "Liquid card 9 effect",
+        effects: []
     }, {
         id: 109,
         klass: CardKlass.LIQUID,
@@ -273,6 +306,7 @@ const cards = [{
         name: "Liquid card 10",
         manaCost: 10,
         effect: "Liquid card 10 effect",
+        effects: []
     }, {
         id: 110,
         klass: CardKlass.LIQUID,
@@ -280,6 +314,7 @@ const cards = [{
         name: "Liquid card 11",
         manaCost: 11,
         effect: "Liquid card 11 effect",
+        effects: []
     }, {
         id: 111,
         klass: CardKlass.LIQUID,
@@ -287,6 +322,7 @@ const cards = [{
         name: "Liquid card 12",
         manaCost: 12,
         effect: "Liquid card 12 effect",
+        effects: []
     }, {
         id: 150,
         klass: CardKlass.GAS,
@@ -296,6 +332,7 @@ const cards = [{
         health: 1,
         manaCost: 1,
         effect: "Gas card 1 effect",
+        effects: []
     }, {
         id: 151,
         klass: CardKlass.GAS,
@@ -305,6 +342,7 @@ const cards = [{
         health: 2,
         manaCost: 2,
         effect: "Gas card 2 effect",
+        effects: []
     }, {
         id: 152,
         klass: CardKlass.GAS,
@@ -314,6 +352,7 @@ const cards = [{
         health: 3,
         manaCost: 3,
         effect: "Gas card 3 effect",
+        effects: []
     }, {
         id: 153,
         klass: CardKlass.GAS,
@@ -323,6 +362,7 @@ const cards = [{
         health: 4,
         manaCost: 4,
         effect: "Gas card 4 effect",
+        effects: []
     }, {
         id: 154,
         klass: CardKlass.GAS,
@@ -332,6 +372,7 @@ const cards = [{
         health: 5,
         manaCost: 5,
         effect: "Gas card 5 effect",
+        effects: []
     }, {
         id: 155,
         klass: CardKlass.GAS,
@@ -341,6 +382,7 @@ const cards = [{
         health: 6,
         manaCost: 6,
         effect: "Gas card 6 effect",
+        effects: []
     }, {
         id: 156,
         klass: CardKlass.GAS,
@@ -348,6 +390,7 @@ const cards = [{
         name: "Gas card 7",
         manaCost: 7,
         effect: "Gas card 7 effect",
+        effects: []
     }, {
         id: 157,
         klass: CardKlass.GAS,
@@ -355,6 +398,7 @@ const cards = [{
         name: "Gas card 8",
         manaCost: 8,
         effect: "Gas card 8 effect",
+        effects: []
     }, {
         id: 158,
         klass: CardKlass.GAS,
@@ -362,6 +406,7 @@ const cards = [{
         name: "Gas card 9",
         manaCost: 9,
         effect: "Gas card 9 effect",
+        effects: []
     }, {
         id: 159,
         klass: CardKlass.GAS,
@@ -369,6 +414,7 @@ const cards = [{
         name: "Gas card 10",
         manaCost: 10,
         effect: "Gas card 10 effect",
+        effects: []
     }, {
         id: 160,
         klass: CardKlass.GAS,
@@ -376,6 +422,7 @@ const cards = [{
         name: "Gas card 11",
         manaCost: 11,
         effect: "Gas card 11 effect",
+        effects: []
     }, {
         id: 161,
         klass: CardKlass.GAS,
@@ -383,6 +430,7 @@ const cards = [{
         name: "Gas card 12",
         manaCost: 12,
         effect: "Gas card 12 effect",
+        effects: []
     }, {
         id: 200,
         klass: CardKlass.PLASMA,
@@ -396,6 +444,7 @@ const cards = [{
     <span class="f--red"><i class="fas fa-khanda"></i></span>,
     it can attack again.
   `,
+        effects: []
     }, {
         id: 201,
         klass: CardKlass.PLASMA,
@@ -408,6 +457,7 @@ const cards = [{
     When summoned, 10% of your Life Points are transfered into *cardname*
     damage
   `,
+        effects: []
     }, {
         id: 202,
         klass: CardKlass.PLASMA,
@@ -426,6 +476,7 @@ const cards = [{
     to
     <span class="f--orange"><i class="fas fa-fire"></i></span>.
   `,
+        effects: []
     }, {
         id: 203,
         klass: CardKlass.PLASMA,
@@ -438,6 +489,7 @@ const cards = [{
     Gains <span class="f--red">+20% <i class="fas fa-khanda"></i></span> for
     each Minion on your field, self included.
   `,
+        effects: []
     }, {
         id: 204,
         klass: CardKlass.PLASMA,
@@ -455,6 +507,7 @@ const cards = [{
     <span class="f--green">10% <i class="fas fa-heart"></i></span>
     instead. Works only on minions.
   `,
+        effects: []
     }, {
         id: 205,
         klass: CardKlass.PLASMA,
@@ -470,6 +523,7 @@ const cards = [{
     <br>
     <i><b>* Stunned</b>: Not able to attack for 1 turn.</i>
   `,
+        effects: []
     }, {
         id: 206,
         klass: CardKlass.PLASMA,
@@ -480,6 +534,7 @@ const cards = [{
     Give one minion
     <span class="f--red">+6/6 <i class="fas fa-khanda"></i></span>.
   `,
+        effects: []
     }, {
         id: 207,
         klass: CardKlass.PLASMA,
@@ -487,6 +542,7 @@ const cards = [{
         name: "Plasma card 8",
         manaCost: 8,
         effect: "Plasma card 8 effect",
+        effects: []
     }, {
         id: 208,
         klass: CardKlass.PLASMA,
@@ -494,6 +550,7 @@ const cards = [{
         name: "Plasma card 9",
         manaCost: 9,
         effect: "Plasma card 9 effect",
+        effects: []
     }, {
         id: 209,
         klass: CardKlass.PLASMA,
@@ -505,6 +562,7 @@ const cards = [{
     <span class="f--red">+6/6 <i class="fas fa-khanda"></i></span>
     until the end of their turn.
   `,
+        effects: []
     }, {
         id: 210,
         klass: CardKlass.PLASMA,
@@ -512,6 +570,7 @@ const cards = [{
         name: "Plasma card 11",
         manaCost: 11,
         effect: "Plasma card 11 effect",
+        effects: []
     }, {
         id: 211,
         klass: CardKlass.PLASMA,
@@ -519,6 +578,7 @@ const cards = [{
         name: "Plasma card 12",
         manaCost: 12,
         effect: "Plasma card 12 effect",
+        effects: []
     }];
 const solidHero = {
     name: "Solid Hero",

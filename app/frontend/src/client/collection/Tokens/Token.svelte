@@ -1,12 +1,11 @@
 <script lang="ts">
   import {eccService, socketService} from "services";
-  import {playerStore} from "stores/data";
-
+  import {playerStore} from "stores";
   import Button from "../../../ui/Button.svelte";
-  import Form from "../../../ui/Form.svelte";
   import Img from "../../../ui/Img.svelte";
   import Input from "../../../ui/Input.svelte";
   import Text from "../../../ui/Text.svelte";
+  import Form from "../../../ui/Form.svelte";
 
   interface Tkn {
     name: string;
@@ -28,7 +27,7 @@
     const {username, publicKey, privateKey, last_nonce} = $playerStore;
     const signature = eccService.sign(`transfer:${last_nonce + 1}`, privateKey);
 
-    socketService.sendToken({
+    socketService.socket.emit("sendToken", {
       chain_id: form.chain.id,
       relayer: "admin",
       from: username,
@@ -108,8 +107,8 @@
           <Input placeholder="To" maxlength={12} bind:value={form.to}/>
           <!-- <Input placeholder="Game Wallet" type="radio" value={false} bind:group={form.isWithdraw}/>
           <Input placeholder="Telos Wallet" type="radio" value={true} bind:group={form.isWithdraw}/> -->
-          <Input placeholder="Amount" bind:value={form.amount}/>
-          <Input placeholder="Withdraw" type="checkbox" bind:checked={form.isWithdraw}/>
+          <Input placeholder="Amount" bind:value={form.amount} maxlength={32}/>
+          <Input placeholder="Withdraw" type="checkbox" bind:checked={form.isWithdraw} maxlength={32}/>
 
           <div style="text-align: right;">Fee: {form.chain.fee}</div>
           <div style="text-align: right;">Total: {(parseFloat(form.amount) + parseFloat(form.chain.fee)).toFixed(4)} {form.chain.text}</div>

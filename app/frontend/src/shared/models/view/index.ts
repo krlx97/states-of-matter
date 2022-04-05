@@ -1,5 +1,3 @@
-import type {Card} from "./Card"
-import type {Hero} from "./Hero";
-import type {Social} from "./Social";
-
-export type {Card, Hero, Social};
+export type {Card} from "./Card"
+export type {Hero} from "./Hero";
+export type {Social} from "./Social";

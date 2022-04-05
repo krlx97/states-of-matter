@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {gameStore} from "game/stores";
+  import {gameStore} from "stores";
 </script>
 
 <style lang="scss">
@@ -10,21 +10,21 @@
     position: relative;
 
     &__cards {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-shadow: 2px 2px 4px black;
-  }
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-shadow: 2px 2px 4px black;
+    }
 
     &__img {
-      height: $card-height;
-      width: $card-width;
+      height: $card-height-sm;
+      width: $card-width-sm;
     }
   }
 </style>
 
 <div class="deck">
   <span class="deck__cards">{$gameStore.opponent.deck} / 30</span>
-  <img class="deck__img" src="assets/card-backs/default.jpg" alt="Deck">
+  <img class="deck__img" src="assets/card-backs/default.jpg" alt="Deck"/>
 </div>

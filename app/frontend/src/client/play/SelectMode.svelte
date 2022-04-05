@@ -1,10 +1,9 @@
 <script lang="ts">
   import {miscService, socketService} from "services";
-
   import Button from "../../ui/Button.svelte";
 
-  const onMakeLobby = (): void => { socketService.makeLobby(); };
-  const onJoinLobby = (): void => { miscService.openModal("joinLobby"); };
+  const onMakeLobby = () => { socketService.socket.emit("makeLobby"); };
+  const onJoinLobby = () => { miscService.openModal("joinLobby"); };
 </script>
 
 <style lang="scss">

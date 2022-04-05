@@ -1,23 +1,22 @@
 <script lang="ts">
   import {miscService} from "services";
-  import {playerStore} from "stores/data";
-
+  import {playerStore} from "stores";
   import Button from "../../ui/Button.svelte";
-  import Text from "../../ui/Text.svelte";
   import FontAwesome from "../../ui/FontAwesome.svelte";
+  import Text from "../../ui/Text.svelte";
 
   let isPrivateKeyVisible = false;
 
-  const onTogglePrivateKeyVisible = (): void => {
+  const onTogglePrivateKeyVisible = () => {
     isPrivateKeyVisible = !isPrivateKeyVisible
   };
 
-  const onCopyPublicKey = async (): Promise<void> => {
+  const onCopyPublicKey = async () => {
     await navigator.clipboard.writeText($playerStore.publicKey);
     miscService.showNotification("Copied to clipboard.");
   };
 
-  const onCopyPrivateKey = async (): Promise<void> => {
+  const onCopyPrivateKey = async () => {
     await navigator.clipboard.writeText($playerStore.privateKey);
     miscService.showNotification("Copied to clipboard.");
   };

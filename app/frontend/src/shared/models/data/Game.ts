@@ -25,6 +25,8 @@ interface GameFields {
   minionB: undefined | GameCard;
   minionC: undefined | GameCard;
   minionD: undefined | GameCard;
+  minionE: undefined | GameCard;
+  minionF: undefined | GameCard;
   trap: undefined | GameCard;
 }
 
@@ -47,7 +49,6 @@ interface GameOpponent {
 }
 
 interface Game {
-  _id?: string;
   gameId: number;
   currentPlayer: string;
   player: GamePlayer;

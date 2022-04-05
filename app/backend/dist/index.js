@@ -5,7 +5,7 @@ import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig.js';
 import { MongoClient } from 'mongodb';
 import fetch from 'node-fetch';
 import { Server } from 'socket.io';
-import { PlayerStatus } from '@som/shared/enums';
+import { PlayerStatus, CardType } from '@som/shared/enums';
 import { randomInt } from 'crypto';
 import { cards } from '@som/shared/data';
 
@@ -672,48 +672,54 @@ const startGame = (services) => {
             currentPlayer: $lobby.host.username,
             playerA: {
                 username: $lobby.host.username,
-                hero: {
-                    id: 2,
-                    health: 600,
-                    maxHealth: 600,
-                    mana: 100,
-                    maxMana: 100,
-                    damage: 30,
-                    passive: 25
-                },
                 fields: {
-                    magic: undefined,
+                    hero: {
+                        id: 2,
+                        type: CardType.HERO,
+                        health: 600,
+                        maxHealth: 600,
+                        mana: 100,
+                        maxMana: 100,
+                        damage: 30,
+                        passive: 25
+                    },
                     minionA: undefined,
                     minionB: undefined,
                     minionC: undefined,
                     minionD: undefined,
-                    trap: undefined,
+                    minionE: undefined,
+                    minionF: undefined,
+                    magic: undefined,
+                    trap: undefined
                 },
-                deck: playerADeck,
                 hand: playerAHand,
+                deck: playerADeck,
                 graveyard: []
             },
             playerB: {
                 username: $lobby.challengee.username,
-                hero: {
-                    id: 4,
-                    health: 600,
-                    maxHealth: 600,
-                    mana: 100,
-                    maxMana: 100,
-                    damage: 20,
-                    passive: 25
-                },
                 fields: {
-                    magic: undefined,
+                    hero: {
+                        id: 4,
+                        type: CardType.HERO,
+                        health: 600,
+                        maxHealth: 600,
+                        mana: 100,
+                        maxMana: 100,
+                        damage: 20,
+                        passive: 25
+                    },
                     minionA: undefined,
                     minionB: undefined,
                     minionC: undefined,
                     minionD: undefined,
-                    trap: undefined,
+                    minionE: undefined,
+                    minionF: undefined,
+                    magic: undefined,
+                    trap: undefined
                 },
-                deck: playerBDeck,
                 hand: playerBHand,
+                deck: playerBDeck,
                 graveyard: []
             },
         };
@@ -726,48 +732,54 @@ const startGame = (services) => {
             currentPlayer: $lobby.host.username,
             player: {
                 username: $lobby.host.username,
-                hero: {
-                    id: 2,
-                    health: 600,
-                    maxHealth: 600,
-                    mana: 100,
-                    maxMana: 100,
-                    damage: 30,
-                    passive: 25
-                },
                 fields: {
-                    magic: undefined,
+                    hero: {
+                        id: 2,
+                        type: CardType.HERO,
+                        health: 600,
+                        maxHealth: 600,
+                        mana: 100,
+                        maxMana: 100,
+                        damage: 30,
+                        passive: 25
+                    },
                     minionA: undefined,
                     minionB: undefined,
                     minionC: undefined,
                     minionD: undefined,
+                    minionE: undefined,
+                    minionF: undefined,
+                    magic: undefined,
                     trap: undefined
                 },
-                deck: playerADeck,
                 hand: playerAHand,
+                deck: playerADeck,
                 graveyard: []
             },
             opponent: {
                 username: $lobby.challengee.username,
-                hero: {
-                    id: 4,
-                    health: 600,
-                    maxHealth: 600,
-                    mana: 100,
-                    maxMana: 100,
-                    damage: 20,
-                    passive: 25
-                },
                 fields: {
-                    magic: undefined,
+                    hero: {
+                        id: 4,
+                        type: CardType.HERO,
+                        health: 600,
+                        maxHealth: 600,
+                        mana: 100,
+                        maxMana: 100,
+                        damage: 20,
+                        passive: 25
+                    },
                     minionA: undefined,
                     minionB: undefined,
                     minionC: undefined,
                     minionD: undefined,
+                    minionE: undefined,
+                    minionF: undefined,
+                    magic: undefined,
                     trap: undefined
                 },
-                deck: playerBDeck.length,
                 hand: playerBHand.length,
+                deck: playerBDeck.length,
                 graveyard: []
             }
         };
@@ -776,48 +788,54 @@ const startGame = (services) => {
             currentPlayer: $lobby.host.username,
             player: {
                 username: $lobby.challengee.username,
-                hero: {
-                    id: 4,
-                    health: 600,
-                    maxHealth: 600,
-                    mana: 100,
-                    maxMana: 100,
-                    damage: 20,
-                    passive: 25
-                },
                 fields: {
-                    magic: undefined,
+                    hero: {
+                        id: 4,
+                        type: CardType.HERO,
+                        health: 600,
+                        maxHealth: 600,
+                        mana: 100,
+                        maxMana: 100,
+                        damage: 20,
+                        passive: 25
+                    },
                     minionA: undefined,
                     minionB: undefined,
                     minionC: undefined,
                     minionD: undefined,
+                    minionE: undefined,
+                    minionF: undefined,
+                    magic: undefined,
                     trap: undefined,
                 },
-                deck: playerBDeck,
                 hand: playerBHand,
+                deck: playerBDeck,
                 graveyard: []
             },
             opponent: {
                 username: $lobby.host.username,
-                hero: {
-                    id: 2,
-                    health: 600,
-                    maxHealth: 600,
-                    mana: 100,
-                    maxMana: 100,
-                    damage: 30,
-                    passive: 25
-                },
                 fields: {
-                    magic: undefined,
+                    hero: {
+                        id: 2,
+                        type: CardType.HERO,
+                        health: 600,
+                        maxHealth: 600,
+                        mana: 100,
+                        maxMana: 100,
+                        damage: 30,
+                        passive: 25
+                    },
                     minionA: undefined,
                     minionB: undefined,
                     minionC: undefined,
                     minionD: undefined,
+                    minionE: undefined,
+                    minionF: undefined,
+                    magic: undefined,
                     trap: undefined,
                 },
-                deck: playerADeck.length,
                 hand: playerAHand.length,
+                deck: playerADeck.length,
                 graveyard: []
             }
         };
@@ -832,7 +850,7 @@ const startGame = (services) => {
 };
 
 const attackCard = (services) => {
-    const { mongoService, socketService } = services;
+    const { mongoService, socketService, gameEngine } = services;
     const { $games, $players } = mongoService;
     const { io, socket, socketId } = socketService;
     socket.on("attackCard", async (params) => {
@@ -846,210 +864,50 @@ const attackCard = (services) => {
         if (!game) {
             return;
         }
+        const { playerA, playerB } = game;
         let opponentUsername;
-        const endGame = async (winner) => {
-            const { playerA, playerB } = game;
-            const [A, B] = await Promise.all([
-                $players.findOneAndUpdate({
-                    username: playerA.username
-                }, {
-                    $set: {
-                        gameId: 0,
-                        status: PlayerStatus.ONLINE
-                    }
-                }, {
-                    returnDocument: "after"
-                }),
-                $players.findOneAndUpdate({
-                    username: playerB.username
-                }, {
-                    $set: {
-                        gameId: 0,
-                        status: PlayerStatus.ONLINE
-                    }
-                }, {
-                    returnDocument: "after"
-                })
-            ]);
-            if (!A.value || !B.value) {
-                return;
-            }
-            const isDeletedGame = await $games.deleteOne({ gameId });
-            if (!isDeletedGame.deletedCount) {
-                return;
-            }
-            if (winner === "A") {
-                io.to(A.value.socketId).emit("notification", "You won!");
-                io.to(B.value.socketId).emit("notification", "You lost...");
-            }
-            else if (winner === "B") {
-                io.to(B.value.socketId).emit("notification", "You won!");
-                io.to(A.value.socketId).emit("notification", "You lost...");
-            }
-            io.to([A.value.socketId, B.value.socketId]).emit("endGame");
-        };
-        // ;w;
-        if (player.username === game.playerA.username) {
-            opponentUsername = game.playerB.username;
-            const { playerA, playerB } = game;
-            if (attacker === "hero") { // attacking with hero
-                if (attacked === "hero") { // attacking hero with hero
-                    playerA.hero.health -= playerB.hero.damage;
-                    playerB.hero.health -= playerA.hero.damage;
-                    if (playerB.hero.health <= 0) {
-                        await endGame("A");
-                        return;
-                    }
-                    else if (playerA.hero.health <= 0) {
-                        await endGame("B");
-                        return;
-                    }
-                }
-                else { // attacking card with hero
-                    const attackedCard = playerB.fields[attacked];
-                    if (!attackedCard ||
-                        !attackedCard.health ||
-                        !attackedCard.damage) {
-                        return;
-                    }
-                    playerA.hero.health -= attackedCard.damage;
-                    attackedCard.health -= playerA.hero.damage;
-                    if (playerA.hero.health <= 0) {
-                        await endGame("B");
-                        return;
-                    }
-                    if (attackedCard.health <= 0) {
-                        playerB.graveyard.push(attackedCard);
-                        playerB.fields[attacked] = undefined;
-                    }
-                }
-            }
-            else { // attacking with card
-                if (attacked === "hero") { // attacking hero with card
-                    const attackerCard = playerA.fields[attacker];
-                    if (!attackerCard || !attackerCard.health || !attackerCard.damage) {
-                        return;
-                    }
-                    attackerCard.health -= playerB.hero.damage;
-                    playerB.hero.health -= attackerCard.damage;
-                    if (playerB.hero.health <= 0) {
-                        await endGame("A");
-                        return;
-                    }
-                    if (attackerCard.health <= 0) {
-                        playerA.graveyard.push(attackerCard);
-                        playerA.fields[attacker] = undefined;
-                    }
-                }
-                else { // attacking card with card
-                    const attackerCard = playerA.fields[attacker];
-                    const attackedCard = playerB.fields[attacked];
-                    if (!attackedCard ||
-                        !attackedCard.health ||
-                        !attackedCard.damage ||
-                        !attackerCard ||
-                        !attackerCard.health ||
-                        !attackerCard.damage) {
-                        return;
-                    }
-                    attackerCard.health -= attackedCard.damage;
-                    attackedCard.health -= attackerCard.damage;
-                    if (attackerCard.health <= 0) {
-                        playerA.graveyard.push(attackerCard);
-                        playerA.fields[attacker] = undefined;
-                    }
-                    if (attackedCard.health <= 0) {
-                        playerB.graveyard.push(attackedCard);
-                        playerB.fields[attacked] = undefined;
-                    }
-                }
-            }
-            await $games.updateOne({ gameId }, { $set: { playerA, playerB } });
+        let _attacker;
+        let _attacked;
+        if (player.username === playerA.username) {
+            opponentUsername = playerB.username;
+            _attacker = playerA.fields[attacker];
+            _attacked = playerB.fields[attacked];
         }
         else {
-            opponentUsername = game.playerA.username;
-            const { playerA, playerB } = game;
-            if (attacker === "hero") { // attacking with hero
-                if (attacked === "hero") { // attacking hero with hero
-                    playerB.hero.health -= playerA.hero.damage;
-                    playerA.hero.health -= playerB.hero.damage;
-                    if (playerB.hero.health <= 0) {
-                        await endGame("A");
-                        return;
-                    }
-                    else if (playerA.hero.health <= 0) {
-                        await endGame("B");
-                        return;
-                    }
-                }
-                else { // attacking card with hero
-                    const attackedCard = playerA.fields[attacked];
-                    if (!attackedCard ||
-                        !attackedCard.health ||
-                        !attackedCard.damage) {
-                        return;
-                    }
-                    playerB.hero.health -= attackedCard.damage;
-                    attackedCard.health -= playerB.hero.damage;
-                    if (playerB.hero.health <= 0) {
-                        return await endGame("A");
-                    }
-                    if (attackedCard.health <= 0) {
-                        playerA.graveyard.push(attackedCard);
-                        playerA.fields[attacked] = undefined;
-                    }
-                }
-            }
-            else { // attacking with card
-                if (attacked === "hero") { // attacking hero with card
-                    const attackerCard = playerB.fields[attacker];
-                    if (!attackerCard || !attackerCard.health || !attackerCard.damage) {
-                        return;
-                    }
-                    attackerCard.health -= playerA.hero.damage;
-                    playerA.hero.health -= attackerCard.damage;
-                    if (playerA.hero.health <= 0) {
-                        await endGame("B");
-                        return;
-                    }
-                    if (attackerCard.health <= 0) {
-                        playerB.graveyard.push(attackerCard);
-                        playerB.fields[attacker] = undefined;
-                    }
-                }
-                else { // attacking card with card
-                    const attackerCard = playerB.fields[attacker];
-                    const attackedCard = playerA.fields[attacked];
-                    if (!attackedCard ||
-                        !attackedCard.health ||
-                        !attackedCard.damage ||
-                        !attackerCard ||
-                        !attackerCard.health ||
-                        !attackerCard.damage) {
-                        return;
-                    }
-                    attackerCard.health -= attackedCard.damage;
-                    attackedCard.health -= attackerCard.damage;
-                    if (attackerCard.health <= 0) {
-                        playerB.graveyard.push(attackerCard);
-                        playerB.fields[attacker] = undefined;
-                    }
-                    if (attackedCard.health <= 0) {
-                        playerA.graveyard.push(attackedCard);
-                        playerA.fields[attacked] = undefined;
-                    }
-                }
-            }
-            await $games.updateOne({ gameId }, { $set: { playerA, playerB } });
+            opponentUsername = playerA.username;
+            _attacker = playerB.fields[attacker];
+            _attacked = playerA.fields[attacked];
         }
-        socket.emit("attackCardSender", params);
+        if (!_attacker || !_attacked) {
+            return;
+        }
+        _attacker.health -= _attacked.damage;
+        _attacked.health -= _attacker.damage;
+        if (_attacker.health <= 0 && attacker === "hero") {
+            await gameEngine.endGame(services, gameId, "B");
+            return;
+        }
+        if (_attacked.health <= 0 && attacked === "hero") {
+            await gameEngine.endGame(services, gameId, "A");
+            return;
+        }
+        if (_attacker.health <= 0 && attacker !== "hero") {
+            playerA.graveyard.push(playerA.fields[attacker]);
+            playerA.fields[attacker] = undefined;
+        }
+        else if (_attacked.health <= 0 && attacked !== "hero") {
+            playerB.graveyard.push(playerB.fields[attacked]);
+            playerB.fields[attacked] = undefined;
+        }
+        await $games.updateOne({ gameId }, { $set: { playerA, playerB } });
+        socket.emit("attackCardSender", { attacked, attacker });
         const opponent = await $players.findOne({
             username: opponentUsername
         });
         if (!opponent || !opponent.socketId) {
             return;
         }
-        io.to(opponent.socketId).emit("attackCardReceiver", params);
+        io.to(opponent.socketId).emit("attackCardReceiver", { attacked, attacker });
     });
 };
 
@@ -1699,6 +1557,57 @@ class SocketService {
     }
 }
 
+class GameEngine {
+    async endGame(services, gameId, winner) {
+        const { mongoService, socketService } = services;
+        const { $games, $players } = mongoService;
+        const { io, socket } = socketService;
+        const game = await $games.findOne({ gameId });
+        if (!game) {
+            return;
+        }
+        const { playerA, playerB } = game;
+        const [A, B] = await Promise.all([
+            $players.findOneAndUpdate({
+                username: playerA.username
+            }, {
+                $set: {
+                    gameId: 0,
+                    status: PlayerStatus.ONLINE
+                }
+            }, {
+                returnDocument: "after"
+            }),
+            $players.findOneAndUpdate({
+                username: playerB.username
+            }, {
+                $set: {
+                    gameId: 0,
+                    status: PlayerStatus.ONLINE
+                }
+            }, {
+                returnDocument: "after"
+            })
+        ]);
+        if (!A.value || !B.value) {
+            return;
+        }
+        const isDeletedGame = await $games.deleteOne({ gameId });
+        if (!isDeletedGame.deletedCount) {
+            return;
+        }
+        if (winner === "A") {
+            io.to(A.value.socketId).emit("notification", "You won!");
+            io.to(B.value.socketId).emit("notification", "You lost...");
+        }
+        else if (winner === "B") {
+            io.to(B.value.socketId).emit("notification", "You won!");
+            io.to(A.value.socketId).emit("notification", "You lost...");
+        }
+        io.to([A.value.socketId, B.value.socketId]).emit("endGame");
+    }
+}
+
 const { mongo: { uri }, eos: { endpoint, contractKey }, socket: { opts }, server: { port } } = settings;
 const httpServer = createServer();
 const ioServer = new Server(httpServer, opts);
@@ -1712,9 +1621,10 @@ const eosApi = new Api({
 });
 const eosService = new EosService(eosApi);
 const mongoService = new MongoService(mongoDb);
+const gameEngine = new GameEngine();
 ioServer.on("connection", (socket) => {
     const socketService = new SocketService(ioServer, socket);
-    const services = { eosService, mongoService, socketService };
+    const services = { eosService, mongoService, socketService, gameEngine };
     requests.forEach((request) => { request(services); });
 });
 process$1.on("unhandledRejection", async (reason, promise) => {

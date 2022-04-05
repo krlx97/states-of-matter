@@ -7,6 +7,7 @@ interface Card {
     health?: number;
     manaCost: number;
     effect: string;
+    effects: Array<number>;
 }
 interface Passive {
     name: string;

@@ -16,7 +16,6 @@ export const disconnect: SocketRequest = (services) => {
       returnDocument: "after"
     });
 
-
     if (!$player.value) { return; }
 
     const {username, status, social} = $player.value;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {playerStore} from "stores/data";
+  import {playerStore} from "stores";
   import Token from "./Token.svelte";
 
   const tokens = [

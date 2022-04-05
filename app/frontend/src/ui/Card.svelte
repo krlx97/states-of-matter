@@ -6,7 +6,7 @@
   import Text from "./Text.svelte";
   import Img from "./Img.svelte";
 
-  import type {Card} from "models/view";
+  import type {Card} from "../shared/models/view";
 
   let card: Card,
       health: number,
@@ -37,8 +37,12 @@
   @import "../shared/styles/mixins";
   @import "../shared/styles/variables";
 
-  .scene {perspective: 1280px}
-  .rotated {transform: rotateY(180deg)}
+  // .scene {
+  //   perspective: 1280px;
+  //   height: 100%;
+  //   width: 100%;
+  // }
+  // .rotated {transform: rotateY(180deg)}
 
   .isNeutral {
     // box-shadow: 0 0 4px 0 rgb(253, 253, 253);
@@ -68,8 +72,10 @@
 
   .card {
     position: relative;
-    height: $card-height;
-    width: $card-width;
+    // height: $card-height;
+    // width: $card-width;
+    height: 100%;
+    width: 100%;
     transform-style: preserve-3d;
     transform-origin: center center;
     // box-shadow: $elevation-sm;
@@ -156,7 +162,7 @@
   }
 </style>
 
-<div class="scene" on:contextmenu|preventDefault={flip}>
+<!-- <div class="scene" on:contextmenu|preventDefault={flip}> -->
   <div class="card" class:rotated={isFlipped}>
     <div class="card--front">
       <div class="card__header">
@@ -261,4 +267,4 @@
       <Img src="card-backs/default.jpg" alt="Card back"/>
     </div>
   </div>
-</div>
+<!-- </div> -->

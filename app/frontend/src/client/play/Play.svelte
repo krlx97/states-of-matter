@@ -1,6 +1,6 @@
 <script lang="ts">
   import {PlayerStatus} from "@som/shared/enums";
-  import {playerStore} from "stores/data";
+  import {playerStore} from "stores";
   import Lobby from "./Lobby.svelte";
   import SelectMode from "./SelectMode.svelte";
 

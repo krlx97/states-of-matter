@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {decksStore} from "client/stores";
+  import {decksStore} from "stores";
   import DeckCard from "./DeckCard.svelte";
 </script>
 

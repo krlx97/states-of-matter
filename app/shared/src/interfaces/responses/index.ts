@@ -66,13 +66,27 @@ interface StartGame {
 }
 //
 interface AttackCardReceiver {
-  attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
-  attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+  attacker: "hero" | "minionA" | "minionB" | "minionC" | "minionD" | "minionE" | "minionF";
+  attacked: "hero" | "minionA" | "minionB" | "minionC" | "minionD" | "minionE" | "minionF";
 }
 
 interface AttackCardSender {
-  attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
-  attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+  attacker: "hero" | "minionA" | "minionB" | "minionC" | "minionD" | "minionE" | "minionF";
+  attacked: "hero" | "minionA" | "minionB" | "minionC" | "minionD" | "minionE" | "minionF";
+}
+interface AttackHeroPlayer {
+  attacker: "a" | "b" | "c" | "d";
+}
+interface AttackHeroOpponent {
+  attacker: "a" | "b" | "c" | "d";
+}
+interface AttackMinionPlayer {
+  attacker: "a" | "b" | "c" | "d";
+  attacked: "a" | "b" | "c" | "d";
+}
+interface AttackMinionOpponent {
+  attacker: "a" | "b" | "c" | "d";
+  attacked: "a" | "b" | "c" | "d";
 }
 
 interface HoverCard {
@@ -143,7 +157,7 @@ interface UpdateFriend {
   status: number;
 }
 
-type Callback<Params> = (params: Params) => Promise<void>;
+type Callback<Params> = (params: Params) => void;
 
 export interface SocketResponses {
   // Global
@@ -155,11 +169,11 @@ export interface SocketResponses {
   getPrivateKeyHash: Callback<GetPrivateKeyHash>;
   signin: Callback<Signin>;
   // Client
-  destroyLobby: () => Promise<void>;
+  destroyLobby: () => void;
   joinLobbyReceiver: Callback<JoinLobbyReceiver>;
   joinLobbySender: Callback<JoinLobbySender>;
-  leaveLobbyReceiver: () => Promise<void>;
-  leaveLobbySender: () => Promise<void>;
+  leaveLobbyReceiver: () => void;
+  leaveLobbySender: () => void;
   makeLobby: Callback<MakeLobby>;
   saveDeck: Callback<SaveDeck>;
   selectDeck: Callback<SelectDeck>;
@@ -167,15 +181,19 @@ export interface SocketResponses {
   setDeckName: Callback<SetDeckName>;
   startGame: Callback<StartGame>;
   // Game
-  endGame: () => Promise<void>;
+  endGame: () => void;
   attackCardReceiver: Callback<AttackCardReceiver>;
   attackCardSender: Callback<AttackCardSender>;
-  endTurnPlayer: () => Promise<void>;
-  endTurnOpponent: () => Promise<void>;
+  "attackHero|player": Callback<AttackHeroPlayer>;
+  "attackHero|opponent": Callback<AttackHeroOpponent>;
+  attackMinionOpponent: Callback<AttackMinionOpponent>;
+  attackMinionPlayer: Callback<AttackMinionPlayer>;
+  endTurnPlayer: () => void;
+  endTurnOpponent: () => void;
   hoverCard: Callback<HoverCard>;
   playCardPlayer: Callback<PlayCardSender>;
   playCardOpponent: Callback<PlayCardReceiver>;
-  unhoverCard: () => Promise<void>;
+  unhoverCard: () => void;
   // Sidenav
   acceptFriendReceiver: Callback<AcceptFriendReceiver>;
   acceptFriendSender: Callback<AcceptFriendSender>;
@@ -261,6 +279,12 @@ interface AttackCardReceiverRes {
 interface AttackCardSenderRes {
   attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
   attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
+}
+interface AttackHeroPlayer {
+  attacker: "a" | "b" | "c" | "d";
+}
+interface AttackHeroOpponent {
+  attacker: "a" | "b" | "c" | "d";
 }
 interface HoverCardRes {
   field: string;

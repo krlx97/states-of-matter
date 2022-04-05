@@ -3,7 +3,7 @@
   let placeholder: string;
   let type: "text" | "number" | "checkbox" | "password" = "text";
   let checked = false;
-  let maxlength: number;
+  let maxlength = 32;
 
   export {value, placeholder, type, checked, maxlength};
 </script>

@@ -1,34 +1,31 @@
 <script lang="ts">
   import {miscService, socketService} from "services";
-  import {playerStore} from "stores/data";
-  import {decksStore} from "client/stores";
-
+  import {decksStore, playerStore} from "stores";
   import Button from "../../ui/Button.svelte";
   import ProgressBar from "../../ui/ProgressBar.svelte";
 
-  let deck: any;
+  export let deck: any;
 
-  const selectDeck = (): void => {
-    socketService.selectDeck({deckId: deck.id});
+  $: progress = (deck.cardsInDeck / 30) * 100;
+
+  const selectDeck = () => {
+    socketService.socket.emit("selectDeck", {deckId: deck.id});
   };
 
-  const changeDeckName = (): void => {
+  const changeDeckName = () => {
     miscService.openModal("changeDeckName", {id: deck.id});
   };
 
-  const saveDeck = (): void => {
+  const saveDeck = () => {
     const cards = $decksStore.deckCards.map(({id, amount}) => ({id, amount}));
-    socketService.saveDeck({cards});
+    socketService.socket.emit("saveDeck", {cards});
   };
 
-  const clearDeck = (): void => {
+  const clearDeck = () => {
     $decksStore.deckCards = [];
     $decksStore.cardsInDeck = 0;
   };
 
-  $:progress = (deck.cardsInDeck / 30) * 100;
-
-  export {deck};
 </script>
 
 <style lang="scss">

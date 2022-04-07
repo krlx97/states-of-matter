@@ -36,11 +36,15 @@ export const attackMinion: SocketRequest = (services) => {
     }
 
     if (playerMinion.health <= 0) {
+      playerMinion.health = playerMinion.maxHealth;
+
       player.graveyard.push(playerMinion);
       player.minion[attacker] = undefined;
     }
 
     if (opponentMinion.health <= 0) {
+      playerMinion.health = playerMinion.maxHealth;
+
       opponent.graveyard.push(opponentMinion);
       opponent.minion[attacked] = undefined;
     }

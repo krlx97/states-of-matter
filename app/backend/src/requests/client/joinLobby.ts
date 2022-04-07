@@ -2,7 +2,7 @@ import {PlayerStatus} from "@som/shared/enums";
 import type {SocketRequest} from "models";
 
 export const joinLobby: SocketRequest = (services) => {
-  const {mongoService, socketService} = services;
+  const {mongoService, socketService, gameEngine} = services;
   const {$lobbies, $players} = mongoService;
   const {io, socket, socketId} = socketService;
 
@@ -31,6 +31,10 @@ export const joinLobby: SocketRequest = (services) => {
     }
     if ($lobby.challengee.username) {
       socket.emit("notification", "Lobby is full.");
+      return;
+    }
+    if(!gameEngine.checkPlayersDeck($player.decks[$player.deckId])){
+      socket.emit("notification", "Invalid deck.");
       return;
     }
 

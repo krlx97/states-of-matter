@@ -1,6 +1,7 @@
 import {PlayerStatus} from "@som/shared/enums";
 import type {Game} from "@som/shared/interfaces/mongo";
 import type {Services} from "models";
+import { PlayerDeck } from "./MongoService/PlayerService.models";
 
 // mutation probably isn't the best way to do this...
 export class GameEngine {
@@ -89,5 +90,11 @@ export class GameEngine {
     const opponent = playerA.username === username ? playerB : playerA;
 
     return {player, opponent};
+  }
+
+  public checkPlayersDeck (playerDeck: PlayerDeck) {
+    const numberOfCards: number = playerDeck.cards.reduce((acc, curr) => acc += curr.amount, 0)
+    if(numberOfCards < 30) return false;
+    return true;
   }
 }

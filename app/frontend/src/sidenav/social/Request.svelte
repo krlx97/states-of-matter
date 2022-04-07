@@ -6,8 +6,8 @@
 
   let username: string;
 
-  const onAcceptFriend = (): void => { socketService.acceptFriend({username}); };
-  const onDeclineFriend = (): void => { socketService.declineFriend({username}); };
+  const onAcceptFriend = (): void => { socketService.socket.emit("acceptFriend", {username}); };
+  const onDeclineFriend = (): void => { socketService.socket.emit("declineFriend", {username}); };
 
   export {username};
 </script>

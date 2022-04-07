@@ -3,7 +3,7 @@ import {PlayerStatus} from "@som/shared/enums";
 import type {SocketRequest} from "models";
 
 export const makeLobby: SocketRequest = (services) => {
-  const {mongoService, socketService} = services;
+  const {mongoService, socketService, gameEngine} = services;
   const {$lobbies, $players} = mongoService;
   const {socket, socketId} = socketService;
 
@@ -20,6 +20,10 @@ export const makeLobby: SocketRequest = (services) => {
     }
     if (player.gameId) {
       socket.emit("notification", "You can't make a lobby while in game.");
+      return;
+    }
+    if(!gameEngine.checkPlayersDeck(player.decks[player.deckId])){
+      socket.emit("notification", "Invalid deck.");
       return;
     }
 

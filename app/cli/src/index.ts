@@ -25,14 +25,13 @@ const write = async (fileName: string): Promise<void> => {
   console.log(camelCase, PascalCase, path.resolve("../../../"));
 
   await fs.writeFile(`./${camelCase}.ts`, `
-    import {${PascalCase}Req} from "@som/shared/interfaces/requests";
     import {SocketRequest} from "models";
 
-    const ${camelCase}: SocketRequest<${PascalCase}> = async (services, params) => {
-
+    export const ${camelCase}: SocketRequest = (services) => {
+      services.socketService.socket.on("${camelCase}", (params) => {
+        //...
+      });
     };
-
-    export default ${camelCase};
   `.trim());
 
   await rebuildIndex(PascalCase);

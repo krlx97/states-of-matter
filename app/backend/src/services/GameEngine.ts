@@ -2,8 +2,24 @@ import {PlayerStatus} from "@som/shared/enums";
 import type {Game} from "@som/shared/interfaces/mongo";
 import type {Services} from "models";
 
+// mutation probably isn't the best way to do this...
 export class GameEngine {
   constructor (private readonly _services: Services) {}
+
+  public async saveGame (game: Game): Promise<boolean> {
+    const {mongoService} = this._services;
+    const {$games} = mongoService;
+    const {gameId, playerA, playerB} = game;
+    const updateGame = await $games.updateOne({gameId}, {
+      $set: {playerA, playerB}
+    });
+
+    if (updateGame.modifiedCount) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   public async isGameOver (game: Game): Promise<boolean> {
     if (game.playerA.hero.health <= 0) {
@@ -17,7 +33,7 @@ export class GameEngine {
     return false;
   }
 
-  async endGame (gameId: number, winner: "A" | "B") {
+  async endGame (gameId: number, winner: "A" | "B"): Promise<void> {
     const {mongoService, socketService} = this._services;
     const {$games, $players} = mongoService;
     const {io, socket} = socketService;

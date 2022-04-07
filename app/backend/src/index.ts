@@ -34,13 +34,14 @@ const eosApi = new Api({
 
 const eosService = new EosService(eosApi);
 const mongoService = new MongoService(mongoDb);
-const gameEngine = new GameEngine();
 
-ioServer.on("connection", (socket) => {
+ioServer.on("connection", (socket): void => {
   const socketService = new SocketService(ioServer, socket);
+  const gameEngine = new GameEngine();
+
   const services: Services = {eosService, mongoService, socketService,  gameEngine};
 
-  requests.forEach((request) => { request(services); });
+  requests.forEach((request): void => request(services));
 });
 
 process.on("unhandledRejection", async (reason, promise) => {

@@ -1,8 +1,7 @@
-import {PlayerStatus} from "@som/shared/enums";
 import type {SocketRequest} from "models";
 
 export const endTurn: SocketRequest = (services) => {
-  const {mongoService, socketService} = services;
+  const {mongoService, socketService, gameEngine} = services;
   const {$games, $players} = mongoService;
   const {io, socket, socketId} = socketService;
 
@@ -28,42 +27,7 @@ export const endTurn: SocketRequest = (services) => {
 
       opponentUsername = username;
 
-      if (!card) {
-        const [A, B] = await Promise.all([
-          $players.findOneAndUpdate({
-            username: playerA.username
-          }, {
-            $set: {
-              gameId: 0,
-              status: PlayerStatus.ONLINE
-            }
-          }, {
-            returnDocument: "after"
-          }),
-          $players.findOneAndUpdate({
-            username: playerB.username
-          }, {
-            $set: {
-              gameId: 0,
-              status: PlayerStatus.ONLINE
-            }
-          }, {
-            returnDocument: "after"
-          })
-        ]);
-
-        if (!A.value || !B.value) { return; }
-
-        io.to(A.value.socketId).emit("notification", "You won!");
-        io.to(B.value.socketId).emit("notification", "You lost...");
-        io.to([A.value.socketId, B.value.socketId]).emit("endGame");
-
-        const isDeletedGame = await $games.deleteOne({gameId});
-
-        if (!isDeletedGame.deletedCount) { return; }
-
-        return;
-      }
+      if (!card) { return await gameEngine.endGame(gameId, "B"); }
 
       hand.push(card);
       hero.mana = 100;
@@ -82,42 +46,7 @@ export const endTurn: SocketRequest = (services) => {
 
       const card = deck.pop();
 
-      if (!card) {
-        const [A, B] = await Promise.all([
-          $players.findOneAndUpdate({
-            username: playerA.username
-          }, {
-            $set: {
-              gameId: 0,
-              status: PlayerStatus.ONLINE
-            }
-          }, {
-            returnDocument: "after"
-          }),
-          $players.findOneAndUpdate({
-            username: playerB.username
-          }, {
-            $set: {
-              gameId: 0,
-              status: PlayerStatus.ONLINE
-            }
-          }, {
-            returnDocument: "after"
-          })
-        ]);
-
-        if (!A.value || !B.value) { return; }
-
-        io.to(A.value.socketId).emit("notification", "You lost...");
-        io.to(B.value.socketId).emit("notification", "You won!");
-        io.to([A.value.socketId, B.value.socketId]).emit("endGame");
-
-        const isDeletedGame = await $games.deleteOne({gameId});
-
-        if (!isDeletedGame.deletedCount) { return; }
-
-        return;
-      }
+      if (!card) { return await gameEngine.endGame(gameId, "A"); }
 
       hand.push(card);
       hero.mana = 100;

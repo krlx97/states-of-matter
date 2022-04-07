@@ -31,9 +31,8 @@ export const attackMinion: SocketRequest = (services) => {
     if (!playerMinion.hasTriggeredEffect) {
       if (playerMinion.effects.includes(Effect.CHARGE)) {
         playerMinion.hasAttacked = false;
+        playerMinion.hasTriggeredEffect = true;
       }
-
-      playerMinion.hasTriggeredEffect = true;
     }
 
     if (playerMinion.health <= 0) {
@@ -46,12 +45,9 @@ export const attackMinion: SocketRequest = (services) => {
       opponent.minion[attacked] = undefined;
     }
 
-    const {playerA, playerB} = $game;
-    const updateGame = await $games.updateOne({gameId}, {
-      $set: {playerA, playerB}
-    });
+    const savedGame = await gameEngine.saveGame($game);
 
-    if (!updateGame.modifiedCount) { return; }
+    if (!savedGame) { return; }
 
     socket.emit("attackMinionPlayer", {attacked, attacker});
 

@@ -1,19 +1,12 @@
-import {randomInt} from "crypto";
 import {cards} from "@som/shared/data";
-import {CardType, PlayerStatus} from "@som/shared/enums";
-import type {GamePlayerMinion, GamePlayerMagic, GamePlayerTrap, Game} from "@som/shared/interfaces/mongo";
-import type {SocketRequest} from "models";
+import { GameMagic, GameMinion, GameTrap } from "@som/shared/dist/interfaces/mongo/Game";
+import {CardKlass, CardType, PlayerStatus} from "@som/shared/enums";
+import type {Game, GameCards} from "@som/shared/interfaces/mongo";
+import type {App} from "models";
 
-function shuffleArray (array: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap>): void {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = randomInt(0, i + 1);
-    const temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
-  }
-}
-
-export const startGame: SocketRequest = (services) => {
+export const startGame = (app: App): void => {
+  const {controllers, services} = app;
+  const {gameController} = controllers;
   const {mongoService, socketService} = services;
   const {$games, $lobbies, $players} = mongoService;
   const {io, socket} = socketService;
@@ -53,10 +46,10 @@ export const startGame: SocketRequest = (services) => {
     if (!playerA.value || !playerB.value) return;
 
     let gid = 1;
-    let playerADeck: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap> = [];
-    const playerAHand: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap> = [];
-    let playerBDeck: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap> = [];
-    const playerBHand: Array<GamePlayerMinion | GamePlayerMagic | GamePlayerTrap> = [];
+    let playerADeck: GameCards = [];
+    const playerAHand: GameCards = [];
+    let playerBDeck: GameCards = [];
+    const playerBHand: GameCards = [];
 
     for (let i = 0; i < playerA.value.decks[playerA.value.deckId].cards.length; i += 1) {
       let id = playerA.value.decks[playerA.value.deckId].cards[i].id;
@@ -65,18 +58,18 @@ export const startGame: SocketRequest = (services) => {
       if (!card) return;
 
       if (card.health) {
-        playerADeck.push({gid, ...card, maxHealth: card.health});
+        playerADeck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
       } else {
-        playerADeck.push({gid, ...card});
+        playerADeck.push({gid, ...card} as any);
       }
 
       gid += 1;
 
       if (playerA.value.decks[playerA.value.deckId].cards[i].amount > 1) {
         if (card.health) {
-          playerADeck.push({gid, ...card, maxHealth: card.health});
+          playerADeck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
         } else {
-          playerADeck.push({gid, ...card});
+          playerADeck.push({gid, ...card} as any);
         }
 
         gid += 1;
@@ -90,27 +83,26 @@ export const startGame: SocketRequest = (services) => {
       if (!card) return;
 
       if (card.health) {
-        playerBDeck.push({gid, ...card, maxHealth: card.health});
+        playerADeck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
       } else {
-        playerBDeck.push({gid, ...card});
+        playerBDeck.push({gid, ...card} as any);
       }
 
       gid += 1;
 
       if (playerB.value.decks[playerB.value.deckId].cards[i].amount > 1) {
         if (card.health) {
-          playerBDeck.push({gid, ...card, maxHealth: card.health});
+          playerADeck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
         } else {
-          playerBDeck.push({gid, ...card});
+          playerBDeck.push({gid, ...card} as any);
         }
 
         gid += 1;
       }
     }
 
-    // playerB.decks[playerB.deckId].cards.
-    shuffleArray(playerADeck)
-    shuffleArray(playerBDeck)
+    gameController.shuffleDeck(playerADeck);
+    gameController.shuffleDeck(playerBDeck);
 
     playerAHand.push(...playerADeck.slice(-5));
     playerBHand.push(...playerBDeck.slice(-5));
@@ -123,52 +115,41 @@ export const startGame: SocketRequest = (services) => {
       currentPlayer: $lobby.host.username,
       playerA: {
         username: $lobby.host.username,
-        fields: {
-          hero: {
-            id: 2, // should be deck.klass
-            type: CardType.HERO,
-            health: 600,
-            maxHealth: 600,
-            mana: 100,
-            maxMana: 100,
-            damage: 30,
-            passive: 25
-          },
-          minionA: undefined,
-          minionB: undefined,
-          minionC: undefined,
-          minionD: undefined,
-          minionE: undefined,
-          minionF: undefined,
-          magic: undefined,
-          trap: undefined
+        hero: {
+          id: 2, // should be deck.klass
+          type: CardType.HERO,
+          klass: CardKlass.LIQUID,
+          health: 600,
+          maxHealth: 600,
+          mana: 100,
+          maxMana: 100,
+          effects: []
         },
+        minion: {
+          a: undefined,
+          b: undefined,
+          c: undefined,
+          d: undefined,
+        },
+        trap: undefined,
         hand: playerAHand,
         deck: playerADeck,
         graveyard: []
       },
       playerB: {
         username: $lobby.challengee.username,
-        fields: {
-          hero: {
-            id: 4, // should be deck.klass
-            type: CardType.HERO,
-            health: 600,
-            maxHealth: 600,
-            mana: 100,
-            maxMana: 100,
-            damage: 20,
-            passive: 25
-          },
-          minionA: undefined,
-          minionB: undefined,
-          minionC: undefined,
-          minionD: undefined,
-          minionE: undefined,
-          minionF: undefined,
-          magic: undefined,
-          trap: undefined
+        hero: {
+          id: 4, // should be deck.klass
+          type: CardType.HERO,
+          klass: CardKlass.PLASMA,
+          health: 600,
+          maxHealth: 600,
+          mana: 100,
+          maxMana: 100,
+          effects: []
         },
+        minion: {a: undefined, b: undefined, c: undefined, d: undefined},
+        trap: undefined,
         hand: playerBHand,
         deck: playerBDeck,
         graveyard: []
@@ -191,9 +172,7 @@ export const startGame: SocketRequest = (services) => {
             health: 600,
             maxHealth: 600,
             mana: 100,
-            maxMana: 100,
-            damage: 30,
-            passive: 25
+            maxMana: 100
           },
           minionA: undefined,
           minionB: undefined,
@@ -217,9 +196,7 @@ export const startGame: SocketRequest = (services) => {
             health: 600,
             maxHealth: 600,
             mana: 100,
-            maxMana: 100,
-            damage: 20,
-            passive: 25
+            maxMana: 100
           },
           minionA: undefined,
           minionB: undefined,

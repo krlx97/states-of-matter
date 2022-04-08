@@ -1,7 +1,8 @@
-import type {Services} from "models";
+import type {App} from "models";
 import type {Player} from "services/MongoService/PlayerService.models";
 
-export const unfriend = (services: Services): void => {
+export const unfriend = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$chats, $players} = mongoService;
   const {io, socket, socketId} = socketService;

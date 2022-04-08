@@ -1,6 +1,7 @@
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
-export const setDeckName: SocketRequest = (services) => {
+export const setDeckName = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$players} = mongoService;
   const {socket, socketId} = socketService;

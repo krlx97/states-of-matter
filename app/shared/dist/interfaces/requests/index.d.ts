@@ -39,14 +39,6 @@ interface SetDeckName {
 interface StartGame {
     lobbyId: number;
 }
-interface attackMinionWithMinion {
-    attacker: "a" | "b" | "c" | "d";
-    attacked: "a" | "b" | "c" | "d";
-}
-interface AttackCard {
-    attacker: "a" | "b" | "c" | "d";
-    attacked: "a" | "b" | "c" | "d" | "hero";
-}
 interface AttackMinion {
     attacker: "a" | "b" | "c" | "d";
     attacked: "a" | "b" | "c" | "d";
@@ -54,10 +46,9 @@ interface AttackMinion {
 interface AttackHero {
     attacker: "a" | "b" | "c" | "d";
 }
-interface PlayCard {
-    field: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap";
+interface PlayMinion {
+    field: "a" | "b" | "c" | "d";
     gid: number;
-    id?: number;
 }
 interface HoverCard {
     field: string;
@@ -100,13 +91,11 @@ export interface SocketRequests {
     setDeckKlass: Callback<SetDeckKlass>;
     setDeckName: Callback<SetDeckName>;
     startGame: Callback<StartGame>;
-    attackMinionWithMinion: Callback<attackMinionWithMinion>;
-    attackCard: Callback<AttackCard>;
     attackMinion: Callback<AttackMinion>;
     attackHero: Callback<AttackHero>;
     endTurn: () => Promise<void>;
     hoverCard: Callback<HoverCard>;
-    playCard: Callback<PlayCard>;
+    playMinion: Callback<PlayMinion>;
     unhoverCard: () => Promise<void>;
     acceptFriend: Callback<AcceptFriend>;
     addFriend: Callback<AddFriend>;

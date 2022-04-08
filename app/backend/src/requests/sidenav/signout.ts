@@ -1,3 +1,3 @@
-import type {Services} from "models";
+import type {App} from "models";
 
-export const signout = (services: Services) => {};
+export const signout = (app: App): void => {};

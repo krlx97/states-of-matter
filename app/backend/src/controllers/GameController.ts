@@ -1,11 +1,12 @@
+import {randomInt} from "crypto";
 import {PlayerStatus} from "@som/shared/enums";
-import type {Game} from "@som/shared/interfaces/mongo";
+import type {Game, GameCards} from "@som/shared/interfaces/mongo";
 import type {Services} from "models";
-import { PlayerDeck } from "./MongoService/PlayerService.models";
+import { PlayerDeck } from "../services/MongoService/PlayerService.models";
 
 // mutation probably isn't the best way to do this...
-export class GameEngine {
-  constructor (private readonly _services: Services) {}
+export class GameController {
+  public constructor (private readonly _services: Services) {}
 
   public async saveGame (game: Game): Promise<boolean> {
     const {mongoService} = this._services;
@@ -34,7 +35,7 @@ export class GameEngine {
     return false;
   }
 
-  async endGame (gameId: number, winner: "A" | "B"): Promise<void> {
+  public async endGame (gameId: number, winner: "A" | "B"): Promise<void> {
     const {mongoService, socketService} = this._services;
     const {$games, $players} = mongoService;
     const {io, socket} = socketService;
@@ -92,9 +93,20 @@ export class GameEngine {
     return {player, opponent};
   }
 
-  public checkPlayersDeck (playerDeck: PlayerDeck) {
-    const numberOfCards: number = playerDeck.cards.reduce((acc, curr) => acc += curr.amount, 0)
-    if(numberOfCards < 30) return false;
+  public checkPlayersDeck (playerDeck: PlayerDeck): boolean {
+    const numberOfCards = playerDeck.cards.reduce((acc, curr) => acc += curr.amount, 0);
+
+    if (numberOfCards < 30) { return false; }
+
     return true;
+  }
+
+  public shuffleDeck (deck: GameCards): void {
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = randomInt(0, i + 1);
+      const temp = deck[i];
+      deck[i] = deck[j];
+      deck[j] = temp;
+    }
   }
 }

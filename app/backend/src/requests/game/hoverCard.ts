@@ -1,6 +1,8 @@
-import {SocketRequest} from "models";
+import {App} from "models";
 
-export const hoverCard: SocketRequest = (services) => {
+export const hoverCard = (app: App): void => {
+  const {controllers, services} = app;
+  const {gameController} = controllers;
   const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
   const {io, socket, socketId} = socketService;
@@ -10,25 +12,18 @@ export const hoverCard: SocketRequest = (services) => {
 
     if (!$player) { return; }
 
-    const {gameId} = $player;
+    const {username, gameId} = $player;
     const $game = await $games.findOne({gameId});
 
     if (!$game) { return; }
 
-    let opponentName: string;
-
-    if ($game.playerA.username === $player.username) {
-      opponentName = $game.playerB.username;
-    } else {
-      opponentName = $game.playerA.username;
-    }
-
-    const opponent = await $players.findOne({
-      username: opponentName
+    const {opponent} = gameController.getPlayers($game, username);
+    const $opponent = await $players.findOne({
+      username: opponent.username
     });
 
-    if (!opponent || !opponent.socketId) { return; }
+    if (!$opponent || !$opponent.socketId) { return; }
 
-    io.to(opponent.socketId).emit("hoverCard", params);
+    io.to($opponent.socketId).emit("hoverCard", params);
   });
 };

@@ -1,7 +1,8 @@
 import {PlayerStatus} from "@som/shared/enums";
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
-export const destroyLobby: SocketRequest = (services) => {
+export const destroyLobby = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$lobbies, $players} = mongoService;
   const {io, socket, socketId} = socketService;

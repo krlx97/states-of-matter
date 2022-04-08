@@ -1,10 +1,17 @@
-import type {EosService, GameEngine, MongoService, SocketService} from "services";
+import type {GameController} from "controllers";
+import type {EosService, MongoService, SocketService} from "services";
+
+export interface Controllers {
+  gameController: GameController;
+}
 
 export interface Services {
   eosService: EosService;
   mongoService: MongoService;
   socketService: SocketService;
-  gameEngine: GameEngine;
 }
 
-export type SocketRequest = (services: Services) => void;
+export interface App {
+  controllers: Controllers;
+  services: Services;
+}

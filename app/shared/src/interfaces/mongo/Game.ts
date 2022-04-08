@@ -1,7 +1,6 @@
 import type {Document} from "mongodb";
 
 interface GameCard {
-  gid: number;
   id: number;
   klass: number;
   type: number;
@@ -15,11 +14,13 @@ interface GameHero extends GameCard {
   maxMana: number;
 }
 
-interface GameMagic extends GameCard {
+export interface GameMagic extends GameCard {
+  gid: number;
   manaCost: number;
 }
 
-interface GameMinion extends GameCard {
+export interface GameMinion extends GameCard {
+  gid: number;
   damage: number;
   health: number;
   maxHealth: number;
@@ -28,11 +29,12 @@ interface GameMinion extends GameCard {
   hasTriggeredEffect: boolean;
 }
 
-interface GameTrap extends GameCard {
+export interface GameTrap extends GameCard {
+  gid: number;
   manaCost: number;
 }
 
-type GameCards = Array<GameMagic & GameMinion & GameTrap>;
+export type GameCards = Array<GameMagic & GameMinion & GameTrap>;
 
 interface GamePlayer {
   username: string;

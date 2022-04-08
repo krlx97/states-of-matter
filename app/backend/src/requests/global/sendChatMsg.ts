@@ -1,13 +1,14 @@
-import type {Services} from "models";
+import type {App} from "models";
 
-export const sendChatMsg = (services: Services): void => {
+export const sendChatMsg = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$chats, $players} = mongoService;
   const {io, socket} = socketService;
 
   socket.on("sendChatMsg", async (params) => {
     const {sender, receiver, text, date} = params;
-    const updateChat = await $chats.updateOne({
+    const $updateChat = await $chats.updateOne({
       players: {$all: [sender, receiver]}
     }, {
       $push: {
@@ -15,16 +16,16 @@ export const sendChatMsg = (services: Services): void => {
       }
     });
 
-    if (!updateChat.modifiedCount) { return; }
+    if (!$updateChat.modifiedCount) { return; }
 
     socket.emit("sendChatMsgSender", {sender, receiver, text, date});
 
-    const player = await $players.findOne({
+    const $receiver = await $players.findOne({
       username: receiver
     });
 
-    if (!player || !player.socketId) { return; }
+    if (!$receiver || !$receiver.socketId) { return; }
 
-    io.to(player.socketId).emit("sendChatMsgReceiver", {sender, text, date});
+    io.to($receiver.socketId).emit("sendChatMsgReceiver", {sender, text, date});
   });
 };

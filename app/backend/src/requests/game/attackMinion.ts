@@ -1,8 +1,10 @@
 import {Effect} from "@som/shared/enums";
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
-export const attackMinion: SocketRequest = (services) => {
-  const {mongoService, socketService, gameEngine} = services;
+export const attackMinion = (app: App): void => {
+  const {controllers, services} = app;
+  const {gameController} = controllers;
+  const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
   const {io, socket, socketId} = socketService;
 
@@ -17,7 +19,7 @@ export const attackMinion: SocketRequest = (services) => {
 
     if (!$game) { return; }
 
-    const {player, opponent} = gameEngine.getPlayers($game, username);
+    const {player, opponent} = gameController.getPlayers($game, username);
     const playerMinion = player.minion[attacker];
     const opponentMinion = opponent.minion[attacked];
 
@@ -49,11 +51,11 @@ export const attackMinion: SocketRequest = (services) => {
       opponent.minion[attacked] = undefined;
     }
 
-    const savedGame = await gameEngine.saveGame($game);
+    const savedGame = await gameController.saveGame($game);
 
     if (!savedGame) { return; }
 
-    socket.emit("attackMinionPlayer", {attacked, attacker});
+    socket.emit("attackMinion|player", {attacked, attacker});
 
     const $opponent = await $players.findOne({
       username: opponent.username
@@ -61,6 +63,6 @@ export const attackMinion: SocketRequest = (services) => {
 
     if (!$opponent || !$opponent.socketId) { return; }
 
-    io.to($opponent.socketId).emit("attackMinionOpponent", {attacked, attacker});
+    io.to($opponent.socketId).emit("attackMinion|opponent", {attacked, attacker});
   });
 };

@@ -1,6 +1,7 @@
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
-export const addFriend: SocketRequest = (services) => {
+export const addFriend = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$players} = mongoService;
   const {io, socket, socketId} = socketService;

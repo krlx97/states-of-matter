@@ -1,69 +1,46 @@
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
-export const endTurn: SocketRequest = (services) => {
-  const {mongoService, socketService, gameEngine} = services;
+export const endTurn = (app: App): void => {
+  const {controllers, services} = app;
+  const {gameController} = controllers;
+  const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
   const {io, socket, socketId} = socketService;
 
   socket.on("endTurn", async () => {
-    const player = await $players.findOne({socketId});
+    const $player = await $players.findOne({socketId});
 
-    if (!player) { return; }
+    if (!$player) { return; }
 
-    const {gameId} = player;
-    const game = await $games.findOne({gameId});
+    const {username, gameId} = $player;
+    const $game = await $games.findOne({gameId});
 
-    if (!game) { return; }
+    if (!$game) { return; }
 
-    let opponentUsername: string;
+    const {opponent} = gameController.getPlayers($game, username);
+    const {hand, deck, hero} = opponent;
+    const card = deck.pop();
 
-    if (player.username === game.playerA.username) {
-      const {playerA, playerB} = game;
-
-      if (playerA.username !== game.currentPlayer) { return; }
-
-      const {username, hand, deck, hero} = playerB;
-      const card = deck.pop();
-
-      opponentUsername = username;
-
-      if (!card) { return await gameEngine.endGame(gameId, "B"); }
-
-      hand.push(card);
-      hero.mana = 100;
-
-      const currentPlayer = username;
-
-      await $games.updateOne({gameId}, {$set: {currentPlayer, playerB}});
-    } else {
-      const {playerA, playerB} = game;
-
-      if (playerB.username !== game.currentPlayer) { return; }
-
-      const {username, hand, deck, hero} = playerA;
-
-      opponentUsername = username;
-
-      const card = deck.pop();
-
-      if (!card) { return await gameEngine.endGame(gameId, "A"); }
-
-      hand.push(card);
-      hero.mana = 100;
-
-      const currentPlayer = username;
-
-      await $games.updateOne({gameId}, {$set: {currentPlayer, playerA}});
+    if (!card) {
+      await gameController.endGame(gameId, "B");
+      return;
     }
 
-    socket.emit("endTurnPlayer");
+    hand.push(card);
+    hero.mana = 100;
 
-    const opponent = await $players.findOne({
-      username: opponentUsername
+    const savedGame = await gameController.saveGame($game);
+
+    if (!savedGame) { return; }
+
+    socket.emit("endTurn|player");
+
+    const $opponent = await $players.findOne({
+      username: opponent.username
     });
 
-    if (!opponent || !opponent.socketId) { return; }
+    if (!$opponent || !$opponent.socketId) { return; }
 
-    io.to(opponent.socketId).emit("endTurnOpponent");
+    io.to($opponent.socketId).emit("endTurn|opponent");
   });
 };

@@ -1,14 +1,15 @@
+import {CardType} from "@som/shared/enums";
 import type {App} from "models";
 
-export const attackHero = (app: App): void => {
+export const playMinion = (app: App): void => {
   const {controllers, services} = app;
   const {gameController} = controllers;
   const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
   const {io, socket, socketId} = socketService;
 
-  socket.on("attackHero", async (params) => {
-    const {attacker} = params;
+  socket.on("playMinion", async (params) => {
+    const {field, gid} = params;
     const $player = await $players.findOne({socketId});
 
     if (!$player) { return; }
@@ -19,28 +20,23 @@ export const attackHero = (app: App): void => {
     if (!$game) { return; }
 
     const {player, opponent} = gameController.getPlayers($game, username);
-    const playerMinion = player.minion[attacker];
-    const opponentHero = opponent.hero;
+    const {hand, minion, hero} = player;
+    const handCard = hand.find((card) => card.gid === gid);
 
-    if (!playerMinion) { return; }
-    if (playerMinion.hasAttacked) { return; }
+    if (!handCard) { return; }
+    if (handCard.type !== CardType.MINION) { return; }
+    if (minion[field]) { return; }
+    if (!handCard.manaCost || handCard.manaCost > hero.mana) { return; }
 
-    // playerMinion.health -= opponentHero.damage;
-    opponentHero.health -= playerMinion.damage;
-    playerMinion.hasAttacked = true;
-
-    if (await gameController.isGameOver($game)) { return; }
-
-    // if (playerMinion.health <= 0) {
-    //   player.graveyard.push(playerMinion);
-    //   player.minion[attacker] = undefined;
-    // }
+    hero.mana -= handCard.manaCost;
+    minion[field] = handCard;
+    hand.splice(hand.indexOf(handCard), 1);
 
     const savedGame = await gameController.saveGame($game);
 
     if (!savedGame) { return; }
 
-    socket.emit("attackHero|player", {attacker});
+    socket.emit("playMinion|player", {field, gid});
 
     const $opponent = await $players.findOne({
       username: opponent.username
@@ -48,6 +44,6 @@ export const attackHero = (app: App): void => {
 
     if (!$opponent || !$opponent.socketId) { return; }
 
-    io.to($opponent.socketId).emit("attackHero|opponent", {attacker});
+    io.to($opponent.socketId).emit("playMinion|opponent", {field, card: handCard});
   });
 };

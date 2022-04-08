@@ -1,2 +1,2 @@
 export {sendChatMsg} from "./sendChatMsg";
-export {updateFriend} from "./updateFriend";
+export {updateStatus} from "./updateStatus";

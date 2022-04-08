@@ -1,8 +1,9 @@
-import type {SocketRequest} from "models";
-import { UpdateFilter } from "mongodb";
-import { Player } from "services/MongoService/PlayerService.models";
+import type {UpdateFilter} from "mongodb";
+import type {App} from "models";
+import type {Player} from "services/MongoService/PlayerService.models";
 
-export const acceptFriend: SocketRequest = (services) => {
+export const acceptFriend = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$chats, $players} = mongoService;
   const {io, socket, socketId} = socketService;

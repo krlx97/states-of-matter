@@ -1,8 +1,9 @@
 import {PlayerStatus} from "@som/shared/enums";
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
 // this needs refactoring...
-export const signin: SocketRequest = (services) => {
+export const signin = (app: App): void => {
+  const {services} = app;
   const {eosService, mongoService, socketService} = services;
   const {$chats, $games, $lobbies, $players} = mongoService;
   const {socket, socketId} = socketService;

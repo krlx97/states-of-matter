@@ -1,6 +1,7 @@
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
-export const sendToken: SocketRequest = (services) => {
+export const sendToken = (app: App): void => {
+  const {services} = app;
   const {eosService, socketService} = services;
   const {socket} = socketService;
 

@@ -1,6 +1,7 @@
-import type {Services} from "models";
+import type {App} from "models";
 
-export const unblock = (services: Services): void => {
+export const unblock = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$players} = mongoService;
   const {socket, socketId} = socketService;

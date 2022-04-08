@@ -1,13 +1,14 @@
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
-export const setDeckKlass: SocketRequest = (services) => {
+export const setDeckKlass = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$players} = mongoService;
   const {socket, socketId} = socketService;
 
   socket.on("setDeckKlass", async (params) => {
     const {deckId, klass} = params;
-    const updatePlayer = await $players.updateOne({
+    const $updatePlayer = await $players.updateOne({
       socketId,
       "decks.id": deckId
     }, {
@@ -16,7 +17,7 @@ export const setDeckKlass: SocketRequest = (services) => {
       }
     });
 
-    if (!updatePlayer.modifiedCount) { return; }
+    if (!$updatePlayer.modifiedCount) { return; }
 
     socket.emit("setDeckKlass", {deckId, klass});
   });

@@ -1,6 +1,7 @@
-import type {SocketRequest} from "models";
+import type {App} from "models";
 
-export const block: SocketRequest = (services) => {
+export const block = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$chats, $players} = mongoService;
   const {io, socket, socketId} = socketService;

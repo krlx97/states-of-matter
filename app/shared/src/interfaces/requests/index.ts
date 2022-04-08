@@ -44,26 +44,20 @@ interface StartGame {
   lobbyId: number;
 }
 // -------------------- GAME --------------------
-interface attackMinionWithMinion {
-  attacker: "a" | "b" | "c" | "d";
-  attacked: "a" | "b" | "c" | "d";
-}
-interface AttackCard {
-  attacker: "a" | "b" | "c" | "d";
-  attacked: "a" | "b" | "c" | "d" | "hero";
-}
 interface AttackMinion {
   attacker: "a" | "b" | "c" | "d";
   attacked: "a" | "b" | "c" | "d";
 }
+
 interface AttackHero {
   attacker: "a" | "b" | "c" | "d";
 }
-interface PlayCard {
-  field: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap";
+
+interface PlayMinion {
+  field: "a" | "b" | "c" | "d";
   gid: number;
-  id?: number;
 }
+
 interface HoverCard {
   field: string;
 }
@@ -112,13 +106,11 @@ export interface SocketRequests {
   setDeckName: Callback<SetDeckName>;
   startGame: Callback<StartGame>;
   // Game
-  attackMinionWithMinion: Callback<attackMinionWithMinion>;
-  attackCard: Callback<AttackCard>;
   attackMinion: Callback<AttackMinion>;
   attackHero: Callback<AttackHero>;
   endTurn: () => Promise<void>;
   hoverCard: Callback<HoverCard>;
-  playCard: Callback<PlayCard>;
+  playMinion: Callback<PlayMinion>;
   unhoverCard: () => Promise<void>;
   // Sidenav
   acceptFriend: Callback<AcceptFriend>;

@@ -8,9 +8,10 @@ import fetch from "node-fetch";
 import {Server} from "socket.io";
 
 import settings from "settings";
+import {GameController} from "controllers";
 import {requests} from "requests";
-import {EosService, MongoService, SocketService, GameEngine} from "services";
-import type {Services} from "models";
+import {EosService, MongoService, SocketService} from "services";
+import type {Controllers, Services} from "models";
 
 const {
   mongo: {uri},
@@ -37,11 +38,12 @@ const mongoService = new MongoService(mongoDb);
 
 ioServer.on("connection", (socket): void => {
   const socketService = new SocketService(ioServer, socket);
-  const gameEngine = new GameEngine();
+  const services: Services = {eosService, mongoService, socketService};
 
-  const services: Services = {eosService, mongoService, socketService,  gameEngine};
+  const gameController = new GameController(services);
+  const controllers: Controllers = {gameController};
 
-  requests.forEach((request): void => request(services));
+  requests.forEach((request): void => request({services, controllers}));
 });
 
 process.on("unhandledRejection", async (reason, promise) => {

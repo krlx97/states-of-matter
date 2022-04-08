@@ -1,4 +1,3 @@
-import {sendChatMsg, updateFriend} from "./global";
 import {disconnect, getPrivateKeyHash, signin, signup} from "./auth";
 
 import {
@@ -14,7 +13,16 @@ import {
   startGame
 } from "./client";
 
-import {attackCard, endTurn, hoverCard, playCard, unhoverCard} from "./game";
+import {
+  attackHero,
+  attackMinion,
+  endTurn,
+  hoverCard,
+  playMinion,
+  unhoverCard
+} from "./game";
+
+import {sendChatMsg, updateStatus} from "./global";
 
 import {
   acceptFriend,
@@ -29,11 +37,13 @@ import {
 
 export const requests = [
   sendChatMsg,
-  updateFriend,
+  updateStatus,
+
   disconnect,
   getPrivateKeyHash,
   signin,
   signup,
+
   destroyLobby,
   joinLobby,
   leaveLobby,
@@ -44,11 +54,14 @@ export const requests = [
   setDeckKlass,
   setDeckName,
   startGame,
-  attackCard,
+
+  attackHero,
+  attackMinion,
   endTurn,
   hoverCard,
-  playCard,
+  playMinion,
   unhoverCard,
+
   acceptFriend,
   addFriend,
   block,

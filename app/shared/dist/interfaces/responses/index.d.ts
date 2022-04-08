@@ -48,14 +48,6 @@ interface SetDeckName {
 interface StartGame {
     game: any;
 }
-interface AttackCardReceiver {
-    attacker: "hero" | "minionA" | "minionB" | "minionC" | "minionD" | "minionE" | "minionF";
-    attacked: "hero" | "minionA" | "minionB" | "minionC" | "minionD" | "minionE" | "minionF";
-}
-interface AttackCardSender {
-    attacker: "hero" | "minionA" | "minionB" | "minionC" | "minionD" | "minionE" | "minionF";
-    attacked: "hero" | "minionA" | "minionB" | "minionC" | "minionD" | "minionE" | "minionF";
-}
 interface AttackHeroPlayer {
     attacker: "a" | "b" | "c" | "d";
 }
@@ -143,17 +135,15 @@ export interface SocketResponses {
     setDeckName: Callback<SetDeckName>;
     startGame: Callback<StartGame>;
     endGame: () => void;
-    attackCardReceiver: Callback<AttackCardReceiver>;
-    attackCardSender: Callback<AttackCardSender>;
-    "attackHero|player": Callback<AttackHeroPlayer>;
     "attackHero|opponent": Callback<AttackHeroOpponent>;
-    attackMinionOpponent: Callback<AttackMinionOpponent>;
-    attackMinionPlayer: Callback<AttackMinionPlayer>;
-    endTurnPlayer: () => void;
-    endTurnOpponent: () => void;
+    "attackHero|player": Callback<AttackHeroPlayer>;
+    "attackMinion|opponent": Callback<AttackMinionOpponent>;
+    "attackMinion|player": Callback<AttackMinionPlayer>;
+    "endTurn|player": () => void;
+    "endTurn|opponent": () => void;
     hoverCard: Callback<HoverCard>;
-    playCardPlayer: Callback<PlayCardSender>;
-    playCardOpponent: Callback<PlayCardReceiver>;
+    "playMinion|player": Callback<PlayCardSender>;
+    "playMinion|opponent": Callback<PlayCardReceiver>;
     unhoverCard: () => void;
     acceptFriendReceiver: Callback<AcceptFriendReceiver>;
     acceptFriendSender: Callback<AcceptFriendSender>;
@@ -167,123 +157,4 @@ export interface SocketResponses {
     unfriendReceiver: Callback<UnfriendReceiver>;
     unfriendSender: Callback<UnfriendSender>;
 }
-/**
- * BELOW TYPES SHOULD BE DELETED BUT ONLY AFTER FRONTEND REFACTOR
- */
-interface GetPrivateKeyHashRes {
-    privateKeyHash: string;
-}
-interface SigninRes {
-    player: any;
-    friends: any[];
-    lobby: any | undefined;
-    game: any | undefined;
-}
-interface JoinLobbyReceiverRes {
-    challengee: any;
-}
-interface JoinLobbySenderRes {
-    lobby: any;
-}
-interface MakeLobbyRes {
-    lobby: any;
-}
-interface SaveDeckRes {
-    cards: Array<any>;
-}
-interface SelectDeckRes {
-    deckId: number;
-}
-interface SetDeckKlassRes {
-    deckId: number;
-    klass: number;
-}
-interface SetDeckNameRes {
-    id: number;
-    name: string;
-}
-interface StartGameRes {
-    game: any;
-}
-interface AttackCardReceiverRes {
-    attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
-    attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
-}
-interface AttackCardSenderRes {
-    attacker: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
-    attacked: "magic" | "minionA" | "minionB" | "minionC" | "minionD" | "trap" | "hero";
-}
-interface AttackHeroPlayer {
-    attacker: "a" | "b" | "c" | "d";
-}
-interface AttackHeroOpponent {
-    attacker: "a" | "b" | "c" | "d";
-}
-interface HoverCardRes {
-    field: string;
-}
-interface PlayCardReceiverRes {
-    field: string;
-    card: any;
-}
-interface PlayCardSenderRes {
-    field: string;
-    gid: number;
-}
-interface AcceptFriendReceiverRes {
-    username: string;
-    avatarId: number;
-    status: number;
-}
-interface AcceptFriendSenderRes {
-    username: string;
-    avatarId: number;
-    status: number;
-}
-interface AddFriendRes {
-    username: string;
-}
-interface BlockReceiverRes {
-    username: string;
-}
-interface BlockSenderRes {
-    username: string;
-}
-interface DeclineFriendRes {
-    username: string;
-}
-interface SetAvatarReceiverRes {
-    username: string;
-    avatarId: number;
-}
-interface SetAvatarSenderRes {
-    avatarId: number;
-}
-interface UnblockRes {
-    friendname: string;
-}
-interface UnfriendReceiverRes {
-    username: string;
-}
-interface UnfriendSenderRes {
-    username: string;
-}
-interface UpdateFriendRes {
-    username: string;
-    status: number;
-}
-interface NotificationRes {
-    msg: string;
-}
-interface SendChatMsgReceiverRes {
-    sender: string;
-    text: string;
-    date: Date;
-}
-interface SendChatMsgSenderRes {
-    sender: string;
-    receiver: string;
-    text: string;
-    date: Date;
-}
-export type { GetPrivateKeyHashRes, SigninRes, JoinLobbyReceiverRes, JoinLobbySenderRes, MakeLobbyRes, SaveDeckRes, SelectDeckRes, SetDeckKlassRes, SetDeckNameRes, StartGameRes, AttackCardReceiverRes, AttackCardSenderRes, HoverCardRes, PlayCardReceiverRes, PlayCardSenderRes, AcceptFriendReceiverRes, AcceptFriendSenderRes, AddFriendRes, BlockReceiverRes, BlockSenderRes, DeclineFriendRes, SetAvatarReceiverRes, SetAvatarSenderRes, UnblockRes, UnfriendReceiverRes, UnfriendSenderRes, UpdateFriendRes, NotificationRes, SendChatMsgReceiverRes, SendChatMsgSenderRes };
+export {};

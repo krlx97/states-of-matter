@@ -1,6 +1,7 @@
-import type {Services} from "models";
+import type {App} from "models";
 
-export const setAvatar = (services: Services): void => {
+export const setAvatar = (app: App): void => {
+  const {services} = app;
   const {mongoService, socketService} = services;
   const {$players} = mongoService;
   const {io, socket, socketId} = socketService;

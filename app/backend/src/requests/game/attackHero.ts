@@ -1,3 +1,4 @@
+import {Effect} from "@som/shared/enums";
 import type {App} from "models";
 
 export const attackHero = (app: App): void => {
@@ -5,7 +6,7 @@ export const attackHero = (app: App): void => {
   const {gameController} = controllers;
   const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+  const {socket, socketId} = socketService;
 
   socket.on("attackHero", async (params) => {
     const {attacker} = params;
@@ -25,29 +26,19 @@ export const attackHero = (app: App): void => {
     if (!playerMinion) { return; }
     if (playerMinion.hasAttacked) { return; }
 
-    // playerMinion.health -= opponentHero.damage;
     opponentHero.health -= playerMinion.damage;
     playerMinion.hasAttacked = true;
 
     if (await gameController.isGameOver($game)) { return; }
 
-    // if (playerMinion.health <= 0) {
-    //   player.graveyard.push(playerMinion);
-    //   player.minion[attacker] = undefined;
-    // }
+    if (!playerMinion.hasTriggeredEffect) {
+      if (playerMinion.effects.includes(Effect.CHARGE)) {
+        playerMinion.hasAttacked = false;
+        playerMinion.hasTriggeredEffect = true;
+        console.log("triggered")
+      }
+    }
 
-    const savedGame = await gameController.saveGame($game);
-
-    if (!savedGame) { return; }
-
-    socket.emit("attackHero|player", {attacker});
-
-    const $opponent = await $players.findOne({
-      username: opponent.username
-    });
-
-    if (!$opponent || !$opponent.socketId) { return; }
-
-    io.to($opponent.socketId).emit("attackHero|opponent", {attacker});
+    await gameController.saveGame($game);
   });
 };

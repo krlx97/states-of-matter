@@ -59,7 +59,7 @@ interface PlayMinion {
 }
 
 interface HoverCard {
-  field: string;
+  field: "a" | "b" | "c" | "d";
 }
 // -------------------- SIDENAV --------------------
 interface AcceptFriend {

@@ -8,7 +8,7 @@ const cards = [{
         health: 70,
         manaCost: 30,
         effect: "Neutral card 1 can attack twice.",
-        effects: [Effect.CHARGE]
+        effects: [Effect.GREED]
     }, {
         id: 1,
         klass: CardKlass.NEUTRAL,
@@ -18,7 +18,7 @@ const cards = [{
         health: 80,
         manaCost: 35,
         effect: "Neutral card 2 effect",
-        effects: [Effect.ASCENSION]
+        effects: [Effect.BLIND]
     }, {
         id: 2,
         klass: CardKlass.NEUTRAL,
@@ -28,7 +28,7 @@ const cards = [{
         health: 90,
         manaCost: 40,
         effect: "Neutral card 3 effect",
-        effects: [Effect.BLIND]
+        effects: [Effect.CHARGE]
     }, {
         id: 3,
         klass: CardKlass.NEUTRAL,
@@ -38,7 +38,7 @@ const cards = [{
         health: 100,
         manaCost: 45,
         effect: "Neutral card 4 effect",
-        effects: [Effect.COMMAND]
+        effects: []
     }, {
         id: 4,
         klass: CardKlass.NEUTRAL,

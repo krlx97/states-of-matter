@@ -32,13 +32,11 @@
 <div class="fields-wrapper">
   <div class="fields">
     <OpponentDeck/>
-    <!-- <OpponentMinionField field="F"/>
-    <OpponentMinionField field="E"/> -->
-    <OpponentMinionField field="D"/>
-    <OpponentMinionField field="C"/>
+    <OpponentMinionField field="d"/>
+    <OpponentMinionField field="c"/>
     <OpponentHero/>
-    <OpponentMinionField field="B"/>
-    <OpponentMinionField field="A"/>
+    <OpponentMinionField field="b"/>
+    <OpponentMinionField field="a"/>
     <OpponentGraveyard/>
   </div>
 

@@ -72,38 +72,17 @@
 
   .card {
     position: relative;
-    // height: $card-height;
-    // width: $card-width;
-    height: 100%;
-    width: 100%;
-    transform-style: preserve-3d;
-    transform-origin: center center;
+    height: $card-height;
+    width: $card-width;
     // box-shadow: $elevation-sm;
-    transition: box-shadow 225ms ease-in-out, transform 450ms $ease-in-out-quart;
+    transition: box-shadow 225ms ease-in-out;
+    display: flex;
+    flex-direction: column;
+    background-image: url("assets/cards/card.png");
 
     &:hover {
       // box-shadow: $elevation-lg;
       cursor: pointer;
-    }
-
-    &--front, &--back {
-      position: absolute;
-      height: 100%;
-      width: 100%;
-      backface-visibility: hidden;
-    }
-
-    &--back {
-      transform: rotateY(-180deg);
-
-      &__img {
-        height: $card-height;
-        width: $card-width;
-      }
-    }
-    &--front {
-      display: flex;
-      flex-direction: column;
     }
 
     &__bar {
@@ -160,111 +139,80 @@
     &__gas { &:hover .tooltip2 {display: initial} }
     &__plasma { &:hover .tooltip2 {display: initial} }
   }
+
+  .cardfront {
+    z-index: 1;
+  }
+  .cardavatar {
+    position: absolute;
+    top: 29px;
+    left: 17px;
+    height: 144px;
+    width: 109px;
+    
+  }
 </style>
 
-<!-- <div class="scene" on:contextmenu|preventDefault={flip}> -->
-  <div class="card" class:rotated={isFlipped}>
-    <div class="card--front">
-      <div class="card__header">
+<div class="card">
+  <!-- <div class="card__header">
 
-        <div class="stat__type" on:mousemove={passiveMouseMove}>
+    <div class="stat__type" on:mousemove={passiveMouseMove}>
 
-          {#if card.type === CardType.MINION}
-            <Img src="attrs/minion.png" alt="Minion"/>
-          {:else if card.type === CardType.MAGIC}
-            <Img src="attrs/magic.png" alt="Magic"/>
-          {:else}
-            <Img src="attrs/trap.png" alt="Trap"/>
-          {/if}
-
-          <div class="tooltip2" bind:this={passiveTooltip}>
-            <Text color="purple" size="xsm">Passive:</Text>
-            <br/>
-            {#if card.klass !== CardKlass.NEUTRAL}
-              <Text size="sm">
-                {@html passives.find((passive) => passive.klass === card.klass).text}
-              </Text>
-            {:else}
-              <Text size="sm">No passive.</Text>
-            {/if}
-            <hr/>
-            <Text color="green" size="xsm">Effect:</Text>
-            <br/>
-            <Text size="sm">{@html card.effect}</Text>
-          </div>
-
-        </div>
-
-        <span class:isNeutral class:isSolid class:isLiquid class:isGas class:isPlasma>{card.name}</span>
-
-      </div>
-
-      <Img src="cards/{card.klass}/{card.id}.jpg" alt={card.name}/>
-
-      {#if isHealthBarVisible}
-        <div class="card__bar">
-          <ProgressBar progress={health / card.health * 100} color="green"/>
-        </div>
+      {#if card.type === CardType.MINION}
+        <Img src="attrs/minion.png" alt="Minion"/>
+      {:else if card.type === CardType.MAGIC}
+        <Img src="attrs/magic.png" alt="Magic"/>
+      {:else}
+        <Img src="attrs/trap.png" alt="Trap"/>
       {/if}
 
-      <div class="card__attrs">
-
-        <div class="stat stat__mana">
-          <Img src="attrs/manacost.png" alt="Mana Cost"/>
-          <Text size="xsm">{card.manaCost}</Text>
-        </div>
-
-        {#if card.type === CardType.MINION}
-          <div class="stat stat__health">
-            <Img src="attrs/health.png" alt="Health"/>
-            <Text size="xsm">{health || card.health}</Text>
-          </div>
-
-          <div class="stat stat__damage">
-            <Img src="attrs/damage.png" alt="Damage"/>
-            <Text size="xsm">{damage || card.damage}</Text>
-          </div>
-
-          <!-- {#if card.klass === 1}
-            <div class="stat stat__solid" on:mousemove={passiveMouseMove}>
-              <Img src="attrs/solid.png" alt="Solid"/>
-              <Text>4</Text>
-
-              <div class="tooltip2" bind:this={passiveTooltip}>
-                {@html passives.find((passive) => passive.klass === card.klass).text}
-              </div>
-            </div>
-          {:else if card.klass === 2}
-            <div class="stat stat__liquid" on:mousemove={passiveMouseMove}>
-              <i class="fas fa-tint fa-fw"></i> <span>4</span>
-
-              <div class="tooltip2" bind:this={passiveTooltip}>
-                {@html passives.find((passive) => passive.klass === card.klass).text}
-              </div>
-            </div>
-          {:else if card.klass === 3}
-            <div class="stat stat__gas" on:mousemove={passiveMouseMove}>
-              <i class="fas fa-radiation fa-fw"></i> <span>4</span>
-
-              <div class="tooltip2" bind:this={passiveTooltip}>
-                {@html passives.find((passive) => passive.klass === card.klass).text}
-              </div>
-            </div>
-          {:else if card.klass === 4}
-            <div class="stat stat__plasma" on:mousemove={passiveMouseMove}>
-              <i class="fas fa-khanda fa-fw"></i> <span>4</span>
-
-              <div class="tooltip2" bind:this={passiveTooltip}>
-                {@html passives.find((passive) => passive.klass === card.klass).text}
-              </div>
-            </div>
-          {/if} -->
+      <div class="tooltip2" bind:this={passiveTooltip}>
+        <Text color="purple" size="xsm">Passive:</Text>
+        <br/>
+        {#if card.klass !== CardKlass.NEUTRAL}
+          <Text size="sm">
+            {@html passives.find((passive) => passive.klass === card.klass).text}
+          </Text>
+        {:else}
+          <Text size="sm">No passive.</Text>
         {/if}
+        <hr/>
+        <Text color="green" size="xsm">Effect:</Text>
+        <br/>
+        <Text size="sm">{@html card.effect}</Text>
       </div>
+
     </div>
 
-    <div class="card--back">
-      <Img src="card-backs/default.jpg" alt="Card back"/>
+    <span class:isNeutral class:isSolid class:isLiquid class:isGas class:isPlasma>{card.name}</span>
+
+  </div> -->
+
+  <!-- <Img src="cards/{card.klass}/{card.id}.jpg" alt={card.name}/> -->
+  <img class="cardfront" src="assets/cards/cardfront.png"/>
+  <img class="cardavatar" src="assets/cards/{card.klass}/{card.id}.jpg"/>
+  <!-- {#if isHealthBarVisible}
+    <div class="card__bar">
+      <ProgressBar progress={health / card.health * 100} color="green"/>
     </div>
-  </div>
-<!-- </div> -->
+  {/if} -->
+
+  <!-- <div class="card__attrs">
+    <div class="stat stat__mana">
+      <Img src="attrs/manacost.png" alt="Mana Cost"/>
+      <Text size="xsm">{card.manaCost}</Text>
+    </div>
+
+    {#if card.type === CardType.MINION}
+      <div class="stat stat__health">
+        <Img src="attrs/health.png" alt="Health"/>
+        <Text size="xsm">{health || card.health}</Text>
+      </div>
+
+      <div class="stat stat__damage">
+        <Img src="attrs/damage.png" alt="Damage"/>
+        <Text size="xsm">{damage || card.damage}</Text>
+      </div>
+    {/if}
+  </div> -->
+</div>

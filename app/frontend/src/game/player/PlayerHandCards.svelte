@@ -3,7 +3,7 @@
   import {gameStore, selectedCardStore, playerStore} from "stores";
   import Card from "../../ui/Card.svelte";
 
-  const selectCard = (id: number, gid: number) => {
+  const selectCard = (id: number, gid: number): void => {
     if ($gameStore.currentPlayer !== $playerStore.username) { return; }
     if ($selectedCardStore.field !== "") { $selectedCardStore.field = ""; }
 
@@ -16,7 +16,7 @@
     }
   };
 
-  const getCard = (id: number): any => cards.find((card) => card.id === id);
+  const getCard = (id: number) => cards.find((card) => card.id === id);
 </script>
 
 <style lang="scss">

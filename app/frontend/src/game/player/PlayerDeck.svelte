@@ -2,7 +2,9 @@
   import {socketService} from "services";
   import {gameStore} from "stores";
 
-  const onEndTurn = () => { socketService.socket.emit("endTurn"); };
+  const onEndTurn = (): void => {
+    socketService.socket.emit("endTurn");
+  };
 </script>
 
 <style lang="scss">

@@ -1,4 +1,3 @@
-import type { Document } from "mongodb";
 interface GameHero {
     id: number;
     health: number;
@@ -26,8 +25,8 @@ export interface GameMinion extends GameCard {
 }
 export interface GameTrap extends GameCard {
 }
-export declare type GameCards = Array<GameMagic & GameMinion & GameTrap>;
-export interface GamePlayer {
+export declare type GameCards = Array<GameMagic | GameMinion | GameTrap>;
+interface GameFEPlayer {
     username: string;
     hero: GameHero;
     minion: {
@@ -37,14 +36,28 @@ export interface GamePlayer {
         d: GameMinion | undefined;
     };
     trap: GameTrap | undefined;
-    hand: GameCards;
     deck: GameCards;
+    hand: GameCards;
     graveyard: GameCards;
 }
-export interface Game extends Document {
+interface GameFEOpponent {
+    username: string;
+    hero: GameHero;
+    minion: {
+        a: GameMinion | undefined;
+        b: GameMinion | undefined;
+        c: GameMinion | undefined;
+        d: GameMinion | undefined;
+    };
+    trap: GameTrap | undefined;
+    deck: number;
+    hand: number;
+    graveyard: GameCards;
+}
+export interface GameFE {
     gameId: number;
     currentPlayer: string;
-    playerA: GamePlayer;
-    playerB: GamePlayer;
+    player: GameFEPlayer;
+    opponent: GameFEOpponent;
 }
 export {};

@@ -2,7 +2,7 @@
   import {cards} from "@som/shared/data";
   import {miscService} from "services";
   import {gameStore} from "stores";
-  import Card from "../../ui/Card.svelte";
+  import CardSm from "../../ui/CardSm.svelte";
 
   const onViewGraveyard = (): void => {
     miscService.openModal("graveyard", $gameStore.opponent.graveyard);
@@ -25,7 +25,7 @@
 
 <div class="graveyard" on:click={onViewGraveyard}>
   {#if $gameStore.opponent.graveyard.length}
-    <Card
+    <CardSm
       card={cards.find((card) => card.id === $gameStore.opponent.graveyard[$gameStore.opponent.graveyard.length - 1].id)}
       health={10}
       damage={10}

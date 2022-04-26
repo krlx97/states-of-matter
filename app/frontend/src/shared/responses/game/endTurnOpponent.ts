@@ -1,13 +1,10 @@
 import {socketService} from "services";
 import {gameStore} from "stores";
 
-export const endTurnOpponent = () => {
-  const {socket} = socketService;
-
-  socket.on("endTurnOpponent", () => {
+export const endTurnOpponent = (): void => {
+  socketService.socket.on("endTurnOpponent", (): void => {
     gameStore.update((store) => {
-      const {player} = store;
-      const {deck, hand, hero, username} = player;
+      const {deck, hand, hero, username} = store.player;
 
       store.currentPlayer = username;
       hand.push(deck.pop());

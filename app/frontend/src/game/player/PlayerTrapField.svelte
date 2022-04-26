@@ -9,6 +9,7 @@
   const onMouseEnter = () => {
     if (isCurrentPlayer) { socketService.socket.emit("hoverCard", {field: "trap"}); }
   }
+
   const onMouseLeave = () => {
     if (isCurrentPlayer) { socketService.socket.emit("unhoverCard"); }
   }

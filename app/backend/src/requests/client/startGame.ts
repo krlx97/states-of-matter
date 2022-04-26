@@ -83,7 +83,7 @@ export const startGame = (app: App): void => {
       if (!card) return;
 
       if (card.health) {
-        playerADeck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
+        playerBDeck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
       } else {
         playerBDeck.push({gid, ...card} as any);
       }
@@ -92,7 +92,7 @@ export const startGame = (app: App): void => {
 
       if (playerB.value.decks[playerB.value.deckId].cards[i].amount > 1) {
         if (card.health) {
-          playerADeck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
+          playerBDeck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
         } else {
           playerBDeck.push({gid, ...card} as any);
         }
@@ -117,20 +117,13 @@ export const startGame = (app: App): void => {
         username: $lobby.host.username,
         hero: {
           id: 2, // should be deck.klass
-          type: CardType.HERO,
-          klass: CardKlass.LIQUID,
           health: 600,
           maxHealth: 600,
           mana: 100,
           maxMana: 100,
           effects: []
         },
-        minion: {
-          a: undefined,
-          b: undefined,
-          c: undefined,
-          d: undefined,
-        },
+        minion: {a: undefined, b: undefined, c: undefined, d: undefined},
         trap: undefined,
         hand: playerAHand,
         deck: playerADeck,
@@ -140,8 +133,6 @@ export const startGame = (app: App): void => {
         username: $lobby.challengee.username,
         hero: {
           id: 4, // should be deck.klass
-          type: CardType.HERO,
-          klass: CardKlass.PLASMA,
           health: 600,
           maxHealth: 600,
           mana: 100,

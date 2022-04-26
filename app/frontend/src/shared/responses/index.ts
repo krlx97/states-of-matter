@@ -15,14 +15,15 @@ import {
 } from "./client";
 
 import {
-  attackCardReceiver,
-  attackCardSender,
+  attackMinionOpponent,
+  attackMinionPlayer,
   endGame,
   endTurnOpponent,
   endTurnPlayer,
   hoverCard,
-  playCardReceiver,
-  playCardSender,
+  playMinionOpponent,
+  playMinionPlayer,
+  reloadGameState,
   unhoverCard
 } from "./game";
 
@@ -60,14 +61,15 @@ export const responses = [
   setDeckName,
   startGame,
   // Game
-  attackCardReceiver,
-  attackCardSender,
+  attackMinionOpponent,
+  attackMinionPlayer,
   endGame,
   endTurnOpponent,
   endTurnPlayer,
   hoverCard,
-  playCardReceiver,
-  playCardSender,
+  playMinionOpponent,
+  playMinionPlayer,
+  reloadGameState,
   unhoverCard,
   // Global
   notification,

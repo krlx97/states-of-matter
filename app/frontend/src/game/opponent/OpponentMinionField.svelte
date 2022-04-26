@@ -1,16 +1,17 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
   import {socketService} from "services";
-  import {gameStore, hoveredCardStore, selectedCardStore, playerStore} from "stores";
+  import {gameStore, hoveredCardStore, playerStore, selectedCardStore} from "stores";
   import Card from "../../ui/CardSm.svelte";
 
   export let field: "a" | "b" | "c" | "d";
 
-  $: isHovered = field === $hoveredCardStore.field;
+  $: minion = $gameStore.opponent.minion[field];
+  $: isHovered = $hoveredCardStore.field === field;
 
-  const getCard = (field: string): any => {
-    const card = cards.find(({id}) => id === $gameStore.opponent.fields[field].id);
-    const {gid} = $gameStore.opponent.fields[field];
+  const getCard = (): any => {
+    const {gid} = minion;
+    const card = cards.find((card) => card.id === minion.id);
 
     return {...card, gid};
   };
@@ -30,75 +31,29 @@
   @import "../../shared/styles/mixins";
   @import "../../shared/styles/variables";
 
-  .isHovered {box-shadow: 0 0 4px 8px white;}
-
   .field {
     height: $card-height-sm;
     width: $card-width-sm;
     @include flex($align-items: center, $justify-content: center);
     box-shadow: $elevation-sm;
     cursor: not-allowed;
+    transition: transform 225ms ease-in-out;
   }
+
+  .isHovered {transform: translateY(-8px);}
 </style>
 
-{#if field === "a"}
-  <div class="field" class:isHovered>
-    {#if $gameStore.opponent.fields.minionA}
-      <div style="height: 100%; width: 100%;" on:click={onAttackCard}>
-        <Card
-          card={getCard("minionA")}
-          health={$gameStore.opponent.fields.minionA.health}
-          damage={$gameStore.opponent.fields.minionA.damage}
-          isHealthBarVisible={true}
-        />
-      </div>
-    {:else}
-      <span class="f--orange">Minion Field {field}</span>
-    {/if}
+{#if minion}
+  <div class="field" class:isHovered on:click={onAttackCard}>
+    <Card
+      card={getCard()}
+      health={minion.health}
+      damage={minion.damage}
+      isHealthBarVisible={true}
+    />
   </div>
-{:else if field === "b"}
-  <div class="field" class:isHovered>
-    {#if $gameStore.opponent.fields.minionB}
-      <div style="height: 100%; width: 100%;" on:click={onAttackCard}>
-        <Card
-          card={getCard("minionB")}
-          health={$gameStore.opponent.fields.minionB.health}
-          damage={$gameStore.opponent.fields.minionB.damage}
-          isHealthBarVisible={true}
-        />
-      </div>
-    {:else}
-      <span class="f--orange">Minion Field {field}</span>
-    {/if}
-  </div>
-{:else if field === "c"}
-  <div class="field" class:isHovered>
-    {#if $gameStore.opponent.fields.minionC}
-      <div style="height: 100%; width: 100%;" on:click={onAttackCard}>
-        <Card
-          card={getCard("minionC")}
-          health={$gameStore.opponent.fields.minionC.health}
-          damage={$gameStore.opponent.fields.minionC.damage}
-          isHealthBarVisible={true}
-        />
-      </div>
-    {:else}
-      <span class="f--orange">Minion Field {field}</span>
-    {/if}
-  </div>
-{:else if field === "d"}
-  <div class="field" class:isHovered>
-    {#if $gameStore.opponent.fields.minionD}
-      <div style="height: 100%; width: 100%;" on:click={onAttackCard}>
-        <Card
-          card={getCard("minionD")}
-          health={$gameStore.opponent.fields.minionD.health}
-          damage={$gameStore.opponent.fields.minionD.damage}
-          isHealthBarVisible={true}
-        />
-      </div>
-    {:else}
-      <span class="f--orange">Minion Field {field}</span>
-    {/if}
+{:else}
+  <div class="field">
+    <span class="f--orange">Minion Field {field}</span>
   </div>
 {/if}

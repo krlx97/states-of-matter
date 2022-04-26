@@ -1,17 +1,17 @@
 import {socketService} from "services";
 import {gameStore} from "stores";
 
-export const playCardReceiver = () => {
+export const playMinionOpponent = (): void => {
   const {socket} = socketService;
 
-  socket.on("playCardOpponent", (params) => {
+  socket.on("playMinionOpponent", (params): void => {
     const {field, card} = params;
 
     gameStore.update((store) => {
-      const {fields, hero} = store.opponent;
+      const {minion, hero} = store.opponent;
 
       hero.mana -= card.manaCost;
-      fields[field] = card;
+      minion[field] = card;
       store.opponent.hand -= 1;
 
       return store;

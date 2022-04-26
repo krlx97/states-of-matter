@@ -84,7 +84,12 @@ export const signin = (app: App): void => {
         gameView = {
           gameId: game.gameId,
           currentPlayer: game.currentPlayer,
-          player: game.playerA,
+          player: {
+            ...game.playerA,
+            // deck should be number so players can't cheat
+            // deck: game.playerA.deck.length
+            // but endTurn event needs refactor first
+          },
           opponent: {
             ...game.playerB,
             deck: game.playerB.deck.length,

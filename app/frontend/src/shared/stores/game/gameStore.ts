@@ -1,7 +1,7 @@
-import {writable, type Writable} from "svelte/store";
-import type {Game} from "../../models/data";
+import {writable} from "svelte/store";
+import type {GameFE} from "@som/shared/interfaces/client";
 
-export const gameStore: Writable<Game> = writable({
+export const gameStore = writable<GameFE>({
   gameId: 0,
   currentPlayer: "",
   player: {
@@ -10,19 +10,12 @@ export const gameStore: Writable<Game> = writable({
       id: 0,
       health: 0,
       maxHealth: 0,
-      damage: 0,
       mana: 0,
       maxMana: 0,
-      passive: 0
+      effects: []
     },
-    fields: {
-      magic: undefined,
-      minionA: undefined,
-      minionB: undefined,
-      minionC: undefined,
-      minionD: undefined,
-      trap: undefined
-    },
+    minion: {a: undefined, b: undefined, c: undefined, d: undefined},
+    trap: undefined,
     deck: [],
     hand: [],
     graveyard: []
@@ -33,19 +26,12 @@ export const gameStore: Writable<Game> = writable({
       id: 0,
       health: 0,
       maxHealth: 0,
-      damage: 0,
       mana: 0,
       maxMana: 0,
-      passive: 0
+      effects: []
     },
-    fields: {
-      magic: undefined,
-      minionA: undefined,
-      minionB: undefined,
-      minionC: undefined,
-      minionD: undefined,
-      trap: undefined
-    },
+    minion: {a: undefined, b: undefined, c: undefined, d: undefined},
+    trap: undefined,
     deck: 0,
     hand: 0,
     graveyard: []

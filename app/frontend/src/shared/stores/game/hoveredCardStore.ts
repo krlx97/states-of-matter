@@ -1,5 +1,5 @@
-import {writable, type Writable} from "svelte/store";
+import {writable} from "svelte/store";
 
-export const hoveredCardStore: Writable<{field: string}> = writable({
-  field: "",
+export const hoveredCardStore = writable<{field: "" | "a" | "b" | "c" | "d"}>({
+  field: ""
 });

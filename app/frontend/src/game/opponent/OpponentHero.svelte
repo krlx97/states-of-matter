@@ -4,19 +4,13 @@
   import {gameStore, selectedCardStore, playerStore} from "stores";
   import Hero from "../../ui/HeroSm.svelte";
 
-  const onAttackCard = () => {
+  const onAttackHero = (): void => {
+    const attacker = $selectedCardStore.field;
+
     if ($gameStore.currentPlayer !== $playerStore.username) { return; }
+    if (!attacker) { return; }
 
-    let attacker: any; // ;w;
-    const attacked = "hero";
-
-    if ($selectedCardStore.field === "hero") {
-      attacker = "hero";
-    } else {
-      attacker = `minion${$selectedCardStore.field}`;
-    }
-
-    socketService.socket.emit("attackCard", {attacker, attacked});
+    socketService.socket.emit("attackHero", {attacker});
   };
 </script>
 
@@ -30,7 +24,7 @@
   }
 </style>
 
-<div class="hero" on:click={onAttackCard}>
+<div class="hero" on:click={onAttackHero}>
   <Hero
     hero={heroes.find((hero) => hero.klass === $gameStore.opponent.hero.id)}
     health={$gameStore.opponent.hero.health}

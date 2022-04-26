@@ -6,7 +6,7 @@ export const playMinion = (app: App): void => {
   const {gameController} = controllers;
   const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+  const {socket, socketId} = socketService;
 
   socket.on("playMinion", async (params) => {
     const {field, gid} = params;
@@ -19,7 +19,7 @@ export const playMinion = (app: App): void => {
 
     if (!$game) { return; }
 
-    const {player, opponent} = gameController.getPlayers($game, username);
+    const {player} = gameController.getPlayers($game, username);
     const {hand, minion, hero} = player;
     const handCard = hand.find((card) => card.gid === gid);
 
@@ -32,18 +32,6 @@ export const playMinion = (app: App): void => {
     minion[field] = handCard;
     hand.splice(hand.indexOf(handCard), 1);
 
-    const savedGame = await gameController.saveGame($game);
-
-    if (!savedGame) { return; }
-
-    socket.emit("playMinion|player", {field, gid});
-
-    const $opponent = await $players.findOne({
-      username: opponent.username
-    });
-
-    if (!$opponent || !$opponent.socketId) { return; }
-
-    io.to($opponent.socketId).emit("playMinion|opponent", {field, card: handCard});
+    await gameController.saveGame($game);
   });
 };

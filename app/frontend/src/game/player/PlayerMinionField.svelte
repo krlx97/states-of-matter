@@ -10,17 +10,17 @@
   const {socket} = socketService;
 
   $: isSelected = $selectedCardStore.field === field;
-
   $: isSummonable =
     $selectedCardStore.hand.gid &&
     $selectedCardStore.hand.type === CardType.MINION &&
-    !$gameStore.player.fields[`minion${field}`];
-
+    !$gameStore.player.minion[field];
   $: isCurrentPlayer = $gameStore.currentPlayer === $playerStore.username;
 
-  const getCard = (field: string): any => {
-    const card = cards.find(({id}) => id === $gameStore.player.fields[field].id);
-    const gid = $gameStore.player.fields[field].gid;
+  $: minion = $gameStore.player.minion[field];
+
+  const getCard = (): any => {
+    const card = cards.find(({id}) => id === minion.id);
+    const gid = minion.gid;
 
     return {...card, gid};
   };
@@ -32,9 +32,8 @@
     if ($selectedCardStore.field !== "") { $selectedCardStore.field = ""; }
 
     const {gid} = $selectedCardStore.hand;
-    const _field: any = `minion${field}`;
 
-    socket.emit("playCard", {field: _field, gid});
+    socket.emit("playMinion", {field, gid});
 
     $selectedCardStore.hand.gid = 0;
   };
@@ -50,10 +49,11 @@
     }
   };
 
-  const mouseEnter = (): void => {
+  const onMouseenter = (): void => {
     if (isCurrentPlayer) { socket.emit("hoverCard", {field}); }
   }
-  const onMouseLeave = (): void => {
+
+  const onMouseleave = (): void => {
     if (isCurrentPlayer) { socket.emit("unhoverCard"); }
   }
 </script>
@@ -66,14 +66,15 @@
     height: $card-height;
     width: $card-width;
     @include d-flex(row, center, center);
-    // background-color: $orange;
     box-shadow: $elevation-sm;
     cursor: not-allowed;
+    transition: transform 225ms ease-in-out;
   }
 
-  .isSelected {
-    box-shadow: 0 0 4px 2px $purple;
-  }
+  .field:hover {transform: translateY(-8px);}
+
+  .isSelected {box-shadow: 0 0 0 4px white;}
+
   .isSummonable {
     animation: glow 1s $ease-in-out-quart infinite;
     cursor: pointer;
@@ -86,64 +87,12 @@
   }
 </style>
 
-{#if field === "a"}
-  {#if $gameStore.player.fields.minionA}
-    <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-      <Card
-        card={getCard("minionA")}
-        health={$gameStore.player.fields.minionA.health}
-        damage={$gameStore.player.fields.minionA.damage}
-        isHealthBarVisible={true}
-      />
-    </div>
-  {:else}
-    <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-      <span>Minion Field {field}</span>
-    </div>
-  {/if}
-{:else if field === "b"}
-  {#if $gameStore.player.fields.minionB}
-    <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-      <Card
-        card={getCard("minionB")}
-        health={$gameStore.player.fields.minionB.health}
-        damage={$gameStore.player.fields.minionB.damage}
-        isHealthBarVisible={true}
-      />
-    </div>
-  {:else}
-    <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-      <span>Minion Field {field}</span>
-    </div>
-  {/if}
-{:else if field === "c"}
-  {#if $gameStore.player.fields.minionC}
-    <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-      <Card
-        card={getCard("minionC")}
-        health={$gameStore.player.fields.minionC.health}
-        damage={$gameStore.player.fields.minionC.damage}
-        isHealthBarVisible={true}
-      />
-    </div>
-  {:else}
-    <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-      <span>Minion Field {field}</span>
-    </div>
-  {/if}
-{:else if field === "d"}
-  {#if $gameStore.player.fields.minionD}
-    <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-      <Card
-        card={getCard("minionD")}
-        health={$gameStore.player.fields.minionD.health}
-        damage={$gameStore.player.fields.minionD.damage}
-        isHealthBarVisible={true}
-      />
-    </div>
-  {:else}
-    <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={mouseEnter} on:mouseleave={onMouseLeave}>
-      <span>Minion Field {field}</span>
-    </div>
-  {/if}
+{#if minion}
+  <div class="field" class:isSelected on:click={onAttackSelect} on:mouseenter={onMouseenter} on:mouseleave={onMouseleave}>
+    <Card card={getCard()} health={minion.health} damage={minion.damage} isHealthBarVisible={true}/>
+  </div>
+{:else}
+  <div class="field" class:isSummonable on:click={onPlayCard} on:mouseenter={onMouseenter} on:mouseleave={onMouseleave}>
+    <span>Minion Field {field}</span>
+  </div>
 {/if}

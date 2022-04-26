@@ -19,10 +19,17 @@
 
 <svelte:head>
   <style>
+    @font-face {
+      font-family: 'RomanCapitalz';
+      src: url(assets/font.woff);
+    }
+
     body {
       margin: 0;
-      font-family: "Exo 2", sans-serif;
+      font-family: "RomanCapitalz", sans-serif;
+      font-size: 20px;
       line-height: 1;
+      user-select: none;
     }
   </style>
 </svelte:head>
@@ -49,7 +56,7 @@
       background-color: $grey;
     }
 
-    &__content {width: calc(100% - 320px)}
+    &__content {width: 100%; display: flex;}
     &__sidenav {width: 320px}
   }
 </style>

@@ -1076,19 +1076,12 @@ var app = (function () {
                 id: 0,
                 health: 0,
                 maxHealth: 0,
-                damage: 0,
                 mana: 0,
                 maxMana: 0,
-                passive: 0
+                effects: []
             },
-            fields: {
-                magic: undefined,
-                minionA: undefined,
-                minionB: undefined,
-                minionC: undefined,
-                minionD: undefined,
-                trap: undefined
-            },
+            minion: { a: undefined, b: undefined, c: undefined, d: undefined },
+            trap: undefined,
             deck: [],
             hand: [],
             graveyard: []
@@ -1099,19 +1092,12 @@ var app = (function () {
                 id: 0,
                 health: 0,
                 maxHealth: 0,
-                damage: 0,
                 mana: 0,
                 maxMana: 0,
-                passive: 0
+                effects: []
             },
-            fields: {
-                magic: undefined,
-                minionA: undefined,
-                minionB: undefined,
-                minionC: undefined,
-                minionD: undefined,
-                trap: undefined
-            },
+            minion: { a: undefined, b: undefined, c: undefined, d: undefined },
+            trap: undefined,
             deck: 0,
             hand: 0,
             graveyard: []
@@ -1119,7 +1105,7 @@ var app = (function () {
     });
 
     const hoveredCardStore = writable({
-        field: "",
+        field: ""
     });
 
     var CardType;
@@ -1147,10 +1133,9 @@ var app = (function () {
     })(PlayerStatus || (PlayerStatus = {}));
     var Effect;
     (function (Effect) {
-        Effect[Effect["ASCENSION"] = 0] = "ASCENSION";
+        Effect[Effect["GREED"] = 0] = "GREED";
         Effect[Effect["BLIND"] = 1] = "BLIND";
-        Effect[Effect["COMMAND"] = 2] = "COMMAND";
-        Effect[Effect["CHARGE"] = 3] = "CHARGE";
+        Effect[Effect["CHARGE"] = 2] = "CHARGE";
     })(Effect || (Effect = {}));
 
     const selectedCardStore = writable({
@@ -4727,7 +4712,7 @@ var app = (function () {
             health: 70,
             manaCost: 30,
             effect: "Neutral card 1 can attack twice.",
-            effects: [Effect.CHARGE]
+            effects: [Effect.GREED]
         }, {
             id: 1,
             klass: CardKlass.NEUTRAL,
@@ -4737,7 +4722,7 @@ var app = (function () {
             health: 80,
             manaCost: 35,
             effect: "Neutral card 2 effect",
-            effects: [Effect.ASCENSION]
+            effects: [Effect.BLIND]
         }, {
             id: 2,
             klass: CardKlass.NEUTRAL,
@@ -4747,7 +4732,7 @@ var app = (function () {
             health: 90,
             manaCost: 40,
             effect: "Neutral card 3 effect",
-            effects: [Effect.BLIND]
+            effects: [Effect.CHARGE]
         }, {
             id: 3,
             klass: CardKlass.NEUTRAL,
@@ -4757,7 +4742,7 @@ var app = (function () {
             health: 100,
             manaCost: 45,
             effect: "Neutral card 4 effect",
-            effects: [Effect.COMMAND]
+            effects: []
         }, {
             id: 4,
             klass: CardKlass.NEUTRAL,
@@ -5534,79 +5519,66 @@ var app = (function () {
         });
     };
 
-    const attackCardReceiver = () => {
+    const attackMinionOpponent = () => {
         const { socket } = socketService;
-        socket.on("attackCardReceiver", (params) => {
+        socket.on("attackMinionOpponent", (params) => {
             const { attacker, attacked } = params;
-            gameStore.update((store) => {
-                const { player, opponent } = store;
-                let _attacker = player.fields[attacker];
-                let _attacked = opponent.fields[attacked];
-                if (!_attacker || !_attacked) {
-                    return;
+            gameStore.update((game) => {
+                const { player, opponent } = game;
+                const playerMinion = player.minion[attacked];
+                const opponentMinion = opponent.minion[attacker];
+                playerMinion.health -= opponentMinion.damage;
+                opponentMinion.health -= playerMinion.damage;
+                playerMinion.hasAttacked = true;
+                if (!playerMinion.hasTriggeredEffect) {
+                    if (playerMinion.effects.includes(Effect.CHARGE)) {
+                        playerMinion.hasAttacked = false;
+                        playerMinion.hasTriggeredEffect = true;
+                    }
                 }
-                _attacker.health -= _attacked.damage;
-                _attacked.health -= _attacker.damage;
-                if (_attacker.health <= 0 && attacker !== "hero") {
-                    player.graveyard.push(player.fields[attacker]);
-                    player.fields[attacker] = undefined;
+                if (playerMinion.health <= 0) {
+                    playerMinion.health = playerMinion.maxHealth;
+                    player.graveyard.push(playerMinion);
+                    player.minion[attacker] = undefined;
                 }
-                else if (_attacked.health <= 0 && attacked !== "hero") {
-                    opponent.graveyard.push(opponent.fields[attacked]);
-                    opponent.fields[attacked] = undefined;
+                if (opponentMinion.health <= 0) {
+                    opponentMinion.health = opponentMinion.maxHealth;
+                    opponent.graveyard.push(opponentMinion);
+                    opponent.minion[attacked] = undefined;
                 }
-                return store;
+                return game;
             });
         });
     };
 
-    const attackCardSender = () => {
+    const attackMinionPlayer = () => {
         const { socket } = socketService;
-        socket.on("attackCardSender", (params) => {
-            const { attacker, attacked } = params;
-            gameStore.update((store) => {
-                const { player, opponent } = store;
-                if (attacker === "hero") { // attacking with hero
-                    if (attacked === "hero") { // attacking hero with hero
-                        player.hero.health -= opponent.hero.damage;
-                        opponent.hero.health -= player.hero.damage;
-                    }
-                    else { // attacking card with hero
-                        const attackedCard = opponent.fields[attacked];
-                        player.hero.health -= attackedCard.damage;
-                        attackedCard.health -= player.hero.damage;
-                        if (attackedCard.health <= 0) {
-                            opponent.graveyard.push(attackedCard);
-                            opponent.fields[attacked] = undefined;
-                        }
+        socket.on("attackMinionPlayer", (params) => {
+            const { attacked, attacker } = params;
+            gameStore.update((game) => {
+                const { player, opponent } = game;
+                const playerMinion = player.minion[attacker];
+                const opponentMinion = opponent.minion[attacked];
+                playerMinion.health -= opponentMinion.damage;
+                opponentMinion.health -= playerMinion.damage;
+                playerMinion.hasAttacked = true;
+                if (!playerMinion.hasTriggeredEffect) {
+                    if (playerMinion.effects.includes(Effect.CHARGE)) {
+                        playerMinion.hasAttacked = false;
+                        playerMinion.hasTriggeredEffect = true;
                     }
                 }
-                else { // attacking with card
-                    if (attacked === "hero") { // attacking hero with card
-                        const attackerCard = player.fields[attacker];
-                        attackerCard.health -= opponent.hero.damage;
-                        opponent.hero.health -= attackerCard.damage;
-                        if (attackerCard.health <= 0) {
-                            player.graveyard.push(attackerCard);
-                            player.fields[attacker] = undefined;
-                        }
-                    }
-                    else { // attacking card with card
-                        const attackerCard = player.fields[attacker];
-                        const attackedCard = opponent.fields[attacked];
-                        attackerCard.health -= attackedCard.damage;
-                        attackedCard.health -= attackerCard.damage;
-                        if (attackerCard.health <= 0) {
-                            player.graveyard.push(attackerCard);
-                            player.fields[attacker] = undefined;
-                        }
-                        if (attackedCard.health <= 0) {
-                            opponent.graveyard.push(attackedCard);
-                            opponent.fields[attacked] = undefined;
-                        }
-                    }
+                if (playerMinion.health <= 0) {
+                    playerMinion.health = playerMinion.maxHealth;
+                    player.graveyard.push(playerMinion);
+                    player.minion[attacker] = undefined;
                 }
-                return store;
+                if (opponentMinion.health <= 0) {
+                    opponentMinion.health = opponentMinion.maxHealth;
+                    opponent.graveyard.push(opponentMinion);
+                    opponent.minion[attacked] = undefined;
+                }
+                return game;
             });
         });
     };
@@ -5624,11 +5596,9 @@ var app = (function () {
     };
 
     const endTurnOpponent = () => {
-        const { socket } = socketService;
-        socket.on("endTurnOpponent", () => {
+        socketService.socket.on("endTurnOpponent", () => {
             gameStore.update((store) => {
-                const { player } = store;
-                const { deck, hand, hero, username } = player;
+                const { deck, hand, hero, username } = store.player;
                 store.currentPlayer = username;
                 hand.push(deck.pop());
                 hero.mana = 100;
@@ -5653,35 +5623,45 @@ var app = (function () {
 
     const hoverCard = () => {
         const { socket } = socketService;
-        socket.on("hoverCard", (params) => { hoveredCardStore.set(params); });
+        socket.on("hoverCard", (params) => {
+            hoveredCardStore.set(params);
+        });
     };
 
-    const playCardReceiver = () => {
+    const playMinionOpponent = () => {
         const { socket } = socketService;
-        socket.on("playCardOpponent", (params) => {
+        socket.on("playMinionOpponent", (params) => {
             const { field, card } = params;
             gameStore.update((store) => {
-                const { fields, hero } = store.opponent;
+                const { minion, hero } = store.opponent;
                 hero.mana -= card.manaCost;
-                fields[field] = card;
+                minion[field] = card;
                 store.opponent.hand -= 1;
                 return store;
             });
         });
     };
 
-    const playCardSender = () => {
+    const playMinionPlayer = () => {
         const { socket } = socketService;
-        socket.on("playCardPlayer", (params) => {
+        socket.on("playMinionPlayer", (params) => {
             const { field, gid } = params;
             gameStore.update((store) => {
-                const { hand, fields, hero } = store.player;
+                const { hand, minion, hero } = store.player;
                 const handCard = hand.find((card) => card.gid === gid);
                 hero.mana -= handCard.manaCost;
-                fields[field] = handCard;
+                minion[field] = handCard;
                 hand.splice(hand.indexOf(handCard), 1);
                 return store;
             });
+        });
+    };
+
+    // never forgetti code spaghetti ;w;
+    const reloadGameState = () => {
+        const { socket } = socketService;
+        socket.on("reloadGameState", (params) => {
+            gameStore.set(params.game);
         });
     };
 
@@ -5941,14 +5921,15 @@ var app = (function () {
         setDeckName,
         startGame,
         // Game
-        attackCardReceiver,
-        attackCardSender,
+        attackMinionOpponent,
+        attackMinionPlayer,
         endGame,
         endTurnOpponent,
         endTurnPlayer,
         hoverCard,
-        playCardReceiver,
-        playCardSender,
+        playMinionOpponent,
+        playMinionPlayer,
+        reloadGameState,
         unhoverCard,
         // Global
         notification,
@@ -6086,7 +6067,7 @@ var app = (function () {
     }
 
     // (158:0) {#if $socialStore.chat.isOpen}
-    function create_if_block$l(ctx) {
+    function create_if_block$k(ctx) {
     	let div1;
     	let header;
     	let div0;
@@ -6295,7 +6276,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$l.name,
+    		id: create_if_block$k.name,
     		type: "if",
     		source: "(158:0) {#if $socialStore.chat.isOpen}",
     		ctx
@@ -6485,7 +6466,7 @@ var app = (function () {
     function create_fragment$18(ctx) {
     	let if_block_anchor;
     	let current;
-    	let if_block = /*$socialStore*/ ctx[2].chat.isOpen && create_if_block$l(ctx);
+    	let if_block = /*$socialStore*/ ctx[2].chat.isOpen && create_if_block$k(ctx);
 
     	const block = {
     		c: function create() {
@@ -6509,7 +6490,7 @@ var app = (function () {
     						transition_in(if_block, 1);
     					}
     				} else {
-    					if_block = create_if_block$l(ctx);
+    					if_block = create_if_block$k(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -7134,7 +7115,7 @@ var app = (function () {
     const file$12 = "src\\ui\\Input.svelte";
 
     // (105:30) 
-    function create_if_block_3$7(ctx) {
+    function create_if_block_3$4(ctx) {
     	let label;
     	let input;
     	let t0;
@@ -7192,7 +7173,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3$7.name,
+    		id: create_if_block_3$4.name,
     		type: "if",
     		source: "(105:30) ",
     		ctx
@@ -7202,7 +7183,7 @@ var app = (function () {
     }
 
     // (100:30) 
-    function create_if_block_2$8(ctx) {
+    function create_if_block_2$5(ctx) {
     	let label;
     	let div;
     	let t0;
@@ -7265,7 +7246,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$8.name,
+    		id: create_if_block_2$5.name,
     		type: "if",
     		source: "(100:30) ",
     		ctx
@@ -7275,7 +7256,7 @@ var app = (function () {
     }
 
     // (98:28) 
-    function create_if_block_1$c(ctx) {
+    function create_if_block_1$9(ctx) {
     	let p;
 
     	const block = {
@@ -7295,7 +7276,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$c.name,
+    		id: create_if_block_1$9.name,
     		type: "if",
     		source: "(98:28) ",
     		ctx
@@ -7305,7 +7286,7 @@ var app = (function () {
     }
 
     // (93:0) {#if type === "text"}
-    function create_if_block$k(ctx) {
+    function create_if_block$j(ctx) {
     	let label;
     	let div;
     	let t0;
@@ -7368,7 +7349,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$k.name,
+    		id: create_if_block$j.name,
     		type: "if",
     		source: "(93:0) {#if type === \\\"text\\\"}",
     		ctx
@@ -7381,10 +7362,10 @@ var app = (function () {
     	let if_block_anchor;
 
     	function select_block_type(ctx, dirty) {
-    		if (/*type*/ ctx[3] === "text") return create_if_block$k;
-    		if (/*type*/ ctx[3] === "number") return create_if_block_1$c;
-    		if (/*type*/ ctx[3] === "password") return create_if_block_2$8;
-    		if (/*type*/ ctx[3] === "checkbox") return create_if_block_3$7;
+    		if (/*type*/ ctx[3] === "text") return create_if_block$j;
+    		if (/*type*/ ctx[3] === "number") return create_if_block_1$9;
+    		if (/*type*/ ctx[3] === "password") return create_if_block_2$5;
+    		if (/*type*/ ctx[3] === "checkbox") return create_if_block_3$4;
     	}
 
     	let current_block_type = select_block_type(ctx);
@@ -8030,7 +8011,7 @@ var app = (function () {
     /* src\modals\AddFriend.svelte generated by Svelte v3.46.4 */
 
     // (12:4) <Button type="submit">
-    function create_default_slot_2$e(ctx) {
+    function create_default_slot_2$d(ctx) {
     	let t;
 
     	const block = {
@@ -8047,7 +8028,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_2$e.name,
+    		id: create_default_slot_2$d.name,
     		type: "slot",
     		source: "(12:4) <Button type=\\\"submit\\\">",
     		ctx
@@ -8057,7 +8038,7 @@ var app = (function () {
     }
 
     // (10:2) <Form on:submit={onAddFriend}>
-    function create_default_slot_1$j(ctx) {
+    function create_default_slot_1$i(ctx) {
     	let input;
     	let updating_value;
     	let t;
@@ -8080,7 +8061,7 @@ var app = (function () {
     	button = new Button({
     			props: {
     				type: "submit",
-    				$$slots: { default: [create_default_slot_2$e] },
+    				$$slots: { default: [create_default_slot_2$d] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -8136,7 +8117,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_1$j.name,
+    		id: create_default_slot_1$i.name,
     		type: "slot",
     		source: "(10:2) <Form on:submit={onAddFriend}>",
     		ctx
@@ -8146,13 +8127,13 @@ var app = (function () {
     }
 
     // (9:0) <Modal>
-    function create_default_slot$q(ctx) {
+    function create_default_slot$p(ctx) {
     	let form;
     	let current;
 
     	form = new Form({
     			props: {
-    				$$slots: { default: [create_default_slot_1$j] },
+    				$$slots: { default: [create_default_slot_1$i] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -8193,7 +8174,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$q.name,
+    		id: create_default_slot$p.name,
     		type: "slot",
     		source: "(9:0) <Modal>",
     		ctx
@@ -8208,7 +8189,7 @@ var app = (function () {
 
     	modal = new Modal({
     			props: {
-    				$$slots: { default: [create_default_slot$q] },
+    				$$slots: { default: [create_default_slot$p] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -8318,7 +8299,7 @@ var app = (function () {
     const file$_ = "src\\modals\\Block.svelte";
 
     // (10:0) <Modal>
-    function create_default_slot$p(ctx) {
+    function create_default_slot$o(ctx) {
     	let p;
     	let t0;
     	let t1_value = /*$modalStore*/ ctx[0].data.username + "";
@@ -8387,7 +8368,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$p.name,
+    		id: create_default_slot$o.name,
     		type: "slot",
     		source: "(10:0) <Modal>",
     		ctx
@@ -8402,7 +8383,7 @@ var app = (function () {
 
     	modal = new Modal({
     			props: {
-    				$$slots: { default: [create_default_slot$p] },
+    				$$slots: { default: [create_default_slot$o] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -8500,7 +8481,7 @@ var app = (function () {
     const file$Z = "src\\modals\\ChangeDeckName.svelte";
 
     // (11:0) <Modal>
-    function create_default_slot$o(ctx) {
+    function create_default_slot$n(ctx) {
     	let form;
     	let div0;
     	let label;
@@ -8573,7 +8554,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$o.name,
+    		id: create_default_slot$n.name,
     		type: "slot",
     		source: "(11:0) <Modal>",
     		ctx
@@ -8588,7 +8569,7 @@ var app = (function () {
 
     	modal = new Modal({
     			props: {
-    				$$slots: { default: [create_default_slot$o] },
+    				$$slots: { default: [create_default_slot$n] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -8701,7 +8682,7 @@ var app = (function () {
     const file$Y = "src\\modals\\Gift.svelte";
 
     // (4:0) <Modal>
-    function create_default_slot$n(ctx) {
+    function create_default_slot$m(ctx) {
     	let p;
 
     	const block = {
@@ -8720,7 +8701,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$n.name,
+    		id: create_default_slot$m.name,
     		type: "slot",
     		source: "(4:0) <Modal>",
     		ctx
@@ -8735,7 +8716,7 @@ var app = (function () {
 
     	modal = new Modal({
     			props: {
-    				$$slots: { default: [create_default_slot$n] },
+    				$$slots: { default: [create_default_slot$m] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -8817,7 +8798,7 @@ var app = (function () {
     const file$X = "src\\modals\\JoinLobby.svelte";
 
     // (13:4) <Text>
-    function create_default_slot_2$d(ctx) {
+    function create_default_slot_2$c(ctx) {
     	let t;
 
     	const block = {
@@ -8834,7 +8815,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_2$d.name,
+    		id: create_default_slot_2$c.name,
     		type: "slot",
     		source: "(13:4) <Text>",
     		ctx
@@ -8844,7 +8825,7 @@ var app = (function () {
     }
 
     // (17:4) <Button type="submit">
-    function create_default_slot_1$i(ctx) {
+    function create_default_slot_1$h(ctx) {
     	let t;
 
     	const block = {
@@ -8861,7 +8842,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_1$i.name,
+    		id: create_default_slot_1$h.name,
     		type: "slot",
     		source: "(17:4) <Button type=\\\"submit\\\">",
     		ctx
@@ -8871,7 +8852,7 @@ var app = (function () {
     }
 
     // (11:0) <Modal>
-    function create_default_slot$m(ctx) {
+    function create_default_slot$l(ctx) {
     	let form;
     	let text_1;
     	let t0;
@@ -8884,7 +8865,7 @@ var app = (function () {
 
     	text_1 = new Text({
     			props: {
-    				$$slots: { default: [create_default_slot_2$d] },
+    				$$slots: { default: [create_default_slot_2$c] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -8893,7 +8874,7 @@ var app = (function () {
     	button = new Button({
     			props: {
     				type: "submit",
-    				$$slots: { default: [create_default_slot_1$i] },
+    				$$slots: { default: [create_default_slot_1$h] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -8974,7 +8955,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$m.name,
+    		id: create_default_slot$l.name,
     		type: "slot",
     		source: "(11:0) <Modal>",
     		ctx
@@ -8989,7 +8970,7 @@ var app = (function () {
 
     	modal = new Modal({
     			props: {
-    				$$slots: { default: [create_default_slot$m] },
+    				$$slots: { default: [create_default_slot$l] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -9143,7 +9124,7 @@ var app = (function () {
     }
 
     // (99:6) <Text>
-    function create_default_slot_2$c(ctx) {
+    function create_default_slot_2$b(ctx) {
     	let t;
 
     	const block = {
@@ -9160,7 +9141,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_2$c.name,
+    		id: create_default_slot_2$b.name,
     		type: "slot",
     		source: "(99:6) <Text>",
     		ctx
@@ -9170,13 +9151,13 @@ var app = (function () {
     }
 
     // (98:4) <Button color="green" on:click={onSendToken}>
-    function create_default_slot_1$h(ctx) {
+    function create_default_slot_1$g(ctx) {
     	let text_1;
     	let current;
 
     	text_1 = new Text({
     			props: {
-    				$$slots: { default: [create_default_slot_2$c] },
+    				$$slots: { default: [create_default_slot_2$b] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -9215,7 +9196,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_1$h.name,
+    		id: create_default_slot_1$g.name,
     		type: "slot",
     		source: "(98:4) <Button color=\\\"green\\\" on:click={onSendToken}>",
     		ctx
@@ -9225,7 +9206,7 @@ var app = (function () {
     }
 
     // (63:0) <Modal>
-    function create_default_slot$l(ctx) {
+    function create_default_slot$k(ctx) {
     	let div0;
     	let t1;
     	let form_1;
@@ -9277,7 +9258,7 @@ var app = (function () {
     	button = new Button({
     			props: {
     				color: "green",
-    				$$slots: { default: [create_default_slot_1$h] },
+    				$$slots: { default: [create_default_slot_1$g] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -9501,7 +9482,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$l.name,
+    		id: create_default_slot$k.name,
     		type: "slot",
     		source: "(63:0) <Modal>",
     		ctx
@@ -9516,7 +9497,7 @@ var app = (function () {
 
     	modal = new Modal({
     			props: {
-    				$$slots: { default: [create_default_slot$l] },
+    				$$slots: { default: [create_default_slot$k] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -9698,7 +9679,7 @@ var app = (function () {
     const file$V = "src\\modals\\Tip.svelte";
 
     // (4:0) <Modal>
-    function create_default_slot$k(ctx) {
+    function create_default_slot$j(ctx) {
     	let p;
 
     	const block = {
@@ -9717,7 +9698,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$k.name,
+    		id: create_default_slot$j.name,
     		type: "slot",
     		source: "(4:0) <Modal>",
     		ctx
@@ -9732,7 +9713,7 @@ var app = (function () {
 
     	modal = new Modal({
     			props: {
-    				$$slots: { default: [create_default_slot$k] },
+    				$$slots: { default: [create_default_slot$j] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -9814,7 +9795,7 @@ var app = (function () {
     const file$U = "src\\modals\\Unfriend.svelte";
 
     // (10:0) <Modal>
-    function create_default_slot$j(ctx) {
+    function create_default_slot$i(ctx) {
     	let p;
     	let t0;
     	let t1_value = /*$modalStore*/ ctx[0].data.username + "";
@@ -9876,7 +9857,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$j.name,
+    		id: create_default_slot$i.name,
     		type: "slot",
     		source: "(10:0) <Modal>",
     		ctx
@@ -9891,7 +9872,7 @@ var app = (function () {
 
     	modal = new Modal({
     			props: {
-    				$$slots: { default: [create_default_slot$j] },
+    				$$slots: { default: [create_default_slot$i] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -9988,1101 +9969,47 @@ var app = (function () {
     /* src\ui\Card.svelte generated by Svelte v3.46.4 */
     const file$T = "src\\ui\\Card.svelte";
 
-    // (163:10) {:else}
-    function create_else_block_1$4(ctx) {
-    	let img;
-    	let current;
-
-    	img = new Img({
-    			props: { src: "attrs/trap.png", alt: "Trap" },
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(img.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(img, target, anchor);
-    			current = true;
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(img.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(img.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(img, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_1$4.name,
-    		type: "else",
-    		source: "(163:10) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (161:49) 
-    function create_if_block_4$5(ctx) {
-    	let img;
-    	let current;
-
-    	img = new Img({
-    			props: { src: "attrs/magic.png", alt: "Magic" },
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(img.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(img, target, anchor);
-    			current = true;
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(img.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(img.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(img, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_4$5.name,
-    		type: "if",
-    		source: "(161:49) ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (159:10) {#if card.type === CardType.MINION}
-    function create_if_block_3$6(ctx) {
-    	let img;
-    	let current;
-
-    	img = new Img({
-    			props: { src: "attrs/minion.png", alt: "Minion" },
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(img.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(img, target, anchor);
-    			current = true;
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(img.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(img.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(img, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_3$6.name,
-    		type: "if",
-    		source: "(159:10) {#if card.type === CardType.MINION}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (168:12) <Text color="purple" size="xsm">
-    function create_default_slot_7$2(ctx) {
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text("Passive:");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_7$2.name,
-    		type: "slot",
-    		source: "(168:12) <Text color=\\\"purple\\\" size=\\\"xsm\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (174:12) {:else}
-    function create_else_block$a(ctx) {
-    	let text_1;
-    	let current;
-
-    	text_1 = new Text({
-    			props: {
-    				size: "sm",
-    				$$slots: { default: [create_default_slot_6$3] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(text_1.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(text_1, target, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const text_1_changes = {};
-
-    			if (dirty & /*$$scope*/ 32768) {
-    				text_1_changes.$$scope = { dirty, ctx };
-    			}
-
-    			text_1.$set(text_1_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(text_1.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(text_1.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(text_1, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block$a.name,
-    		type: "else",
-    		source: "(174:12) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (170:12) {#if card.klass !== CardKlass.NEUTRAL}
-    function create_if_block_2$7(ctx) {
-    	let text_1;
-    	let current;
-
-    	text_1 = new Text({
-    			props: {
-    				size: "sm",
-    				$$slots: { default: [create_default_slot_5$5] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(text_1.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(text_1, target, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const text_1_changes = {};
-
-    			if (dirty & /*$$scope, card*/ 32769) {
-    				text_1_changes.$$scope = { dirty, ctx };
-    			}
-
-    			text_1.$set(text_1_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(text_1.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(text_1.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(text_1, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_2$7.name,
-    		type: "if",
-    		source: "(170:12) {#if card.klass !== CardKlass.NEUTRAL}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (175:14) <Text size="sm">
-    function create_default_slot_6$3(ctx) {
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text("No passive.");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_6$3.name,
-    		type: "slot",
-    		source: "(175:14) <Text size=\\\"sm\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (171:14) <Text size="sm">
-    function create_default_slot_5$5(ctx) {
-    	let html_tag;
-    	let raw_value = passives.find(/*func*/ ctx[12]).text + "";
-    	let html_anchor;
-
-    	const block = {
-    		c: function create() {
-    			html_tag = new HtmlTag();
-    			html_anchor = empty$1();
-    			html_tag.a = html_anchor;
-    		},
-    		m: function mount(target, anchor) {
-    			html_tag.m(raw_value, target, anchor);
-    			insert_dev(target, html_anchor, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*card*/ 1 && raw_value !== (raw_value = passives.find(/*func*/ ctx[12]).text + "")) html_tag.p(raw_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(html_anchor);
-    			if (detaching) html_tag.d();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_5$5.name,
-    		type: "slot",
-    		source: "(171:14) <Text size=\\\"sm\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (178:12) <Text color="green" size="xsm">
-    function create_default_slot_4$7(ctx) {
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text("Effect:");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_4$7.name,
-    		type: "slot",
-    		source: "(178:12) <Text color=\\\"green\\\" size=\\\"xsm\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (180:12) <Text size="sm">
-    function create_default_slot_3$8(ctx) {
-    	let html_tag;
-    	let raw_value = /*card*/ ctx[0].effect + "";
-    	let html_anchor;
-
-    	const block = {
-    		c: function create() {
-    			html_tag = new HtmlTag();
-    			html_anchor = empty$1();
-    			html_tag.a = html_anchor;
-    		},
-    		m: function mount(target, anchor) {
-    			html_tag.m(raw_value, target, anchor);
-    			insert_dev(target, html_anchor, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*card*/ 1 && raw_value !== (raw_value = /*card*/ ctx[0].effect + "")) html_tag.p(raw_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(html_anchor);
-    			if (detaching) html_tag.d();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_3$8.name,
-    		type: "slot",
-    		source: "(180:12) <Text size=\\\"sm\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (191:6) {#if isHealthBarVisible}
-    function create_if_block_1$b(ctx) {
+    function create_fragment$U(ctx) {
     	let div;
-    	let progressbar;
-    	let current;
-
-    	progressbar = new ProgressBar({
-    			props: {
-    				progress: /*health*/ ctx[1] / /*card*/ ctx[0].health * 100,
-    				color: "green"
-    			},
-    			$$inline: true
-    		});
+    	let img0;
+    	let img0_src_value;
+    	let t;
+    	let img1;
+    	let img1_src_value;
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			create_component(progressbar.$$.fragment);
-    			attr_dev(div, "class", "card__bar svelte-1fr08x7");
-    			add_location(div, file$T, 191, 8, 4606);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(progressbar, div, null);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const progressbar_changes = {};
-    			if (dirty & /*health, card*/ 3) progressbar_changes.progress = /*health*/ ctx[1] / /*card*/ ctx[0].health * 100;
-    			progressbar.$set(progressbar_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(progressbar.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(progressbar.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(progressbar);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_1$b.name,
-    		type: "if",
-    		source: "(191:6) {#if isHealthBarVisible}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (201:10) <Text size="xsm">
-    function create_default_slot_2$b(ctx) {
-    	let t_value = /*card*/ ctx[0].manaCost + "";
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text(t_value);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*card*/ 1 && t_value !== (t_value = /*card*/ ctx[0].manaCost + "")) set_data_dev(t, t_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_2$b.name,
-    		type: "slot",
-    		source: "(201:10) <Text size=\\\"xsm\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (204:8) {#if card.type === CardType.MINION}
-    function create_if_block$j(ctx) {
-    	let div0;
-    	let img0;
-    	let t0;
-    	let text0;
-    	let t1;
-    	let div1;
-    	let img1;
-    	let t2;
-    	let text1;
-    	let current;
-
-    	img0 = new Img({
-    			props: { src: "attrs/health.png", alt: "Health" },
-    			$$inline: true
-    		});
-
-    	text0 = new Text({
-    			props: {
-    				size: "xsm",
-    				$$slots: { default: [create_default_slot_1$g] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	img1 = new Img({
-    			props: { src: "attrs/damage.png", alt: "Damage" },
-    			$$inline: true
-    		});
-
-    	text1 = new Text({
-    			props: {
-    				size: "xsm",
-    				$$slots: { default: [create_default_slot$i] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div0 = element("div");
-    			create_component(img0.$$.fragment);
-    			t0 = space();
-    			create_component(text0.$$.fragment);
-    			t1 = space();
-    			div1 = element("div");
-    			create_component(img1.$$.fragment);
-    			t2 = space();
-    			create_component(text1.$$.fragment);
-    			attr_dev(div0, "class", "stat stat__health svelte-1fr08x7");
-    			add_location(div0, file$T, 204, 10, 4997);
-    			attr_dev(div1, "class", "stat stat__damage svelte-1fr08x7");
-    			add_location(div1, file$T, 209, 10, 5177);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div0, anchor);
-    			mount_component(img0, div0, null);
-    			append_dev(div0, t0);
-    			mount_component(text0, div0, null);
-    			insert_dev(target, t1, anchor);
-    			insert_dev(target, div1, anchor);
-    			mount_component(img1, div1, null);
-    			append_dev(div1, t2);
-    			mount_component(text1, div1, null);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const text0_changes = {};
-
-    			if (dirty & /*$$scope, health, card*/ 32771) {
-    				text0_changes.$$scope = { dirty, ctx };
-    			}
-
-    			text0.$set(text0_changes);
-    			const text1_changes = {};
-
-    			if (dirty & /*$$scope, damage, card*/ 32773) {
-    				text1_changes.$$scope = { dirty, ctx };
-    			}
-
-    			text1.$set(text1_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(img0.$$.fragment, local);
-    			transition_in(text0.$$.fragment, local);
-    			transition_in(img1.$$.fragment, local);
-    			transition_in(text1.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(img0.$$.fragment, local);
-    			transition_out(text0.$$.fragment, local);
-    			transition_out(img1.$$.fragment, local);
-    			transition_out(text1.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div0);
-    			destroy_component(img0);
-    			destroy_component(text0);
-    			if (detaching) detach_dev(t1);
-    			if (detaching) detach_dev(div1);
-    			destroy_component(img1);
-    			destroy_component(text1);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block$j.name,
-    		type: "if",
-    		source: "(204:8) {#if card.type === CardType.MINION}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (207:12) <Text size="xsm">
-    function create_default_slot_1$g(ctx) {
-    	let t_value = (/*health*/ ctx[1] || /*card*/ ctx[0].health) + "";
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text(t_value);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*health, card*/ 3 && t_value !== (t_value = (/*health*/ ctx[1] || /*card*/ ctx[0].health) + "")) set_data_dev(t, t_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_1$g.name,
-    		type: "slot",
-    		source: "(207:12) <Text size=\\\"xsm\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (212:12) <Text size="xsm">
-    function create_default_slot$i(ctx) {
-    	let t_value = (/*damage*/ ctx[2] || /*card*/ ctx[0].damage) + "";
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text(t_value);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*damage, card*/ 5 && t_value !== (t_value = (/*damage*/ ctx[2] || /*card*/ ctx[0].damage) + "")) set_data_dev(t, t_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot$i.name,
-    		type: "slot",
-    		source: "(212:12) <Text size=\\\"xsm\\\">",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function create_fragment$U(ctx) {
-    	let div7;
-    	let div5;
-    	let div2;
-    	let div1;
-    	let current_block_type_index;
-    	let if_block0;
-    	let t0;
-    	let div0;
-    	let text0;
-    	let t1;
-    	let br0;
-    	let t2;
-    	let current_block_type_index_1;
-    	let if_block1;
-    	let t3;
-    	let hr;
-    	let t4;
-    	let text1;
-    	let t5;
-    	let br1;
-    	let t6;
-    	let text2;
-    	let t7;
-    	let span;
-    	let t8_value = /*card*/ ctx[0].name + "";
-    	let t8;
-    	let t9;
-    	let img0;
-    	let t10;
-    	let t11;
-    	let div4;
-    	let div3;
-    	let img1;
-    	let t12;
-    	let text3;
-    	let t13;
-    	let t14;
-    	let div6;
-    	let img2;
-    	let current;
-    	let mounted;
-    	let dispose;
-    	const if_block_creators = [create_if_block_3$6, create_if_block_4$5, create_else_block_1$4];
-    	const if_blocks = [];
-
-    	function select_block_type(ctx, dirty) {
-    		if (/*card*/ ctx[0].type === CardType.MINION) return 0;
-    		if (/*card*/ ctx[0].type === CardType.MAGIC) return 1;
-    		return 2;
-    	}
-
-    	current_block_type_index = select_block_type(ctx);
-    	if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	text0 = new Text({
-    			props: {
-    				color: "purple",
-    				size: "xsm",
-    				$$slots: { default: [create_default_slot_7$2] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	const if_block_creators_1 = [create_if_block_2$7, create_else_block$a];
-    	const if_blocks_1 = [];
-
-    	function select_block_type_1(ctx, dirty) {
-    		if (/*card*/ ctx[0].klass !== CardKlass.NEUTRAL) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index_1 = select_block_type_1(ctx);
-    	if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
-
-    	text1 = new Text({
-    			props: {
-    				color: "green",
-    				size: "xsm",
-    				$$slots: { default: [create_default_slot_4$7] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	text2 = new Text({
-    			props: {
-    				size: "sm",
-    				$$slots: { default: [create_default_slot_3$8] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	img0 = new Img({
-    			props: {
-    				src: "cards/" + /*card*/ ctx[0].klass + "/" + /*card*/ ctx[0].id + ".jpg",
-    				alt: /*card*/ ctx[0].name
-    			},
-    			$$inline: true
-    		});
-
-    	let if_block2 = /*isHealthBarVisible*/ ctx[3] && create_if_block_1$b(ctx);
-
-    	img1 = new Img({
-    			props: {
-    				src: "attrs/manacost.png",
-    				alt: "Mana Cost"
-    			},
-    			$$inline: true
-    		});
-
-    	text3 = new Text({
-    			props: {
-    				size: "xsm",
-    				$$slots: { default: [create_default_slot_2$b] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	let if_block3 = /*card*/ ctx[0].type === CardType.MINION && create_if_block$j(ctx);
-
-    	img2 = new Img({
-    			props: {
-    				src: "card-backs/default.jpg",
-    				alt: "Card back"
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div7 = element("div");
-    			div5 = element("div");
-    			div2 = element("div");
-    			div1 = element("div");
-    			if_block0.c();
-    			t0 = space();
-    			div0 = element("div");
-    			create_component(text0.$$.fragment);
-    			t1 = space();
-    			br0 = element("br");
-    			t2 = space();
-    			if_block1.c();
-    			t3 = space();
-    			hr = element("hr");
-    			t4 = space();
-    			create_component(text1.$$.fragment);
-    			t5 = space();
-    			br1 = element("br");
-    			t6 = space();
-    			create_component(text2.$$.fragment);
-    			t7 = space();
-    			span = element("span");
-    			t8 = text(t8_value);
-    			t9 = space();
-    			create_component(img0.$$.fragment);
-    			t10 = space();
-    			if (if_block2) if_block2.c();
-    			t11 = space();
-    			div4 = element("div");
-    			div3 = element("div");
-    			create_component(img1.$$.fragment);
-    			t12 = space();
-    			create_component(text3.$$.fragment);
-    			t13 = space();
-    			if (if_block3) if_block3.c();
-    			t14 = space();
-    			div6 = element("div");
-    			create_component(img2.$$.fragment);
-    			add_location(br0, file$T, 168, 12, 3889);
-    			add_location(hr, file$T, 176, 12, 4192);
-    			add_location(br1, file$T, 178, 12, 4270);
-    			attr_dev(div0, "class", "tooltip2 svelte-1fr08x7");
-    			add_location(div0, file$T, 166, 10, 3765);
-    			attr_dev(div1, "class", "stat__type svelte-1fr08x7");
-    			add_location(div1, file$T, 156, 8, 3397);
-    			attr_dev(span, "class", "svelte-1fr08x7");
-    			toggle_class(span, "isNeutral", /*isNeutral*/ ctx[6]);
-    			toggle_class(span, "isSolid", /*isSolid*/ ctx[7]);
-    			toggle_class(span, "isLiquid", /*isLiquid*/ ctx[8]);
-    			toggle_class(span, "isGas", /*isGas*/ ctx[9]);
-    			toggle_class(span, "isPlasma", /*isPlasma*/ ctx[10]);
-    			add_location(span, file$T, 184, 8, 4379);
-    			attr_dev(div2, "class", "card__header svelte-1fr08x7");
-    			add_location(div2, file$T, 154, 6, 3359);
-    			attr_dev(div3, "class", "stat stat__mana svelte-1fr08x7");
-    			add_location(div3, file$T, 198, 8, 4783);
-    			attr_dev(div4, "class", "card__attrs svelte-1fr08x7");
-    			add_location(div4, file$T, 196, 6, 4746);
-    			attr_dev(div5, "class", "card--front svelte-1fr08x7");
-    			add_location(div5, file$T, 153, 4, 3326);
-    			attr_dev(div6, "class", "card--back svelte-1fr08x7");
-    			add_location(div6, file$T, 252, 4, 6944);
-    			attr_dev(div7, "class", "card svelte-1fr08x7");
-    			toggle_class(div7, "rotated", /*isFlipped*/ ctx[4]);
-    			add_location(div7, file$T, 152, 2, 3276);
+    			img0 = element("img");
+    			t = space();
+    			img1 = element("img");
+    			attr_dev(img0, "class", "cardfront svelte-1f3rkrs");
+    			if (!src_url_equal(img0.src, img0_src_value = "assets/cards/cardfront.png")) attr_dev(img0, "src", img0_src_value);
+    			add_location(img0, file$T, 183, 2, 4180);
+    			attr_dev(img1, "class", "cardavatar svelte-1f3rkrs");
+    			if (!src_url_equal(img1.src, img1_src_value = "assets/cards/" + /*card*/ ctx[0].klass + "/" + /*card*/ ctx[0].id + ".jpg")) attr_dev(img1, "src", img1_src_value);
+    			add_location(img1, file$T, 184, 2, 4241);
+    			attr_dev(div, "class", "card svelte-1f3rkrs");
+    			add_location(div, file$T, 147, 0, 3041);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div7, anchor);
-    			append_dev(div7, div5);
-    			append_dev(div5, div2);
-    			append_dev(div2, div1);
-    			if_blocks[current_block_type_index].m(div1, null);
-    			append_dev(div1, t0);
-    			append_dev(div1, div0);
-    			mount_component(text0, div0, null);
-    			append_dev(div0, t1);
-    			append_dev(div0, br0);
-    			append_dev(div0, t2);
-    			if_blocks_1[current_block_type_index_1].m(div0, null);
-    			append_dev(div0, t3);
-    			append_dev(div0, hr);
-    			append_dev(div0, t4);
-    			mount_component(text1, div0, null);
-    			append_dev(div0, t5);
-    			append_dev(div0, br1);
-    			append_dev(div0, t6);
-    			mount_component(text2, div0, null);
-    			/*div0_binding*/ ctx[13](div0);
-    			append_dev(div2, t7);
-    			append_dev(div2, span);
-    			append_dev(span, t8);
-    			append_dev(div5, t9);
-    			mount_component(img0, div5, null);
-    			append_dev(div5, t10);
-    			if (if_block2) if_block2.m(div5, null);
-    			append_dev(div5, t11);
-    			append_dev(div5, div4);
-    			append_dev(div4, div3);
-    			mount_component(img1, div3, null);
-    			append_dev(div3, t12);
-    			mount_component(text3, div3, null);
-    			append_dev(div4, t13);
-    			if (if_block3) if_block3.m(div4, null);
-    			append_dev(div7, t14);
-    			append_dev(div7, div6);
-    			mount_component(img2, div6, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div1, "mousemove", /*passiveMouseMove*/ ctx[11], false, false, false);
-    				mounted = true;
-    			}
+    			insert_dev(target, div, anchor);
+    			append_dev(div, img0);
+    			append_dev(div, t);
+    			append_dev(div, img1);
     		},
     		p: function update(ctx, [dirty]) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
-
-    			if (current_block_type_index !== previous_block_index) {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block0 = if_blocks[current_block_type_index];
-
-    				if (!if_block0) {
-    					if_block0 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block0.c();
-    				}
-
-    				transition_in(if_block0, 1);
-    				if_block0.m(div1, t0);
-    			}
-
-    			const text0_changes = {};
-
-    			if (dirty & /*$$scope*/ 32768) {
-    				text0_changes.$$scope = { dirty, ctx };
-    			}
-
-    			text0.$set(text0_changes);
-    			let previous_block_index_1 = current_block_type_index_1;
-    			current_block_type_index_1 = select_block_type_1(ctx);
-
-    			if (current_block_type_index_1 === previous_block_index_1) {
-    				if_blocks_1[current_block_type_index_1].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks_1[previous_block_index_1], 1, 1, () => {
-    					if_blocks_1[previous_block_index_1] = null;
-    				});
-
-    				check_outros();
-    				if_block1 = if_blocks_1[current_block_type_index_1];
-
-    				if (!if_block1) {
-    					if_block1 = if_blocks_1[current_block_type_index_1] = if_block_creators_1[current_block_type_index_1](ctx);
-    					if_block1.c();
-    				} else {
-    					if_block1.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block1, 1);
-    				if_block1.m(div0, t3);
-    			}
-
-    			const text1_changes = {};
-
-    			if (dirty & /*$$scope*/ 32768) {
-    				text1_changes.$$scope = { dirty, ctx };
-    			}
-
-    			text1.$set(text1_changes);
-    			const text2_changes = {};
-
-    			if (dirty & /*$$scope, card*/ 32769) {
-    				text2_changes.$$scope = { dirty, ctx };
-    			}
-
-    			text2.$set(text2_changes);
-    			if ((!current || dirty & /*card*/ 1) && t8_value !== (t8_value = /*card*/ ctx[0].name + "")) set_data_dev(t8, t8_value);
-    			const img0_changes = {};
-    			if (dirty & /*card*/ 1) img0_changes.src = "cards/" + /*card*/ ctx[0].klass + "/" + /*card*/ ctx[0].id + ".jpg";
-    			if (dirty & /*card*/ 1) img0_changes.alt = /*card*/ ctx[0].name;
-    			img0.$set(img0_changes);
-
-    			if (/*isHealthBarVisible*/ ctx[3]) {
-    				if (if_block2) {
-    					if_block2.p(ctx, dirty);
-
-    					if (dirty & /*isHealthBarVisible*/ 8) {
-    						transition_in(if_block2, 1);
-    					}
-    				} else {
-    					if_block2 = create_if_block_1$b(ctx);
-    					if_block2.c();
-    					transition_in(if_block2, 1);
-    					if_block2.m(div5, t11);
-    				}
-    			} else if (if_block2) {
-    				group_outros();
-
-    				transition_out(if_block2, 1, 1, () => {
-    					if_block2 = null;
-    				});
-
-    				check_outros();
-    			}
-
-    			const text3_changes = {};
-
-    			if (dirty & /*$$scope, card*/ 32769) {
-    				text3_changes.$$scope = { dirty, ctx };
-    			}
-
-    			text3.$set(text3_changes);
-
-    			if (/*card*/ ctx[0].type === CardType.MINION) {
-    				if (if_block3) {
-    					if_block3.p(ctx, dirty);
-
-    					if (dirty & /*card*/ 1) {
-    						transition_in(if_block3, 1);
-    					}
-    				} else {
-    					if_block3 = create_if_block$j(ctx);
-    					if_block3.c();
-    					transition_in(if_block3, 1);
-    					if_block3.m(div4, null);
-    				}
-    			} else if (if_block3) {
-    				group_outros();
-
-    				transition_out(if_block3, 1, 1, () => {
-    					if_block3 = null;
-    				});
-
-    				check_outros();
-    			}
-
-    			if (dirty & /*isFlipped*/ 16) {
-    				toggle_class(div7, "rotated", /*isFlipped*/ ctx[4]);
+    			if (dirty & /*card*/ 1 && !src_url_equal(img1.src, img1_src_value = "assets/cards/" + /*card*/ ctx[0].klass + "/" + /*card*/ ctx[0].id + ".jpg")) {
+    				attr_dev(img1, "src", img1_src_value);
     			}
     		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block0);
-    			transition_in(text0.$$.fragment, local);
-    			transition_in(if_block1);
-    			transition_in(text1.$$.fragment, local);
-    			transition_in(text2.$$.fragment, local);
-    			transition_in(img0.$$.fragment, local);
-    			transition_in(if_block2);
-    			transition_in(img1.$$.fragment, local);
-    			transition_in(text3.$$.fragment, local);
-    			transition_in(if_block3);
-    			transition_in(img2.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block0);
-    			transition_out(text0.$$.fragment, local);
-    			transition_out(if_block1);
-    			transition_out(text1.$$.fragment, local);
-    			transition_out(text2.$$.fragment, local);
-    			transition_out(img0.$$.fragment, local);
-    			transition_out(if_block2);
-    			transition_out(img1.$$.fragment, local);
-    			transition_out(text3.$$.fragment, local);
-    			transition_out(if_block3);
-    			transition_out(img2.$$.fragment, local);
-    			current = false;
-    		},
+    		i: noop,
+    		o: noop,
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div7);
-    			if_blocks[current_block_type_index].d();
-    			destroy_component(text0);
-    			if_blocks_1[current_block_type_index_1].d();
-    			destroy_component(text1);
-    			destroy_component(text2);
-    			/*div0_binding*/ ctx[13](null);
-    			destroy_component(img0);
-    			if (if_block2) if_block2.d();
-    			destroy_component(img1);
-    			destroy_component(text3);
-    			if (if_block3) if_block3.d();
-    			destroy_component(img2);
-    			mounted = false;
-    			dispose();
+    			if (detaching) detach_dev(div);
     		}
     	};
 
@@ -11109,13 +10036,13 @@ var app = (function () {
     	let isPlasma = card.klass === CardKlass.PLASMA;
 
     	const flip = () => {
-    		$$invalidate(4, isFlipped = !isFlipped);
+    		isFlipped = !isFlipped;
     	};
 
     	const passiveMouseMove = event => {
     		const { offsetX, offsetY } = event;
-    		$$invalidate(5, passiveTooltip.style.top = `calc(24px + ${offsetY}px)`, passiveTooltip);
-    		$$invalidate(5, passiveTooltip.style.left = `calc(-12px + ${offsetX}px)`, passiveTooltip);
+    		passiveTooltip.style.top = `calc(24px + ${offsetY}px)`;
+    		passiveTooltip.style.left = `calc(-12px + ${offsetX}px)`;
     	};
 
     	const writable_props = ['card', 'health', 'damage', 'isHealthBarVisible'];
@@ -11123,15 +10050,6 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<Card> was created with unknown prop '${key}'`);
     	});
-
-    	const func = passive => passive.klass === card.klass;
-
-    	function div0_binding($$value) {
-    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
-    			passiveTooltip = $$value;
-    			$$invalidate(5, passiveTooltip);
-    		});
-    	}
 
     	$$self.$$set = $$props => {
     		if ('card' in $$props) $$invalidate(0, card = $$props.card);
@@ -11166,36 +10084,21 @@ var app = (function () {
     		if ('card' in $$props) $$invalidate(0, card = $$props.card);
     		if ('health' in $$props) $$invalidate(1, health = $$props.health);
     		if ('damage' in $$props) $$invalidate(2, damage = $$props.damage);
-    		if ('isFlipped' in $$props) $$invalidate(4, isFlipped = $$props.isFlipped);
+    		if ('isFlipped' in $$props) isFlipped = $$props.isFlipped;
     		if ('isHealthBarVisible' in $$props) $$invalidate(3, isHealthBarVisible = $$props.isHealthBarVisible);
-    		if ('passiveTooltip' in $$props) $$invalidate(5, passiveTooltip = $$props.passiveTooltip);
-    		if ('isNeutral' in $$props) $$invalidate(6, isNeutral = $$props.isNeutral);
-    		if ('isSolid' in $$props) $$invalidate(7, isSolid = $$props.isSolid);
-    		if ('isLiquid' in $$props) $$invalidate(8, isLiquid = $$props.isLiquid);
-    		if ('isGas' in $$props) $$invalidate(9, isGas = $$props.isGas);
-    		if ('isPlasma' in $$props) $$invalidate(10, isPlasma = $$props.isPlasma);
+    		if ('passiveTooltip' in $$props) passiveTooltip = $$props.passiveTooltip;
+    		if ('isNeutral' in $$props) isNeutral = $$props.isNeutral;
+    		if ('isSolid' in $$props) isSolid = $$props.isSolid;
+    		if ('isLiquid' in $$props) isLiquid = $$props.isLiquid;
+    		if ('isGas' in $$props) isGas = $$props.isGas;
+    		if ('isPlasma' in $$props) isPlasma = $$props.isPlasma;
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [
-    		card,
-    		health,
-    		damage,
-    		isHealthBarVisible,
-    		isFlipped,
-    		passiveTooltip,
-    		isNeutral,
-    		isSolid,
-    		isLiquid,
-    		isGas,
-    		isPlasma,
-    		passiveMouseMove,
-    		func,
-    		div0_binding
-    	];
+    	return [card, health, damage, isHealthBarVisible];
     }
 
     class Card extends SvelteComponentDev {
@@ -11564,7 +10467,7 @@ var app = (function () {
     }
 
     // (17:0) {#if $modalStore.list.block}
-    function create_if_block_7$2(ctx) {
+    function create_if_block_7(ctx) {
     	let block;
     	let current;
     	block = new Block$1({ $$inline: true });
@@ -11593,7 +10496,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block: block_1,
-    		id: create_if_block_7$2.name,
+    		id: create_if_block_7.name,
     		type: "if",
     		source: "(17:0) {#if $modalStore.list.block}",
     		ctx
@@ -11603,7 +10506,7 @@ var app = (function () {
     }
 
     // (21:0) {#if $modalStore.list.changeDeckName}
-    function create_if_block_6$2(ctx) {
+    function create_if_block_6(ctx) {
     	let changedeckname;
     	let current;
     	changedeckname = new ChangeDeckName({ $$inline: true });
@@ -11632,7 +10535,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_6$2.name,
+    		id: create_if_block_6.name,
     		type: "if",
     		source: "(21:0) {#if $modalStore.list.changeDeckName}",
     		ctx
@@ -11642,7 +10545,7 @@ var app = (function () {
     }
 
     // (25:0) {#if $modalStore.list.gift}
-    function create_if_block_5$3(ctx) {
+    function create_if_block_5$1(ctx) {
     	let gift;
     	let current;
     	gift = new Gift({ $$inline: true });
@@ -11671,7 +10574,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_5$3.name,
+    		id: create_if_block_5$1.name,
     		type: "if",
     		source: "(25:0) {#if $modalStore.list.gift}",
     		ctx
@@ -11681,7 +10584,7 @@ var app = (function () {
     }
 
     // (29:0) {#if $modalStore.list.joinLobby}
-    function create_if_block_4$4(ctx) {
+    function create_if_block_4$2(ctx) {
     	let joinlobby;
     	let current;
     	joinlobby = new JoinLobby({ $$inline: true });
@@ -11710,7 +10613,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_4$4.name,
+    		id: create_if_block_4$2.name,
     		type: "if",
     		source: "(29:0) {#if $modalStore.list.joinLobby}",
     		ctx
@@ -11720,7 +10623,7 @@ var app = (function () {
     }
 
     // (33:0) {#if $modalStore.list.sendToken}
-    function create_if_block_3$5(ctx) {
+    function create_if_block_3$3(ctx) {
     	let sendtoken;
     	let current;
     	sendtoken = new SendToken({ $$inline: true });
@@ -11749,7 +10652,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3$5.name,
+    		id: create_if_block_3$3.name,
     		type: "if",
     		source: "(33:0) {#if $modalStore.list.sendToken}",
     		ctx
@@ -11759,7 +10662,7 @@ var app = (function () {
     }
 
     // (37:0) {#if $modalStore.list.tip}
-    function create_if_block_2$6(ctx) {
+    function create_if_block_2$4(ctx) {
     	let tip;
     	let current;
     	tip = new Tip({ $$inline: true });
@@ -11788,7 +10691,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$6.name,
+    		id: create_if_block_2$4.name,
     		type: "if",
     		source: "(37:0) {#if $modalStore.list.tip}",
     		ctx
@@ -11798,7 +10701,7 @@ var app = (function () {
     }
 
     // (41:0) {#if $modalStore.list.unfriend}
-    function create_if_block_1$a(ctx) {
+    function create_if_block_1$8(ctx) {
     	let unfriend;
     	let current;
     	unfriend = new Unfriend({ $$inline: true });
@@ -11827,7 +10730,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$a.name,
+    		id: create_if_block_1$8.name,
     		type: "if",
     		source: "(41:0) {#if $modalStore.list.unfriend}",
     		ctx
@@ -11887,13 +10790,13 @@ var app = (function () {
     	let if_block8_anchor;
     	let current;
     	let if_block0 = /*$modalStore*/ ctx[0].list.addFriend && create_if_block_8(ctx);
-    	let if_block1 = /*$modalStore*/ ctx[0].list.block && create_if_block_7$2(ctx);
-    	let if_block2 = /*$modalStore*/ ctx[0].list.changeDeckName && create_if_block_6$2(ctx);
-    	let if_block3 = /*$modalStore*/ ctx[0].list.gift && create_if_block_5$3(ctx);
-    	let if_block4 = /*$modalStore*/ ctx[0].list.joinLobby && create_if_block_4$4(ctx);
-    	let if_block5 = /*$modalStore*/ ctx[0].list.sendToken && create_if_block_3$5(ctx);
-    	let if_block6 = /*$modalStore*/ ctx[0].list.tip && create_if_block_2$6(ctx);
-    	let if_block7 = /*$modalStore*/ ctx[0].list.unfriend && create_if_block_1$a(ctx);
+    	let if_block1 = /*$modalStore*/ ctx[0].list.block && create_if_block_7(ctx);
+    	let if_block2 = /*$modalStore*/ ctx[0].list.changeDeckName && create_if_block_6(ctx);
+    	let if_block3 = /*$modalStore*/ ctx[0].list.gift && create_if_block_5$1(ctx);
+    	let if_block4 = /*$modalStore*/ ctx[0].list.joinLobby && create_if_block_4$2(ctx);
+    	let if_block5 = /*$modalStore*/ ctx[0].list.sendToken && create_if_block_3$3(ctx);
+    	let if_block6 = /*$modalStore*/ ctx[0].list.tip && create_if_block_2$4(ctx);
+    	let if_block7 = /*$modalStore*/ ctx[0].list.unfriend && create_if_block_1$8(ctx);
     	let if_block8 = /*$modalStore*/ ctx[0].list.graveyard && create_if_block$i(ctx);
 
     	const block = {
@@ -11969,7 +10872,7 @@ var app = (function () {
     						transition_in(if_block1, 1);
     					}
     				} else {
-    					if_block1 = create_if_block_7$2(ctx);
+    					if_block1 = create_if_block_7(ctx);
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(t1.parentNode, t1);
@@ -11990,7 +10893,7 @@ var app = (function () {
     						transition_in(if_block2, 1);
     					}
     				} else {
-    					if_block2 = create_if_block_6$2(ctx);
+    					if_block2 = create_if_block_6(ctx);
     					if_block2.c();
     					transition_in(if_block2, 1);
     					if_block2.m(t2.parentNode, t2);
@@ -12011,7 +10914,7 @@ var app = (function () {
     						transition_in(if_block3, 1);
     					}
     				} else {
-    					if_block3 = create_if_block_5$3(ctx);
+    					if_block3 = create_if_block_5$1(ctx);
     					if_block3.c();
     					transition_in(if_block3, 1);
     					if_block3.m(t3.parentNode, t3);
@@ -12032,7 +10935,7 @@ var app = (function () {
     						transition_in(if_block4, 1);
     					}
     				} else {
-    					if_block4 = create_if_block_4$4(ctx);
+    					if_block4 = create_if_block_4$2(ctx);
     					if_block4.c();
     					transition_in(if_block4, 1);
     					if_block4.m(t4.parentNode, t4);
@@ -12053,7 +10956,7 @@ var app = (function () {
     						transition_in(if_block5, 1);
     					}
     				} else {
-    					if_block5 = create_if_block_3$5(ctx);
+    					if_block5 = create_if_block_3$3(ctx);
     					if_block5.c();
     					transition_in(if_block5, 1);
     					if_block5.m(t5.parentNode, t5);
@@ -12074,7 +10977,7 @@ var app = (function () {
     						transition_in(if_block6, 1);
     					}
     				} else {
-    					if_block6 = create_if_block_2$6(ctx);
+    					if_block6 = create_if_block_2$4(ctx);
     					if_block6.c();
     					transition_in(if_block6, 1);
     					if_block6.m(t6.parentNode, t6);
@@ -12095,7 +10998,7 @@ var app = (function () {
     						transition_in(if_block7, 1);
     					}
     				} else {
-    					if_block7 = create_if_block_1$a(ctx);
+    					if_block7 = create_if_block_1$8(ctx);
     					if_block7.c();
     					transition_in(if_block7, 1);
     					if_block7.m(t7.parentNode, t7);
@@ -13485,7 +12388,7 @@ var app = (function () {
     const file$O = "src\\auth\\Auth.svelte";
 
     // (18:30) 
-    function create_if_block_1$9(ctx) {
+    function create_if_block_1$7(ctx) {
     	let signup;
     	let current;
     	signup = new Signup({ $$inline: true });
@@ -13516,7 +12419,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$9.name,
+    		id: create_if_block_1$7.name,
     		type: "if",
     		source: "(18:30) ",
     		ctx
@@ -13571,7 +12474,7 @@ var app = (function () {
     	let current_block_type_index;
     	let if_block;
     	let current;
-    	const if_block_creators = [create_if_block$h, create_if_block_1$9];
+    	const if_block_creators = [create_if_block$h, create_if_block_1$7];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -13974,7 +12877,7 @@ var app = (function () {
     	let if_block;
     	let div_transition;
     	let current;
-    	const if_block_creators = [create_if_block_1$8, create_else_block$9];
+    	const if_block_creators = [create_if_block_1$6, create_else_block$9];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -14117,7 +13020,7 @@ var app = (function () {
     }
 
     // (86:6) {#if token.token === "DMT"}
-    function create_if_block_1$8(ctx) {
+    function create_if_block_1$6(ctx) {
     	let text_1;
     	let current;
 
@@ -14163,7 +13066,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$8.name,
+    		id: create_if_block_1$6.name,
     		type: "if",
     		source: "(86:6) {#if token.token === \\\"DMT\\\"}",
     		ctx
@@ -17513,7 +16416,7 @@ var app = (function () {
     const file$x = "src\\ui\\Hero.svelte";
 
     // (154:2) {#if isHealthBarVisible}
-    function create_if_block_1$7(ctx) {
+    function create_if_block_1$5(ctx) {
     	let div;
     	let progressbar;
     	let current;
@@ -17561,7 +16464,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$7.name,
+    		id: create_if_block_1$5.name,
     		type: "if",
     		source: "(154:2) {#if isHealthBarVisible}",
     		ctx
@@ -17777,7 +16680,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	let if_block0 = /*isHealthBarVisible*/ ctx[3] && create_if_block_1$7(ctx);
+    	let if_block0 = /*isHealthBarVisible*/ ctx[3] && create_if_block_1$5(ctx);
     	let if_block1 = /*isManaBarVisible*/ ctx[4] && create_if_block$d(ctx);
 
     	text0 = new Text({
@@ -17948,7 +16851,7 @@ var app = (function () {
     						transition_in(if_block0, 1);
     					}
     				} else {
-    					if_block0 = create_if_block_1$7(ctx);
+    					if_block0 = create_if_block_1$5(ctx);
     					if_block0.c();
     					transition_in(if_block0, 1);
     					if_block0.m(div8, t8);
@@ -21215,7 +20118,7 @@ var app = (function () {
     }
 
     // (76:56) 
-    function create_if_block_3$4(ctx) {
+    function create_if_block_3$2(ctx) {
     	let text_1;
     	let current;
 
@@ -21252,7 +20155,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3$4.name,
+    		id: create_if_block_3$2.name,
     		type: "if",
     		source: "(76:56) ",
     		ctx
@@ -21262,7 +20165,7 @@ var app = (function () {
     }
 
     // (74:57) 
-    function create_if_block_2$5(ctx) {
+    function create_if_block_2$3(ctx) {
     	let text_1;
     	let current;
 
@@ -21299,7 +20202,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$5.name,
+    		id: create_if_block_2$3.name,
     		type: "if",
     		source: "(74:57) ",
     		ctx
@@ -21309,7 +20212,7 @@ var app = (function () {
     }
 
     // (72:56) 
-    function create_if_block_1$6(ctx) {
+    function create_if_block_1$4(ctx) {
     	let text_1;
     	let current;
 
@@ -21346,7 +20249,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$6.name,
+    		id: create_if_block_1$4.name,
     		type: "if",
     		source: "(72:56) ",
     		ctx
@@ -21600,7 +20503,7 @@ var app = (function () {
     	let if_block;
     	let if_block_anchor;
     	let current;
-    	const if_block_creators = [create_if_block$a, create_if_block_1$6, create_if_block_2$5, create_if_block_3$4];
+    	const if_block_creators = [create_if_block$a, create_if_block_1$4, create_if_block_2$3, create_if_block_3$2];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -22133,9 +21036,9 @@ var app = (function () {
     			create_component(button0.$$.fragment);
     			t1 = space();
     			create_component(button1.$$.fragment);
-    			add_location(div0, file$m, 23, 2, 784);
+    			add_location(div0, file$m, 23, 2, 814);
     			attr_dev(div1, "class", "request svelte-80736m");
-    			add_location(div1, file$m, 21, 0, 732);
+    			add_location(div1, file$m, 21, 0, 762);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -22211,11 +21114,11 @@ var app = (function () {
     	let { username } = $$props;
 
     	const onAcceptFriend = () => {
-    		socketService.acceptFriend({ username });
+    		socketService.socket.emit("acceptFriend", { username });
     	};
 
     	const onDeclineFriend = () => {
-    		socketService.declineFriend({ username });
+    		socketService.socket.emit("declineFriend", { username });
     	};
 
     	const writable_props = ['username'];
@@ -22431,13 +21334,13 @@ var app = (function () {
     }
 
     // (54:4) {#if isFriendsToggled}
-    function create_if_block_4$3(ctx) {
+    function create_if_block_4$1(ctx) {
     	let div;
     	let current_block_type_index;
     	let if_block;
     	let div_transition;
     	let current;
-    	const if_block_creators = [create_if_block_5$2, create_else_block_2$2];
+    	const if_block_creators = [create_if_block_5, create_else_block_2];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -22513,7 +21416,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_4$3.name,
+    		id: create_if_block_4$1.name,
     		type: "if",
     		source: "(54:4) {#if isFriendsToggled}",
     		ctx
@@ -22523,7 +21426,7 @@ var app = (function () {
     }
 
     // (60:8) {:else}
-    function create_else_block_2$2(ctx) {
+    function create_else_block_2(ctx) {
     	let text_1;
     	let current;
 
@@ -22568,7 +21471,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block_2$2.name,
+    		id: create_else_block_2.name,
     		type: "else",
     		source: "(60:8) {:else}",
     		ctx
@@ -22578,7 +21481,7 @@ var app = (function () {
     }
 
     // (56:8) {#if $playerStore.social.friends.length}
-    function create_if_block_5$2(ctx) {
+    function create_if_block_5(ctx) {
     	let each_1_anchor;
     	let current;
     	let each_value_2 = /*$socialStore*/ ctx[7].friends;
@@ -22664,7 +21567,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_5$2.name,
+    		id: create_if_block_5.name,
     		type: "if",
     		source: "(56:8) {#if $playerStore.social.friends.length}",
     		ctx
@@ -22836,13 +21739,13 @@ var app = (function () {
     }
 
     // (74:4) {#if isRequestsToggled}
-    function create_if_block_2$4(ctx) {
+    function create_if_block_2$2(ctx) {
     	let div;
     	let current_block_type_index;
     	let if_block;
     	let div_transition;
     	let current;
-    	const if_block_creators = [create_if_block_3$3, create_else_block_1$3];
+    	const if_block_creators = [create_if_block_3$1, create_else_block_1$1];
     	const if_blocks = [];
 
     	function select_block_type_1(ctx, dirty) {
@@ -22918,7 +21821,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$4.name,
+    		id: create_if_block_2$2.name,
     		type: "if",
     		source: "(74:4) {#if isRequestsToggled}",
     		ctx
@@ -22928,7 +21831,7 @@ var app = (function () {
     }
 
     // (80:8) {:else}
-    function create_else_block_1$3(ctx) {
+    function create_else_block_1$1(ctx) {
     	let text_1;
     	let current;
 
@@ -22973,7 +21876,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block_1$3.name,
+    		id: create_else_block_1$1.name,
     		type: "else",
     		source: "(80:8) {:else}",
     		ctx
@@ -22983,7 +21886,7 @@ var app = (function () {
     }
 
     // (76:8) {#if $playerStore.social.requests.length}
-    function create_if_block_3$3(ctx) {
+    function create_if_block_3$1(ctx) {
     	let each_1_anchor;
     	let current;
     	let each_value_1 = /*$playerStore*/ ctx[6].social.requests;
@@ -23069,7 +21972,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3$3.name,
+    		id: create_if_block_3$1.name,
     		type: "if",
     		source: "(76:8) {#if $playerStore.social.requests.length}",
     		ctx
@@ -23247,7 +22150,7 @@ var app = (function () {
     	let if_block;
     	let div_transition;
     	let current;
-    	const if_block_creators = [create_if_block_1$5, create_else_block$5];
+    	const if_block_creators = [create_if_block_1$3, create_else_block$5];
     	const if_blocks = [];
 
     	function select_block_type_2(ctx, dirty) {
@@ -23388,7 +22291,7 @@ var app = (function () {
     }
 
     // (96:8) {#if $playerStore.social.blocked.length}
-    function create_if_block_1$5(ctx) {
+    function create_if_block_1$3(ctx) {
     	let each_1_anchor;
     	let current;
     	let each_value = /*$playerStore*/ ctx[6].social.blocked;
@@ -23474,7 +22377,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$5.name,
+    		id: create_if_block_1$3.name,
     		type: "if",
     		source: "(96:8) {#if $playerStore.social.blocked.length}",
     		ctx
@@ -23615,7 +22518,7 @@ var app = (function () {
     		});
 
     	button1.$on("click", /*toggleFriends*/ ctx[10]);
-    	let if_block0 = /*isFriendsToggled*/ ctx[0] && create_if_block_4$3(ctx);
+    	let if_block0 = /*isFriendsToggled*/ ctx[0] && create_if_block_4$1(ctx);
 
     	text1 = new Text({
     			props: {
@@ -23636,7 +22539,7 @@ var app = (function () {
     		});
 
     	button2.$on("click", /*toggleRequests*/ ctx[11]);
-    	let if_block1 = /*isRequestsToggled*/ ctx[1] && create_if_block_2$4(ctx);
+    	let if_block1 = /*isRequestsToggled*/ ctx[1] && create_if_block_2$2(ctx);
 
     	text2 = new Text({
     			props: {
@@ -23768,7 +22671,7 @@ var app = (function () {
     						transition_in(if_block0, 1);
     					}
     				} else {
-    					if_block0 = create_if_block_4$3(ctx);
+    					if_block0 = create_if_block_4$1(ctx);
     					if_block0.c();
     					transition_in(if_block0, 1);
     					if_block0.m(div2, null);
@@ -23806,7 +22709,7 @@ var app = (function () {
     						transition_in(if_block1, 1);
     					}
     				} else {
-    					if_block1 = create_if_block_2$4(ctx);
+    					if_block1 = create_if_block_2$2(ctx);
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(div4, null);
@@ -24226,1221 +23129,11 @@ var app = (function () {
     	}
     }
 
-    /* src\game\opponent\OpponentGraveyard.svelte generated by Svelte v3.46.4 */
-    const file$i = "src\\game\\opponent\\OpponentGraveyard.svelte";
-
-    // (28:2) {:else}
-    function create_else_block$4(ctx) {
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text("Graveyard");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		p: noop,
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block$4.name,
-    		type: "else",
-    		source: "(28:2) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (22:2) {#if $gameStore.opponent.graveyard.length}
-    function create_if_block$8(ctx) {
-    	let card;
-    	let current;
-
-    	card = new Card({
-    			props: {
-    				card: cards.find(/*func*/ ctx[2]),
-    				health: 10,
-    				damage: 10
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(card.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(card, target, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 1) card_changes.card = cards.find(/*func*/ ctx[2]);
-    			card.$set(card_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(card.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(card.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(card, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block$8.name,
-    		type: "if",
-    		source: "(22:2) {#if $gameStore.opponent.graveyard.length}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function create_fragment$i(ctx) {
-    	let div;
-    	let current_block_type_index;
-    	let if_block;
-    	let current;
-    	let mounted;
-    	let dispose;
-    	const if_block_creators = [create_if_block$8, create_else_block$4];
-    	const if_blocks = [];
-
-    	function select_block_type(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[0].opponent.graveyard.length) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			if_block.c();
-    			attr_dev(div, "class", "graveyard svelte-c5o0s3");
-    			add_location(div, file$i, 20, 0, 519);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			if_blocks[current_block_type_index].m(div, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div, "click", /*onViewGraveyard*/ ctx[1], false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, [dirty]) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(div, null);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			if_blocks[current_block_type_index].d();
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_fragment$i.name,
-    		type: "component",
-    		source: "",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function instance$i($$self, $$props, $$invalidate) {
-    	let $gameStore;
-    	validate_store(gameStore, 'gameStore');
-    	component_subscribe($$self, gameStore, $$value => $$invalidate(0, $gameStore = $$value));
-    	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('OpponentGraveyard', slots, []);
-
-    	const onViewGraveyard = () => {
-    		miscService.openModal("graveyard", $gameStore.opponent.graveyard);
-    	};
-
-    	const writable_props = [];
-
-    	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<OpponentGraveyard> was created with unknown prop '${key}'`);
-    	});
-
-    	const func = card => card.id === $gameStore.opponent.graveyard[$gameStore.opponent.graveyard.length - 1].id;
-
-    	$$self.$capture_state = () => ({
-    		cards,
-    		miscService,
-    		gameStore,
-    		Card,
-    		onViewGraveyard,
-    		$gameStore
-    	});
-
-    	return [$gameStore, onViewGraveyard, func];
-    }
-
-    class OpponentGraveyard extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$i, create_fragment$i, safe_not_equal, {});
-
-    		dispatch_dev("SvelteRegisterComponent", {
-    			component: this,
-    			tagName: "OpponentGraveyard",
-    			options,
-    			id: create_fragment$i.name
-    		});
-    	}
-    }
-
-    /* src\game\opponent\OpponentHandCards.svelte generated by Svelte v3.46.4 */
-    const file$h = "src\\game\\opponent\\OpponentHandCards.svelte";
-
-    function get_each_context$1(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[1] = list[i];
-    	return child_ctx;
-    }
-
-    // (28:2) {#each Array($gameStore.opponent.hand) as _}
-    function create_each_block$1(ctx) {
-    	let div;
-    	let img;
-    	let img_src_value;
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			img = element("img");
-    			t = space();
-    			attr_dev(img, "class", "player__deck__img svelte-7fir7k");
-    			if (!src_url_equal(img.src, img_src_value = "assets/card-backs/default.jpg")) attr_dev(img, "src", img_src_value);
-    			attr_dev(img, "alt", "");
-    			add_location(img, file$h, 29, 6, 585);
-    			attr_dev(div, "class", "player__hand__card svelte-7fir7k");
-    			add_location(div, file$h, 28, 4, 545);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, img);
-    			append_dev(div, t);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block$1.name,
-    		type: "each",
-    		source: "(28:2) {#each Array($gameStore.opponent.hand) as _}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function create_fragment$h(ctx) {
-    	let div;
-    	let each_value = Array(/*$gameStore*/ ctx[0].opponent.hand);
-    	validate_each_argument(each_value);
-    	let each_blocks = [];
-
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
-    	}
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			attr_dev(div, "class", "player__hand svelte-7fir7k");
-    			add_location(div, file$h, 26, 0, 465);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div, null);
-    			}
-    		},
-    		p: function update(ctx, [dirty]) {
-    			if (dirty & /*$gameStore*/ 1) {
-    				const old_length = each_value.length;
-    				each_value = Array(/*$gameStore*/ ctx[0].opponent.hand);
-    				validate_each_argument(each_value);
-    				let i;
-
-    				for (i = old_length; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$1(ctx, each_value, i);
-
-    					if (!each_blocks[i]) {
-    						each_blocks[i] = create_each_block$1(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(div, null);
-    					}
-    				}
-
-    				for (i = each_value.length; i < old_length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-
-    				each_blocks.length = each_value.length;
-    			}
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_each(each_blocks, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_fragment$h.name,
-    		type: "component",
-    		source: "",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function instance$h($$self, $$props, $$invalidate) {
-    	let $gameStore;
-    	validate_store(gameStore, 'gameStore');
-    	component_subscribe($$self, gameStore, $$value => $$invalidate(0, $gameStore = $$value));
-    	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('OpponentHandCards', slots, []);
-    	const writable_props = [];
-
-    	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<OpponentHandCards> was created with unknown prop '${key}'`);
-    	});
-
-    	$$self.$capture_state = () => ({ gameStore, $gameStore });
-    	return [$gameStore];
-    }
-
-    class OpponentHandCards extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$h, create_fragment$h, safe_not_equal, {});
-
-    		dispatch_dev("SvelteRegisterComponent", {
-    			component: this,
-    			tagName: "OpponentHandCards",
-    			options,
-    			id: create_fragment$h.name
-    		});
-    	}
-    }
-
-    /* src\ui\HeroSm.svelte generated by Svelte v3.46.4 */
-    const file$g = "src\\ui\\HeroSm.svelte";
-
-    // (158:2) {#if isHealthBarVisible}
-    function create_if_block_1$4(ctx) {
-    	let div;
-    	let progressbar;
-    	let current;
-
-    	progressbar = new ProgressBar({
-    			props: {
-    				size: "md",
-    				progress: /*health*/ ctx[1] / /*hero*/ ctx[0].health * 100,
-    				color: "green"
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(progressbar.$$.fragment);
-    			attr_dev(div, "class", "card__bar svelte-1819kqf");
-    			add_location(div, file$g, 158, 4, 4060);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(progressbar, div, null);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const progressbar_changes = {};
-    			if (dirty & /*health, hero*/ 3) progressbar_changes.progress = /*health*/ ctx[1] / /*hero*/ ctx[0].health * 100;
-    			progressbar.$set(progressbar_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(progressbar.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(progressbar.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(progressbar);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_1$4.name,
-    		type: "if",
-    		source: "(158:2) {#if isHealthBarVisible}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (163:2) {#if isManaBarVisible}
-    function create_if_block$7(ctx) {
-    	let div;
-    	let progressbar;
-    	let current;
-
-    	progressbar = new ProgressBar({
-    			props: {
-    				size: "sm",
-    				progress: /*mana*/ ctx[2] / /*hero*/ ctx[0].mana * 100,
-    				color: "blue"
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(progressbar.$$.fragment);
-    			attr_dev(div, "class", "card__manabar svelte-1819kqf");
-    			add_location(div, file$g, 163, 4, 4220);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(progressbar, div, null);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const progressbar_changes = {};
-    			if (dirty & /*mana, hero*/ 5) progressbar_changes.progress = /*mana*/ ctx[2] / /*hero*/ ctx[0].mana * 100;
-    			progressbar.$set(progressbar_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(progressbar.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(progressbar.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(progressbar);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block$7.name,
-    		type: "if",
-    		source: "(163:2) {#if isManaBarVisible}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function create_fragment$g(ctx) {
-    	let div8;
-    	let div3;
-    	let div1;
-    	let img0;
-    	let img0_src_value;
-    	let t0;
-    	let div0;
-    	let p0;
-    	let raw0_value = /*hero*/ ctx[0].passive.info + "";
-    	let t1;
-    	let hr;
-    	let t2;
-    	let p1;
-    	let raw1_value = /*hero*/ ctx[0].active.info + "";
-    	let t3;
-    	let div2;
-    	let t4_value = /*hero*/ ctx[0].name + "";
-    	let t4;
-    	let t5;
-    	let img1;
-    	let img1_src_value;
-    	let img1_alt_value;
-    	let t6;
-    	let t7;
-    	let t8;
-    	let div7;
-    	let div4;
-    	let img2;
-    	let img2_src_value;
-    	let t9;
-    	let span0;
-    	let t10_value = (/*mana*/ ctx[2] || /*hero*/ ctx[0].mana) + "";
-    	let t10;
-    	let t11;
-    	let div5;
-    	let img3;
-    	let img3_src_value;
-    	let t12;
-    	let span1;
-    	let t13_value = (/*health*/ ctx[1] || /*hero*/ ctx[0].health) + "";
-    	let t13;
-    	let t14;
-    	let div6;
-    	let img4;
-    	let img4_src_value;
-    	let t15;
-    	let span2;
-    	let t16_value = /*hero*/ ctx[0].damage + "";
-    	let t16;
-    	let current;
-    	let mounted;
-    	let dispose;
-    	let if_block0 = /*isHealthBarVisible*/ ctx[3] && create_if_block_1$4(ctx);
-    	let if_block1 = /*isManaBarVisible*/ ctx[4] && create_if_block$7(ctx);
-
-    	const block = {
-    		c: function create() {
-    			div8 = element("div");
-    			div3 = element("div");
-    			div1 = element("div");
-    			img0 = element("img");
-    			t0 = space();
-    			div0 = element("div");
-    			p0 = element("p");
-    			t1 = space();
-    			hr = element("hr");
-    			t2 = space();
-    			p1 = element("p");
-    			t3 = space();
-    			div2 = element("div");
-    			t4 = text(t4_value);
-    			t5 = space();
-    			img1 = element("img");
-    			t6 = space();
-    			if (if_block0) if_block0.c();
-    			t7 = space();
-    			if (if_block1) if_block1.c();
-    			t8 = space();
-    			div7 = element("div");
-    			div4 = element("div");
-    			img2 = element("img");
-    			t9 = space();
-    			span0 = element("span");
-    			t10 = text(t10_value);
-    			t11 = space();
-    			div5 = element("div");
-    			img3 = element("img");
-    			t12 = space();
-    			span1 = element("span");
-    			t13 = text(t13_value);
-    			t14 = space();
-    			div6 = element("div");
-    			img4 = element("img");
-    			t15 = space();
-    			span2 = element("span");
-    			t16 = text(t16_value);
-    			attr_dev(img0, "class", "stat__img svelte-1819kqf");
-    			if (!src_url_equal(img0.src, img0_src_value = "assets/attrs/hero.png")) attr_dev(img0, "src", img0_src_value);
-    			attr_dev(img0, "alt", "Hero");
-    			add_location(img0, file$g, 143, 6, 3650);
-    			add_location(p0, file$g, 146, 8, 3781);
-    			add_location(hr, file$g, 147, 8, 3823);
-    			add_location(p1, file$g, 148, 8, 3838);
-    			attr_dev(div0, "class", "tooltip svelte-1819kqf");
-    			add_location(div0, file$g, 145, 6, 3723);
-    			attr_dev(div1, "class", "stat stat__type svelte-1819kqf");
-    			add_location(div1, file$g, 142, 4, 3581);
-    			add_location(div2, file$g, 152, 4, 3903);
-    			attr_dev(div3, "class", "card__header svelte-1819kqf");
-    			add_location(div3, file$g, 141, 2, 3549);
-    			attr_dev(img1, "class", "card__img svelte-1819kqf");
-    			if (!src_url_equal(img1.src, img1_src_value = "assets/classes/" + /*hero*/ ctx[0].klass + "_hero.jpg")) attr_dev(img1, "src", img1_src_value);
-    			attr_dev(img1, "alt", img1_alt_value = /*hero*/ ctx[0].name);
-    			add_location(img1, file$g, 155, 2, 3941);
-    			attr_dev(img2, "class", "stat__img svelte-1819kqf");
-    			if (!src_url_equal(img2.src, img2_src_value = "assets/attrs/mana.png")) attr_dev(img2, "src", img2_src_value);
-    			attr_dev(img2, "alt", "Mana Capacity");
-    			add_location(img2, file$g, 171, 6, 4423);
-    			attr_dev(span0, "class", "stat__text svelte-1819kqf");
-    			add_location(span0, file$g, 172, 6, 4503);
-    			attr_dev(div4, "class", "stat stat__mana svelte-1819kqf");
-    			add_location(div4, file$g, 170, 4, 4386);
-    			attr_dev(img3, "class", "stat__img svelte-1819kqf");
-    			if (!src_url_equal(img3.src, img3_src_value = "assets/attrs/health.png")) attr_dev(img3, "src", img3_src_value);
-    			attr_dev(img3, "alt", "Health");
-    			add_location(img3, file$g, 176, 6, 4613);
-    			attr_dev(span1, "class", "stat__text svelte-1819kqf");
-    			add_location(span1, file$g, 177, 6, 4688);
-    			attr_dev(div5, "class", "stat stat__health svelte-1819kqf");
-    			add_location(div5, file$g, 175, 4, 4574);
-    			attr_dev(img4, "class", "stat__img svelte-1819kqf");
-    			if (!src_url_equal(img4.src, img4_src_value = "assets/attrs/damage.png")) attr_dev(img4, "src", img4_src_value);
-    			attr_dev(img4, "alt", "Damage");
-    			add_location(img4, file$g, 181, 6, 4802);
-    			attr_dev(span2, "class", "stat__text svelte-1819kqf");
-    			add_location(span2, file$g, 182, 6, 4877);
-    			attr_dev(div6, "class", "stat stat__damage svelte-1819kqf");
-    			add_location(div6, file$g, 180, 4, 4763);
-    			attr_dev(div7, "class", "card__attrs svelte-1819kqf");
-    			add_location(div7, file$g, 168, 2, 4353);
-    			attr_dev(div8, "class", "card svelte-1819kqf");
-    			add_location(div8, file$g, 139, 0, 3525);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div8, anchor);
-    			append_dev(div8, div3);
-    			append_dev(div3, div1);
-    			append_dev(div1, img0);
-    			append_dev(div1, t0);
-    			append_dev(div1, div0);
-    			append_dev(div0, p0);
-    			p0.innerHTML = raw0_value;
-    			append_dev(div0, t1);
-    			append_dev(div0, hr);
-    			append_dev(div0, t2);
-    			append_dev(div0, p1);
-    			p1.innerHTML = raw1_value;
-    			/*div0_binding*/ ctx[7](div0);
-    			append_dev(div3, t3);
-    			append_dev(div3, div2);
-    			append_dev(div2, t4);
-    			append_dev(div8, t5);
-    			append_dev(div8, img1);
-    			append_dev(div8, t6);
-    			if (if_block0) if_block0.m(div8, null);
-    			append_dev(div8, t7);
-    			if (if_block1) if_block1.m(div8, null);
-    			append_dev(div8, t8);
-    			append_dev(div8, div7);
-    			append_dev(div7, div4);
-    			append_dev(div4, img2);
-    			append_dev(div4, t9);
-    			append_dev(div4, span0);
-    			append_dev(span0, t10);
-    			append_dev(div7, t11);
-    			append_dev(div7, div5);
-    			append_dev(div5, img3);
-    			append_dev(div5, t12);
-    			append_dev(div5, span1);
-    			append_dev(span1, t13);
-    			append_dev(div7, t14);
-    			append_dev(div7, div6);
-    			append_dev(div6, img4);
-    			append_dev(div6, t15);
-    			append_dev(div6, span2);
-    			append_dev(span2, t16);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div1, "mousemove", /*passiveMouseMove*/ ctx[6], false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, [dirty]) {
-    			if ((!current || dirty & /*hero*/ 1) && raw0_value !== (raw0_value = /*hero*/ ctx[0].passive.info + "")) p0.innerHTML = raw0_value;			if ((!current || dirty & /*hero*/ 1) && raw1_value !== (raw1_value = /*hero*/ ctx[0].active.info + "")) p1.innerHTML = raw1_value;			if ((!current || dirty & /*hero*/ 1) && t4_value !== (t4_value = /*hero*/ ctx[0].name + "")) set_data_dev(t4, t4_value);
-
-    			if (!current || dirty & /*hero*/ 1 && !src_url_equal(img1.src, img1_src_value = "assets/classes/" + /*hero*/ ctx[0].klass + "_hero.jpg")) {
-    				attr_dev(img1, "src", img1_src_value);
-    			}
-
-    			if (!current || dirty & /*hero*/ 1 && img1_alt_value !== (img1_alt_value = /*hero*/ ctx[0].name)) {
-    				attr_dev(img1, "alt", img1_alt_value);
-    			}
-
-    			if (/*isHealthBarVisible*/ ctx[3]) {
-    				if (if_block0) {
-    					if_block0.p(ctx, dirty);
-
-    					if (dirty & /*isHealthBarVisible*/ 8) {
-    						transition_in(if_block0, 1);
-    					}
-    				} else {
-    					if_block0 = create_if_block_1$4(ctx);
-    					if_block0.c();
-    					transition_in(if_block0, 1);
-    					if_block0.m(div8, t7);
-    				}
-    			} else if (if_block0) {
-    				group_outros();
-
-    				transition_out(if_block0, 1, 1, () => {
-    					if_block0 = null;
-    				});
-
-    				check_outros();
-    			}
-
-    			if (/*isManaBarVisible*/ ctx[4]) {
-    				if (if_block1) {
-    					if_block1.p(ctx, dirty);
-
-    					if (dirty & /*isManaBarVisible*/ 16) {
-    						transition_in(if_block1, 1);
-    					}
-    				} else {
-    					if_block1 = create_if_block$7(ctx);
-    					if_block1.c();
-    					transition_in(if_block1, 1);
-    					if_block1.m(div8, t8);
-    				}
-    			} else if (if_block1) {
-    				group_outros();
-
-    				transition_out(if_block1, 1, 1, () => {
-    					if_block1 = null;
-    				});
-
-    				check_outros();
-    			}
-
-    			if ((!current || dirty & /*mana, hero*/ 5) && t10_value !== (t10_value = (/*mana*/ ctx[2] || /*hero*/ ctx[0].mana) + "")) set_data_dev(t10, t10_value);
-    			if ((!current || dirty & /*health, hero*/ 3) && t13_value !== (t13_value = (/*health*/ ctx[1] || /*hero*/ ctx[0].health) + "")) set_data_dev(t13, t13_value);
-    			if ((!current || dirty & /*hero*/ 1) && t16_value !== (t16_value = /*hero*/ ctx[0].damage + "")) set_data_dev(t16, t16_value);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block0);
-    			transition_in(if_block1);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block0);
-    			transition_out(if_block1);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div8);
-    			/*div0_binding*/ ctx[7](null);
-    			if (if_block0) if_block0.d();
-    			if (if_block1) if_block1.d();
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_fragment$g.name,
-    		type: "component",
-    		source: "",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function instance$g($$self, $$props, $$invalidate) {
-    	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('HeroSm', slots, []);
-    	let { hero } = $$props;
-    	let { health = hero.health } = $$props;
-    	let { mana = hero.health } = $$props;
-    	let { isHealthBarVisible = false } = $$props;
-    	let { isManaBarVisible = false } = $$props;
-    	let abilityTooltip;
-    	let passiveTooltip;
-    	let damageTooltip;
-    	let manaTooltip;
-    	var heroKlass;
-
-    	(function (heroKlass) {
-    		heroKlass[heroKlass["SOLID"] = 1] = "SOLID";
-    		heroKlass[heroKlass["LIQUID"] = 2] = "LIQUID";
-    		heroKlass[heroKlass["GAS"] = 3] = "GAS";
-    		heroKlass[heroKlass["PLASMA"] = 4] = "PLASMA";
-    	})(heroKlass || (heroKlass = {}));
-
-    	const abilityMouseMove = event => {
-    		const { offsetX, offsetY } = event;
-    		abilityTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
-    		abilityTooltip.style.left = `calc(-80px + ${offsetX}px)`;
-    	};
-
-    	const passiveMouseMove = event => {
-    		const { offsetX, offsetY } = event;
-    		$$invalidate(5, passiveTooltip.style.bottom = `calc(48px + ${-offsetY}px)`, passiveTooltip);
-    		$$invalidate(5, passiveTooltip.style.left = `calc(-80px + ${offsetX}px)`, passiveTooltip);
-    	};
-
-    	const damageMouseMove = event => {
-    		const { offsetX, offsetY } = event;
-    		damageTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
-    		damageTooltip.style.left = `calc(-80px + ${offsetX}px)`;
-    	};
-
-    	const manaMouseMove = event => {
-    		const { offsetX, offsetY } = event;
-    		manaTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
-    		manaTooltip.style.left = `calc(-80px + ${offsetX}px)`;
-    	};
-
-    	const writable_props = ['hero', 'health', 'mana', 'isHealthBarVisible', 'isManaBarVisible'];
-
-    	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<HeroSm> was created with unknown prop '${key}'`);
-    	});
-
-    	function div0_binding($$value) {
-    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
-    			passiveTooltip = $$value;
-    			$$invalidate(5, passiveTooltip);
-    		});
-    	}
-
-    	$$self.$$set = $$props => {
-    		if ('hero' in $$props) $$invalidate(0, hero = $$props.hero);
-    		if ('health' in $$props) $$invalidate(1, health = $$props.health);
-    		if ('mana' in $$props) $$invalidate(2, mana = $$props.mana);
-    		if ('isHealthBarVisible' in $$props) $$invalidate(3, isHealthBarVisible = $$props.isHealthBarVisible);
-    		if ('isManaBarVisible' in $$props) $$invalidate(4, isManaBarVisible = $$props.isManaBarVisible);
-    	};
-
-    	$$self.$capture_state = () => ({
-    		ProgressBar,
-    		Text,
-    		Img,
-    		hero,
-    		health,
-    		mana,
-    		isHealthBarVisible,
-    		isManaBarVisible,
-    		abilityTooltip,
-    		passiveTooltip,
-    		damageTooltip,
-    		manaTooltip,
-    		heroKlass,
-    		abilityMouseMove,
-    		passiveMouseMove,
-    		damageMouseMove,
-    		manaMouseMove
-    	});
-
-    	$$self.$inject_state = $$props => {
-    		if ('hero' in $$props) $$invalidate(0, hero = $$props.hero);
-    		if ('health' in $$props) $$invalidate(1, health = $$props.health);
-    		if ('mana' in $$props) $$invalidate(2, mana = $$props.mana);
-    		if ('isHealthBarVisible' in $$props) $$invalidate(3, isHealthBarVisible = $$props.isHealthBarVisible);
-    		if ('isManaBarVisible' in $$props) $$invalidate(4, isManaBarVisible = $$props.isManaBarVisible);
-    		if ('abilityTooltip' in $$props) abilityTooltip = $$props.abilityTooltip;
-    		if ('passiveTooltip' in $$props) $$invalidate(5, passiveTooltip = $$props.passiveTooltip);
-    		if ('damageTooltip' in $$props) damageTooltip = $$props.damageTooltip;
-    		if ('manaTooltip' in $$props) manaTooltip = $$props.manaTooltip;
-    		if ('heroKlass' in $$props) heroKlass = $$props.heroKlass;
-    	};
-
-    	if ($$props && "$$inject" in $$props) {
-    		$$self.$inject_state($$props.$$inject);
-    	}
-
-    	return [
-    		hero,
-    		health,
-    		mana,
-    		isHealthBarVisible,
-    		isManaBarVisible,
-    		passiveTooltip,
-    		passiveMouseMove,
-    		div0_binding
-    	];
-    }
-
-    class HeroSm extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-
-    		init(this, options, instance$g, create_fragment$g, safe_not_equal, {
-    			hero: 0,
-    			health: 1,
-    			mana: 2,
-    			isHealthBarVisible: 3,
-    			isManaBarVisible: 4
-    		});
-
-    		dispatch_dev("SvelteRegisterComponent", {
-    			component: this,
-    			tagName: "HeroSm",
-    			options,
-    			id: create_fragment$g.name
-    		});
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-
-    		if (/*hero*/ ctx[0] === undefined && !('hero' in props)) {
-    			console.warn("<HeroSm> was created without expected prop 'hero'");
-    		}
-    	}
-
-    	get hero() {
-    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set hero(value) {
-    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get health() {
-    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set health(value) {
-    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get mana() {
-    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set mana(value) {
-    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get isHealthBarVisible() {
-    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set isHealthBarVisible(value) {
-    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get isManaBarVisible() {
-    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set isManaBarVisible(value) {
-    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src\game\opponent\OpponentHero.svelte generated by Svelte v3.46.4 */
-    const file$f = "src\\game\\opponent\\OpponentHero.svelte";
-
-    function create_fragment$f(ctx) {
-    	let div;
-    	let hero;
-    	let current;
-    	let mounted;
-    	let dispose;
-
-    	hero = new HeroSm({
-    			props: {
-    				hero: heroes.find(/*func*/ ctx[2]),
-    				health: /*$gameStore*/ ctx[0].opponent.hero.health,
-    				mana: /*$gameStore*/ ctx[0].opponent.hero.mana,
-    				isHealthBarVisible: true,
-    				isManaBarVisible: true
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(hero.$$.fragment);
-    			attr_dev(div, "class", "hero svelte-smw579");
-    			add_location(div, file$f, 26, 0, 730);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(hero, div, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div, "click", /*onAttackCard*/ ctx[1], false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, [dirty]) {
-    			const hero_changes = {};
-    			if (dirty & /*$gameStore*/ 1) hero_changes.hero = heroes.find(/*func*/ ctx[2]);
-    			if (dirty & /*$gameStore*/ 1) hero_changes.health = /*$gameStore*/ ctx[0].opponent.hero.health;
-    			if (dirty & /*$gameStore*/ 1) hero_changes.mana = /*$gameStore*/ ctx[0].opponent.hero.mana;
-    			hero.$set(hero_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(hero.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(hero.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(hero);
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_fragment$f.name,
-    		type: "component",
-    		source: "",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function instance$f($$self, $$props, $$invalidate) {
-    	let $selectedCardStore;
-    	let $playerStore;
-    	let $gameStore;
-    	validate_store(selectedCardStore, 'selectedCardStore');
-    	component_subscribe($$self, selectedCardStore, $$value => $$invalidate(3, $selectedCardStore = $$value));
-    	validate_store(playerStore, 'playerStore');
-    	component_subscribe($$self, playerStore, $$value => $$invalidate(4, $playerStore = $$value));
-    	validate_store(gameStore, 'gameStore');
-    	component_subscribe($$self, gameStore, $$value => $$invalidate(0, $gameStore = $$value));
-    	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('OpponentHero', slots, []);
-
-    	const onAttackCard = () => {
-    		if ($gameStore.currentPlayer !== $playerStore.username) {
-    			return;
-    		}
-
-    		let attacker; // ;w;
-    		const attacked = "hero";
-
-    		if ($selectedCardStore.field === "hero") {
-    			attacker = "hero";
-    		} else {
-    			attacker = `minion${$selectedCardStore.field}`;
-    		}
-
-    		socketService.socket.emit("attackCard", { attacker, attacked });
-    	};
-
-    	const writable_props = [];
-
-    	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<OpponentHero> was created with unknown prop '${key}'`);
-    	});
-
-    	const func = hero => hero.klass === $gameStore.opponent.hero.id;
-
-    	$$self.$capture_state = () => ({
-    		heroes,
-    		socketService,
-    		gameStore,
-    		selectedCardStore,
-    		playerStore,
-    		Hero: HeroSm,
-    		onAttackCard,
-    		$selectedCardStore,
-    		$playerStore,
-    		$gameStore
-    	});
-
-    	return [$gameStore, onAttackCard, func];
-    }
-
-    class OpponentHero extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$f, create_fragment$f, safe_not_equal, {});
-
-    		dispatch_dev("SvelteRegisterComponent", {
-    			component: this,
-    			tagName: "OpponentHero",
-    			options,
-    			id: create_fragment$f.name
-    		});
-    	}
-    }
-
-    /* src\game\opponent\OpponentMagicField.svelte generated by Svelte v3.46.4 */
-    const file$e = "src\\game\\opponent\\OpponentMagicField.svelte";
-
-    function create_fragment$e(ctx) {
-    	let div;
-    	let span;
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			span = element("span");
-    			span.textContent = "Magic Field";
-    			attr_dev(span, "class", "f--green");
-    			add_location(span, file$e, 21, 2, 448);
-    			attr_dev(div, "class", "field svelte-1oeesi2");
-    			toggle_class(div, "isHovered", /*isHovered*/ ctx[0]);
-    			add_location(div, file$e, 20, 0, 409);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, span);
-    		},
-    		p: function update(ctx, [dirty]) {
-    			if (dirty & /*isHovered*/ 1) {
-    				toggle_class(div, "isHovered", /*isHovered*/ ctx[0]);
-    			}
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_fragment$e.name,
-    		type: "component",
-    		source: "",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function instance$e($$self, $$props, $$invalidate) {
-    	let isHovered;
-    	let $hoveredCardStore;
-    	validate_store(hoveredCardStore, 'hoveredCardStore');
-    	component_subscribe($$self, hoveredCardStore, $$value => $$invalidate(1, $hoveredCardStore = $$value));
-    	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('OpponentMagicField', slots, []);
-    	const writable_props = [];
-
-    	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<OpponentMagicField> was created with unknown prop '${key}'`);
-    	});
-
-    	$$self.$capture_state = () => ({
-    		hoveredCardStore,
-    		isHovered,
-    		$hoveredCardStore
-    	});
-
-    	$$self.$inject_state = $$props => {
-    		if ('isHovered' in $$props) $$invalidate(0, isHovered = $$props.isHovered);
-    	};
-
-    	if ($$props && "$$inject" in $$props) {
-    		$$self.$inject_state($$props.$$inject);
-    	}
-
-    	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*$hoveredCardStore*/ 2) {
-    			$$invalidate(0, isHovered = "magic" === $hoveredCardStore.field);
-    		}
-    	};
-
-    	return [isHovered, $hoveredCardStore];
-    }
-
-    class OpponentMagicField extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$e, create_fragment$e, safe_not_equal, {});
-
-    		dispatch_dev("SvelteRegisterComponent", {
-    			component: this,
-    			tagName: "OpponentMagicField",
-    			options,
-    			id: create_fragment$e.name
-    		});
-    	}
-    }
-
     /* src\ui\CardSm.svelte generated by Svelte v3.46.4 */
-    const file$d = "src\\ui\\CardSm.svelte";
+    const file$i = "src\\ui\\CardSm.svelte";
 
     // (154:6) {:else}
-    function create_else_block_1$2(ctx) {
+    function create_else_block_1(ctx) {
     	let img;
     	let img_src_value;
 
@@ -25450,7 +23143,7 @@ var app = (function () {
     			attr_dev(img, "class", "att svelte-16vspcj");
     			if (!src_url_equal(img.src, img_src_value = "assets/attrs/trap.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "Trap");
-    			add_location(img, file$d, 154, 8, 3267);
+    			add_location(img, file$i, 154, 8, 3267);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, img, anchor);
@@ -25462,7 +23155,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block_1$2.name,
+    		id: create_else_block_1.name,
     		type: "else",
     		source: "(154:6) {:else}",
     		ctx
@@ -25472,7 +23165,7 @@ var app = (function () {
     }
 
     // (152:45) 
-    function create_if_block_4$2(ctx) {
+    function create_if_block_4(ctx) {
     	let img;
     	let img_src_value;
 
@@ -25482,7 +23175,7 @@ var app = (function () {
     			attr_dev(img, "class", "att svelte-16vspcj");
     			if (!src_url_equal(img.src, img_src_value = "assets/attrs/magic.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "Magic");
-    			add_location(img, file$d, 152, 8, 3183);
+    			add_location(img, file$i, 152, 8, 3183);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, img, anchor);
@@ -25494,7 +23187,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_4$2.name,
+    		id: create_if_block_4.name,
     		type: "if",
     		source: "(152:45) ",
     		ctx
@@ -25504,7 +23197,7 @@ var app = (function () {
     }
 
     // (150:6) {#if card.type === CardType.MINION}
-    function create_if_block_3$2(ctx) {
+    function create_if_block_3(ctx) {
     	let img;
     	let img_src_value;
 
@@ -25514,7 +23207,7 @@ var app = (function () {
     			attr_dev(img, "class", "att svelte-16vspcj");
     			if (!src_url_equal(img.src, img_src_value = "assets/attrs/minion.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "Minion");
-    			add_location(img, file$d, 150, 8, 3065);
+    			add_location(img, file$i, 150, 8, 3065);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, img, anchor);
@@ -25526,7 +23219,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3$2.name,
+    		id: create_if_block_3.name,
     		type: "if",
     		source: "(150:6) {#if card.type === CardType.MINION}",
     		ctx
@@ -25563,7 +23256,7 @@ var app = (function () {
     }
 
     // (165:8) {:else}
-    function create_else_block$3(ctx) {
+    function create_else_block$4(ctx) {
     	let text_1;
     	let current;
 
@@ -25609,7 +23302,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block$3.name,
+    		id: create_else_block$4.name,
     		type: "else",
     		source: "(165:8) {:else}",
     		ctx
@@ -25619,7 +23312,7 @@ var app = (function () {
     }
 
     // (161:8) {#if card.klass !== CardKlass.NEUTRAL}
-    function create_if_block_2$3(ctx) {
+    function create_if_block_2$1(ctx) {
     	let text_1;
     	let current;
 
@@ -25665,7 +23358,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$3.name,
+    		id: create_if_block_2$1.name,
     		type: "if",
     		source: "(161:8) {#if card.klass !== CardKlass.NEUTRAL}",
     		ctx
@@ -25801,7 +23494,7 @@ var app = (function () {
     }
 
     // (182:2) {#if isHealthBarVisible}
-    function create_if_block_1$3(ctx) {
+    function create_if_block_1$2(ctx) {
     	let div;
     	let progressbar;
     	let current;
@@ -25819,7 +23512,7 @@ var app = (function () {
     			div = element("div");
     			create_component(progressbar.$$.fragment);
     			attr_dev(div, "class", "card__bar svelte-16vspcj");
-    			add_location(div, file$d, 182, 4, 4133);
+    			add_location(div, file$i, 182, 4, 4133);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -25848,7 +23541,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$3.name,
+    		id: create_if_block_1$2.name,
     		type: "if",
     		source: "(182:2) {#if isHealthBarVisible}",
     		ctx
@@ -25858,7 +23551,7 @@ var app = (function () {
     }
 
     // (193:4) {#if card.type === CardType.MINION}
-    function create_if_block$6(ctx) {
+    function create_if_block$8(ctx) {
     	let div0;
     	let img0;
     	let img0_src_value;
@@ -25891,19 +23584,19 @@ var app = (function () {
     			attr_dev(img0, "class", "stat__img svelte-16vspcj");
     			if (!src_url_equal(img0.src, img0_src_value = "assets/attrs/health.png")) attr_dev(img0, "src", img0_src_value);
     			attr_dev(img0, "alt", "Health");
-    			add_location(img0, file$d, 194, 8, 4554);
+    			add_location(img0, file$i, 194, 8, 4554);
     			attr_dev(span0, "class", "stat__text svelte-16vspcj");
-    			add_location(span0, file$d, 195, 8, 4631);
+    			add_location(span0, file$i, 195, 8, 4631);
     			attr_dev(div0, "class", "stat stat__health svelte-16vspcj");
-    			add_location(div0, file$d, 193, 6, 4513);
+    			add_location(div0, file$i, 193, 6, 4513);
     			attr_dev(img1, "class", "stat__img svelte-16vspcj");
     			if (!src_url_equal(img1.src, img1_src_value = "assets/attrs/damage.png")) attr_dev(img1, "src", img1_src_value);
     			attr_dev(img1, "alt", "Damage");
-    			add_location(img1, file$d, 198, 8, 4749);
+    			add_location(img1, file$i, 198, 8, 4749);
     			attr_dev(span1, "class", "stat__text svelte-16vspcj");
-    			add_location(span1, file$d, 199, 8, 4826);
+    			add_location(span1, file$i, 199, 8, 4826);
     			attr_dev(div1, "class", "stat stat__damage svelte-16vspcj");
-    			add_location(div1, file$d, 197, 6, 4708);
+    			add_location(div1, file$i, 197, 6, 4708);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div0, anchor);
@@ -25931,7 +23624,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$6.name,
+    		id: create_if_block$8.name,
     		type: "if",
     		source: "(193:4) {#if card.type === CardType.MINION}",
     		ctx
@@ -25940,7 +23633,7 @@ var app = (function () {
     	return block;
     }
 
-    function create_fragment$d(ctx) {
+    function create_fragment$i(ctx) {
     	let div5;
     	let div2;
     	let div1;
@@ -25984,9 +23677,9 @@ var app = (function () {
     	let dispose;
 
     	function select_block_type(ctx, dirty) {
-    		if (/*card*/ ctx[0].type === CardType.MINION) return create_if_block_3$2;
-    		if (/*card*/ ctx[0].type === CardType.MAGIC) return create_if_block_4$2;
-    		return create_else_block_1$2;
+    		if (/*card*/ ctx[0].type === CardType.MINION) return create_if_block_3;
+    		if (/*card*/ ctx[0].type === CardType.MAGIC) return create_if_block_4;
+    		return create_else_block_1;
     	}
 
     	let current_block_type = select_block_type(ctx);
@@ -26002,7 +23695,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const if_block_creators = [create_if_block_2$3, create_else_block$3];
+    	const if_block_creators = [create_if_block_2$1, create_else_block$4];
     	const if_blocks = [];
 
     	function select_block_type_1(ctx, dirty) {
@@ -26032,8 +23725,8 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	let if_block2 = /*isHealthBarVisible*/ ctx[3] && create_if_block_1$3(ctx);
-    	let if_block3 = /*card*/ ctx[0].type === CardType.MINION && create_if_block$6(ctx);
+    	let if_block2 = /*isHealthBarVisible*/ ctx[3] && create_if_block_1$2(ctx);
+    	let if_block3 = /*card*/ ctx[0].type === CardType.MINION && create_if_block$8(ctx);
 
     	const block = {
     		c: function create() {
@@ -26072,39 +23765,39 @@ var app = (function () {
     			t13 = text(t13_value);
     			t14 = space();
     			if (if_block3) if_block3.c();
-    			add_location(br0, file$d, 159, 8, 3463);
-    			add_location(hr, file$d, 167, 8, 3734);
-    			add_location(br1, file$d, 169, 8, 3804);
+    			add_location(br0, file$i, 159, 8, 3463);
+    			add_location(hr, file$i, 167, 8, 3734);
+    			add_location(br1, file$i, 169, 8, 3804);
     			attr_dev(div0, "class", "tooltip2 svelte-16vspcj");
-    			add_location(div0, file$d, 157, 6, 3347);
+    			add_location(div0, file$i, 157, 6, 3347);
     			attr_dev(div1, "class", "stat__type svelte-16vspcj");
-    			add_location(div1, file$d, 147, 4, 2954);
+    			add_location(div1, file$i, 147, 4, 2954);
     			attr_dev(span0, "class", "svelte-16vspcj");
     			toggle_class(span0, "isNeutral", /*isNeutral*/ ctx[6]);
     			toggle_class(span0, "isSolid", /*isSolid*/ ctx[7]);
     			toggle_class(span0, "isLiquid", /*isLiquid*/ ctx[8]);
     			toggle_class(span0, "isGas", /*isGas*/ ctx[9]);
     			toggle_class(span0, "isPlasma", /*isPlasma*/ ctx[10]);
-    			add_location(span0, file$d, 175, 4, 3897);
+    			add_location(span0, file$i, 175, 4, 3897);
     			attr_dev(div2, "class", "card__header svelte-16vspcj");
-    			add_location(div2, file$d, 145, 2, 2920);
+    			add_location(div2, file$i, 145, 2, 2920);
     			attr_dev(img0, "class", "card__img svelte-16vspcj");
     			if (!src_url_equal(img0.src, img0_src_value = "assets/cards/" + /*card*/ ctx[0].klass + "/" + /*card*/ ctx[0].id + ".jpg")) attr_dev(img0, "src", img0_src_value);
     			attr_dev(img0, "alt", img0_alt_value = /*card*/ ctx[0].name);
-    			add_location(img0, file$d, 179, 2, 4011);
+    			add_location(img0, file$i, 179, 2, 4011);
     			attr_dev(img1, "class", "stat__img svelte-16vspcj");
     			if (!src_url_equal(img1.src, img1_src_value = "assets/attrs/manacost.png")) attr_dev(img1, "src", img1_src_value);
     			attr_dev(img1, "alt", "Mana Cost");
-    			add_location(img1, file$d, 189, 6, 4325);
+    			add_location(img1, file$i, 189, 6, 4325);
     			attr_dev(span1, "class", "stat__text svelte-16vspcj");
-    			add_location(span1, file$d, 190, 6, 4405);
+    			add_location(span1, file$i, 190, 6, 4405);
     			attr_dev(div3, "class", "stat stat__mana svelte-16vspcj");
-    			add_location(div3, file$d, 188, 4, 4288);
+    			add_location(div3, file$i, 188, 4, 4288);
     			attr_dev(div4, "class", "card__attrs svelte-16vspcj");
-    			add_location(div4, file$d, 187, 2, 4257);
+    			add_location(div4, file$i, 187, 2, 4257);
     			attr_dev(div5, "class", "card svelte-16vspcj");
     			toggle_class(div5, "rotated", /*isFlipped*/ ctx[4]);
-    			add_location(div5, file$d, 144, 0, 2872);
+    			add_location(div5, file$i, 144, 0, 2872);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -26229,7 +23922,7 @@ var app = (function () {
     						transition_in(if_block2, 1);
     					}
     				} else {
-    					if_block2 = create_if_block_1$3(ctx);
+    					if_block2 = create_if_block_1$2(ctx);
     					if_block2.c();
     					transition_in(if_block2, 1);
     					if_block2.m(div5, t11);
@@ -26250,7 +23943,7 @@ var app = (function () {
     				if (if_block3) {
     					if_block3.p(ctx, dirty);
     				} else {
-    					if_block3 = create_if_block$6(ctx);
+    					if_block3 = create_if_block$8(ctx);
     					if_block3.c();
     					if_block3.m(div4, null);
     				}
@@ -26297,7 +23990,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$d.name,
+    		id: create_fragment$i.name,
     		type: "component",
     		source: "",
     		ctx
@@ -26306,7 +23999,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$d($$self, $$props, $$invalidate) {
+    function instance$i($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('CardSm', slots, []);
     	let isFlipped = false, passiveTooltip;
@@ -26411,7 +24104,7 @@ var app = (function () {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance$d, create_fragment$d, safe_not_equal, {
+    		init(this, options, instance$i, create_fragment$i, safe_not_equal, {
     			card: 0,
     			health: 1,
     			damage: 2,
@@ -26422,7 +24115,7 @@ var app = (function () {
     			component: this,
     			tagName: "CardSm",
     			options,
-    			id: create_fragment$d.name
+    			id: create_fragment$i.name
     		});
 
     		const { ctx } = this.$$;
@@ -26474,705 +24167,1239 @@ var app = (function () {
     	}
     }
 
+    /* src\game\opponent\OpponentGraveyard.svelte generated by Svelte v3.46.4 */
+    const file$h = "src\\game\\opponent\\OpponentGraveyard.svelte";
+
+    // (28:2) {:else}
+    function create_else_block$3(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Graveyard");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block$3.name,
+    		type: "else",
+    		source: "(28:2) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (22:2) {#if $gameStore.opponent.graveyard.length}
+    function create_if_block$7(ctx) {
+    	let cardsm;
+    	let current;
+
+    	cardsm = new CardSm({
+    			props: {
+    				card: cards.find(/*func*/ ctx[2]),
+    				health: 10,
+    				damage: 10
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			create_component(cardsm.$$.fragment);
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(cardsm, target, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const cardsm_changes = {};
+    			if (dirty & /*$gameStore*/ 1) cardsm_changes.card = cards.find(/*func*/ ctx[2]);
+    			cardsm.$set(cardsm_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(cardsm.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(cardsm.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(cardsm, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$7.name,
+    		type: "if",
+    		source: "(22:2) {#if $gameStore.opponent.graveyard.length}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$h(ctx) {
+    	let div;
+    	let current_block_type_index;
+    	let if_block;
+    	let current;
+    	let mounted;
+    	let dispose;
+    	const if_block_creators = [create_if_block$7, create_else_block$3];
+    	const if_blocks = [];
+
+    	function select_block_type(ctx, dirty) {
+    		if (/*$gameStore*/ ctx[0].opponent.graveyard.length) return 0;
+    		return 1;
+    	}
+
+    	current_block_type_index = select_block_type(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			if_block.c();
+    			attr_dev(div, "class", "graveyard svelte-c5o0s3");
+    			add_location(div, file$h, 20, 0, 523);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			if_blocks[current_block_type_index].m(div, null);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(div, "click", /*onViewGraveyard*/ ctx[1], false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, [dirty]) {
+    			let previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type(ctx);
+
+    			if (current_block_type_index === previous_block_index) {
+    				if_blocks[current_block_type_index].p(ctx, dirty);
+    			} else {
+    				group_outros();
+
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
+
+    				check_outros();
+    				if_block = if_blocks[current_block_type_index];
+
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
+    				} else {
+    					if_block.p(ctx, dirty);
+    				}
+
+    				transition_in(if_block, 1);
+    				if_block.m(div, null);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			if_blocks[current_block_type_index].d();
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$h.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$h($$self, $$props, $$invalidate) {
+    	let $gameStore;
+    	validate_store(gameStore, 'gameStore');
+    	component_subscribe($$self, gameStore, $$value => $$invalidate(0, $gameStore = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('OpponentGraveyard', slots, []);
+
+    	const onViewGraveyard = () => {
+    		miscService.openModal("graveyard", $gameStore.opponent.graveyard);
+    	};
+
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<OpponentGraveyard> was created with unknown prop '${key}'`);
+    	});
+
+    	const func = card => card.id === $gameStore.opponent.graveyard[$gameStore.opponent.graveyard.length - 1].id;
+
+    	$$self.$capture_state = () => ({
+    		cards,
+    		miscService,
+    		gameStore,
+    		CardSm,
+    		onViewGraveyard,
+    		$gameStore
+    	});
+
+    	return [$gameStore, onViewGraveyard, func];
+    }
+
+    class OpponentGraveyard extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$h, create_fragment$h, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "OpponentGraveyard",
+    			options,
+    			id: create_fragment$h.name
+    		});
+    	}
+    }
+
+    /* src\game\opponent\OpponentHandCards.svelte generated by Svelte v3.46.4 */
+    const file$g = "src\\game\\opponent\\OpponentHandCards.svelte";
+
+    function get_each_context$1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[1] = list[i];
+    	return child_ctx;
+    }
+
+    // (28:2) {#each Array($gameStore.opponent.hand) as _}
+    function create_each_block$1(ctx) {
+    	let div;
+    	let img;
+    	let img_src_value;
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			img = element("img");
+    			t = space();
+    			attr_dev(img, "class", "player__deck__img svelte-7fir7k");
+    			if (!src_url_equal(img.src, img_src_value = "assets/card-backs/default.jpg")) attr_dev(img, "src", img_src_value);
+    			attr_dev(img, "alt", "");
+    			add_location(img, file$g, 29, 6, 585);
+    			attr_dev(div, "class", "player__hand__card svelte-7fir7k");
+    			add_location(div, file$g, 28, 4, 545);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, img);
+    			append_dev(div, t);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$1.name,
+    		type: "each",
+    		source: "(28:2) {#each Array($gameStore.opponent.hand) as _}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$g(ctx) {
+    	let div;
+    	let each_value = Array(/*$gameStore*/ ctx[0].opponent.hand);
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(div, "class", "player__hand svelte-7fir7k");
+    			add_location(div, file$g, 26, 0, 465);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div, null);
+    			}
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*$gameStore*/ 1) {
+    				const old_length = each_value.length;
+    				each_value = Array(/*$gameStore*/ ctx[0].opponent.hand);
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = old_length; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$1(ctx, each_value, i);
+
+    					if (!each_blocks[i]) {
+    						each_blocks[i] = create_each_block$1(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div, null);
+    					}
+    				}
+
+    				for (i = each_value.length; i < old_length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value.length;
+    			}
+    		},
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$g.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$g($$self, $$props, $$invalidate) {
+    	let $gameStore;
+    	validate_store(gameStore, 'gameStore');
+    	component_subscribe($$self, gameStore, $$value => $$invalidate(0, $gameStore = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('OpponentHandCards', slots, []);
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<OpponentHandCards> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$capture_state = () => ({ gameStore, $gameStore });
+    	return [$gameStore];
+    }
+
+    class OpponentHandCards extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$g, create_fragment$g, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "OpponentHandCards",
+    			options,
+    			id: create_fragment$g.name
+    		});
+    	}
+    }
+
+    /* src\ui\HeroSm.svelte generated by Svelte v3.46.4 */
+    const file$f = "src\\ui\\HeroSm.svelte";
+
+    // (158:2) {#if isHealthBarVisible}
+    function create_if_block_1$1(ctx) {
+    	let div;
+    	let progressbar;
+    	let current;
+
+    	progressbar = new ProgressBar({
+    			props: {
+    				size: "md",
+    				progress: /*health*/ ctx[1] / /*hero*/ ctx[0].health * 100,
+    				color: "green"
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(progressbar.$$.fragment);
+    			attr_dev(div, "class", "card__bar svelte-1819kqf");
+    			add_location(div, file$f, 158, 4, 4060);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(progressbar, div, null);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const progressbar_changes = {};
+    			if (dirty & /*health, hero*/ 3) progressbar_changes.progress = /*health*/ ctx[1] / /*hero*/ ctx[0].health * 100;
+    			progressbar.$set(progressbar_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(progressbar.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(progressbar.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(progressbar);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1$1.name,
+    		type: "if",
+    		source: "(158:2) {#if isHealthBarVisible}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (163:2) {#if isManaBarVisible}
+    function create_if_block$6(ctx) {
+    	let div;
+    	let progressbar;
+    	let current;
+
+    	progressbar = new ProgressBar({
+    			props: {
+    				size: "sm",
+    				progress: /*mana*/ ctx[2] / /*hero*/ ctx[0].mana * 100,
+    				color: "blue"
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(progressbar.$$.fragment);
+    			attr_dev(div, "class", "card__manabar svelte-1819kqf");
+    			add_location(div, file$f, 163, 4, 4220);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(progressbar, div, null);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const progressbar_changes = {};
+    			if (dirty & /*mana, hero*/ 5) progressbar_changes.progress = /*mana*/ ctx[2] / /*hero*/ ctx[0].mana * 100;
+    			progressbar.$set(progressbar_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(progressbar.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(progressbar.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(progressbar);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$6.name,
+    		type: "if",
+    		source: "(163:2) {#if isManaBarVisible}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$f(ctx) {
+    	let div8;
+    	let div3;
+    	let div1;
+    	let img0;
+    	let img0_src_value;
+    	let t0;
+    	let div0;
+    	let p0;
+    	let raw0_value = /*hero*/ ctx[0].passive.info + "";
+    	let t1;
+    	let hr;
+    	let t2;
+    	let p1;
+    	let raw1_value = /*hero*/ ctx[0].active.info + "";
+    	let t3;
+    	let div2;
+    	let t4_value = /*hero*/ ctx[0].name + "";
+    	let t4;
+    	let t5;
+    	let img1;
+    	let img1_src_value;
+    	let img1_alt_value;
+    	let t6;
+    	let t7;
+    	let t8;
+    	let div7;
+    	let div4;
+    	let img2;
+    	let img2_src_value;
+    	let t9;
+    	let span0;
+    	let t10_value = (/*mana*/ ctx[2] || /*hero*/ ctx[0].mana) + "";
+    	let t10;
+    	let t11;
+    	let div5;
+    	let img3;
+    	let img3_src_value;
+    	let t12;
+    	let span1;
+    	let t13_value = (/*health*/ ctx[1] || /*hero*/ ctx[0].health) + "";
+    	let t13;
+    	let t14;
+    	let div6;
+    	let img4;
+    	let img4_src_value;
+    	let t15;
+    	let span2;
+    	let t16_value = /*hero*/ ctx[0].damage + "";
+    	let t16;
+    	let current;
+    	let mounted;
+    	let dispose;
+    	let if_block0 = /*isHealthBarVisible*/ ctx[3] && create_if_block_1$1(ctx);
+    	let if_block1 = /*isManaBarVisible*/ ctx[4] && create_if_block$6(ctx);
+
+    	const block = {
+    		c: function create() {
+    			div8 = element("div");
+    			div3 = element("div");
+    			div1 = element("div");
+    			img0 = element("img");
+    			t0 = space();
+    			div0 = element("div");
+    			p0 = element("p");
+    			t1 = space();
+    			hr = element("hr");
+    			t2 = space();
+    			p1 = element("p");
+    			t3 = space();
+    			div2 = element("div");
+    			t4 = text(t4_value);
+    			t5 = space();
+    			img1 = element("img");
+    			t6 = space();
+    			if (if_block0) if_block0.c();
+    			t7 = space();
+    			if (if_block1) if_block1.c();
+    			t8 = space();
+    			div7 = element("div");
+    			div4 = element("div");
+    			img2 = element("img");
+    			t9 = space();
+    			span0 = element("span");
+    			t10 = text(t10_value);
+    			t11 = space();
+    			div5 = element("div");
+    			img3 = element("img");
+    			t12 = space();
+    			span1 = element("span");
+    			t13 = text(t13_value);
+    			t14 = space();
+    			div6 = element("div");
+    			img4 = element("img");
+    			t15 = space();
+    			span2 = element("span");
+    			t16 = text(t16_value);
+    			attr_dev(img0, "class", "stat__img svelte-1819kqf");
+    			if (!src_url_equal(img0.src, img0_src_value = "assets/attrs/hero.png")) attr_dev(img0, "src", img0_src_value);
+    			attr_dev(img0, "alt", "Hero");
+    			add_location(img0, file$f, 143, 6, 3650);
+    			add_location(p0, file$f, 146, 8, 3781);
+    			add_location(hr, file$f, 147, 8, 3823);
+    			add_location(p1, file$f, 148, 8, 3838);
+    			attr_dev(div0, "class", "tooltip svelte-1819kqf");
+    			add_location(div0, file$f, 145, 6, 3723);
+    			attr_dev(div1, "class", "stat stat__type svelte-1819kqf");
+    			add_location(div1, file$f, 142, 4, 3581);
+    			add_location(div2, file$f, 152, 4, 3903);
+    			attr_dev(div3, "class", "card__header svelte-1819kqf");
+    			add_location(div3, file$f, 141, 2, 3549);
+    			attr_dev(img1, "class", "card__img svelte-1819kqf");
+    			if (!src_url_equal(img1.src, img1_src_value = "assets/classes/" + /*hero*/ ctx[0].klass + "_hero.jpg")) attr_dev(img1, "src", img1_src_value);
+    			attr_dev(img1, "alt", img1_alt_value = /*hero*/ ctx[0].name);
+    			add_location(img1, file$f, 155, 2, 3941);
+    			attr_dev(img2, "class", "stat__img svelte-1819kqf");
+    			if (!src_url_equal(img2.src, img2_src_value = "assets/attrs/mana.png")) attr_dev(img2, "src", img2_src_value);
+    			attr_dev(img2, "alt", "Mana Capacity");
+    			add_location(img2, file$f, 171, 6, 4423);
+    			attr_dev(span0, "class", "stat__text svelte-1819kqf");
+    			add_location(span0, file$f, 172, 6, 4503);
+    			attr_dev(div4, "class", "stat stat__mana svelte-1819kqf");
+    			add_location(div4, file$f, 170, 4, 4386);
+    			attr_dev(img3, "class", "stat__img svelte-1819kqf");
+    			if (!src_url_equal(img3.src, img3_src_value = "assets/attrs/health.png")) attr_dev(img3, "src", img3_src_value);
+    			attr_dev(img3, "alt", "Health");
+    			add_location(img3, file$f, 176, 6, 4613);
+    			attr_dev(span1, "class", "stat__text svelte-1819kqf");
+    			add_location(span1, file$f, 177, 6, 4688);
+    			attr_dev(div5, "class", "stat stat__health svelte-1819kqf");
+    			add_location(div5, file$f, 175, 4, 4574);
+    			attr_dev(img4, "class", "stat__img svelte-1819kqf");
+    			if (!src_url_equal(img4.src, img4_src_value = "assets/attrs/damage.png")) attr_dev(img4, "src", img4_src_value);
+    			attr_dev(img4, "alt", "Damage");
+    			add_location(img4, file$f, 181, 6, 4802);
+    			attr_dev(span2, "class", "stat__text svelte-1819kqf");
+    			add_location(span2, file$f, 182, 6, 4877);
+    			attr_dev(div6, "class", "stat stat__damage svelte-1819kqf");
+    			add_location(div6, file$f, 180, 4, 4763);
+    			attr_dev(div7, "class", "card__attrs svelte-1819kqf");
+    			add_location(div7, file$f, 168, 2, 4353);
+    			attr_dev(div8, "class", "card svelte-1819kqf");
+    			add_location(div8, file$f, 139, 0, 3525);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div8, anchor);
+    			append_dev(div8, div3);
+    			append_dev(div3, div1);
+    			append_dev(div1, img0);
+    			append_dev(div1, t0);
+    			append_dev(div1, div0);
+    			append_dev(div0, p0);
+    			p0.innerHTML = raw0_value;
+    			append_dev(div0, t1);
+    			append_dev(div0, hr);
+    			append_dev(div0, t2);
+    			append_dev(div0, p1);
+    			p1.innerHTML = raw1_value;
+    			/*div0_binding*/ ctx[7](div0);
+    			append_dev(div3, t3);
+    			append_dev(div3, div2);
+    			append_dev(div2, t4);
+    			append_dev(div8, t5);
+    			append_dev(div8, img1);
+    			append_dev(div8, t6);
+    			if (if_block0) if_block0.m(div8, null);
+    			append_dev(div8, t7);
+    			if (if_block1) if_block1.m(div8, null);
+    			append_dev(div8, t8);
+    			append_dev(div8, div7);
+    			append_dev(div7, div4);
+    			append_dev(div4, img2);
+    			append_dev(div4, t9);
+    			append_dev(div4, span0);
+    			append_dev(span0, t10);
+    			append_dev(div7, t11);
+    			append_dev(div7, div5);
+    			append_dev(div5, img3);
+    			append_dev(div5, t12);
+    			append_dev(div5, span1);
+    			append_dev(span1, t13);
+    			append_dev(div7, t14);
+    			append_dev(div7, div6);
+    			append_dev(div6, img4);
+    			append_dev(div6, t15);
+    			append_dev(div6, span2);
+    			append_dev(span2, t16);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(div1, "mousemove", /*passiveMouseMove*/ ctx[6], false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if ((!current || dirty & /*hero*/ 1) && raw0_value !== (raw0_value = /*hero*/ ctx[0].passive.info + "")) p0.innerHTML = raw0_value;			if ((!current || dirty & /*hero*/ 1) && raw1_value !== (raw1_value = /*hero*/ ctx[0].active.info + "")) p1.innerHTML = raw1_value;			if ((!current || dirty & /*hero*/ 1) && t4_value !== (t4_value = /*hero*/ ctx[0].name + "")) set_data_dev(t4, t4_value);
+
+    			if (!current || dirty & /*hero*/ 1 && !src_url_equal(img1.src, img1_src_value = "assets/classes/" + /*hero*/ ctx[0].klass + "_hero.jpg")) {
+    				attr_dev(img1, "src", img1_src_value);
+    			}
+
+    			if (!current || dirty & /*hero*/ 1 && img1_alt_value !== (img1_alt_value = /*hero*/ ctx[0].name)) {
+    				attr_dev(img1, "alt", img1_alt_value);
+    			}
+
+    			if (/*isHealthBarVisible*/ ctx[3]) {
+    				if (if_block0) {
+    					if_block0.p(ctx, dirty);
+
+    					if (dirty & /*isHealthBarVisible*/ 8) {
+    						transition_in(if_block0, 1);
+    					}
+    				} else {
+    					if_block0 = create_if_block_1$1(ctx);
+    					if_block0.c();
+    					transition_in(if_block0, 1);
+    					if_block0.m(div8, t7);
+    				}
+    			} else if (if_block0) {
+    				group_outros();
+
+    				transition_out(if_block0, 1, 1, () => {
+    					if_block0 = null;
+    				});
+
+    				check_outros();
+    			}
+
+    			if (/*isManaBarVisible*/ ctx[4]) {
+    				if (if_block1) {
+    					if_block1.p(ctx, dirty);
+
+    					if (dirty & /*isManaBarVisible*/ 16) {
+    						transition_in(if_block1, 1);
+    					}
+    				} else {
+    					if_block1 = create_if_block$6(ctx);
+    					if_block1.c();
+    					transition_in(if_block1, 1);
+    					if_block1.m(div8, t8);
+    				}
+    			} else if (if_block1) {
+    				group_outros();
+
+    				transition_out(if_block1, 1, 1, () => {
+    					if_block1 = null;
+    				});
+
+    				check_outros();
+    			}
+
+    			if ((!current || dirty & /*mana, hero*/ 5) && t10_value !== (t10_value = (/*mana*/ ctx[2] || /*hero*/ ctx[0].mana) + "")) set_data_dev(t10, t10_value);
+    			if ((!current || dirty & /*health, hero*/ 3) && t13_value !== (t13_value = (/*health*/ ctx[1] || /*hero*/ ctx[0].health) + "")) set_data_dev(t13, t13_value);
+    			if ((!current || dirty & /*hero*/ 1) && t16_value !== (t16_value = /*hero*/ ctx[0].damage + "")) set_data_dev(t16, t16_value);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block0);
+    			transition_in(if_block1);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block0);
+    			transition_out(if_block1);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div8);
+    			/*div0_binding*/ ctx[7](null);
+    			if (if_block0) if_block0.d();
+    			if (if_block1) if_block1.d();
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$f.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$f($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('HeroSm', slots, []);
+    	let { hero } = $$props;
+    	let { health = hero.health } = $$props;
+    	let { mana = hero.health } = $$props;
+    	let { isHealthBarVisible = false } = $$props;
+    	let { isManaBarVisible = false } = $$props;
+    	let abilityTooltip;
+    	let passiveTooltip;
+    	let damageTooltip;
+    	let manaTooltip;
+    	var heroKlass;
+
+    	(function (heroKlass) {
+    		heroKlass[heroKlass["SOLID"] = 1] = "SOLID";
+    		heroKlass[heroKlass["LIQUID"] = 2] = "LIQUID";
+    		heroKlass[heroKlass["GAS"] = 3] = "GAS";
+    		heroKlass[heroKlass["PLASMA"] = 4] = "PLASMA";
+    	})(heroKlass || (heroKlass = {}));
+
+    	const abilityMouseMove = event => {
+    		const { offsetX, offsetY } = event;
+    		abilityTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
+    		abilityTooltip.style.left = `calc(-80px + ${offsetX}px)`;
+    	};
+
+    	const passiveMouseMove = event => {
+    		const { offsetX, offsetY } = event;
+    		$$invalidate(5, passiveTooltip.style.bottom = `calc(48px + ${-offsetY}px)`, passiveTooltip);
+    		$$invalidate(5, passiveTooltip.style.left = `calc(-80px + ${offsetX}px)`, passiveTooltip);
+    	};
+
+    	const damageMouseMove = event => {
+    		const { offsetX, offsetY } = event;
+    		damageTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
+    		damageTooltip.style.left = `calc(-80px + ${offsetX}px)`;
+    	};
+
+    	const manaMouseMove = event => {
+    		const { offsetX, offsetY } = event;
+    		manaTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
+    		manaTooltip.style.left = `calc(-80px + ${offsetX}px)`;
+    	};
+
+    	const writable_props = ['hero', 'health', 'mana', 'isHealthBarVisible', 'isManaBarVisible'];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<HeroSm> was created with unknown prop '${key}'`);
+    	});
+
+    	function div0_binding($$value) {
+    		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+    			passiveTooltip = $$value;
+    			$$invalidate(5, passiveTooltip);
+    		});
+    	}
+
+    	$$self.$$set = $$props => {
+    		if ('hero' in $$props) $$invalidate(0, hero = $$props.hero);
+    		if ('health' in $$props) $$invalidate(1, health = $$props.health);
+    		if ('mana' in $$props) $$invalidate(2, mana = $$props.mana);
+    		if ('isHealthBarVisible' in $$props) $$invalidate(3, isHealthBarVisible = $$props.isHealthBarVisible);
+    		if ('isManaBarVisible' in $$props) $$invalidate(4, isManaBarVisible = $$props.isManaBarVisible);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		ProgressBar,
+    		Text,
+    		Img,
+    		hero,
+    		health,
+    		mana,
+    		isHealthBarVisible,
+    		isManaBarVisible,
+    		abilityTooltip,
+    		passiveTooltip,
+    		damageTooltip,
+    		manaTooltip,
+    		heroKlass,
+    		abilityMouseMove,
+    		passiveMouseMove,
+    		damageMouseMove,
+    		manaMouseMove
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ('hero' in $$props) $$invalidate(0, hero = $$props.hero);
+    		if ('health' in $$props) $$invalidate(1, health = $$props.health);
+    		if ('mana' in $$props) $$invalidate(2, mana = $$props.mana);
+    		if ('isHealthBarVisible' in $$props) $$invalidate(3, isHealthBarVisible = $$props.isHealthBarVisible);
+    		if ('isManaBarVisible' in $$props) $$invalidate(4, isManaBarVisible = $$props.isManaBarVisible);
+    		if ('abilityTooltip' in $$props) abilityTooltip = $$props.abilityTooltip;
+    		if ('passiveTooltip' in $$props) $$invalidate(5, passiveTooltip = $$props.passiveTooltip);
+    		if ('damageTooltip' in $$props) damageTooltip = $$props.damageTooltip;
+    		if ('manaTooltip' in $$props) manaTooltip = $$props.manaTooltip;
+    		if ('heroKlass' in $$props) heroKlass = $$props.heroKlass;
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
+    		hero,
+    		health,
+    		mana,
+    		isHealthBarVisible,
+    		isManaBarVisible,
+    		passiveTooltip,
+    		passiveMouseMove,
+    		div0_binding
+    	];
+    }
+
+    class HeroSm extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+
+    		init(this, options, instance$f, create_fragment$f, safe_not_equal, {
+    			hero: 0,
+    			health: 1,
+    			mana: 2,
+    			isHealthBarVisible: 3,
+    			isManaBarVisible: 4
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "HeroSm",
+    			options,
+    			id: create_fragment$f.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*hero*/ ctx[0] === undefined && !('hero' in props)) {
+    			console.warn("<HeroSm> was created without expected prop 'hero'");
+    		}
+    	}
+
+    	get hero() {
+    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set hero(value) {
+    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get health() {
+    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set health(value) {
+    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get mana() {
+    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set mana(value) {
+    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get isHealthBarVisible() {
+    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set isHealthBarVisible(value) {
+    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get isManaBarVisible() {
+    		throw new Error("<HeroSm>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set isManaBarVisible(value) {
+    		throw new Error("<HeroSm>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src\game\opponent\OpponentHero.svelte generated by Svelte v3.46.4 */
+    const file$e = "src\\game\\opponent\\OpponentHero.svelte";
+
+    function create_fragment$e(ctx) {
+    	let div;
+    	let hero;
+    	let current;
+    	let mounted;
+    	let dispose;
+
+    	hero = new HeroSm({
+    			props: {
+    				hero: heroes.find(/*func*/ ctx[2]),
+    				health: /*$gameStore*/ ctx[0].opponent.hero.health,
+    				mana: /*$gameStore*/ ctx[0].opponent.hero.mana,
+    				isHealthBarVisible: true,
+    				isManaBarVisible: true
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(hero.$$.fragment);
+    			attr_dev(div, "class", "hero svelte-smw579");
+    			add_location(div, file$e, 22, 0, 599);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(hero, div, null);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(div, "click", /*onAttackHero*/ ctx[1], false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, [dirty]) {
+    			const hero_changes = {};
+    			if (dirty & /*$gameStore*/ 1) hero_changes.hero = heroes.find(/*func*/ ctx[2]);
+    			if (dirty & /*$gameStore*/ 1) hero_changes.health = /*$gameStore*/ ctx[0].opponent.hero.health;
+    			if (dirty & /*$gameStore*/ 1) hero_changes.mana = /*$gameStore*/ ctx[0].opponent.hero.mana;
+    			hero.$set(hero_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(hero.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(hero.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(hero);
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$e.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$e($$self, $$props, $$invalidate) {
+    	let $playerStore;
+    	let $gameStore;
+    	let $selectedCardStore;
+    	validate_store(playerStore, 'playerStore');
+    	component_subscribe($$self, playerStore, $$value => $$invalidate(3, $playerStore = $$value));
+    	validate_store(gameStore, 'gameStore');
+    	component_subscribe($$self, gameStore, $$value => $$invalidate(0, $gameStore = $$value));
+    	validate_store(selectedCardStore, 'selectedCardStore');
+    	component_subscribe($$self, selectedCardStore, $$value => $$invalidate(4, $selectedCardStore = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('OpponentHero', slots, []);
+
+    	const onAttackHero = () => {
+    		const attacker = $selectedCardStore.field;
+
+    		if ($gameStore.currentPlayer !== $playerStore.username) {
+    			return;
+    		}
+
+    		if (!attacker) {
+    			return;
+    		}
+
+    		socketService.socket.emit("attackHero", { attacker });
+    	};
+
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<OpponentHero> was created with unknown prop '${key}'`);
+    	});
+
+    	const func = hero => hero.klass === $gameStore.opponent.hero.id;
+
+    	$$self.$capture_state = () => ({
+    		heroes,
+    		socketService,
+    		gameStore,
+    		selectedCardStore,
+    		playerStore,
+    		Hero: HeroSm,
+    		onAttackHero,
+    		$playerStore,
+    		$gameStore,
+    		$selectedCardStore
+    	});
+
+    	return [$gameStore, onAttackHero, func];
+    }
+
+    class OpponentHero extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$e, create_fragment$e, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "OpponentHero",
+    			options,
+    			id: create_fragment$e.name
+    		});
+    	}
+    }
+
+    /* src\game\opponent\OpponentMagicField.svelte generated by Svelte v3.46.4 */
+    const file$d = "src\\game\\opponent\\OpponentMagicField.svelte";
+
+    function create_fragment$d(ctx) {
+    	let div;
+    	let span;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			span = element("span");
+    			span.textContent = "Magic Field";
+    			attr_dev(span, "class", "f--green");
+    			add_location(span, file$d, 21, 2, 448);
+    			attr_dev(div, "class", "field svelte-1oeesi2");
+    			toggle_class(div, "isHovered", /*isHovered*/ ctx[0]);
+    			add_location(div, file$d, 20, 0, 409);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, span);
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*isHovered*/ 1) {
+    				toggle_class(div, "isHovered", /*isHovered*/ ctx[0]);
+    			}
+    		},
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$d.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$d($$self, $$props, $$invalidate) {
+    	let isHovered;
+    	let $hoveredCardStore;
+    	validate_store(hoveredCardStore, 'hoveredCardStore');
+    	component_subscribe($$self, hoveredCardStore, $$value => $$invalidate(1, $hoveredCardStore = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('OpponentMagicField', slots, []);
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<OpponentMagicField> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$capture_state = () => ({
+    		hoveredCardStore,
+    		isHovered,
+    		$hoveredCardStore
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ('isHovered' in $$props) $$invalidate(0, isHovered = $$props.isHovered);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*$hoveredCardStore*/ 2) {
+    			$$invalidate(0, isHovered = "magic" === $hoveredCardStore.field);
+    		}
+    	};
+
+    	return [isHovered, $hoveredCardStore];
+    }
+
+    class OpponentMagicField extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$d, create_fragment$d, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "OpponentMagicField",
+    			options,
+    			id: create_fragment$d.name
+    		});
+    	}
+    }
+
     /* src\game\opponent\OpponentMinionField.svelte generated by Svelte v3.46.4 */
 
     const { Object: Object_1$1 } = globals;
     const file$c = "src\\game\\opponent\\OpponentMinionField.svelte";
 
-    // (84:24) 
-    function create_if_block_6$1(ctx) {
-    	let div;
-    	let current_block_type_index;
-    	let if_block;
-    	let current;
-    	const if_block_creators = [create_if_block_7$1, create_else_block_3$1];
-    	const if_blocks = [];
-
-    	function select_block_type_4(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[2].opponent.fields.minionD) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_4(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			if_block.c();
-    			attr_dev(div, "class", "field svelte-odopfd");
-    			toggle_class(div, "isHovered", /*isHovered*/ ctx[1]);
-    			add_location(div, file$c, 84, 2, 2784);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			if_blocks[current_block_type_index].m(div, null);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_4(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(div, null);
-    			}
-
-    			if (dirty & /*isHovered*/ 2) {
-    				toggle_class(div, "isHovered", /*isHovered*/ ctx[1]);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			if_blocks[current_block_type_index].d();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_6$1.name,
-    		type: "if",
-    		source: "(84:24) ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (69:24) 
-    function create_if_block_4$1(ctx) {
-    	let div;
-    	let current_block_type_index;
-    	let if_block;
-    	let current;
-    	const if_block_creators = [create_if_block_5$1, create_else_block_2$1];
-    	const if_blocks = [];
-
-    	function select_block_type_3(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[2].opponent.fields.minionC) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_3(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			if_block.c();
-    			attr_dev(div, "class", "field svelte-odopfd");
-    			toggle_class(div, "isHovered", /*isHovered*/ ctx[1]);
-    			add_location(div, file$c, 69, 2, 2269);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			if_blocks[current_block_type_index].m(div, null);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_3(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(div, null);
-    			}
-
-    			if (dirty & /*isHovered*/ 2) {
-    				toggle_class(div, "isHovered", /*isHovered*/ ctx[1]);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			if_blocks[current_block_type_index].d();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_4$1.name,
-    		type: "if",
-    		source: "(69:24) ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (54:24) 
-    function create_if_block_2$2(ctx) {
-    	let div;
-    	let current_block_type_index;
-    	let if_block;
-    	let current;
-    	const if_block_creators = [create_if_block_3$1, create_else_block_1$1];
-    	const if_blocks = [];
-
-    	function select_block_type_2(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[2].opponent.fields.minionB) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_2(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			if_block.c();
-    			attr_dev(div, "class", "field svelte-odopfd");
-    			toggle_class(div, "isHovered", /*isHovered*/ ctx[1]);
-    			add_location(div, file$c, 54, 2, 1754);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			if_blocks[current_block_type_index].m(div, null);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_2(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(div, null);
-    			}
-
-    			if (dirty & /*isHovered*/ 2) {
-    				toggle_class(div, "isHovered", /*isHovered*/ ctx[1]);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			if_blocks[current_block_type_index].d();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_2$2.name,
-    		type: "if",
-    		source: "(54:24) ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (39:0) {#if field === "a"}
-    function create_if_block$5(ctx) {
-    	let div;
-    	let current_block_type_index;
-    	let if_block;
-    	let current;
-    	const if_block_creators = [create_if_block_1$2, create_else_block$2];
-    	const if_blocks = [];
-
-    	function select_block_type_1(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[2].opponent.fields.minionA) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_1(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			if_block.c();
-    			attr_dev(div, "class", "field svelte-odopfd");
-    			toggle_class(div, "isHovered", /*isHovered*/ ctx[1]);
-    			add_location(div, file$c, 39, 2, 1239);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			if_blocks[current_block_type_index].m(div, null);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_1(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(div, null);
-    			}
-
-    			if (dirty & /*isHovered*/ 2) {
-    				toggle_class(div, "isHovered", /*isHovered*/ ctx[1]);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			if_blocks[current_block_type_index].d();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block$5.name,
-    		type: "if",
-    		source: "(39:0) {#if field === \\\"a\\\"}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (95:4) {:else}
-    function create_else_block_3$1(ctx) {
-    	let span;
-    	let t0;
-    	let t1;
-
-    	const block = {
-    		c: function create() {
-    			span = element("span");
-    			t0 = text("Minion Field ");
-    			t1 = text(/*field*/ ctx[0]);
-    			attr_dev(span, "class", "f--orange");
-    			add_location(span, file$c, 95, 6, 3197);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, t1);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*field*/ 1) set_data_dev(t1, /*field*/ ctx[0]);
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_3$1.name,
-    		type: "else",
-    		source: "(95:4) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (86:4) {#if $gameStore.opponent.fields.minionD}
-    function create_if_block_7$1(ctx) {
-    	let div;
-    	let card;
-    	let current;
-    	let mounted;
-    	let dispose;
-
-    	card = new CardSm({
-    			props: {
-    				card: /*getCard*/ ctx[3]("minionD"),
-    				health: /*$gameStore*/ ctx[2].opponent.fields.minionD.health,
-    				damage: /*$gameStore*/ ctx[2].opponent.fields.minionD.damage,
-    				isHealthBarVisible: true
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(card.$$.fragment);
-    			set_style(div, "height", "100%");
-    			set_style(div, "width", "100%");
-    			add_location(div, file$c, 86, 6, 2873);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(card, div, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div, "click", /*onAttackCard*/ ctx[4], false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 4) card_changes.health = /*$gameStore*/ ctx[2].opponent.fields.minionD.health;
-    			if (dirty & /*$gameStore*/ 4) card_changes.damage = /*$gameStore*/ ctx[2].opponent.fields.minionD.damage;
-    			card.$set(card_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(card.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(card.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(card);
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_7$1.name,
-    		type: "if",
-    		source: "(86:4) {#if $gameStore.opponent.fields.minionD}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (80:4) {:else}
-    function create_else_block_2$1(ctx) {
-    	let span;
-    	let t0;
-    	let t1;
-
-    	const block = {
-    		c: function create() {
-    			span = element("span");
-    			t0 = text("Minion Field ");
-    			t1 = text(/*field*/ ctx[0]);
-    			attr_dev(span, "class", "f--orange");
-    			add_location(span, file$c, 80, 6, 2682);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, t1);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*field*/ 1) set_data_dev(t1, /*field*/ ctx[0]);
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_2$1.name,
-    		type: "else",
-    		source: "(80:4) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (71:4) {#if $gameStore.opponent.fields.minionC}
-    function create_if_block_5$1(ctx) {
-    	let div;
-    	let card;
-    	let current;
-    	let mounted;
-    	let dispose;
-
-    	card = new CardSm({
-    			props: {
-    				card: /*getCard*/ ctx[3]("minionC"),
-    				health: /*$gameStore*/ ctx[2].opponent.fields.minionC.health,
-    				damage: /*$gameStore*/ ctx[2].opponent.fields.minionC.damage,
-    				isHealthBarVisible: true
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(card.$$.fragment);
-    			set_style(div, "height", "100%");
-    			set_style(div, "width", "100%");
-    			add_location(div, file$c, 71, 6, 2358);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(card, div, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div, "click", /*onAttackCard*/ ctx[4], false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 4) card_changes.health = /*$gameStore*/ ctx[2].opponent.fields.minionC.health;
-    			if (dirty & /*$gameStore*/ 4) card_changes.damage = /*$gameStore*/ ctx[2].opponent.fields.minionC.damage;
-    			card.$set(card_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(card.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(card.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(card);
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_5$1.name,
-    		type: "if",
-    		source: "(71:4) {#if $gameStore.opponent.fields.minionC}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (65:4) {:else}
-    function create_else_block_1$1(ctx) {
-    	let span;
-    	let t0;
-    	let t1;
-
-    	const block = {
-    		c: function create() {
-    			span = element("span");
-    			t0 = text("Minion Field ");
-    			t1 = text(/*field*/ ctx[0]);
-    			attr_dev(span, "class", "f--orange");
-    			add_location(span, file$c, 65, 6, 2167);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
-    			append_dev(span, t0);
-    			append_dev(span, t1);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*field*/ 1) set_data_dev(t1, /*field*/ ctx[0]);
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_1$1.name,
-    		type: "else",
-    		source: "(65:4) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (56:4) {#if $gameStore.opponent.fields.minionB}
-    function create_if_block_3$1(ctx) {
-    	let div;
-    	let card;
-    	let current;
-    	let mounted;
-    	let dispose;
-
-    	card = new CardSm({
-    			props: {
-    				card: /*getCard*/ ctx[3]("minionB"),
-    				health: /*$gameStore*/ ctx[2].opponent.fields.minionB.health,
-    				damage: /*$gameStore*/ ctx[2].opponent.fields.minionB.damage,
-    				isHealthBarVisible: true
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(card.$$.fragment);
-    			set_style(div, "height", "100%");
-    			set_style(div, "width", "100%");
-    			add_location(div, file$c, 56, 6, 1843);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(card, div, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div, "click", /*onAttackCard*/ ctx[4], false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 4) card_changes.health = /*$gameStore*/ ctx[2].opponent.fields.minionB.health;
-    			if (dirty & /*$gameStore*/ 4) card_changes.damage = /*$gameStore*/ ctx[2].opponent.fields.minionB.damage;
-    			card.$set(card_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(card.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(card.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(card);
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_3$1.name,
-    		type: "if",
-    		source: "(56:4) {#if $gameStore.opponent.fields.minionB}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (50:4) {:else}
+    // (50:0) {:else}
     function create_else_block$2(ctx) {
+    	let div;
     	let span;
     	let t0;
     	let t1;
 
     	const block = {
     		c: function create() {
+    			div = element("div");
     			span = element("span");
     			t0 = text("Minion Field ");
     			t1 = text(/*field*/ ctx[0]);
     			attr_dev(span, "class", "f--orange");
-    			add_location(span, file$c, 50, 6, 1652);
+    			add_location(span, file$c, 51, 4, 1508);
+    			attr_dev(div, "class", "field svelte-4yowu7");
+    			add_location(div, file$c, 50, 2, 1483);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, span, anchor);
+    			insert_dev(target, div, anchor);
+    			append_dev(div, span);
     			append_dev(span, t0);
     			append_dev(span, t1);
     		},
@@ -27182,7 +25409,7 @@ var app = (function () {
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(span);
+    			if (detaching) detach_dev(div);
     		}
     	};
 
@@ -27190,15 +25417,15 @@ var app = (function () {
     		block,
     		id: create_else_block$2.name,
     		type: "else",
-    		source: "(50:4) {:else}",
+    		source: "(50:0) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (41:4) {#if $gameStore.opponent.fields.minionA}
-    function create_if_block_1$2(ctx) {
+    // (41:0) {#if minion}
+    function create_if_block$5(ctx) {
     	let div;
     	let card;
     	let current;
@@ -27207,9 +25434,9 @@ var app = (function () {
 
     	card = new CardSm({
     			props: {
-    				card: /*getCard*/ ctx[3]("minionA"),
-    				health: /*$gameStore*/ ctx[2].opponent.fields.minionA.health,
-    				damage: /*$gameStore*/ ctx[2].opponent.fields.minionA.damage,
+    				card: /*getCard*/ ctx[3](),
+    				health: /*minion*/ ctx[1].health,
+    				damage: /*minion*/ ctx[1].damage,
     				isHealthBarVisible: true
     			},
     			$$inline: true
@@ -27219,9 +25446,9 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			create_component(card.$$.fragment);
-    			set_style(div, "height", "100%");
-    			set_style(div, "width", "100%");
-    			add_location(div, file$c, 41, 6, 1328);
+    			attr_dev(div, "class", "field svelte-4yowu7");
+    			toggle_class(div, "isHovered", /*isHovered*/ ctx[2]);
+    			add_location(div, file$c, 41, 2, 1265);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -27235,9 +25462,13 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 4) card_changes.health = /*$gameStore*/ ctx[2].opponent.fields.minionA.health;
-    			if (dirty & /*$gameStore*/ 4) card_changes.damage = /*$gameStore*/ ctx[2].opponent.fields.minionA.damage;
+    			if (dirty & /*minion*/ 2) card_changes.health = /*minion*/ ctx[1].health;
+    			if (dirty & /*minion*/ 2) card_changes.damage = /*minion*/ ctx[1].damage;
     			card.$set(card_changes);
+
+    			if (dirty & /*isHovered*/ 4) {
+    				toggle_class(div, "isHovered", /*isHovered*/ ctx[2]);
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -27258,9 +25489,9 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$2.name,
+    		id: create_if_block$5.name,
     		type: "if",
-    		source: "(41:4) {#if $gameStore.opponent.fields.minionA}",
+    		source: "(41:0) {#if minion}",
     		ctx
     	});
 
@@ -27272,34 +25503,27 @@ var app = (function () {
     	let if_block;
     	let if_block_anchor;
     	let current;
-    	const if_block_creators = [create_if_block$5, create_if_block_2$2, create_if_block_4$1, create_if_block_6$1];
+    	const if_block_creators = [create_if_block$5, create_else_block$2];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
-    		if (/*field*/ ctx[0] === "a") return 0;
-    		if (/*field*/ ctx[0] === "b") return 1;
-    		if (/*field*/ ctx[0] === "c") return 2;
-    		if (/*field*/ ctx[0] === "d") return 3;
-    		return -1;
+    		if (/*minion*/ ctx[1]) return 0;
+    		return 1;
     	}
 
-    	if (~(current_block_type_index = select_block_type(ctx))) {
-    		if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    	}
+    	current_block_type_index = select_block_type(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	const block = {
     		c: function create() {
-    			if (if_block) if_block.c();
+    			if_block.c();
     			if_block_anchor = empty$1();
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			if (~current_block_type_index) {
-    				if_blocks[current_block_type_index].m(target, anchor);
-    			}
-
+    			if_blocks[current_block_type_index].m(target, anchor);
     			insert_dev(target, if_block_anchor, anchor);
     			current = true;
     		},
@@ -27308,35 +25532,26 @@ var app = (function () {
     			current_block_type_index = select_block_type(ctx);
 
     			if (current_block_type_index === previous_block_index) {
-    				if (~current_block_type_index) {
-    					if_blocks[current_block_type_index].p(ctx, dirty);
-    				}
+    				if_blocks[current_block_type_index].p(ctx, dirty);
     			} else {
-    				if (if_block) {
-    					group_outros();
+    				group_outros();
 
-    					transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    						if_blocks[previous_block_index] = null;
-    					});
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
 
-    					check_outros();
-    				}
+    				check_outros();
+    				if_block = if_blocks[current_block_type_index];
 
-    				if (~current_block_type_index) {
-    					if_block = if_blocks[current_block_type_index];
-
-    					if (!if_block) {
-    						if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    						if_block.c();
-    					} else {
-    						if_block.p(ctx, dirty);
-    					}
-
-    					transition_in(if_block, 1);
-    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
     				} else {
-    					if_block = null;
+    					if_block.p(ctx, dirty);
     				}
+
+    				transition_in(if_block, 1);
+    				if_block.m(if_block_anchor.parentNode, if_block_anchor);
     			}
     		},
     		i: function intro(local) {
@@ -27349,10 +25564,7 @@ var app = (function () {
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (~current_block_type_index) {
-    				if_blocks[current_block_type_index].d(detaching);
-    			}
-
+    			if_blocks[current_block_type_index].d(detaching);
     			if (detaching) detach_dev(if_block_anchor);
     		}
     	};
@@ -27369,26 +25581,27 @@ var app = (function () {
     }
 
     function instance$c($$self, $$props, $$invalidate) {
+    	let minion;
     	let isHovered;
     	let $selectedCardStore;
     	let $playerStore;
     	let $gameStore;
     	let $hoveredCardStore;
     	validate_store(selectedCardStore, 'selectedCardStore');
-    	component_subscribe($$self, selectedCardStore, $$value => $$invalidate(6, $selectedCardStore = $$value));
+    	component_subscribe($$self, selectedCardStore, $$value => $$invalidate(7, $selectedCardStore = $$value));
     	validate_store(playerStore, 'playerStore');
-    	component_subscribe($$self, playerStore, $$value => $$invalidate(7, $playerStore = $$value));
+    	component_subscribe($$self, playerStore, $$value => $$invalidate(8, $playerStore = $$value));
     	validate_store(gameStore, 'gameStore');
-    	component_subscribe($$self, gameStore, $$value => $$invalidate(2, $gameStore = $$value));
+    	component_subscribe($$self, gameStore, $$value => $$invalidate(5, $gameStore = $$value));
     	validate_store(hoveredCardStore, 'hoveredCardStore');
-    	component_subscribe($$self, hoveredCardStore, $$value => $$invalidate(5, $hoveredCardStore = $$value));
+    	component_subscribe($$self, hoveredCardStore, $$value => $$invalidate(6, $hoveredCardStore = $$value));
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('OpponentMinionField', slots, []);
     	let { field } = $$props;
 
-    	const getCard = field => {
-    		const card = cards.find(({ id }) => id === $gameStore.opponent.fields[field].id);
-    		const { gid } = $gameStore.opponent.fields[field];
+    	const getCard = () => {
+    		const { gid } = minion;
+    		const card = cards.find(card => card.id === minion.id);
     		return Object.assign(Object.assign({}, card), { gid });
     	};
 
@@ -27421,12 +25634,13 @@ var app = (function () {
     		socketService,
     		gameStore,
     		hoveredCardStore,
-    		selectedCardStore,
     		playerStore,
+    		selectedCardStore,
     		Card: CardSm,
     		field,
     		getCard,
     		onAttackCard,
+    		minion,
     		isHovered,
     		$selectedCardStore,
     		$playerStore,
@@ -27436,7 +25650,8 @@ var app = (function () {
 
     	$$self.$inject_state = $$props => {
     		if ('field' in $$props) $$invalidate(0, field = $$props.field);
-    		if ('isHovered' in $$props) $$invalidate(1, isHovered = $$props.isHovered);
+    		if ('minion' in $$props) $$invalidate(1, minion = $$props.minion);
+    		if ('isHovered' in $$props) $$invalidate(2, isHovered = $$props.isHovered);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -27444,12 +25659,16 @@ var app = (function () {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*field, $hoveredCardStore*/ 33) {
-    			$$invalidate(1, isHovered = field === $hoveredCardStore.field);
+    		if ($$self.$$.dirty & /*$gameStore, field*/ 33) {
+    			$$invalidate(1, minion = $gameStore.opponent.minion[field]);
+    		}
+
+    		if ($$self.$$.dirty & /*$hoveredCardStore, field*/ 65) {
+    			$$invalidate(2, isHovered = $hoveredCardStore.field === field);
     		}
     	};
 
-    	return [field, isHovered, $gameStore, getCard, onAttackCard, $hoveredCardStore];
+    	return [field, minion, isHovered, getCard, onAttackCard, $gameStore, $hoveredCardStore];
     }
 
     class OpponentMinionField extends SvelteComponentDev {
@@ -27582,7 +25801,7 @@ var app = (function () {
     /* src\game\opponent\Opponent.svelte generated by Svelte v3.46.4 */
     const file$a = "src\\game\\opponent\\Opponent.svelte";
 
-    // (48:2) {#if $gameStore.currentPlayer !== $playerStore.username}
+    // (46:2) {#if $gameStore.currentPlayer !== $playerStore.username}
     function create_if_block$4(ctx) {
     	let div;
     	let i;
@@ -27592,9 +25811,9 @@ var app = (function () {
     			div = element("div");
     			i = element("i");
     			attr_dev(i, "class", "fas fa-arrow-left");
-    			add_location(i, file$a, 49, 6, 1341);
+    			add_location(i, file$a, 47, 6, 1256);
     			attr_dev(div, "class", "turn svelte-1j9brnr");
-    			add_location(div, file$a, 48, 4, 1315);
+    			add_location(div, file$a, 46, 4, 1230);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -27609,7 +25828,7 @@ var app = (function () {
     		block,
     		id: create_if_block$4.name,
     		type: "if",
-    		source: "(48:2) {#if $gameStore.currentPlayer !== $playerStore.username}",
+    		source: "(46:2) {#if $gameStore.currentPlayer !== $playerStore.username}",
     		ctx
     	});
 
@@ -27637,11 +25856,11 @@ var app = (function () {
     	let t7;
     	let current;
     	opponentdeck = new OpponentDeck({ $$inline: true });
-    	opponentminionfield0 = new OpponentMinionField({ props: { field: "D" }, $$inline: true });
-    	opponentminionfield1 = new OpponentMinionField({ props: { field: "C" }, $$inline: true });
+    	opponentminionfield0 = new OpponentMinionField({ props: { field: "d" }, $$inline: true });
+    	opponentminionfield1 = new OpponentMinionField({ props: { field: "c" }, $$inline: true });
     	opponenthero = new OpponentHero({ $$inline: true });
-    	opponentminionfield2 = new OpponentMinionField({ props: { field: "B" }, $$inline: true });
-    	opponentminionfield3 = new OpponentMinionField({ props: { field: "A" }, $$inline: true });
+    	opponentminionfield2 = new OpponentMinionField({ props: { field: "b" }, $$inline: true });
+    	opponentminionfield3 = new OpponentMinionField({ props: { field: "a" }, $$inline: true });
     	opponentgraveyard = new OpponentGraveyard({ $$inline: true });
     	opponenthandcards = new OpponentHandCards({ $$inline: true });
     	let if_block = /*$gameStore*/ ctx[0].currentPlayer !== /*$playerStore*/ ctx[1].username && create_if_block$4(ctx);
@@ -27827,13 +26046,13 @@ var app = (function () {
     			t2 = space();
     			img = element("img");
     			attr_dev(span, "class", "deck__cards svelte-13wo4vy");
-    			add_location(span, file$9, 23, 2, 503);
+    			add_location(span, file$9, 25, 2, 509);
     			attr_dev(img, "class", "deck__img svelte-13wo4vy");
     			if (!src_url_equal(img.src, img_src_value = "assets/card-backs/default.jpg")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "Deck");
-    			add_location(img, file$9, 24, 2, 576);
+    			add_location(img, file$9, 26, 2, 582);
     			attr_dev(div, "class", "deck svelte-13wo4vy");
-    			add_location(div, file$9, 22, 0, 460);
+    			add_location(div, file$9, 24, 0, 466);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -28022,7 +26241,7 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			if_block.c();
-    			attr_dev(div, "class", "graveyard svelte-1bu8vyg");
+    			attr_dev(div, "class", "graveyard svelte-mf9rzo");
     			add_location(div, file$8, 20, 0, 606);
     		},
     		l: function claim(nodes) {
@@ -28407,14 +26626,12 @@ var app = (function () {
     	let div;
     	let hero;
     	let current;
-    	let mounted;
-    	let dispose;
 
     	hero = new Hero({
     			props: {
-    				hero: heroes.find(/*func*/ ctx[4]),
-    				health: /*$gameStore*/ ctx[1].player.hero.health,
-    				mana: /*$gameStore*/ ctx[1].player.hero.mana,
+    				hero: heroes.find(/*func*/ ctx[1]),
+    				health: /*$gameStore*/ ctx[0].player.hero.health,
+    				mana: /*$gameStore*/ ctx[0].player.hero.mana,
     				isHealthBarVisible: true,
     				isManaBarVisible: true
     			},
@@ -28425,9 +26642,8 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			create_component(hero.$$.fragment);
-    			attr_dev(div, "class", "hero svelte-yvg5qq");
-    			toggle_class(div, "isSelected", /*isSelected*/ ctx[0]);
-    			add_location(div, file$6, 29, 0, 735);
+    			attr_dev(div, "class", "hero svelte-n3tlr8");
+    			add_location(div, file$6, 10, 0, 227);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -28436,22 +26652,13 @@ var app = (function () {
     			insert_dev(target, div, anchor);
     			mount_component(hero, div, null);
     			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div, "click", /*onAttackSelect*/ ctx[2], false, false, false);
-    				mounted = true;
-    			}
     		},
     		p: function update(ctx, [dirty]) {
     			const hero_changes = {};
-    			if (dirty & /*$gameStore*/ 2) hero_changes.hero = heroes.find(/*func*/ ctx[4]);
-    			if (dirty & /*$gameStore*/ 2) hero_changes.health = /*$gameStore*/ ctx[1].player.hero.health;
-    			if (dirty & /*$gameStore*/ 2) hero_changes.mana = /*$gameStore*/ ctx[1].player.hero.mana;
+    			if (dirty & /*$gameStore*/ 1) hero_changes.hero = heroes.find(/*func*/ ctx[1]);
+    			if (dirty & /*$gameStore*/ 1) hero_changes.health = /*$gameStore*/ ctx[0].player.hero.health;
+    			if (dirty & /*$gameStore*/ 1) hero_changes.mana = /*$gameStore*/ ctx[0].player.hero.mana;
     			hero.$set(hero_changes);
-
-    			if (dirty & /*isSelected*/ 1) {
-    				toggle_class(div, "isSelected", /*isSelected*/ ctx[0]);
-    			}
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -28465,8 +26672,6 @@ var app = (function () {
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
     			destroy_component(hero);
-    			mounted = false;
-    			dispose();
     		}
     	};
 
@@ -28482,35 +26687,11 @@ var app = (function () {
     }
 
     function instance$6($$self, $$props, $$invalidate) {
-    	let isSelected;
-    	let $selectedCardStore;
-    	let $playerStore;
     	let $gameStore;
-    	validate_store(selectedCardStore, 'selectedCardStore');
-    	component_subscribe($$self, selectedCardStore, $$value => $$invalidate(3, $selectedCardStore = $$value));
-    	validate_store(playerStore, 'playerStore');
-    	component_subscribe($$self, playerStore, $$value => $$invalidate(5, $playerStore = $$value));
     	validate_store(gameStore, 'gameStore');
-    	component_subscribe($$self, gameStore, $$value => $$invalidate(1, $gameStore = $$value));
+    	component_subscribe($$self, gameStore, $$value => $$invalidate(0, $gameStore = $$value));
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('PlayerHero', slots, []);
-
-    	const onAttackSelect = () => {
-    		if ($gameStore.currentPlayer !== $playerStore.username) {
-    			return;
-    		}
-
-    		if ($selectedCardStore.hand.gid) {
-    			set_store_value(selectedCardStore, $selectedCardStore.hand.gid = 0, $selectedCardStore);
-    		}
-
-    		if ($selectedCardStore.field === "hero") {
-    			set_store_value(selectedCardStore, $selectedCardStore.field = "", $selectedCardStore);
-    		} else {
-    			set_store_value(selectedCardStore, $selectedCardStore.field = "hero", $selectedCardStore);
-    		}
-    	};
-
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
@@ -28518,35 +26699,8 @@ var app = (function () {
     	});
 
     	const func = hero => hero.klass === $gameStore.player.hero.id;
-
-    	$$self.$capture_state = () => ({
-    		heroes,
-    		gameStore,
-    		selectedCardStore,
-    		playerStore,
-    		Hero,
-    		onAttackSelect,
-    		isSelected,
-    		$selectedCardStore,
-    		$playerStore,
-    		$gameStore
-    	});
-
-    	$$self.$inject_state = $$props => {
-    		if ('isSelected' in $$props) $$invalidate(0, isSelected = $$props.isSelected);
-    	};
-
-    	if ($$props && "$$inject" in $$props) {
-    		$$self.$inject_state($$props.$$inject);
-    	}
-
-    	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*$selectedCardStore*/ 8) {
-    			$$invalidate(0, isSelected = $selectedCardStore.field === "hero");
-    		}
-    	};
-
-    	return [isSelected, $gameStore, onAttackSelect, $selectedCardStore, func];
+    	$$self.$capture_state = () => ({ heroes, gameStore, Hero, $gameStore });
+    	return [$gameStore, func];
     }
 
     class PlayerHero extends SvelteComponentDev {
@@ -28771,753 +26925,7 @@ var app = (function () {
     const { Object: Object_1 } = globals;
     const file$4 = "src\\game\\player\\PlayerMinionField.svelte";
 
-    // (140:24) 
-    function create_if_block_6(ctx) {
-    	let current_block_type_index;
-    	let if_block;
-    	let if_block_anchor;
-    	let current;
-    	const if_block_creators = [create_if_block_7, create_else_block_3];
-    	const if_blocks = [];
-
-    	function select_block_type_4(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[1].player.fields.minionD) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_4(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			if_block.c();
-    			if_block_anchor = empty$1();
-    		},
-    		m: function mount(target, anchor) {
-    			if_blocks[current_block_type_index].m(target, anchor);
-    			insert_dev(target, if_block_anchor, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_4(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if_blocks[current_block_type_index].d(detaching);
-    			if (detaching) detach_dev(if_block_anchor);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_6.name,
-    		type: "if",
-    		source: "(140:24) ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (125:24) 
-    function create_if_block_4(ctx) {
-    	let current_block_type_index;
-    	let if_block;
-    	let if_block_anchor;
-    	let current;
-    	const if_block_creators = [create_if_block_5, create_else_block_2];
-    	const if_blocks = [];
-
-    	function select_block_type_3(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[1].player.fields.minionC) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_3(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			if_block.c();
-    			if_block_anchor = empty$1();
-    		},
-    		m: function mount(target, anchor) {
-    			if_blocks[current_block_type_index].m(target, anchor);
-    			insert_dev(target, if_block_anchor, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_3(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if_blocks[current_block_type_index].d(detaching);
-    			if (detaching) detach_dev(if_block_anchor);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_4.name,
-    		type: "if",
-    		source: "(125:24) ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (110:24) 
-    function create_if_block_2$1(ctx) {
-    	let current_block_type_index;
-    	let if_block;
-    	let if_block_anchor;
-    	let current;
-    	const if_block_creators = [create_if_block_3, create_else_block_1];
-    	const if_blocks = [];
-
-    	function select_block_type_2(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[1].player.fields.minionB) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_2(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			if_block.c();
-    			if_block_anchor = empty$1();
-    		},
-    		m: function mount(target, anchor) {
-    			if_blocks[current_block_type_index].m(target, anchor);
-    			insert_dev(target, if_block_anchor, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_2(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if_blocks[current_block_type_index].d(detaching);
-    			if (detaching) detach_dev(if_block_anchor);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_2$1.name,
-    		type: "if",
-    		source: "(110:24) ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (95:0) {#if field === "a"}
-    function create_if_block$2(ctx) {
-    	let current_block_type_index;
-    	let if_block;
-    	let if_block_anchor;
-    	let current;
-    	const if_block_creators = [create_if_block_1$1, create_else_block];
-    	const if_blocks = [];
-
-    	function select_block_type_1(ctx, dirty) {
-    		if (/*$gameStore*/ ctx[1].player.fields.minionA) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_1(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	const block = {
-    		c: function create() {
-    			if_block.c();
-    			if_block_anchor = empty$1();
-    		},
-    		m: function mount(target, anchor) {
-    			if_blocks[current_block_type_index].m(target, anchor);
-    			insert_dev(target, if_block_anchor, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_1(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if_blocks[current_block_type_index].d(detaching);
-    			if (detaching) detach_dev(if_block_anchor);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block$2.name,
-    		type: "if",
-    		source: "(95:0) {#if field === \\\"a\\\"}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (150:2) {:else}
-    function create_else_block_3(ctx) {
-    	let div;
-    	let span;
-    	let t0;
-    	let t1;
-    	let mounted;
-    	let dispose;
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			span = element("span");
-    			t0 = text("Minion Field ");
-    			t1 = text(/*field*/ ctx[0]);
-    			add_location(span, file$4, 151, 6, 4908);
-    			attr_dev(div, "class", "field svelte-1u0jnve");
-    			toggle_class(div, "isSummonable", /*isSummonable*/ ctx[2]);
-    			add_location(div, file$4, 150, 4, 4784);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, span);
-    			append_dev(span, t0);
-    			append_dev(span, t1);
-
-    			if (!mounted) {
-    				dispose = [
-    					listen_dev(div, "click", /*onPlayCard*/ ctx[5], false, false, false),
-    					listen_dev(div, "mouseenter", /*mouseEnter*/ ctx[7], false, false, false),
-    					listen_dev(div, "mouseleave", /*onMouseLeave*/ ctx[8], false, false, false)
-    				];
-
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*field*/ 1) set_data_dev(t1, /*field*/ ctx[0]);
-
-    			if (dirty & /*isSummonable*/ 4) {
-    				toggle_class(div, "isSummonable", /*isSummonable*/ ctx[2]);
-    			}
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			mounted = false;
-    			run_all(dispose);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_3.name,
-    		type: "else",
-    		source: "(150:2) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (141:2) {#if $gameStore.player.fields.minionD}
-    function create_if_block_7(ctx) {
-    	let div;
-    	let card;
-    	let current;
-    	let mounted;
-    	let dispose;
-
-    	card = new Card({
-    			props: {
-    				card: /*getCard*/ ctx[4]("minionD"),
-    				health: /*$gameStore*/ ctx[1].player.fields.minionD.health,
-    				damage: /*$gameStore*/ ctx[1].player.fields.minionD.damage,
-    				isHealthBarVisible: true
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(card.$$.fragment);
-    			attr_dev(div, "class", "field svelte-1u0jnve");
-    			toggle_class(div, "isSelected", /*isSelected*/ ctx[3]);
-    			add_location(div, file$4, 141, 4, 4428);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(card, div, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = [
-    					listen_dev(div, "click", /*onAttackSelect*/ ctx[6], false, false, false),
-    					listen_dev(div, "mouseenter", /*mouseEnter*/ ctx[7], false, false, false),
-    					listen_dev(div, "mouseleave", /*onMouseLeave*/ ctx[8], false, false, false)
-    				];
-
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 2) card_changes.health = /*$gameStore*/ ctx[1].player.fields.minionD.health;
-    			if (dirty & /*$gameStore*/ 2) card_changes.damage = /*$gameStore*/ ctx[1].player.fields.minionD.damage;
-    			card.$set(card_changes);
-
-    			if (dirty & /*isSelected*/ 8) {
-    				toggle_class(div, "isSelected", /*isSelected*/ ctx[3]);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(card.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(card.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(card);
-    			mounted = false;
-    			run_all(dispose);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_7.name,
-    		type: "if",
-    		source: "(141:2) {#if $gameStore.player.fields.minionD}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (135:2) {:else}
-    function create_else_block_2(ctx) {
-    	let div;
-    	let span;
-    	let t0;
-    	let t1;
-    	let mounted;
-    	let dispose;
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			span = element("span");
-    			t0 = text("Minion Field ");
-    			t1 = text(/*field*/ ctx[0]);
-    			add_location(span, file$4, 136, 6, 4300);
-    			attr_dev(div, "class", "field svelte-1u0jnve");
-    			toggle_class(div, "isSummonable", /*isSummonable*/ ctx[2]);
-    			add_location(div, file$4, 135, 4, 4176);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, span);
-    			append_dev(span, t0);
-    			append_dev(span, t1);
-
-    			if (!mounted) {
-    				dispose = [
-    					listen_dev(div, "click", /*onPlayCard*/ ctx[5], false, false, false),
-    					listen_dev(div, "mouseenter", /*mouseEnter*/ ctx[7], false, false, false),
-    					listen_dev(div, "mouseleave", /*onMouseLeave*/ ctx[8], false, false, false)
-    				];
-
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*field*/ 1) set_data_dev(t1, /*field*/ ctx[0]);
-
-    			if (dirty & /*isSummonable*/ 4) {
-    				toggle_class(div, "isSummonable", /*isSummonable*/ ctx[2]);
-    			}
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			mounted = false;
-    			run_all(dispose);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_2.name,
-    		type: "else",
-    		source: "(135:2) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (126:2) {#if $gameStore.player.fields.minionC}
-    function create_if_block_5(ctx) {
-    	let div;
-    	let card;
-    	let current;
-    	let mounted;
-    	let dispose;
-
-    	card = new Card({
-    			props: {
-    				card: /*getCard*/ ctx[4]("minionC"),
-    				health: /*$gameStore*/ ctx[1].player.fields.minionC.health,
-    				damage: /*$gameStore*/ ctx[1].player.fields.minionC.damage,
-    				isHealthBarVisible: true
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(card.$$.fragment);
-    			attr_dev(div, "class", "field svelte-1u0jnve");
-    			toggle_class(div, "isSelected", /*isSelected*/ ctx[3]);
-    			add_location(div, file$4, 126, 4, 3820);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(card, div, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = [
-    					listen_dev(div, "click", /*onAttackSelect*/ ctx[6], false, false, false),
-    					listen_dev(div, "mouseenter", /*mouseEnter*/ ctx[7], false, false, false),
-    					listen_dev(div, "mouseleave", /*onMouseLeave*/ ctx[8], false, false, false)
-    				];
-
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 2) card_changes.health = /*$gameStore*/ ctx[1].player.fields.minionC.health;
-    			if (dirty & /*$gameStore*/ 2) card_changes.damage = /*$gameStore*/ ctx[1].player.fields.minionC.damage;
-    			card.$set(card_changes);
-
-    			if (dirty & /*isSelected*/ 8) {
-    				toggle_class(div, "isSelected", /*isSelected*/ ctx[3]);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(card.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(card.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(card);
-    			mounted = false;
-    			run_all(dispose);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_5.name,
-    		type: "if",
-    		source: "(126:2) {#if $gameStore.player.fields.minionC}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (120:2) {:else}
-    function create_else_block_1(ctx) {
-    	let div;
-    	let span;
-    	let t0;
-    	let t1;
-    	let mounted;
-    	let dispose;
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			span = element("span");
-    			t0 = text("Minion Field ");
-    			t1 = text(/*field*/ ctx[0]);
-    			add_location(span, file$4, 121, 6, 3692);
-    			attr_dev(div, "class", "field svelte-1u0jnve");
-    			toggle_class(div, "isSummonable", /*isSummonable*/ ctx[2]);
-    			add_location(div, file$4, 120, 4, 3568);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, span);
-    			append_dev(span, t0);
-    			append_dev(span, t1);
-
-    			if (!mounted) {
-    				dispose = [
-    					listen_dev(div, "click", /*onPlayCard*/ ctx[5], false, false, false),
-    					listen_dev(div, "mouseenter", /*mouseEnter*/ ctx[7], false, false, false),
-    					listen_dev(div, "mouseleave", /*onMouseLeave*/ ctx[8], false, false, false)
-    				];
-
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*field*/ 1) set_data_dev(t1, /*field*/ ctx[0]);
-
-    			if (dirty & /*isSummonable*/ 4) {
-    				toggle_class(div, "isSummonable", /*isSummonable*/ ctx[2]);
-    			}
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			mounted = false;
-    			run_all(dispose);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_1.name,
-    		type: "else",
-    		source: "(120:2) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (111:2) {#if $gameStore.player.fields.minionB}
-    function create_if_block_3(ctx) {
-    	let div;
-    	let card;
-    	let current;
-    	let mounted;
-    	let dispose;
-
-    	card = new Card({
-    			props: {
-    				card: /*getCard*/ ctx[4]("minionB"),
-    				health: /*$gameStore*/ ctx[1].player.fields.minionB.health,
-    				damage: /*$gameStore*/ ctx[1].player.fields.minionB.damage,
-    				isHealthBarVisible: true
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(card.$$.fragment);
-    			attr_dev(div, "class", "field svelte-1u0jnve");
-    			toggle_class(div, "isSelected", /*isSelected*/ ctx[3]);
-    			add_location(div, file$4, 111, 4, 3212);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(card, div, null);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = [
-    					listen_dev(div, "click", /*onAttackSelect*/ ctx[6], false, false, false),
-    					listen_dev(div, "mouseenter", /*mouseEnter*/ ctx[7], false, false, false),
-    					listen_dev(div, "mouseleave", /*onMouseLeave*/ ctx[8], false, false, false)
-    				];
-
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 2) card_changes.health = /*$gameStore*/ ctx[1].player.fields.minionB.health;
-    			if (dirty & /*$gameStore*/ 2) card_changes.damage = /*$gameStore*/ ctx[1].player.fields.minionB.damage;
-    			card.$set(card_changes);
-
-    			if (dirty & /*isSelected*/ 8) {
-    				toggle_class(div, "isSelected", /*isSelected*/ ctx[3]);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(card.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(card.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(card);
-    			mounted = false;
-    			run_all(dispose);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_3.name,
-    		type: "if",
-    		source: "(111:2) {#if $gameStore.player.fields.minionB}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (105:2) {:else}
+    // (104:0) {:else}
     function create_else_block(ctx) {
     	let div;
     	let span;
@@ -29532,10 +26940,10 @@ var app = (function () {
     			span = element("span");
     			t0 = text("Minion Field ");
     			t1 = text(/*field*/ ctx[0]);
-    			add_location(span, file$4, 106, 6, 3084);
-    			attr_dev(div, "class", "field svelte-1u0jnve");
+    			add_location(span, file$4, 105, 4, 2948);
+    			attr_dev(div, "class", "field svelte-1ptpbzp");
     			toggle_class(div, "isSummonable", /*isSummonable*/ ctx[2]);
-    			add_location(div, file$4, 105, 4, 2960);
+    			add_location(div, file$4, 104, 2, 2824);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -29546,8 +26954,8 @@ var app = (function () {
     			if (!mounted) {
     				dispose = [
     					listen_dev(div, "click", /*onPlayCard*/ ctx[5], false, false, false),
-    					listen_dev(div, "mouseenter", /*mouseEnter*/ ctx[7], false, false, false),
-    					listen_dev(div, "mouseleave", /*onMouseLeave*/ ctx[8], false, false, false)
+    					listen_dev(div, "mouseenter", /*onMouseenter*/ ctx[7], false, false, false),
+    					listen_dev(div, "mouseleave", /*onMouseleave*/ ctx[8], false, false, false)
     				];
 
     				mounted = true;
@@ -29573,15 +26981,15 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(105:2) {:else}",
+    		source: "(104:0) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (96:2) {#if $gameStore.player.fields.minionA}
-    function create_if_block_1$1(ctx) {
+    // (100:0) {#if minion}
+    function create_if_block$2(ctx) {
     	let div;
     	let card;
     	let current;
@@ -29590,9 +26998,9 @@ var app = (function () {
 
     	card = new Card({
     			props: {
-    				card: /*getCard*/ ctx[4]("minionA"),
-    				health: /*$gameStore*/ ctx[1].player.fields.minionA.health,
-    				damage: /*$gameStore*/ ctx[1].player.fields.minionA.damage,
+    				card: /*getCard*/ ctx[4](),
+    				health: /*minion*/ ctx[1].health,
+    				damage: /*minion*/ ctx[1].damage,
     				isHealthBarVisible: true
     			},
     			$$inline: true
@@ -29602,9 +27010,9 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			create_component(card.$$.fragment);
-    			attr_dev(div, "class", "field svelte-1u0jnve");
+    			attr_dev(div, "class", "field svelte-1ptpbzp");
     			toggle_class(div, "isSelected", /*isSelected*/ ctx[3]);
-    			add_location(div, file$4, 96, 4, 2604);
+    			add_location(div, file$4, 100, 2, 2579);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -29614,8 +27022,8 @@ var app = (function () {
     			if (!mounted) {
     				dispose = [
     					listen_dev(div, "click", /*onAttackSelect*/ ctx[6], false, false, false),
-    					listen_dev(div, "mouseenter", /*mouseEnter*/ ctx[7], false, false, false),
-    					listen_dev(div, "mouseleave", /*onMouseLeave*/ ctx[8], false, false, false)
+    					listen_dev(div, "mouseenter", /*onMouseenter*/ ctx[7], false, false, false),
+    					listen_dev(div, "mouseleave", /*onMouseleave*/ ctx[8], false, false, false)
     				];
 
     				mounted = true;
@@ -29623,8 +27031,8 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			const card_changes = {};
-    			if (dirty & /*$gameStore*/ 2) card_changes.health = /*$gameStore*/ ctx[1].player.fields.minionA.health;
-    			if (dirty & /*$gameStore*/ 2) card_changes.damage = /*$gameStore*/ ctx[1].player.fields.minionA.damage;
+    			if (dirty & /*minion*/ 2) card_changes.health = /*minion*/ ctx[1].health;
+    			if (dirty & /*minion*/ 2) card_changes.damage = /*minion*/ ctx[1].damage;
     			card.$set(card_changes);
 
     			if (dirty & /*isSelected*/ 8) {
@@ -29650,9 +27058,9 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$1.name,
+    		id: create_if_block$2.name,
     		type: "if",
-    		source: "(96:2) {#if $gameStore.player.fields.minionA}",
+    		source: "(100:0) {#if minion}",
     		ctx
     	});
 
@@ -29664,34 +27072,27 @@ var app = (function () {
     	let if_block;
     	let if_block_anchor;
     	let current;
-    	const if_block_creators = [create_if_block$2, create_if_block_2$1, create_if_block_4, create_if_block_6];
+    	const if_block_creators = [create_if_block$2, create_else_block];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
-    		if (/*field*/ ctx[0] === "a") return 0;
-    		if (/*field*/ ctx[0] === "b") return 1;
-    		if (/*field*/ ctx[0] === "c") return 2;
-    		if (/*field*/ ctx[0] === "d") return 3;
-    		return -1;
+    		if (/*minion*/ ctx[1]) return 0;
+    		return 1;
     	}
 
-    	if (~(current_block_type_index = select_block_type(ctx))) {
-    		if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    	}
+    	current_block_type_index = select_block_type(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	const block = {
     		c: function create() {
-    			if (if_block) if_block.c();
+    			if_block.c();
     			if_block_anchor = empty$1();
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			if (~current_block_type_index) {
-    				if_blocks[current_block_type_index].m(target, anchor);
-    			}
-
+    			if_blocks[current_block_type_index].m(target, anchor);
     			insert_dev(target, if_block_anchor, anchor);
     			current = true;
     		},
@@ -29700,35 +27101,26 @@ var app = (function () {
     			current_block_type_index = select_block_type(ctx);
 
     			if (current_block_type_index === previous_block_index) {
-    				if (~current_block_type_index) {
-    					if_blocks[current_block_type_index].p(ctx, dirty);
-    				}
+    				if_blocks[current_block_type_index].p(ctx, dirty);
     			} else {
-    				if (if_block) {
-    					group_outros();
+    				group_outros();
 
-    					transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    						if_blocks[previous_block_index] = null;
-    					});
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
 
-    					check_outros();
-    				}
+    				check_outros();
+    				if_block = if_blocks[current_block_type_index];
 
-    				if (~current_block_type_index) {
-    					if_block = if_blocks[current_block_type_index];
-
-    					if (!if_block) {
-    						if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    						if_block.c();
-    					} else {
-    						if_block.p(ctx, dirty);
-    					}
-
-    					transition_in(if_block, 1);
-    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
     				} else {
-    					if_block = null;
+    					if_block.p(ctx, dirty);
     				}
+
+    				transition_in(if_block, 1);
+    				if_block.m(if_block_anchor.parentNode, if_block_anchor);
     			}
     		},
     		i: function intro(local) {
@@ -29741,10 +27133,7 @@ var app = (function () {
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (~current_block_type_index) {
-    				if_blocks[current_block_type_index].d(detaching);
-    			}
-
+    			if_blocks[current_block_type_index].d(detaching);
     			if (detaching) detach_dev(if_block_anchor);
     		}
     	};
@@ -29764,23 +27153,24 @@ var app = (function () {
     	let isSelected;
     	let isSummonable;
     	let isCurrentPlayer;
+    	let minion;
     	let $selectedCardStore;
     	let $gameStore;
     	let $playerStore;
     	validate_store(selectedCardStore, 'selectedCardStore');
     	component_subscribe($$self, selectedCardStore, $$value => $$invalidate(9, $selectedCardStore = $$value));
     	validate_store(gameStore, 'gameStore');
-    	component_subscribe($$self, gameStore, $$value => $$invalidate(1, $gameStore = $$value));
+    	component_subscribe($$self, gameStore, $$value => $$invalidate(10, $gameStore = $$value));
     	validate_store(playerStore, 'playerStore');
-    	component_subscribe($$self, playerStore, $$value => $$invalidate(10, $playerStore = $$value));
+    	component_subscribe($$self, playerStore, $$value => $$invalidate(11, $playerStore = $$value));
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('PlayerMinionField', slots, []);
     	let { field } = $$props;
     	const { socket } = socketService;
 
-    	const getCard = field => {
-    		const card = cards.find(({ id }) => id === $gameStore.player.fields[field].id);
-    		const gid = $gameStore.player.fields[field].gid;
+    	const getCard = () => {
+    		const card = cards.find(({ id }) => id === minion.id);
+    		const gid = minion.gid;
     		return Object.assign(Object.assign({}, card), { gid });
     	};
 
@@ -29802,8 +27192,7 @@ var app = (function () {
     		}
 
     		const { gid } = $selectedCardStore.hand;
-    		const _field = `minion${field}`;
-    		socket.emit("playCard", { field: _field, gid });
+    		socket.emit("playMinion", { field, gid });
     		set_store_value(selectedCardStore, $selectedCardStore.hand.gid = 0, $selectedCardStore);
     	};
 
@@ -29823,13 +27212,13 @@ var app = (function () {
     		}
     	};
 
-    	const mouseEnter = () => {
+    	const onMouseenter = () => {
     		if (isCurrentPlayer) {
     			socket.emit("hoverCard", { field });
     		}
     	};
 
-    	const onMouseLeave = () => {
+    	const onMouseleave = () => {
     		if (isCurrentPlayer) {
     			socket.emit("unhoverCard");
     		}
@@ -29858,9 +27247,10 @@ var app = (function () {
     		getCard,
     		onPlayCard,
     		onAttackSelect,
-    		mouseEnter,
-    		onMouseLeave,
+    		onMouseenter,
+    		onMouseleave,
     		isCurrentPlayer,
+    		minion,
     		isSummonable,
     		isSelected,
     		$selectedCardStore,
@@ -29871,6 +27261,7 @@ var app = (function () {
     	$$self.$inject_state = $$props => {
     		if ('field' in $$props) $$invalidate(0, field = $$props.field);
     		if ('isCurrentPlayer' in $$props) isCurrentPlayer = $$props.isCurrentPlayer;
+    		if ('minion' in $$props) $$invalidate(1, minion = $$props.minion);
     		if ('isSummonable' in $$props) $$invalidate(2, isSummonable = $$props.isSummonable);
     		if ('isSelected' in $$props) $$invalidate(3, isSelected = $$props.isSelected);
     	};
@@ -29884,26 +27275,31 @@ var app = (function () {
     			$$invalidate(3, isSelected = $selectedCardStore.field === field);
     		}
 
-    		if ($$self.$$.dirty & /*$selectedCardStore, $gameStore, field*/ 515) {
-    			$$invalidate(2, isSummonable = $selectedCardStore.hand.gid && $selectedCardStore.hand.type === CardType.MINION && !$gameStore.player.fields[`minion${field}`]);
+    		if ($$self.$$.dirty & /*$selectedCardStore, $gameStore, field*/ 1537) {
+    			$$invalidate(2, isSummonable = $selectedCardStore.hand.gid && $selectedCardStore.hand.type === CardType.MINION && !$gameStore.player.minion[field]);
     		}
 
-    		if ($$self.$$.dirty & /*$gameStore, $playerStore*/ 1026) {
+    		if ($$self.$$.dirty & /*$gameStore, $playerStore*/ 3072) {
     			isCurrentPlayer = $gameStore.currentPlayer === $playerStore.username;
+    		}
+
+    		if ($$self.$$.dirty & /*$gameStore, field*/ 1025) {
+    			$$invalidate(1, minion = $gameStore.player.minion[field]);
     		}
     	};
 
     	return [
     		field,
-    		$gameStore,
+    		minion,
     		isSummonable,
     		isSelected,
     		getCard,
     		onPlayCard,
     		onAttackSelect,
-    		mouseEnter,
-    		onMouseLeave,
+    		onMouseenter,
+    		onMouseleave,
     		$selectedCardStore,
+    		$gameStore,
     		$playerStore
     	];
     }
@@ -30091,7 +27487,7 @@ var app = (function () {
     /* src\game\player\Player.svelte generated by Svelte v3.46.4 */
     const file$2 = "src\\game\\player\\Player.svelte";
 
-    // (49:2) {#if $gameStore.currentPlayer === $playerStore.username}
+    // (47:2) {#if $gameStore.currentPlayer === $playerStore.username}
     function create_if_block$1(ctx) {
     	let div;
     	let fontawesome;
@@ -30107,7 +27503,7 @@ var app = (function () {
     			div = element("div");
     			create_component(fontawesome.$$.fragment);
     			attr_dev(div, "class", "turn svelte-1j9brnr");
-    			add_location(div, file$2, 49, 4, 1323);
+    			add_location(div, file$2, 47, 4, 1242);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -30133,7 +27529,7 @@ var app = (function () {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(49:2) {#if $gameStore.currentPlayer === $playerStore.username}",
+    		source: "(47:2) {#if $gameStore.currentPlayer === $playerStore.username}",
     		ctx
     	});
 
@@ -30161,11 +27557,11 @@ var app = (function () {
     	let t7;
     	let current;
     	playergraveyard = new PlayerGraveyard({ $$inline: true });
-    	playerminionfield0 = new PlayerMinionField({ props: { field: "A" }, $$inline: true });
-    	playerminionfield1 = new PlayerMinionField({ props: { field: "B" }, $$inline: true });
+    	playerminionfield0 = new PlayerMinionField({ props: { field: "a" }, $$inline: true });
+    	playerminionfield1 = new PlayerMinionField({ props: { field: "b" }, $$inline: true });
     	playerhero = new PlayerHero({ $$inline: true });
-    	playerminionfield2 = new PlayerMinionField({ props: { field: "C" }, $$inline: true });
-    	playerminionfield3 = new PlayerMinionField({ props: { field: "D" }, $$inline: true });
+    	playerminionfield2 = new PlayerMinionField({ props: { field: "c" }, $$inline: true });
+    	playerminionfield3 = new PlayerMinionField({ props: { field: "d" }, $$inline: true });
     	playerdeck = new PlayerDeck({ $$inline: true });
     	playerhandcards = new PlayerHandCards({ $$inline: true });
     	let if_block = /*$gameStore*/ ctx[0].currentPlayer === /*$playerStore*/ ctx[1].username && create_if_block$1(ctx);
@@ -30431,7 +27827,7 @@ var app = (function () {
     /* src\App.svelte generated by Svelte v3.46.4 */
     const file = "src\\App.svelte";
 
-    // (64:27) 
+    // (72:27) 
     function create_if_block_2(ctx) {
     	let game;
     	let current;
@@ -30463,14 +27859,14 @@ var app = (function () {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(64:27) ",
+    		source: "(72:27) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (57:59) 
+    // (65:59) 
     function create_if_block_1(ctx) {
     	let div1;
     	let client;
@@ -30488,10 +27884,10 @@ var app = (function () {
     			t = space();
     			div0 = element("div");
     			create_component(sidenav.$$.fragment);
-    			attr_dev(div0, "class", "app__sidenav svelte-1pmcdr8");
-    			add_location(div0, file, 59, 8, 1465);
-    			attr_dev(div1, "class", "app__content svelte-1pmcdr8");
-    			add_location(div1, file, 57, 6, 1412);
+    			attr_dev(div0, "class", "app__sidenav svelte-1nfyaq");
+    			add_location(div0, file, 67, 8, 1618);
+    			attr_dev(div1, "class", "app__content svelte-1nfyaq");
+    			add_location(div1, file, 65, 6, 1565);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -30523,14 +27919,14 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(57:59) ",
+    		source: "(65:59) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (55:4) {#if status === 0}
+    // (63:4) {#if status === 0}
     function create_if_block(ctx) {
     	let auth;
     	let current;
@@ -30562,7 +27958,7 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(55:4) {#if status === 0}",
+    		source: "(63:4) {#if status === 0}",
     		ctx
     	});
 
@@ -30604,7 +28000,7 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			style = element("style");
-    			style.textContent = "body {\n      margin: 0;\n      font-family: \"Exo 2\", sans-serif;\n      line-height: 1;\n    }";
+    			style.textContent = "@font-face {\n      font-family: 'RomanCapitalz';\n      src: url(assets/font.woff);\n    }\n\n    body {\n      margin: 0;\n      font-family: \"RomanCapitalz\", sans-serif;\n      font-size: 20px;\n      line-height: 1;\n      user-select: none;\n    }";
     			t1 = space();
     			div1 = element("div");
     			div0 = element("div");
@@ -30616,10 +28012,10 @@ var app = (function () {
     			t4 = space();
     			create_component(modals.$$.fragment);
     			add_location(style, file, 17, 2, 586);
-    			attr_dev(div0, "class", "app--inner svelte-1pmcdr8");
-    			add_location(div0, file, 53, 2, 1284);
-    			attr_dev(div1, "class", "app svelte-1pmcdr8");
-    			add_location(div1, file, 52, 0, 1264);
+    			attr_dev(div0, "class", "app--inner svelte-1nfyaq");
+    			add_location(div0, file, 61, 2, 1437);
+    			attr_dev(div1, "class", "app svelte-1nfyaq");
+    			add_location(div1, file, 60, 0, 1417);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");

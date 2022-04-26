@@ -1,3 +1,4 @@
+import { GameFE } from "interfaces/client";
 interface UpdateFriend {
     username: string;
     status: number;
@@ -63,11 +64,14 @@ interface AttackMinionOpponent {
     attacked: "a" | "b" | "c" | "d";
 }
 interface HoverCard {
-    field: string;
+    field: "a" | "b" | "c" | "d";
 }
 interface PlayCardReceiver {
     field: string;
     card: any;
+}
+interface ReloadGameState {
+    game: GameFE;
 }
 interface PlayCardSender {
     field: string;
@@ -135,16 +139,17 @@ export interface SocketResponses {
     setDeckName: Callback<SetDeckName>;
     startGame: Callback<StartGame>;
     endGame: () => void;
-    "attackHero|opponent": Callback<AttackHeroOpponent>;
-    "attackHero|player": Callback<AttackHeroPlayer>;
-    "attackMinion|opponent": Callback<AttackMinionOpponent>;
-    "attackMinion|player": Callback<AttackMinionPlayer>;
-    "endTurn|player": () => void;
-    "endTurn|opponent": () => void;
+    attackHeroOpponent: Callback<AttackHeroOpponent>;
+    attackHeroPlayer: Callback<AttackHeroPlayer>;
+    attackMinionOpponent: Callback<AttackMinionOpponent>;
+    attackMinionPlayer: Callback<AttackMinionPlayer>;
+    endTurnPlayer: () => void;
+    endTurnOpponent: () => void;
     hoverCard: Callback<HoverCard>;
-    "playMinion|player": Callback<PlayCardSender>;
-    "playMinion|opponent": Callback<PlayCardReceiver>;
+    playMinionPlayer: Callback<PlayCardSender>;
+    playMinionOpponent: Callback<PlayCardReceiver>;
     unhoverCard: () => void;
+    reloadGameState: Callback<ReloadGameState>;
     acceptFriendReceiver: Callback<AcceptFriendReceiver>;
     acceptFriendSender: Callback<AcceptFriendSender>;
     addFriend: Callback<AddFriend>;

@@ -1,4 +1,4 @@
-import {App} from "models";
+import type {App} from "models";
 
 export const unhoverCard = (app: App): void => {
   const {controllers, services} = app;

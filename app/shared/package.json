@@ -9,7 +9,8 @@
     "./enums": "./dist/enums/index.js",
     "./interfaces/requests": "./dist/interfaces/requests/index.js",
     "./interfaces/responses": "./dist/interfaces/responses/index.js",
-    "./interfaces/mongo": "./dist/interfaces/mongo/index.js"
+    "./interfaces/mongo": "./dist/interfaces/mongo/index.js",
+    "./interfaces/client": "./dist/interfaces/client/index.js"
   },
   "typesVersions": {
     "*": {
@@ -17,7 +18,8 @@
       "enums": ["dist/enums/index.d.ts"],
       "interfaces/requests": ["dist/interfaces/requests/index.d.ts"],
       "interfaces/responses": ["dist/interfaces/responses/index.d.ts"],
-      "interfaces/mongo": ["dist/interfaces/mongo/index.d.ts"]
+      "interfaces/mongo": ["dist/interfaces/mongo/index.d.ts"],
+      "interfaces/client": ["dist/interfaces/client/index.d.ts"]
     }
   },
   "devDependencies": {

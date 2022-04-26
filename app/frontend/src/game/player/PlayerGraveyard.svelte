@@ -4,7 +4,7 @@
   import {gameStore} from "stores";
   import Card from "../../ui/Card.svelte";
 
-  const onViewGraveyard = () => {
+  const onViewGraveyard = (): void => {
     miscService.openModal("graveyard", $gameStore.player.graveyard);
   };
 </script>
@@ -17,7 +17,7 @@
     height: $card-height;
     width: $card-width;
     @include flex($align-items: center, $justify-content: center);
-    background-color: $purple;
+    border: 1px solid $purple;
     box-shadow: $elevation-sm;
     color: white;
   }

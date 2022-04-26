@@ -20,7 +20,9 @@
     @include flex($align-items: center, $justify-content: center);
     overflow: hidden;
   }
+
   .fields {@include grid(7, 1, 0 $spacing-sm);}
+
   .turn {
     position: absolute;
     top: 50%;
@@ -31,13 +33,11 @@
 <div class="fields-wrapper">
   <div class="fields">
     <PlayerGraveyard/>
-    <PlayerMinionField field="A"/>
-    <PlayerMinionField field="B"/>
+    <PlayerMinionField field="a"/>
+    <PlayerMinionField field="b"/>
     <PlayerHero/>
-    <PlayerMinionField field="C"/>
-    <PlayerMinionField field="D"/>
-    <!-- <PlayerMinionField field="E"/>
-    <PlayerMinionField field="F"/> -->
+    <PlayerMinionField field="c"/>
+    <PlayerMinionField field="d"/>
     <PlayerDeck/>
   </div>
 

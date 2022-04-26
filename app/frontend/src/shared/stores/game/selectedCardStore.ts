@@ -1,8 +1,8 @@
-import {writable, type Writable} from "svelte/store";
+import {writable} from "svelte/store";
 import {CardType} from "@som/shared/enums";
 import type {SelectedCard} from "../../models/view/selectedCard";
 
-export const selectedCardStore: Writable<SelectedCard> = writable({
+export const selectedCardStore = writable<SelectedCard>({
   field: "",
   hand: {
     gid: 0,

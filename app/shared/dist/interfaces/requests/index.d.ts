@@ -51,7 +51,7 @@ interface PlayMinion {
     gid: number;
 }
 interface HoverCard {
-    field: string;
+    field: "a" | "b" | "c" | "d";
 }
 interface AcceptFriend {
     username: string;

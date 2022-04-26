@@ -5,7 +5,7 @@ export const endTurn = (app: App): void => {
   const {gameController} = controllers;
   const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+  const {socket, socketId} = socketService;
 
   socket.on("endTurn", async () => {
     const $player = await $players.findOne({socketId});
@@ -17,30 +17,26 @@ export const endTurn = (app: App): void => {
 
     if (!$game) { return; }
 
+    if ($game.currentPlayer !== username) { return; }
+
     const {opponent} = gameController.getPlayers($game, username);
-    const {hand, deck, hero} = opponent;
-    const card = deck.pop();
+    const {hero, minion} = opponent;
 
-    if (!card) {
-      await gameController.endGame(gameId, "B");
-      return;
-    }
+    await gameController.drawCard(gameId, opponent);
 
-    hand.push(card);
     hero.mana = 100;
 
-    const savedGame = await gameController.saveGame($game);
+    const minionKeys = Object.keys(minion) as Array<keyof typeof minion>;
 
-    if (!savedGame) { return; }
-
-    socket.emit("endTurn|player");
-
-    const $opponent = await $players.findOne({
-      username: opponent.username
+    minionKeys.forEach((key) => {
+      const Minion = minion[key];
+      if (!Minion) { return; }
+      Minion.hasAttacked = false;
+      Minion.hasTriggeredEffect = false;
     });
 
-    if (!$opponent || !$opponent.socketId) { return; }
+    $game.currentPlayer = opponent.username;
 
-    io.to($opponent.socketId).emit("endTurn|opponent");
+    await gameController.saveGame($game);
   });
 };

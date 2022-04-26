@@ -5,8 +5,8 @@ import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig.js';
 import { MongoClient } from 'mongodb';
 import fetch from 'node-fetch';
 import { Server } from 'socket.io';
-import { PlayerStatus, CardType } from '@som/shared/enums';
 import { randomInt } from 'crypto';
+import { PlayerStatus, CardType, Effect } from '@som/shared/enums';
 import { cards } from '@som/shared/data';
 
 const settings = {
@@ -30,49 +30,193 @@ const settings = {
     }
 };
 
-const sendChatMsg = (services) => {
-    const { mongoService, socketService } = services;
-    const { $chats, $players } = mongoService;
-    const { io, socket } = socketService;
-    socket.on("sendChatMsg", async (params) => {
-        const { sender, receiver, text, date } = params;
-        const updateChat = await $chats.updateOne({
-            players: { $all: [sender, receiver] }
-        }, {
-            $push: {
-                messages: { sender, text, date }
+// mutation probably isn't the best way to do this...
+class GameController {
+    _services;
+    constructor(_services) {
+        this._services = _services;
+    }
+    async saveGame(game) {
+        const { mongoService, socketService } = this._services;
+        const { $games, $players } = mongoService;
+        const { io } = socketService;
+        const { gameId, playerA, playerB } = game;
+        const [$updateGame, $playerA, $playerB] = await Promise.all([
+            $games.replaceOne({ gameId }, game),
+            $players.findOne({
+                username: playerA.username
+            }),
+            $players.findOne({
+                username: playerB.username
+            })
+        ]);
+        if (!$updateGame.modifiedCount || !$playerA || !$playerB) {
+            return;
+        }
+        io.to($playerA.socketId).emit("reloadGameState", {
+            game: this.generateGameFE(game, playerA.username)
+        });
+        io.to($playerB.socketId).emit("reloadGameState", {
+            game: this.generateGameFE(game, playerB.username)
+        });
+    }
+    async isGameOver(game) {
+        if (game.playerA.hero.health <= 0) {
+            await this.endGame(game.gameId, "B");
+            return true;
+        }
+        else if (game.playerB.hero.health <= 0) {
+            await this.endGame(game.gameId, "A");
+            return true;
+        }
+        return false;
+    }
+    async endGame(gameId, winner) {
+        const { mongoService, socketService } = this._services;
+        const { $games, $players } = mongoService;
+        const { io, socket } = socketService;
+        const game = await $games.findOne({ gameId });
+        if (!game) {
+            return;
+        }
+        const { playerA, playerB } = game;
+        const [A, B] = await Promise.all([
+            $players.findOneAndUpdate({
+                username: playerA.username
+            }, {
+                $set: {
+                    gameId: 0,
+                    status: PlayerStatus.ONLINE
+                }
+            }, {
+                returnDocument: "after"
+            }),
+            $players.findOneAndUpdate({
+                username: playerB.username
+            }, {
+                $set: {
+                    gameId: 0,
+                    status: PlayerStatus.ONLINE
+                }
+            }, {
+                returnDocument: "after"
+            })
+        ]);
+        if (!A.value || !B.value) {
+            return;
+        }
+        const isDeletedGame = await $games.deleteOne({ gameId });
+        if (!isDeletedGame.deletedCount) {
+            return;
+        }
+        if (winner === "A") {
+            io.to(A.value.socketId).emit("notification", "You won!");
+            io.to(B.value.socketId).emit("notification", "You lost...");
+        }
+        else if (winner === "B") {
+            io.to(B.value.socketId).emit("notification", "You won!");
+            io.to(A.value.socketId).emit("notification", "You lost...");
+        }
+        io.to([A.value.socketId, B.value.socketId]).emit("endGame");
+    }
+    getPlayers(game, username) {
+        const { playerA, playerB } = game;
+        const player = playerA.username === username ? playerA : playerB;
+        const opponent = playerA.username === username ? playerB : playerA;
+        return { player, opponent };
+    }
+    checkPlayersDeck(playerDeck) {
+        const numberOfCards = playerDeck.cards.reduce((acc, curr) => acc += curr.amount, 0);
+        if (numberOfCards !== 30) {
+            return false;
+        }
+        return true;
+    }
+    shuffleDeck(deck) {
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = randomInt(0, i + 1);
+            const temp = deck[i];
+            deck[i] = deck[j];
+            deck[j] = temp;
+        }
+    }
+    generateGameFE(game, username) {
+        const { gameId, currentPlayer, playerA, playerB } = game;
+        return {
+            gameId,
+            currentPlayer,
+            player: playerA.username === username ? {
+                username: playerA.username,
+                hero: playerA.hero,
+                minion: playerA.minion,
+                trap: playerA.trap,
+                deck: playerA.deck,
+                hand: playerA.hand,
+                graveyard: playerA.graveyard
+            } : {
+                username: playerB.username,
+                hero: playerB.hero,
+                minion: playerB.minion,
+                trap: playerB.trap,
+                deck: playerB.deck,
+                hand: playerB.hand,
+                graveyard: playerB.graveyard
+            },
+            opponent: playerA.username === username ? {
+                username: playerB.username,
+                hero: playerB.hero,
+                minion: playerB.minion,
+                trap: playerB.trap,
+                deck: playerB.deck.length,
+                hand: playerB.hand.length,
+                graveyard: playerB.graveyard
+            } : {
+                username: playerA.username,
+                hero: playerA.hero,
+                minion: playerA.minion,
+                trap: playerA.trap,
+                deck: playerA.deck.length,
+                hand: playerA.hand.length,
+                graveyard: playerA.graveyard
             }
+        };
+    }
+    async reloadGameState(game) {
+        const { mongoService, socketService } = this._services;
+        const { $players } = mongoService;
+        const { io } = socketService;
+        const { playerA, playerB } = game;
+        const [$playerA, $playerB] = await Promise.all([
+            $players.findOne({
+                username: playerA.username
+            }),
+            $players.findOne({
+                username: playerB.username
+            })
+        ]);
+        if (!$playerA || !$playerB) {
+            return;
+        }
+        io.to($playerA.socketId).emit("reloadGameState", {
+            game: this.generateGameFE(game, playerA.username)
         });
-        if (!updateChat.modifiedCount) {
-            return;
-        }
-        socket.emit("sendChatMsgSender", { sender, receiver, text, date });
-        const player = await $players.findOne({
-            username: receiver
+        io.to($playerB.socketId).emit("reloadGameState", {
+            game: this.generateGameFE(game, playerB.username)
         });
-        if (!player || !player.socketId) {
+    }
+    async drawCard(gameId, player) {
+        const { hand, deck } = player;
+        const card = deck.pop();
+        if (!card) {
+            await this.endGame(gameId, "B");
             return;
         }
-        io.to(player.socketId).emit("sendChatMsgReceiver", { sender, text, date });
-    });
-};
+        hand.push(card);
+    }
+}
 
-const updateFriend = (services) => {
-    const { mongoService, socketService } = services;
-    const { $players } = mongoService;
-    const { io, socket, socketId } = socketService;
-    socket.on("updateStatus", async () => {
-        const player = await $players.findOne({ socketId });
-        if (!player) {
-            return;
-        }
-        const { username, status, social: { friends } } = player;
-        const socketIds = await mongoService.getSocketIds(friends);
-        io.to(socketIds).emit("updateStatus", { username, status });
-    });
-};
-
-const disconnect = (services) => {
+const disconnect = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -94,7 +238,8 @@ const disconnect = (services) => {
     });
 };
 
-const getPrivateKeyHash = (services) => {
+const getPrivateKeyHash = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { socket } = socketService;
@@ -111,7 +256,8 @@ const getPrivateKeyHash = (services) => {
 };
 
 // this needs refactoring...
-const signin = (services) => {
+const signin = (app) => {
+    const { services } = app;
     const { eosService, mongoService, socketService } = services;
     const { $chats, $games, $lobbies, $players } = mongoService;
     const { socket, socketId } = socketService;
@@ -185,7 +331,12 @@ const signin = (services) => {
                 gameView = {
                     gameId: game.gameId,
                     currentPlayer: game.currentPlayer,
-                    player: game.playerA,
+                    player: {
+                        ...game.playerA,
+                        // deck should be number so players can't cheat
+                        // deck: game.playerA.deck.length
+                        // but endTurn event needs refactor first
+                    },
                     opponent: {
                         ...game.playerB,
                         deck: game.playerB.deck.length,
@@ -215,7 +366,8 @@ const signin = (services) => {
     });
 };
 
-const signup = (services) => {
+const signup = (app) => {
+    const { services } = app;
     const { eosService, mongoService, socketService } = services;
     const { $players } = mongoService;
     const { socket } = socketService;
@@ -266,7 +418,8 @@ const signup = (services) => {
     });
 };
 
-const destroyLobby = (services) => {
+const destroyLobby = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $lobbies, $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -320,7 +473,9 @@ const destroyLobby = (services) => {
     });
 };
 
-const joinLobby = (services) => {
+const joinLobby = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
     const { mongoService, socketService } = services;
     const { $lobbies, $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -350,6 +505,10 @@ const joinLobby = (services) => {
             socket.emit("notification", "Lobby is full.");
             return;
         }
+        if (!gameController.checkPlayersDeck($player.decks[$player.deckId])) {
+            socket.emit("notification", "Invalid deck.");
+            return;
+        }
         const { username, avatarId } = $player;
         const [modifiedLobby, updatedPlayer] = await Promise.all([
             $lobbies.findOneAndUpdate({ lobbyId }, {
@@ -377,7 +536,8 @@ const joinLobby = (services) => {
     });
 };
 
-const leaveLobby = (services) => {
+const leaveLobby = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $lobbies, $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -422,7 +582,9 @@ const leaveLobby = (services) => {
     });
 };
 
-const makeLobby = (services) => {
+const makeLobby = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
     const { mongoService, socketService } = services;
     const { $lobbies, $players } = mongoService;
     const { socket, socketId } = socketService;
@@ -438,6 +600,10 @@ const makeLobby = (services) => {
         }
         if (player.gameId) {
             socket.emit("notification", "You can't make a lobby while in game.");
+            return;
+        }
+        if (!gameController.checkPlayersDeck(player.decks[player.deckId])) {
+            socket.emit("notification", "Invalid deck.");
             return;
         }
         const { username, avatarId } = player;
@@ -470,18 +636,19 @@ const makeLobby = (services) => {
     });
 };
 
-const saveDeck = (services) => {
+const saveDeck = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { socket, socketId } = socketService;
     socket.on("saveDeck", async (params) => {
         const { cards } = params;
-        const player = await $players.findOne({ socketId });
-        if (!player) {
+        const $player = await $players.findOne({ socketId });
+        if (!$player) {
             return;
         }
-        const { deckId } = player;
-        const updatePlayer = await $players.updateOne({
+        const { deckId } = $player;
+        const $updatePlayer = await $players.updateOne({
             socketId,
             "decks.id": deckId
         }, {
@@ -489,30 +656,32 @@ const saveDeck = (services) => {
                 "decks.$.cards": cards
             }
         });
-        if (!updatePlayer.modifiedCount) {
+        if (!$updatePlayer.modifiedCount) {
             return;
         }
         socket.emit("saveDeck", { cards });
     });
 };
 
-const selectDeck = (services) => {
+const selectDeck = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { socket, socketId } = socketService;
     socket.on("selectDeck", async (params) => {
         const { deckId } = params;
-        const updatePlayer = await $players.updateOne({ socketId }, {
+        const $updatePlayer = await $players.updateOne({ socketId }, {
             $set: { deckId }
         });
-        if (!updatePlayer.modifiedCount) {
+        if (!$updatePlayer.modifiedCount) {
             return;
         }
         socket.emit("selectDeck", { deckId });
     });
 };
 
-const sendToken = (services) => {
+const sendToken = (app) => {
+    const { services } = app;
     const { eosService, socketService } = services;
     const { socket } = socketService;
     socket.on("sendToken", async (params) => {
@@ -524,13 +693,14 @@ const sendToken = (services) => {
     });
 };
 
-const setDeckKlass = (services) => {
+const setDeckKlass = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { socket, socketId } = socketService;
     socket.on("setDeckKlass", async (params) => {
         const { deckId, klass } = params;
-        const updatePlayer = await $players.updateOne({
+        const $updatePlayer = await $players.updateOne({
             socketId,
             "decks.id": deckId
         }, {
@@ -538,14 +708,15 @@ const setDeckKlass = (services) => {
                 "decks.$.klass": klass
             }
         });
-        if (!updatePlayer.modifiedCount) {
+        if (!$updatePlayer.modifiedCount) {
             return;
         }
         socket.emit("setDeckKlass", { deckId, klass });
     });
 };
 
-const setDeckName = (services) => {
+const setDeckName = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { socket, socketId } = socketService;
@@ -566,15 +737,9 @@ const setDeckName = (services) => {
     });
 };
 
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = randomInt(0, i + 1);
-        const temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-}
-const startGame = (services) => {
+const startGame = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
     const { mongoService, socketService } = services;
     const { $games, $lobbies, $players } = mongoService;
     const { io, socket } = socketService;
@@ -622,7 +787,7 @@ const startGame = (services) => {
             if (!card)
                 return;
             if (card.health) {
-                playerADeck.push({ gid, ...card, maxHealth: card.health });
+                playerADeck.push({ gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false });
             }
             else {
                 playerADeck.push({ gid, ...card });
@@ -630,7 +795,7 @@ const startGame = (services) => {
             gid += 1;
             if (playerA.value.decks[playerA.value.deckId].cards[i].amount > 1) {
                 if (card.health) {
-                    playerADeck.push({ gid, ...card, maxHealth: card.health });
+                    playerADeck.push({ gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false });
                 }
                 else {
                     playerADeck.push({ gid, ...card });
@@ -644,7 +809,7 @@ const startGame = (services) => {
             if (!card)
                 return;
             if (card.health) {
-                playerBDeck.push({ gid, ...card, maxHealth: card.health });
+                playerBDeck.push({ gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false });
             }
             else {
                 playerBDeck.push({ gid, ...card });
@@ -652,7 +817,7 @@ const startGame = (services) => {
             gid += 1;
             if (playerB.value.decks[playerB.value.deckId].cards[i].amount > 1) {
                 if (card.health) {
-                    playerBDeck.push({ gid, ...card, maxHealth: card.health });
+                    playerBDeck.push({ gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false });
                 }
                 else {
                     playerBDeck.push({ gid, ...card });
@@ -660,9 +825,8 @@ const startGame = (services) => {
                 gid += 1;
             }
         }
-        // playerB.decks[playerB.deckId].cards.
-        shuffleArray(playerADeck);
-        shuffleArray(playerBDeck);
+        gameController.shuffleDeck(playerADeck);
+        gameController.shuffleDeck(playerBDeck);
         playerAHand.push(...playerADeck.slice(-5));
         playerBHand.push(...playerBDeck.slice(-5));
         playerADeck = playerADeck.slice(0, -5);
@@ -672,52 +836,32 @@ const startGame = (services) => {
             currentPlayer: $lobby.host.username,
             playerA: {
                 username: $lobby.host.username,
-                fields: {
-                    hero: {
-                        id: 2,
-                        type: CardType.HERO,
-                        health: 600,
-                        maxHealth: 600,
-                        mana: 100,
-                        maxMana: 100,
-                        damage: 30,
-                        passive: 25
-                    },
-                    minionA: undefined,
-                    minionB: undefined,
-                    minionC: undefined,
-                    minionD: undefined,
-                    minionE: undefined,
-                    minionF: undefined,
-                    magic: undefined,
-                    trap: undefined
+                hero: {
+                    id: 2,
+                    health: 600,
+                    maxHealth: 600,
+                    mana: 100,
+                    maxMana: 100,
+                    effects: []
                 },
+                minion: { a: undefined, b: undefined, c: undefined, d: undefined },
+                trap: undefined,
                 hand: playerAHand,
                 deck: playerADeck,
                 graveyard: []
             },
             playerB: {
                 username: $lobby.challengee.username,
-                fields: {
-                    hero: {
-                        id: 4,
-                        type: CardType.HERO,
-                        health: 600,
-                        maxHealth: 600,
-                        mana: 100,
-                        maxMana: 100,
-                        damage: 20,
-                        passive: 25
-                    },
-                    minionA: undefined,
-                    minionB: undefined,
-                    minionC: undefined,
-                    minionD: undefined,
-                    minionE: undefined,
-                    minionF: undefined,
-                    magic: undefined,
-                    trap: undefined
+                hero: {
+                    id: 4,
+                    health: 600,
+                    maxHealth: 600,
+                    mana: 100,
+                    maxMana: 100,
+                    effects: []
                 },
+                minion: { a: undefined, b: undefined, c: undefined, d: undefined },
+                trap: undefined,
                 hand: playerBHand,
                 deck: playerBDeck,
                 graveyard: []
@@ -739,9 +883,7 @@ const startGame = (services) => {
                         health: 600,
                         maxHealth: 600,
                         mana: 100,
-                        maxMana: 100,
-                        damage: 30,
-                        passive: 25
+                        maxMana: 100
                     },
                     minionA: undefined,
                     minionB: undefined,
@@ -765,9 +907,7 @@ const startGame = (services) => {
                         health: 600,
                         maxHealth: 600,
                         mana: 100,
-                        maxMana: 100,
-                        damage: 20,
-                        passive: 25
+                        maxMana: 100
                     },
                     minionA: undefined,
                     minionB: undefined,
@@ -849,191 +989,141 @@ const startGame = (services) => {
     });
 };
 
-const attackCard = (services) => {
-    const { mongoService, socketService, gameEngine } = services;
-    const { $games, $players } = mongoService;
-    const { io, socket, socketId } = socketService;
-    socket.on("attackCard", async (params) => {
-        const { attacked, attacker } = params;
-        const player = await $players.findOne({ socketId });
-        if (!player) {
-            return;
-        }
-        const { gameId } = player;
-        const game = await $games.findOne({ gameId });
-        if (!game) {
-            return;
-        }
-        const { playerA, playerB } = game;
-        let opponentUsername;
-        let _attacker;
-        let _attacked;
-        if (player.username === playerA.username) {
-            opponentUsername = playerB.username;
-            _attacker = playerA.fields[attacker];
-            _attacked = playerB.fields[attacked];
-        }
-        else {
-            opponentUsername = playerA.username;
-            _attacker = playerB.fields[attacker];
-            _attacked = playerA.fields[attacked];
-        }
-        if (!_attacker || !_attacked) {
-            return;
-        }
-        _attacker.health -= _attacked.damage;
-        _attacked.health -= _attacker.damage;
-        if (_attacker.health <= 0 && attacker === "hero") {
-            await gameEngine.endGame(services, gameId, "B");
-            return;
-        }
-        if (_attacked.health <= 0 && attacked === "hero") {
-            await gameEngine.endGame(services, gameId, "A");
-            return;
-        }
-        if (_attacker.health <= 0 && attacker !== "hero") {
-            playerA.graveyard.push(playerA.fields[attacker]);
-            playerA.fields[attacker] = undefined;
-        }
-        else if (_attacked.health <= 0 && attacked !== "hero") {
-            playerB.graveyard.push(playerB.fields[attacked]);
-            playerB.fields[attacked] = undefined;
-        }
-        await $games.updateOne({ gameId }, { $set: { playerA, playerB } });
-        socket.emit("attackCardSender", { attacked, attacker });
-        const opponent = await $players.findOne({
-            username: opponentUsername
-        });
-        if (!opponent || !opponent.socketId) {
-            return;
-        }
-        io.to(opponent.socketId).emit("attackCardReceiver", { attacked, attacker });
-    });
-};
-
-const endTurn = (services) => {
+const attackHero = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
     const { mongoService, socketService } = services;
     const { $games, $players } = mongoService;
-    const { io, socket, socketId } = socketService;
-    socket.on("endTurn", async () => {
-        const player = await $players.findOne({ socketId });
-        if (!player) {
+    const { socket, socketId } = socketService;
+    socket.on("attackHero", async (params) => {
+        const { attacker } = params;
+        const $player = await $players.findOne({ socketId });
+        if (!$player) {
             return;
         }
-        const { gameId } = player;
-        const game = await $games.findOne({ gameId });
-        if (!game) {
+        const { username, gameId } = $player;
+        const $game = await $games.findOne({ gameId });
+        if (!$game) {
             return;
         }
-        let opponentUsername;
-        if (player.username === game.playerA.username) {
-            const { playerA, playerB } = game;
-            if (playerA.username !== game.currentPlayer) {
-                return;
-            }
-            const { username, hand, deck, hero } = playerB;
-            const card = deck.pop();
-            opponentUsername = username;
-            if (!card) {
-                const [A, B] = await Promise.all([
-                    $players.findOneAndUpdate({
-                        username: playerA.username
-                    }, {
-                        $set: {
-                            gameId: 0,
-                            status: PlayerStatus.ONLINE
-                        }
-                    }, {
-                        returnDocument: "after"
-                    }),
-                    $players.findOneAndUpdate({
-                        username: playerB.username
-                    }, {
-                        $set: {
-                            gameId: 0,
-                            status: PlayerStatus.ONLINE
-                        }
-                    }, {
-                        returnDocument: "after"
-                    })
-                ]);
-                if (!A.value || !B.value) {
-                    return;
-                }
-                io.to(A.value.socketId).emit("notification", "You won!");
-                io.to(B.value.socketId).emit("notification", "You lost...");
-                io.to([A.value.socketId, B.value.socketId]).emit("endGame");
-                const isDeletedGame = await $games.deleteOne({ gameId });
-                if (!isDeletedGame.deletedCount) {
-                    return;
-                }
-                return;
-            }
-            hand.push(card);
-            hero.mana = 100;
-            const currentPlayer = username;
-            await $games.updateOne({ gameId }, { $set: { currentPlayer, playerB } });
-        }
-        else {
-            const { playerA, playerB } = game;
-            if (playerB.username !== game.currentPlayer) {
-                return;
-            }
-            const { username, hand, deck, hero } = playerA;
-            opponentUsername = username;
-            const card = deck.pop();
-            if (!card) {
-                const [A, B] = await Promise.all([
-                    $players.findOneAndUpdate({
-                        username: playerA.username
-                    }, {
-                        $set: {
-                            gameId: 0,
-                            status: PlayerStatus.ONLINE
-                        }
-                    }, {
-                        returnDocument: "after"
-                    }),
-                    $players.findOneAndUpdate({
-                        username: playerB.username
-                    }, {
-                        $set: {
-                            gameId: 0,
-                            status: PlayerStatus.ONLINE
-                        }
-                    }, {
-                        returnDocument: "after"
-                    })
-                ]);
-                if (!A.value || !B.value) {
-                    return;
-                }
-                io.to(A.value.socketId).emit("notification", "You lost...");
-                io.to(B.value.socketId).emit("notification", "You won!");
-                io.to([A.value.socketId, B.value.socketId]).emit("endGame");
-                const isDeletedGame = await $games.deleteOne({ gameId });
-                if (!isDeletedGame.deletedCount) {
-                    return;
-                }
-                return;
-            }
-            hand.push(card);
-            hero.mana = 100;
-            const currentPlayer = username;
-            await $games.updateOne({ gameId }, { $set: { currentPlayer, playerA } });
-        }
-        socket.emit("endTurnPlayer");
-        const opponent = await $players.findOne({
-            username: opponentUsername
-        });
-        if (!opponent || !opponent.socketId) {
+        const { player, opponent } = gameController.getPlayers($game, username);
+        const playerMinion = player.minion[attacker];
+        const opponentHero = opponent.hero;
+        if (!playerMinion) {
             return;
         }
-        io.to(opponent.socketId).emit("endTurnOpponent");
+        if (playerMinion.hasAttacked) {
+            return;
+        }
+        opponentHero.health -= playerMinion.damage;
+        playerMinion.hasAttacked = true;
+        if (await gameController.isGameOver($game)) {
+            return;
+        }
+        if (!playerMinion.hasTriggeredEffect) {
+            if (playerMinion.effects.includes(Effect.CHARGE)) {
+                playerMinion.hasAttacked = false;
+                playerMinion.hasTriggeredEffect = true;
+                console.log("triggered");
+            }
+        }
+        await gameController.saveGame($game);
     });
 };
 
-const hoverCard = (services) => {
+const attackMinion = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
+    const { mongoService, socketService } = services;
+    const { $games, $players } = mongoService;
+    const { socket, socketId } = socketService;
+    socket.on("attackMinion", async (params) => {
+        const { attacked, attacker } = params;
+        const $player = await $players.findOne({ socketId });
+        if (!$player) {
+            return;
+        }
+        const { username, gameId } = $player;
+        const $game = await $games.findOne({ gameId });
+        if (!$game) {
+            return;
+        }
+        const { player, opponent } = gameController.getPlayers($game, username);
+        const playerMinion = player.minion[attacker];
+        const opponentMinion = opponent.minion[attacked];
+        if (!playerMinion || !opponentMinion) {
+            return;
+        }
+        if (playerMinion.hasAttacked) {
+            return;
+        }
+        playerMinion.health -= opponentMinion.damage;
+        opponentMinion.health -= playerMinion.damage;
+        playerMinion.hasAttacked = true;
+        if (!playerMinion.hasTriggeredEffect) {
+            if (playerMinion.effects.includes(Effect.CHARGE)) {
+                playerMinion.hasAttacked = false;
+                playerMinion.hasTriggeredEffect = true;
+                console.log("triggered");
+            }
+        }
+        if (playerMinion.health <= 0) {
+            if (playerMinion.effects.includes(Effect.GREED)) {
+                await gameController.drawCard(gameId, player);
+            }
+            playerMinion.health = playerMinion.maxHealth;
+            player.graveyard.push(playerMinion);
+            player.minion[attacker] = undefined;
+        }
+        if (opponentMinion.health <= 0) {
+            opponentMinion.health = opponentMinion.maxHealth;
+            opponent.graveyard.push(opponentMinion);
+            opponent.minion[attacked] = undefined;
+        }
+        await gameController.saveGame($game);
+    });
+};
+
+const endTurn = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
+    const { mongoService, socketService } = services;
+    const { $games, $players } = mongoService;
+    const { socket, socketId } = socketService;
+    socket.on("endTurn", async () => {
+        const $player = await $players.findOne({ socketId });
+        if (!$player) {
+            return;
+        }
+        const { username, gameId } = $player;
+        const $game = await $games.findOne({ gameId });
+        if (!$game) {
+            return;
+        }
+        if ($game.currentPlayer !== username) {
+            return;
+        }
+        const { opponent } = gameController.getPlayers($game, username);
+        const { hero, minion } = opponent;
+        await gameController.drawCard(gameId, opponent);
+        hero.mana = 100;
+        const minionKeys = Object.keys(minion);
+        minionKeys.forEach((key) => {
+            const Minion = minion[key];
+            if (!Minion) {
+                return;
+            }
+            Minion.hasAttacked = false;
+            Minion.hasTriggeredEffect = false;
+        });
+        $game.currentPlayer = opponent.username;
+        await gameController.saveGame($game);
+    });
+};
+
+const hoverCard = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
     const { mongoService, socketService } = services;
     const { $games, $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -1042,97 +1132,64 @@ const hoverCard = (services) => {
         if (!$player) {
             return;
         }
-        const { gameId } = $player;
+        const { username, gameId } = $player;
         const $game = await $games.findOne({ gameId });
         if (!$game) {
             return;
         }
-        let opponentName;
-        if ($game.playerA.username === $player.username) {
-            opponentName = $game.playerB.username;
-        }
-        else {
-            opponentName = $game.playerA.username;
-        }
-        const opponent = await $players.findOne({
-            username: opponentName
+        const { opponent } = gameController.getPlayers($game, username);
+        const $opponent = await $players.findOne({
+            username: opponent.username
         });
-        if (!opponent || !opponent.socketId) {
+        if (!$opponent || !$opponent.socketId) {
             return;
         }
-        io.to(opponent.socketId).emit("hoverCard", params);
+        io.to($opponent.socketId).emit("hoverCard", params);
     });
 };
 
-const playCard = (services) => {
+const playMinion = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
     const { mongoService, socketService } = services;
     const { $games, $players } = mongoService;
-    const { io, socket, socketId } = socketService;
-    socket.on("playCard", async (params) => {
-        const { field, gid, id } = params;
+    const { socket, socketId } = socketService;
+    socket.on("playMinion", async (params) => {
+        const { field, gid } = params;
         const $player = await $players.findOne({ socketId });
         if (!$player) {
             return;
         }
-        const { gameId } = $player;
+        const { username, gameId } = $player;
         const $game = await $games.findOne({ gameId });
         if (!$game) {
             return;
         }
-        let opponentUsername = "";
-        let card;
-        if ($player.username === $game.playerA.username) {
-            opponentUsername = $game.playerB.username;
-            const { playerA } = $game;
-            const { hand, fields, hero } = playerA;
-            const handCard = hand.find((card) => card.gid === gid);
-            if (!handCard) {
-                return;
-            }
-            if (fields[field]) {
-                return;
-            }
-            if (!handCard.manaCost || handCard.manaCost > hero.mana) {
-                return;
-            }
-            hero.mana -= handCard.manaCost;
-            fields[field] = handCard;
-            hand.splice(hand.indexOf(handCard), 1);
-            card = handCard;
-            await $games.updateOne({ gameId }, { $set: { playerA } });
-        }
-        else {
-            opponentUsername = $game.playerA.username;
-            const { playerB } = $game;
-            const { hand, fields, hero } = playerB;
-            const handCard = hand.find((card) => card.gid === gid);
-            if (!handCard) {
-                return;
-            }
-            if (fields[field]) {
-                return;
-            }
-            if (!handCard.manaCost || handCard.manaCost > hero.mana) {
-                return;
-            }
-            hero.mana -= handCard.manaCost;
-            fields[field] = handCard;
-            hand.splice(hand.indexOf(handCard), 1);
-            card = handCard;
-            await $games.updateOne({ gameId }, { $set: { playerB } });
-        }
-        socket.emit("playCardPlayer", { field, gid });
-        const opponent = await $players.findOne({
-            username: opponentUsername
-        });
-        if (!opponent || !opponent.socketId) {
+        const { player } = gameController.getPlayers($game, username);
+        const { hand, minion, hero } = player;
+        const handCard = hand.find((card) => card.gid === gid);
+        if (!handCard) {
             return;
         }
-        io.to(opponent.socketId).emit("playCardOpponent", { field, card });
+        if (handCard.type !== CardType.MINION) {
+            return;
+        }
+        if (minion[field]) {
+            return;
+        }
+        if (!handCard.manaCost || handCard.manaCost > hero.mana) {
+            return;
+        }
+        hero.mana -= handCard.manaCost;
+        minion[field] = handCard;
+        hand.splice(hand.indexOf(handCard), 1);
+        await gameController.saveGame($game);
     });
 };
 
-const unhoverCard = (services) => {
+const unhoverCard = (app) => {
+    const { controllers, services } = app;
+    const { gameController } = controllers;
     const { mongoService, socketService } = services;
     const { $games, $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -1141,29 +1198,68 @@ const unhoverCard = (services) => {
         if (!$player) {
             return;
         }
-        const { gameId } = $player;
+        const { username, gameId } = $player;
         const $game = await $games.findOne({ gameId });
         if (!$game) {
             return;
         }
-        let opponentName;
-        if ($game.playerA.username === $player.username) {
-            opponentName = $game.playerB.username;
-        }
-        else {
-            opponentName = $game.playerA.username;
-        }
-        const opponent = await $players.findOne({
-            username: opponentName
+        const { opponent } = gameController.getPlayers($game, username);
+        const $opponent = await $players.findOne({
+            username: opponent.username
         });
-        if (!opponent || !opponent.socketId) {
+        if (!$opponent || !$opponent.socketId) {
             return;
         }
-        io.to(opponent.socketId).emit("unhoverCard");
+        io.to($opponent.socketId).emit("unhoverCard");
     });
 };
 
-const acceptFriend = (services) => {
+const sendChatMsg = (app) => {
+    const { services } = app;
+    const { mongoService, socketService } = services;
+    const { $chats, $players } = mongoService;
+    const { io, socket } = socketService;
+    socket.on("sendChatMsg", async (params) => {
+        const { sender, receiver, text, date } = params;
+        const $updateChat = await $chats.updateOne({
+            players: { $all: [sender, receiver] }
+        }, {
+            $push: {
+                messages: { sender, text, date }
+            }
+        });
+        if (!$updateChat.modifiedCount) {
+            return;
+        }
+        socket.emit("sendChatMsgSender", { sender, receiver, text, date });
+        const $receiver = await $players.findOne({
+            username: receiver
+        });
+        if (!$receiver || !$receiver.socketId) {
+            return;
+        }
+        io.to($receiver.socketId).emit("sendChatMsgReceiver", { sender, text, date });
+    });
+};
+
+const updateStatus = (app) => {
+    const { services } = app;
+    const { mongoService, socketService } = services;
+    const { $players } = mongoService;
+    const { io, socket, socketId } = socketService;
+    socket.on("updateStatus", async () => {
+        const $player = await $players.findOne({ socketId });
+        if (!$player) {
+            return;
+        }
+        const { username, status, social } = $player;
+        const socketIds = await mongoService.getSocketIds(social.friends);
+        io.to(socketIds).emit("updateStatus", { username, status });
+    });
+};
+
+const acceptFriend = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $chats, $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -1212,7 +1308,8 @@ const acceptFriend = (services) => {
     });
 };
 
-const addFriend = (services) => {
+const addFriend = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -1264,7 +1361,8 @@ const addFriend = (services) => {
     });
 };
 
-const block = (services) => {
+const block = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $chats, $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -1309,25 +1407,27 @@ const block = (services) => {
     });
 };
 
-const declineFriend = (services) => {
+const declineFriend = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { socket, socketId } = socketService;
     socket.on("declineFriend", async (params) => {
         const { username } = params;
-        const updatedPlayer = await $players.updateOne({ socketId }, {
+        const $updatedPlayer = await $players.updateOne({ socketId }, {
             $pull: {
                 "social.requests": username
             }
         });
-        if (!updatedPlayer.modifiedCount) {
+        if (!$updatedPlayer.modifiedCount) {
             return;
         }
         socket.emit("declineFriend", { username });
     });
 };
 
-const setAvatar = (services) => {
+const setAvatar = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -1348,9 +1448,10 @@ const setAvatar = (services) => {
     });
 };
 
-const signout = (services) => { };
+const signout = (app) => { };
 
-const unblock = (services) => {
+const unblock = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $players } = mongoService;
     const { socket, socketId } = socketService;
@@ -1370,7 +1471,8 @@ const unblock = (services) => {
     });
 };
 
-const unfriend = (services) => {
+const unfriend = (app) => {
+    const { services } = app;
     const { mongoService, socketService } = services;
     const { $chats, $players } = mongoService;
     const { io, socket, socketId } = socketService;
@@ -1413,7 +1515,7 @@ const unfriend = (services) => {
 
 const requests = [
     sendChatMsg,
-    updateFriend,
+    updateStatus,
     disconnect,
     getPrivateKeyHash,
     signin,
@@ -1428,10 +1530,11 @@ const requests = [
     setDeckKlass,
     setDeckName,
     startGame,
-    attackCard,
+    attackHero,
+    attackMinion,
     endTurn,
     hoverCard,
-    playCard,
+    playMinion,
     unhoverCard,
     acceptFriend,
     addFriend,
@@ -1557,57 +1660,6 @@ class SocketService {
     }
 }
 
-class GameEngine {
-    async endGame(services, gameId, winner) {
-        const { mongoService, socketService } = services;
-        const { $games, $players } = mongoService;
-        const { io, socket } = socketService;
-        const game = await $games.findOne({ gameId });
-        if (!game) {
-            return;
-        }
-        const { playerA, playerB } = game;
-        const [A, B] = await Promise.all([
-            $players.findOneAndUpdate({
-                username: playerA.username
-            }, {
-                $set: {
-                    gameId: 0,
-                    status: PlayerStatus.ONLINE
-                }
-            }, {
-                returnDocument: "after"
-            }),
-            $players.findOneAndUpdate({
-                username: playerB.username
-            }, {
-                $set: {
-                    gameId: 0,
-                    status: PlayerStatus.ONLINE
-                }
-            }, {
-                returnDocument: "after"
-            })
-        ]);
-        if (!A.value || !B.value) {
-            return;
-        }
-        const isDeletedGame = await $games.deleteOne({ gameId });
-        if (!isDeletedGame.deletedCount) {
-            return;
-        }
-        if (winner === "A") {
-            io.to(A.value.socketId).emit("notification", "You won!");
-            io.to(B.value.socketId).emit("notification", "You lost...");
-        }
-        else if (winner === "B") {
-            io.to(B.value.socketId).emit("notification", "You won!");
-            io.to(A.value.socketId).emit("notification", "You lost...");
-        }
-        io.to([A.value.socketId, B.value.socketId]).emit("endGame");
-    }
-}
-
 const { mongo: { uri }, eos: { endpoint, contractKey }, socket: { opts }, server: { port } } = settings;
 const httpServer = createServer();
 const ioServer = new Server(httpServer, opts);
@@ -1621,11 +1673,12 @@ const eosApi = new Api({
 });
 const eosService = new EosService(eosApi);
 const mongoService = new MongoService(mongoDb);
-const gameEngine = new GameEngine();
 ioServer.on("connection", (socket) => {
     const socketService = new SocketService(ioServer, socket);
-    const services = { eosService, mongoService, socketService, gameEngine };
-    requests.forEach((request) => { request(services); });
+    const services = { eosService, mongoService, socketService };
+    const gameController = new GameController(services);
+    const controllers = { gameController };
+    requests.forEach((request) => request({ services, controllers }));
 });
 process$1.on("unhandledRejection", async (reason, promise) => {
     const occuredAt = Date.now();

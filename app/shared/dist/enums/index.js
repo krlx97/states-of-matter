@@ -26,9 +26,8 @@ export var PlayerStatus;
 ;
 export var Effect;
 (function (Effect) {
-    Effect[Effect["ASCENSION"] = 0] = "ASCENSION";
+    Effect[Effect["GREED"] = 0] = "GREED";
     Effect[Effect["BLIND"] = 1] = "BLIND";
-    Effect[Effect["COMMAND"] = 2] = "COMMAND";
-    Effect[Effect["CHARGE"] = 3] = "CHARGE";
+    Effect[Effect["CHARGE"] = 2] = "CHARGE";
 })(Effect || (Effect = {}));
 ;

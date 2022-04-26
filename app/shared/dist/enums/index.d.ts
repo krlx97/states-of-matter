@@ -19,8 +19,7 @@ export declare enum PlayerStatus {
     INGAME = 4
 }
 export declare enum Effect {
-    ASCENSION = 0,
+    GREED = 0,
     BLIND = 1,
-    COMMAND = 2,
-    CHARGE = 3
+    CHARGE = 2
 }

@@ -38,6 +38,10 @@ interface Hero {
 
 import {CardKlass, CardType, Effect} from "../enums/index.js";
 
+export const lore = new Map([
+  
+]);
+
 const cards: Array<Card> = [{
   id: 0,
   klass: CardKlass.NEUTRAL,

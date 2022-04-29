@@ -120,6 +120,10 @@ interface UpdateFriend {
     status: number;
 }
 declare type Callback<Params> = (params: Params) => void;
+interface LevelUp {
+    xp: number;
+    lv: number;
+}
 export interface SocketResponses {
     notification: Callback<string>;
     updateStatus: Callback<UpdateFriend>;
@@ -149,6 +153,7 @@ export interface SocketResponses {
     playMinionPlayer: Callback<PlayCardSender>;
     playMinionOpponent: Callback<PlayCardReceiver>;
     unhoverCard: () => void;
+    levelUp: Callback<LevelUp>;
     reloadGameState: Callback<ReloadGameState>;
     acceptFriendReceiver: Callback<AcceptFriendReceiver>;
     acceptFriendSender: Callback<AcceptFriendSender>;

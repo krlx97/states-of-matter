@@ -3,7 +3,9 @@ import {PlayerStatus} from "@som/shared/enums";
 import type {Game, GameCards, GamePlayer} from "@som/shared/interfaces/mongo";
 import type {GameFE} from "@som/shared/interfaces/client";
 import type {Services} from "models";
-import { PlayerDeck } from "../services/MongoService/PlayerService.models";
+import { Player, PlayerDeck } from "../services/MongoService/PlayerService.models";
+import { cards } from "@som/shared/data";
+import { GameMinion } from "@som/shared/dist/interfaces/mongo/Game";
 
 // mutation probably isn't the best way to do this...
 export class GameController {
@@ -65,6 +67,9 @@ export class GameController {
         $set: {
           gameId: 0,
           status: PlayerStatus.ONLINE
+        },
+        $inc: {
+          xp: 100
         }
       }, {
         returnDocument: "after"
@@ -75,6 +80,9 @@ export class GameController {
         $set: {
           gameId: 0,
           status: PlayerStatus.ONLINE
+        },
+        $inc: {
+          xp: 100
         }
       }, {
         returnDocument: "after"
@@ -82,6 +90,27 @@ export class GameController {
     ]);
 
     if (!A.value || !B.value) { return; }
+
+    if (A.value.xp >= Math.pow(A.value.level * 10, A.value.level / 100 + 1)) {
+      await $players.updateOne({username: A.value.username}, {
+        $inc: {lv: 1}
+      });
+
+      io.to(A.value.socketId).emit("levelUp", {
+        xp: A.value.xp,
+        lv: A.value.lv + 1
+      });
+    }
+    if (B.value.xp >= Math.pow(B.value.level * 10, B.value.level / 100 + 1)) {
+      await $players.updateOne({username: B.value.username}, {
+        $inc: {lv: 1}
+      });
+
+      io.to(B.value.socketId).emit("levelUp", {
+        xp: B.value.xp,
+        lv: B.value.lv + 1
+      });
+    }
 
     const isDeletedGame = await $games.deleteOne({gameId});
 
@@ -121,6 +150,138 @@ export class GameController {
       deck[i] = deck[j];
       deck[j] = temp;
     }
+  }
+
+  private _push2Deck (deck: GameCards, gid: number, card: any): GameCards {
+    if (card.health) {
+      deck.push({gid, ...card, maxHealth: card.health, hasAttacked: false, hasTriggeredEffect: false} as GameMinion);
+    } else {
+      deck.push({gid, ...card} as any);
+    }
+
+    return deck;
+  }
+
+  private _buildDeck (player: Player): GameCards {
+    let playerDeck: GameCards = [];
+    let gid = 1;
+
+    player.decks[player.deckId].cards.forEach((deckCard) => {
+      const {id} = deckCard;
+      const card = cards.find((card) => card.id === id);
+
+      if (!card) { return; }
+
+      playerDeck = this._push2Deck(playerDeck, gid, card);
+      gid += 1;
+
+      if (deckCard.amount > 1) {
+        playerDeck = this._push2Deck(playerDeck, gid, card);
+        gid += 1;
+      }
+    });
+
+    for (let i = playerDeck.length - 1; i > 0; i--) {
+      const j = randomInt(0, i + 1);
+      const temp = playerDeck[i];
+      playerDeck[i] = playerDeck[j];
+      playerDeck[j] = temp;
+    }
+
+    return playerDeck;
+  }
+
+  private _generateGame (gameId: number, playerA: Player, playerB: Player): Game {
+    let playerADeck = this._buildDeck(playerA);
+    const playerAHand: GameCards = [];
+    let playerBDeck = this._buildDeck(playerB);
+    const playerBHand: GameCards = [];
+
+    playerAHand.push(...playerADeck.slice(-5));
+    playerBHand.push(...playerBDeck.slice(-5));
+
+    playerADeck = playerADeck.slice(0, -5);
+    playerBDeck = playerBDeck.slice(0, -5);
+
+    return {
+      gameId,
+      currentPlayer: playerA.username,
+      playerA: {
+        username: playerA.username,
+        hero: {
+          id: 2, // should be deck.klass
+          health: 600,
+          maxHealth: 600,
+          mana: 100,
+          maxMana: 100,
+          effects: []
+        },
+        minion: {a: undefined, b: undefined, c: undefined, d: undefined},
+        trap: undefined,
+        hand: playerAHand,
+        deck: playerADeck,
+        graveyard: []
+      },
+      playerB: {
+        username: playerB.username,
+        hero: {
+          id: 4, // should be deck.klass
+          health: 600,
+          maxHealth: 600,
+          mana: 100,
+          maxMana: 100,
+          effects: []
+        },
+        minion: {a: undefined, b: undefined, c: undefined, d: undefined},
+        trap: undefined,
+        hand: playerBHand,
+        deck: playerBDeck,
+        graveyard: []
+      },
+    };
+  }
+
+  public async startGame (playerA: string, playerB: string): Promise<void> {
+    const {mongoService, socketService} = this._services;
+    const {$games, $players} = mongoService;
+    const {io, socket} = socketService;
+    const gameId = randomInt(0, 1000000);
+    const [upd1, upd2] = await Promise.all([
+      $players.findOneAndUpdate({
+        username: playerA
+      }, {
+        $set: {
+          status: PlayerStatus.INGAME,
+          gameId
+        }
+      }),
+      $players.findOneAndUpdate({
+        username: playerB
+      }, {
+        $set: {
+          status: PlayerStatus.INGAME,
+          gameId
+        }
+      })
+    ]);
+
+    if (!upd1.value || !upd2.value) { return; }
+
+    const game = this._generateGame(gameId, upd1.value, upd2.value);
+    const isInserted = await $games.insertOne(game);
+
+    if (!isInserted.insertedId) { return; }
+
+    const gamePlayerA = this.generateGameFE(game, upd1.value.username);
+    const gamePlayerB = this.generateGameFE(game, upd2.value.username);
+
+    socket.emit("startGame", {
+      game: gamePlayerB
+    });
+
+    io.to(upd1.value.socketId).emit("startGame", {
+      game: gamePlayerA
+    });
   }
 
   public generateGameFE (game: Game, username: string): GameFE {

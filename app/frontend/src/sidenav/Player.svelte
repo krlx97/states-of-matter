@@ -49,12 +49,10 @@
 
   let xpProgressLen;
 
-  $:xpRequired = ($playerStore.lv % 10 + 1) * 100;
+  $:xpRequired = Math.pow($playerStore.lv * 10, $playerStore.lv / 100 + 1)
   $:xpOffset = xpProgressLen - (xpProgressLen * ($playerStore.xp / xpRequired));
 
   onMount((): void => {
-    $playerStore.xp = 125;
-
     const xpProgress: any = document.getElementById("xpProgress");
     xpProgressLen = xpProgress.getTotalLength();
   });

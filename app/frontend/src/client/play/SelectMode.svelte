@@ -4,6 +4,10 @@
 
   const onMakeLobby = () => { socketService.socket.emit("makeLobby"); };
   const onJoinLobby = () => { miscService.openModal("joinLobby"); };
+
+  const onJoinCasualQueue = (): void => {
+    socketService.socket.emit("joinCasualQueue");
+  };
 </script>
 
 <style lang="scss">
@@ -41,7 +45,9 @@
   <div class="play-screen casual">
     <h1>CASUAL</h1>
     <p>Play for fun</p>
-    <p>Casual coming soon... 😉</p>
+    <Button color="green" on:click={onJoinCasualQueue}>
+      QUEUE
+    </Button>
   </div>
 
   <div class="play-screen ranked">

@@ -6,19 +6,24 @@ import type {Lobby} from "./LobbyService.models";
 import type {Player} from "./PlayerService.models";
 
 export class MongoService {
-  readonly $chats: Collection<Chat>;
-  readonly $games: Collection<Game>;
-  readonly $lobbies: Collection<Lobby>;
-  readonly $players: Collection<Player>;
+  public readonly $chats: Collection<Chat>;
+  public readonly $games: Collection<Game>;
+  public readonly $lobbies: Collection<Lobby>;
+  public readonly $players: Collection<Player>;
+  public readonly $casualQueue: Collection<{
+    username: string;
+    lv: number;
+  }>;
 
-  constructor (mongoDb: Db) {
+  public constructor (mongoDb: Db) {
     this.$chats = mongoDb.collection("chats");
     this.$games = mongoDb.collection("games");
     this.$lobbies = mongoDb.collection("lobbies");
     this.$players = mongoDb.collection("players");
+    this.$casualQueue = mongoDb.collection("casualQueue");
   }
 
-  async getSocketIds (usernames: Usernames): Promise<SocketIds> {
+  public async getSocketIds (usernames: Usernames): Promise<SocketIds> {
     return await this
       .$players
       .find({username: {$in: usernames}})

@@ -34,6 +34,7 @@ interface Hero {
     special: Special;
 }
 import { CardKlass } from "../enums/index.js";
+export declare const lore: Map<unknown, unknown>;
 declare const cards: Array<Card>;
 declare const heroes: Array<Hero>;
 declare const passives: {

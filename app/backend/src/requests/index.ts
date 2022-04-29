@@ -2,6 +2,7 @@ import {disconnect, getPrivateKeyHash, signin, signup} from "./auth";
 
 import {
   destroyLobby,
+  joinCasualQueue,
   joinLobby,
   leaveLobby,
   makeLobby,
@@ -45,6 +46,7 @@ export const requests = [
   signup,
 
   destroyLobby,
+  joinCasualQueue,
   joinLobby,
   leaveLobby,
   makeLobby,

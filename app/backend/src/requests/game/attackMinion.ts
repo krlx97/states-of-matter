@@ -1,9 +1,10 @@
 import {Effect} from "@som/shared/enums";
+import {charge} from "helpers/effects";
 import type {App} from "models";
 
 export const attackMinion = (app: App): void => {
   const {controllers, services} = app;
-  const {gameController} = controllers;
+  const {effectController, gameController} = controllers;
   const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
   const {socket, socketId} = socketService;
@@ -30,13 +31,7 @@ export const attackMinion = (app: App): void => {
     opponentMinion.health -= playerMinion.damage;
     playerMinion.hasAttacked = true;
 
-    if (!playerMinion.hasTriggeredEffect) {
-      if (playerMinion.effects.includes(Effect.CHARGE)) {
-        playerMinion.hasAttacked = false;
-        playerMinion.hasTriggeredEffect = true;
-        console.log("triggered")
-      }
-    }
+    charge(playerMinion);
 
     if (playerMinion.health <= 0) {
       if (playerMinion.effects.includes(Effect.GREED)) {
@@ -50,6 +45,10 @@ export const attackMinion = (app: App): void => {
     }
 
     if (opponentMinion.health <= 0) {
+      if (opponentMinion.effects.includes(Effect.GREED)) {
+        await gameController.drawCard(gameId, opponent);
+      }
+
       opponentMinion.health = opponentMinion.maxHealth;
 
       opponent.graveyard.push(opponentMinion);

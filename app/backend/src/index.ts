@@ -8,7 +8,7 @@ import fetch from "node-fetch";
 import {Server} from "socket.io";
 
 import settings from "settings";
-import {GameController} from "controllers";
+import {EffectController, GameController} from "controllers";
 import {requests} from "requests";
 import {EosService, MongoService, SocketService} from "services";
 import type {Controllers, Services} from "models";
@@ -41,7 +41,8 @@ ioServer.on("connection", (socket): void => {
   const services: Services = {eosService, mongoService, socketService};
 
   const gameController = new GameController(services);
-  const controllers: Controllers = {gameController};
+  const effectController = new EffectController();
+  const controllers: Controllers = {effectController, gameController};
 
   requests.forEach((request): void => request({services, controllers}));
 });

@@ -3,7 +3,7 @@ import type {App} from "models";
 
 export const attackHero = (app: App): void => {
   const {controllers, services} = app;
-  const {gameController} = controllers;
+  const {effectController, gameController} = controllers;
   const {mongoService, socketService} = services;
   const {$games, $players} = mongoService;
   const {socket, socketId} = socketService;
@@ -27,17 +27,12 @@ export const attackHero = (app: App): void => {
     if (playerMinion.hasAttacked) { return; }
 
     opponentHero.health -= playerMinion.damage;
-    playerMinion.hasAttacked = true;
 
     if (await gameController.isGameOver($game)) { return; }
 
-    if (!playerMinion.hasTriggeredEffect) {
-      if (playerMinion.effects.includes(Effect.CHARGE)) {
-        playerMinion.hasAttacked = false;
-        playerMinion.hasTriggeredEffect = true;
-        console.log("triggered")
-      }
-    }
+    playerMinion.hasAttacked = true;
+
+    effectController.charge(playerMinion);
 
     await gameController.saveGame($game);
   });

@@ -6,6 +6,7 @@ export {endGame} from "./endGame";
 export {endTurnOpponent} from "./endTurnOpponent";
 export {endTurnPlayer} from "./endTurnPlayer";
 export {hoverCard} from "./hoverCard";
+export {levelUp} from "./levelUp";
 export {playMinionOpponent} from "./playMinionOpponent";
 export {playMinionPlayer} from "./playMinionPlayer";
 export {reloadGameState} from "./reloadGameState";

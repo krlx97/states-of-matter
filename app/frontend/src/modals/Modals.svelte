@@ -2,6 +2,7 @@
   import {modalStore} from "stores";
   import AddFriend from "./AddFriend.svelte";
   import Block from "./Block.svelte";
+  import CardLore from "./CardLore.svelte";
   import ChangeDeckName from "./ChangeDeckName.svelte";
   import Gift from "./Gift.svelte";
   import JoinLobby from "./JoinLobby.svelte";
@@ -17,6 +18,10 @@
 
 {#if $modalStore.list.block}
   <Block/>
+{/if}
+
+{#if $modalStore.list.cardLore}
+  <CardLore/>
 {/if}
 
 {#if $modalStore.list.changeDeckName}

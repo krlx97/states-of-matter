@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {heroes} from "@som/shared/data";
   import {socketService} from "services";
   import {gameStore, selectedCardStore, playerStore} from "stores";
   import Hero from "../../ui/HeroSm.svelte";
@@ -26,7 +25,7 @@
 
 <div class="hero" on:click={onAttackHero}>
   <Hero
-    hero={heroes.find((hero) => hero.klass === $gameStore.opponent.hero.id)}
+    hero={$gameStore.opponent.hero}
     health={$gameStore.opponent.hero.health}
     mana={$gameStore.opponent.hero.mana}
     isHealthBarVisible={true}

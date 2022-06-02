@@ -2,10 +2,14 @@ import {getPrivateKeyHash, signin} from "./auth";
 
 import {
   destroyLobby,
+  joinCasualQueue,
   joinLobbyReceiver,
   joinLobbySender,
+  joinRankedQueue,
+  leaveCasualQueue,
   leaveLobbyReceiver,
   leaveLobbySender,
+  leaveRankedQueue,
   makeLobby,
   saveDeck,
   selectDeck,
@@ -15,17 +19,13 @@ import {
 } from "./client";
 
 import {
-  attackMinionOpponent,
-  attackMinionPlayer,
   endGame,
-  endTurnOpponent,
-  endTurnPlayer,
   hoverCard,
+  hoverHandCard,
   levelUp,
-  playMinionOpponent,
-  playMinionPlayer,
   reloadGameState,
-  unhoverCard
+  unhoverCard,
+  unhoverHandCard
 } from "./game";
 
 import {notification, sendChatMsgReceiver, sendChatMsgSender} from "./global";
@@ -51,10 +51,14 @@ export const responses = [
   signin,
   // Client
   destroyLobby,
+  joinCasualQueue,
   joinLobbyReceiver,
   joinLobbySender,
+  joinRankedQueue,
+  leaveCasualQueue,
   leaveLobbyReceiver,
   leaveLobbySender,
+  leaveRankedQueue,
   makeLobby,
   saveDeck,
   selectDeck,
@@ -62,17 +66,13 @@ export const responses = [
   setDeckName,
   startGame,
   // Game
-  attackMinionOpponent,
-  attackMinionPlayer,
   endGame,
-  endTurnOpponent,
-  endTurnPlayer,
   hoverCard,
+  hoverHandCard,
   levelUp,
-  playMinionOpponent,
-  playMinionPlayer,
   reloadGameState,
   unhoverCard,
+  unhoverHandCard,
   // Global
   notification,
   sendChatMsgReceiver,

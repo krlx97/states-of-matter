@@ -21,12 +21,15 @@
     cursor: pointer;
     font-family: inherit;
     font-size: inherit;
+
+    transition: color 225ms $ease-in-out-quart, border-color 225ms $ease-in-out-quart;
   }
   button:disabled {
     color: $dark-grey;
+    background-color: $grey;
     cursor: not-allowed;
   }
-  button:disabled:hover {background-color: unset}
+  // button:disabled:hover {background-color: unset}
   button:not(:disabled):active {background-color: $dark-grey}
   button:focus {outline: 0}
 
@@ -35,7 +38,7 @@
   }
 
   .btn--raised-purple {background-color: $purple}
-  .btn--raised-green {background-color: $green}
+  .btn--raised-green {background-color: #618C03}
   .btn--raised-grey {background-color: $dark-grey}
   .btn--icon-purple {color: $purple}
   .btn--icon-green {color: $green}
@@ -44,6 +47,13 @@
   .btn--outlined-purple {border: 2px solid $purple}
   .btn--outlined-green {border: 2px solid $green}
   .btn--outlined-grey {border: 2px solid $dark-grey}
+
+  .btn--outlined-purple:disabled {
+    color: $light-grey;
+    background-color: transparent;
+    cursor: not-allowed;
+    border-color: $light-grey;
+  }
 
   .btn--icon-purple, .btn--icon-green, .btn--icon-grey {
     padding: 0.5em;

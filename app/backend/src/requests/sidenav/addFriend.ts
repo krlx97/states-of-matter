@@ -1,16 +1,15 @@
-import type {App} from "models";
+import {playersDb} from "apis/mongo";
+import { ioServer } from "apis/server";
+import type {SocketEvent} from "models";
 
-export const addFriend = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {io, socket, socketId} = socketService;
+const addFriend: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("addFriend", async (params) => {
     const {username} = params;
     const [sender, receiver] = await Promise.all([
-      $players.findOne({socketId}),
-      $players.findOne({username})
+      playersDb.findOne({socketId}),
+      playersDb.findOne({username})
     ]);
 
     if (!sender || !receiver) { return; }
@@ -40,7 +39,7 @@ export const addFriend = (app: App): void => {
       return;
     }
 
-    const updatePlayer = await $players.updateOne({username}, {
+    const updatePlayer = await playersDb.updateOne({username}, {
       $push: {
         "social.requests": sender.username
       }
@@ -49,8 +48,10 @@ export const addFriend = (app: App): void => {
     if (!updatePlayer.modifiedCount) { return; }
 
     socket.emit("notification", "Friend request sent.");
-    io.to(receiver.socketId).emit("addFriend", {
+    ioServer.to(receiver.socketId).emit("addFriend", {
       username: sender.username
     });
   });
 };
+
+export {addFriend};

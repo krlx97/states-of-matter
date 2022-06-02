@@ -1,16 +1,15 @@
 import type {UpdateFilter} from "mongodb";
-import type {App} from "models";
-import type {Player} from "services/MongoService/PlayerService.models";
+import type {SocketEvent} from "models";
+import { chatsDb, playersDb } from "apis/mongo";
+import { Player } from "@som/shared/types/mongo";
+import { ioServer } from "apis/server";
 
-export const acceptFriend = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$chats, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+const acceptFriend: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("acceptFriend", async (params) => {
     const {username} = params;
-    const $sender = await $players.findOneAndUpdate({socketId}, {
+    const $sender = await playersDb.findOneAndUpdate({socketId}, {
       $pull: {
         "social.requests": username
       },
@@ -23,7 +22,7 @@ export const acceptFriend = (app: App): void => {
 
     if (!$sender.value) { return; }
 
-    const receiver = await $players.findOneAndUpdate({username}, {
+    const receiver = await playersDb.findOneAndUpdate({username}, {
       $push: {
         "social.friends": $sender.value.username
       }
@@ -33,7 +32,7 @@ export const acceptFriend = (app: App): void => {
 
     if (!receiver.value) { return; }
 
-    const insertChat = await $chats.insertOne({
+    const insertChat = await chatsDb.insertOne({
       players: [$sender.value.username, receiver.value.username],
       messages: []
     });
@@ -46,10 +45,12 @@ export const acceptFriend = (app: App): void => {
       status: receiver.value.status
     });
 
-    io.to(receiver.value.socketId).emit("acceptFriendReceiver", {
+    ioServer.to(receiver.value.socketId).emit("acceptFriendReceiver", {
       username: $sender.value.username,
       avatarId: $sender.value.avatarId,
       status: $sender.value.status
     });
   });
 };
+
+export {acceptFriend};

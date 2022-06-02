@@ -3,9 +3,9 @@
   import Text from "./Text.svelte";
   import Img from "./Img.svelte";
 
-  import type {Hero} from "../shared/models/view";
+  import type {GameHero} from "@som/shared/types/client";
 
-  let hero: Hero;
+  let hero: GameHero;
   let health: number = hero.health;
   let mana: number = hero.health;
   let isHealthBarVisible = false;
@@ -149,9 +149,6 @@
       <img class="stat__img" src="assets/attrs/hero.png" alt="Hero"/>
 
       <div class="tooltip" bind:this={passiveTooltip}>
-        <p>{@html hero.passive.info}</p>
-        <hr/>
-        <p>{@html hero.active.info}</p>
       </div>
     </div>
 
@@ -162,12 +159,12 @@
 
   {#if isHealthBarVisible}
     <div class="card__bar">
-      <ProgressBar size="md" progress={health / hero.health * 100} color="green"/>
+      <!-- <ProgressBar size="md" progress={health / hero.health * 100} color="green"/> -->
     </div>
   {/if}
   {#if isManaBarVisible}
     <div class="card__manabar">
-      <ProgressBar size="sm" progress={mana / hero.mana * 100} color="blue"/>
+      <!-- <ProgressBar size="sm" progress={mana / hero.mana * 100} color="blue"/> -->
     </div>
   {/if}
 
@@ -183,10 +180,6 @@
       <span class="stat__text">{health || hero.health}</span>
     </div>
 
-    <div class="stat stat__damage">
-      <img class="stat__img" src="assets/attrs/damage.png" alt="Damage"/>
-      <span class="stat__text">{hero.damage}</span>
-    </div>
 
     <!-- {#if hero.klass === 1}
       <div class="stat stat__solid">

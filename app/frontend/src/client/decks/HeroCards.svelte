@@ -5,7 +5,7 @@
   import Hero from "../../ui/Hero.svelte";
   import type {CardKlass} from "@som/shared/enums";
 
-  const setDeckKlass = (klass: CardKlass) => {
+  const setDeckKlass = (klass: CardKlass): void => {
     const {deckId} = $playerStore;
     socketService.socket.emit("setDeckKlass", {deckId, klass});
   };
@@ -14,20 +14,20 @@
 <style lang="scss">
   @import "../../shared/styles/variables";
 
-  .decks {
+  .heroes {
     display: flex;
-    padding: 0 $spacing-md $spacing-md 0;
+    padding: 0 $spacing-sm $spacing-sm 0;
     box-sizing: border-box;
 
     &__hero {
-      margin: $spacing-md 0 0 $spacing-md;
+      margin: $spacing-sm 0 0 $spacing-sm;
     }
   }
 </style>
 
-<div class="decks">
+<div class="heroes">
   {#each heroes as hero}
-    <div class="decks__hero" on:click={() => setDeckKlass(hero.klass)}>
+    <div class="heroes__hero" on:click={() => setDeckKlass(hero.klass)}>
       <Hero {hero}/>
     </div>
   {/each}

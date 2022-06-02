@@ -1,12 +1,10 @@
-import type {App} from "models";
+import {transact} from "apis/eos";
+import type {SocketEvent} from "models";
 
-export const sendToken = (app: App): void => {
-  const {services} = app;
-  const {eosService, socketService} = services;
-  const {socket} = socketService;
-
+const sendToken: SocketEvent = (socket): void => {
   socket.on("sendToken", async (params) => {
-    const transaction = await eosService.transact("transfer", params);
+  console.log(params);
+    const transaction = await transact("transfer", params);
 
     if (!transaction) {
       socket.emit("notification", "Error sending token.");
@@ -14,3 +12,5 @@ export const sendToken = (app: App): void => {
     }
   });
 };
+
+export {sendToken};

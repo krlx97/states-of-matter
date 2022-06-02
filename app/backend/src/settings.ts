@@ -6,8 +6,8 @@ const settings = {
   },
   eos: {
     endpoint: "https://testnet.telos.net",
-    contractAccount: "telosgamesbp",
-    contractKey: process.env.EOS_CONTRACT_KEY || "5K2rKojEWKC1UmmiyWKvvXcVeS1Devq2LQEgDyKejyFNJAX2AX2"
+    contractAccount: "somgame11111",
+    contractKey: "5K52s5CAKU6tEXE6Rnirsjz5SKtWfKBN4H5634MSqMH6huaUAkx"
   },
   socket: {
     opts: production ? {} : {
@@ -17,7 +17,7 @@ const settings = {
     }
   },
   server: {
-    port: process.env.PORT || 4200
+    port: 4200
   }
 };
 

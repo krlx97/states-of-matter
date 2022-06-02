@@ -1,43 +1,49 @@
 import {Effect} from "@som/shared/enums";
-import {charge} from "helpers/effects";
-import type {App} from "models";
+import {gamesDb, playersDb} from "apis/mongo";
+import gameEngine from "helpers/game";
+import type {SocketEvent} from "models";
 
-export const attackMinion = (app: App): void => {
-  const {controllers, services} = app;
-  const {effectController, gameController} = controllers;
-  const {mongoService, socketService} = services;
-  const {$games, $players} = mongoService;
-  const {socket, socketId} = socketService;
+const attackMinion: SocketEvent = (socket): void => {
+  const socketId = socket.id;
+  const {triggerEffect} = gameEngine;
 
   socket.on("attackMinion", async (params) => {
     const {attacked, attacker} = params;
-    const $player = await $players.findOne({socketId});
+    const $player = await playersDb.findOne({socketId});
 
     if (!$player) { return; }
 
     const {username, gameId} = $player;
-    const $game = await $games.findOne({gameId});
+    const $game = await gamesDb.findOne({gameId});
 
     if (!$game) { return; }
+    if ($game.currentPlayer !== username) { return; }
 
-    const {player, opponent} = gameController.getPlayers($game, username);
+    const {player, opponent} = gameEngine.getPlayers($game, username);
     const playerMinion = player.minion[attacker];
     const opponentMinion = opponent.minion[attacked];
 
     if (!playerMinion || !opponentMinion) { return; }
-    if (playerMinion.hasAttacked) { return; }
+    if (!playerMinion.canAttack) { return; }
+
+    playerMinion.canAttack = false;
+    triggerEffect.multiStrike(playerMinion);
+
+    if (opponent.trap && opponent.trap.effects.includes(Effect.MIRRORS_EDGE)) {
+      player.hero.health -= playerMinion.damage;
+
+      if (await gameEngine.isGameOver($game)) { return; }
+
+      opponent.graveyard.push(opponent.trap);
+      opponent.trap = undefined;
+
+      return await gameEngine.saveGame($game);
+    }
 
     playerMinion.health -= opponentMinion.damage;
     opponentMinion.health -= playerMinion.damage;
-    playerMinion.hasAttacked = true;
-
-    charge(playerMinion);
 
     if (playerMinion.health <= 0) {
-      if (playerMinion.effects.includes(Effect.GREED)) {
-        await gameController.drawCard(gameId, player);
-      }
-
       playerMinion.health = playerMinion.maxHealth;
 
       player.graveyard.push(playerMinion);
@@ -45,16 +51,14 @@ export const attackMinion = (app: App): void => {
     }
 
     if (opponentMinion.health <= 0) {
-      if (opponentMinion.effects.includes(Effect.GREED)) {
-        await gameController.drawCard(gameId, opponent);
-      }
-
       opponentMinion.health = opponentMinion.maxHealth;
 
       opponent.graveyard.push(opponentMinion);
       opponent.minion[attacked] = undefined;
     }
 
-    await gameController.saveGame($game);
+    await gameEngine.saveGame($game);
   });
 };
+
+export {attackMinion};

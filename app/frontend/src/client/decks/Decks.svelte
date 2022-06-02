@@ -1,23 +1,23 @@
 <script lang="ts">
-  import {onMount} from "svelte";
   import {cards} from "@som/shared/data";
+  import {onMount} from "svelte";
   import {decksStore, playerStore} from "stores";
   import Cards from "./Cards.svelte";
+  import SelectedDeck from "./SelectedDeck.svelte";
   import DeckCards from "./DeckCards.svelte";
-  import DeckSlots from "./DeckSlots.svelte";
   import HeroCards from "./HeroCards.svelte";
 
-  onMount(() => {
+  onMount((): void => {
     const {deckId} = $playerStore;
     const deck = $playerStore.decks.find((deck) => deck.id === deckId);
 
     $decksStore.deckCards = deck.cards.map((deckCard) => {
       const card = cards.find((card) => card.id === deckCard.id);
-      const {id, klass, name} = card;
+      const {id, klass, name, manaCost} = card;
       const {amount} = deckCard;
 
-      return {klass, id, name, amount};
-    });
+      return {klass, id, name, amount, manaCost};
+    }).sort((a, b) => a.manaCost - b.manaCost);
 
     $decksStore.deckSlots = $playerStore.decks.map((deck) => {
       const {id, name, klass, cards} = deck;
@@ -29,6 +29,8 @@
 
       return {id, name, klass, cardsInDeck};
     });
+
+    $decksStore.selectedDeck = $decksStore.deckSlots.find((slot) => slot.id === $playerStore.deckId);
   });
 </script>
 
@@ -43,7 +45,11 @@
     align-items: center;
     justify-content: center;
 
-    &__list, &__deck { height: 100%; }
+    &__deck {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
 
     &__cards {
       height: 100%;
@@ -56,16 +62,12 @@
 </style>
 
 <div class="decks">
-  <div class="decks__list">
-    <DeckSlots/>
-  </div>
-
   <div class="decks__cards">
     <HeroCards/>
     <Cards/>
   </div>
-
   <div class="decks__deck">
+    <SelectedDeck/>
     <DeckCards/>
   </div>
 </div>

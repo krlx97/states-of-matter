@@ -8,14 +8,20 @@
   @import "../../shared/styles/variables";
 
   .decks {
-    padding: $spacing-md;
-    @include flex(column);
-    box-sizing: border-box;
+    position: absolute;
+    top: 100%;
+    left: 0;
+
+    &__deck {
+      // margin: 1em 0;
+    }
   }
 </style>
 
 <div class="decks">
   {#each $decksStore.deckSlots as deck}
-    <DeckSlot {deck}/>
+    <div class="decks__deck">
+      <DeckSlot {deck}/>
+    </div>
   {/each}
 </div>

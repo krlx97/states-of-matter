@@ -9,6 +9,7 @@
   import Client from "./client/Client.svelte";
   import Sidenav from "./sidenav/Sidenav.svelte";
   import Game from "./game/Game.svelte";
+import { PlayerStatus } from "@som/shared/enums";
 
   $: status = $playerStore.status;
 
@@ -20,16 +21,15 @@
 <svelte:head>
   <style>
     @font-face {
-      font-family: 'RomanCapitalz';
+      font-family: 'RomanCapitals';
       src: url(assets/font.woff);
     }
 
     body {
       margin: 0;
-      font-family: "RomanCapitalz", sans-serif;
-      font-size: 20px;
+      /* font-family: "RomanCapitals", sans-serif; */
+      font-family: 'Cardo', serif;      font-size: 16px;
       line-height: 1;
-      user-select: none;
     }
   </style>
 </svelte:head>
@@ -63,16 +63,16 @@
 
 <div class="app">
   <div class="app--inner">
-    {#if status === 0}
+    {#if status === PlayerStatus.OFFLINE}
       <Auth/>
-    {:else if status === 1 || status === 2 || status === 3}
+    {:else if status === PlayerStatus.ONLINE || status === PlayerStatus.IN_CASUAL_QUEUE || status === PlayerStatus.IN_RANKED_QUEUE || status === PlayerStatus.INLOBBY}
       <div class="app__content">
         <Client/>
         <div class="app__sidenav">
           <Sidenav/>
         </div>
       </div>
-    {:else if status === 4}
+    {:else if status === PlayerStatus.INGAME}
       <Game/>
     {/if}
     <ChatWindow/>

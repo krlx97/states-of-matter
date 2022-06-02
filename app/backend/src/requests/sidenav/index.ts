@@ -1,8 +1,25 @@
-export {acceptFriend} from "./acceptFriend";
-export {addFriend} from "./addFriend";
-export {block} from "./block";
-export {declineFriend} from "./declineFriend";
-export {setAvatar} from "./setAvatar";
-export {signout} from "./signout";
-export {unblock} from "./unblock";
-export {unfriend} from "./unfriend";
+import {acceptFriend} from "./acceptFriend";
+import {addFriend} from "./addFriend";
+import {block} from "./block";
+import {declineFriend} from "./declineFriend";
+import {sendChatMsg} from "../sidenav/sendChatMsg";
+import {setAvatar} from "./setAvatar";
+import {signout} from "./signout";
+import {unblock} from "./unblock";
+import {unfriend} from "./unfriend";
+import {updateStatus} from "../sidenav/updateStatus";
+
+const sidenav = [
+  acceptFriend,
+  addFriend,
+  block,
+  declineFriend,
+  sendChatMsg,
+  setAvatar,
+  signout,
+  unblock,
+  unfriend,
+  updateStatus
+];
+
+export {sidenav};

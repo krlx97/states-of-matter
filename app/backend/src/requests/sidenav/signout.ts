@@ -1,3 +1,5 @@
-import type {App} from "models";
+import type {SocketEvent} from "models";
 
-export const signout = (app: App): void => {};
+const signout: SocketEvent = (socket): void => {};
+
+export {signout};

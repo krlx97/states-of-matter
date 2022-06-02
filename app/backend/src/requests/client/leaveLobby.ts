@@ -1,14 +1,13 @@
 import {PlayerStatus} from "@som/shared/enums";
-import type {App} from "models";
+import { ioServer } from "apis/server";
+import {lobbiesDb, playersDb} from "apis/mongo";
+import type {SocketEvent} from "models";
 
-export const leaveLobby = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$lobbies, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+const leaveLobby: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("leaveLobby", async () => {
-    const $player = await $players.findOne({socketId});
+    const $player = await playersDb.findOne({socketId});
 
     if (!$player) {
       socket.emit("notification", "Player not found.");
@@ -20,7 +19,7 @@ export const leaveLobby = (app: App): void => {
     }
 
     const {lobbyId} = $player;
-    const $lobby = await $lobbies.findOne({lobbyId});
+    const $lobby = await lobbiesDb.findOne({lobbyId});
 
     if (!$lobby) {
       socket.emit("notification", "Lobby not found.");
@@ -28,7 +27,7 @@ export const leaveLobby = (app: App): void => {
     }
 
     const [$updateLobby, $updatePlayer] = await Promise.all([
-      $lobbies.updateOne({lobbyId}, {
+      lobbiesDb.updateOne({lobbyId}, {
         $set: {
           challengee: {
             username: "",
@@ -37,7 +36,7 @@ export const leaveLobby = (app: App): void => {
           }
         }
       }),
-      $players.updateOne({socketId}, {
+      playersDb.updateOne({socketId}, {
         $set: {
           lobbyId: 0,
           status: PlayerStatus.ONLINE
@@ -48,6 +47,8 @@ export const leaveLobby = (app: App): void => {
     if (!$updateLobby.modifiedCount || !$updatePlayer.modifiedCount) { return; }
 
     socket.emit("leaveLobbySender");
-    io.to($lobby.host.socketId).emit("leaveLobbyReceiver");
+    ioServer.to($lobby.host.socketId).emit("leaveLobbyReceiver");
   });
 };
+
+export {leaveLobby};

@@ -1,29 +1,31 @@
-import {App} from "models";
+import {gamesDb, playersDb} from "apis/mongo";
+import gameEngine from "helpers/game";
+import { ioServer } from "apis/server";
+import type {SocketEvent} from "models";
 
-export const hoverCard = (app: App): void => {
-  const {controllers, services} = app;
-  const {gameController} = controllers;
-  const {mongoService, socketService} = services;
-  const {$games, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+const hoverCard: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("hoverCard", async (params) => {
-    const $player = await $players.findOne({socketId});
+    const $player = await playersDb.findOne({socketId});
 
     if (!$player) { return; }
 
     const {username, gameId} = $player;
-    const $game = await $games.findOne({gameId});
+    const $game = await gamesDb.findOne({gameId});
 
     if (!$game) { return; }
+    if ($game.currentPlayer !== username) { return; }
 
-    const {opponent} = gameController.getPlayers($game, username);
-    const $opponent = await $players.findOne({
+    const {opponent} = gameEngine.getPlayers($game, username);
+    const $opponent = await playersDb.findOne({
       username: opponent.username
     });
 
     if (!$opponent || !$opponent.socketId) { return; }
 
-    io.to($opponent.socketId).emit("hoverCard", params);
+    ioServer.to($opponent.socketId).emit("hoverCard", params);
   });
 };
+
+export {hoverCard};

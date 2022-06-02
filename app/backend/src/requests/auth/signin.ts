@@ -1,12 +1,11 @@
 import {PlayerStatus} from "@som/shared/enums";
-import type {App} from "models";
+import {findPlayer} from "apis/eos";
+import {chatsDb, gamesDb, lobbiesDb, playersDb} from "apis/mongo";
+import type {SocketEvent} from "models";
 
 // this needs refactoring...
-export const signin = (app: App): void => {
-  const {services} = app;
-  const {eosService, mongoService, socketService} = services;
-  const {$chats, $games, $lobbies, $players} = mongoService;
-  const {socket, socketId} = socketService;
+const signin: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("signin", async (params) => {
     const {username, publicKey, signature} = params;
@@ -16,7 +15,7 @@ export const signin = (app: App): void => {
 
     // if (!transaction) { return; }
 
-    const $player = await $players.findOneAndUpdate({username}, [{
+    const $player = await playersDb.findOneAndUpdate({username}, [{
       $set: {
         socketId,
         status: {
@@ -40,20 +39,21 @@ export const signin = (app: App): void => {
       returnDocument: "after"
     });
 
-    const player$ = await eosService.findPlayer(username);
+    const player$ = await findPlayer(username);
 
     if (!$player.value || !player$) { return; }
 
-    const {wallet, last_nonce} = player$;
+    const {wallet, nonce} = player$;
+console.log(wallet);
     const {friends} = $player.value.social;
     const friendsView: Array<any> = [];
 
     for (const friendname of friends) {
       const [friend, chat] = await Promise.all([
-        $players.findOne({
+        playersDb.findOne({
           username: friendname
         }),
-        $chats.findOne({
+        chatsDb.findOne({
           players: {
             $all: [username, friendname]
           }
@@ -72,11 +72,11 @@ export const signin = (app: App): void => {
     let gameView;
 
     if (lobbyId) {
-      lobby = await $lobbies.findOne({lobbyId});
+      lobby = await lobbiesDb.findOne({lobbyId});
 
       if (!lobby) { return; }
     } else if (gameId) {
-      game = await $games.findOne({gameId});
+      game = await gamesDb.findOne({gameId});
 
       if (!game) { return; }
 
@@ -111,10 +111,12 @@ export const signin = (app: App): void => {
     }
 
     socket.emit("signin", {
-      player: {...$player.value, wallet, last_nonce},
+      player: {...$player.value, wallet, nonce},
       friends: friendsView,
       lobby,
       game: gameView
     });
   });
 };
+
+export {signin};

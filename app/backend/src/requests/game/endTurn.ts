@@ -1,42 +1,42 @@
-import type {App} from "models";
+import {gamesDb, playersDb} from "apis/mongo";
+import gameEngine from "helpers/game";
+import type {SocketEvent} from "models";
 
-export const endTurn = (app: App): void => {
-  const {controllers, services} = app;
-  const {gameController} = controllers;
-  const {mongoService, socketService} = services;
-  const {$games, $players} = mongoService;
-  const {socket, socketId} = socketService;
+const endTurn: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("endTurn", async () => {
-    const $player = await $players.findOne({socketId});
+    const $player = await playersDb.findOne({socketId});
 
     if (!$player) { return; }
 
     const {username, gameId} = $player;
-    const $game = await $games.findOne({gameId});
+    const $game = await gamesDb.findOne({gameId});
 
     if (!$game) { return; }
-
     if ($game.currentPlayer !== username) { return; }
 
-    const {opponent} = gameController.getPlayers($game, username);
+    const {opponent} = gameEngine.getPlayers($game, username);
     const {hero, minion} = opponent;
 
-    await gameController.drawCard(gameId, opponent);
+    await gameEngine.drawCard($game, opponent);
 
-    hero.mana = 100;
+    hero.mana = 20;
 
     const minionKeys = Object.keys(minion) as Array<keyof typeof minion>;
 
     minionKeys.forEach((key) => {
       const Minion = minion[key];
       if (!Minion) { return; }
-      Minion.hasAttacked = false;
+      Minion.canAttack = true;
       Minion.hasTriggeredEffect = false;
     });
 
     $game.currentPlayer = opponent.username;
+    $game.currentTurn += 1;
 
-    await gameController.saveGame($game);
+    await gameEngine.saveGame($game);
   });
 };
+
+export {endTurn};

@@ -1,19 +1,17 @@
-import type {App} from "models";
+import {playersDb} from "apis/mongo";
+import type {SocketEvent} from "models";
 
-export const saveDeck = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {socket, socketId} = socketService;
+const saveDeck: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("saveDeck", async (params) => {
     const {cards} = params;
-    const $player = await $players.findOne({socketId});
+    const player = await playersDb.findOne({socketId});
 
-    if (!$player) { return; }
+    if (!player) { return; }
 
-    const {deckId} = $player;
-    const $updatePlayer = await $players.updateOne({
+    const {deckId} = player;
+    const $updatePlayer = await playersDb.updateOne({
       socketId,
       "decks.id": deckId
     }, {
@@ -27,3 +25,5 @@ export const saveDeck = (app: App): void => {
     socket.emit("saveDeck", {cards});
   });
 };
+
+export {saveDeck};

@@ -1,25 +1,24 @@
 import {PlayerStatus} from "@som/shared/enums";
-import type {App} from "models";
+import {lobbiesDb, playersDb} from "apis/mongo";
+import {ioServer} from "apis/server";
+import type {SocketEvent} from "models";
 
-export const destroyLobby = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$lobbies, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+const destroyLobby: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("destroyLobby", async () => {
-    const $player = await $players.findOne({socketId});
+    const player = await playersDb.findOne({socketId});
 
-    if (!$player) { return; }
+    if (!player) { return; }
 
-    const {username, lobbyId} = $player;
+    const {username, lobbyId} = player;
 
     if (!lobbyId) {
       socket.emit("notification", "You are not in a lobby.");
       return;
     }
 
-    const lobby = await $lobbies.findOne({lobbyId});
+    const lobby = await lobbiesDb.findOne({lobbyId});
 
     if (!lobby) { return; }
 
@@ -29,8 +28,8 @@ export const destroyLobby = (app: App): void => {
     }
 
     const [deleteLobby, updatePlayer] = await Promise.all([
-      $lobbies.deleteOne({lobbyId}),
-      $players.updateOne({socketId}, {
+      lobbiesDb.deleteOne({lobbyId}),
+      playersDb.updateOne({socketId}, {
         $set: {
           lobbyId: 0,
           status: PlayerStatus.ONLINE
@@ -41,7 +40,7 @@ export const destroyLobby = (app: App): void => {
     if (!deleteLobby.deletedCount || !updatePlayer.modifiedCount) { return; }
 
     if (lobby.challengee.username) {
-      const challengee = await $players.findOneAndUpdate({
+      const challengee = await playersDb.findOneAndUpdate({
         username: lobby.challengee.username
       }, {
         $set: {
@@ -56,6 +55,8 @@ export const destroyLobby = (app: App): void => {
     }
 
     socket.emit("destroyLobby");
-    io.to(lobby.challengee.socketId).emit("destroyLobby");
+    ioServer.to(lobby.challengee.socketId).emit("destroyLobby");
   });
 };
+
+export {destroyLobby};

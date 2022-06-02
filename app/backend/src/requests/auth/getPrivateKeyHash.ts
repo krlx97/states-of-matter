@@ -1,21 +1,19 @@
-import type {App} from "models";
+import {playersDb} from "apis/mongo";
+import type {SocketEvent} from "models";
 
-export const getPrivateKeyHash = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {socket} = socketService;
-
+const getPrivateKeyHash: SocketEvent = (socket): void => {
   socket.on("getPrivateKeyHash", async (params) => {
     const {username} = params;
-    const $player = await $players.findOne({username});
+    const player = await playersDb.findOne({username});
 
-    if (!$player) {
+    if (!player) {
       socket.emit("notification", "Player not found.");
       return;
     }
 
-    const {privateKeyHash} = $player;
+    const {privateKeyHash} = player;
     socket.emit("getPrivateKeyHash", {privateKeyHash});
   });
 };
+
+export {getPrivateKeyHash};

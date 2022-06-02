@@ -1,8 +1,9 @@
-import {writable, type Writable} from "svelte/store";
+import {writable} from "svelte/store";
 
 interface Modals {
   addFriend: boolean;
-  block: boolean
+  block: boolean;
+  cardLore: boolean;
   changeDeckName: boolean;
   gift: boolean;
   joinLobby: boolean;
@@ -19,12 +20,13 @@ interface ModalStore {
   list: Modals;
 }
 
-export const modalStore: Writable<ModalStore> = writable({
+export const modalStore = writable<ModalStore>({
   data: {},
   current: "",
   list: {
     addFriend: false,
     block: false,
+    cardLore: false,
     changeDeckName: false,
     gift: false,
     joinLobby: false,

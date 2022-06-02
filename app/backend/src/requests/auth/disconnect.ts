@@ -1,14 +1,13 @@
 import {PlayerStatus} from "@som/shared/enums";
-import type {App} from "models";
+import {playersDb} from "apis/mongo";
+import {ioServer} from "apis/server";
+import {getSocketIds} from "helpers/player";
+import type {SocketEvent} from "models";
 
-export const disconnect = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {io, socket, socketId} = socketService;
-
+const disconnect: SocketEvent = (socket): void => {
   socket.on("disconnect", async (reason) => {
-    const $player = await $players.findOneAndUpdate({socketId}, {
+    const socketId = socket.id;
+    const player = await playersDb.findOneAndUpdate({socketId}, {
       $set: {
         socketId: "",
         status: PlayerStatus.OFFLINE
@@ -17,11 +16,13 @@ export const disconnect = (app: App): void => {
       returnDocument: "after"
     });
 
-    if (!$player.value) { return; }
+    if (!player.value) { return; }
 
-    const {username, status, social} = $player.value;
-    const socketIds = await mongoService.getSocketIds(social.friends);
+    const {username, status, social} = player.value;
+    const socketIds = await getSocketIds(social.friends);
 
-    io.to(socketIds).emit("updateStatus", {username, status});
+    ioServer.to(socketIds).emit("updateStatus", {username, status});
   });
 };
+
+export {disconnect};

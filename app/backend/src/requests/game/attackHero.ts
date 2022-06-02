@@ -1,39 +1,51 @@
 import {Effect} from "@som/shared/enums";
-import type {App} from "models";
+import {gamesDb, playersDb} from "apis/mongo";
+import gameEngine from "helpers/game";
+import type {SocketEvent} from "models";
 
-export const attackHero = (app: App): void => {
-  const {controllers, services} = app;
-  const {effectController, gameController} = controllers;
-  const {mongoService, socketService} = services;
-  const {$games, $players} = mongoService;
-  const {socket, socketId} = socketService;
+const attackHero: SocketEvent = (socket): void => {
+  const socketId = socket.id;
+  const {triggerEffect} = gameEngine;
 
   socket.on("attackHero", async (params) => {
+    const $player = await playersDb.findOne({socketId});
     const {attacker} = params;
-    const $player = await $players.findOne({socketId});
 
     if (!$player) { return; }
 
     const {username, gameId} = $player;
-    const $game = await $games.findOne({gameId});
+    const game = await gamesDb.findOne({gameId});
 
-    if (!$game) { return; }
+    if (!game) { return; }
+    if (game.currentPlayer !== username) { return; }
 
-    const {player, opponent} = gameController.getPlayers($game, username);
+    const {player, opponent} = gameEngine.getPlayers(game, username);
     const playerMinion = player.minion[attacker];
     const opponentHero = opponent.hero;
 
     if (!playerMinion) { return; }
-    if (playerMinion.hasAttacked) { return; }
+    if (!playerMinion.canAttack) { return; }
+
+    playerMinion.canAttack = false;
+    triggerEffect.multiStrike(playerMinion);
+
+    if (opponent.trap && opponent.trap.effects.includes(Effect.MIRRORS_EDGE)) {
+      player.hero.health -= playerMinion.damage;
+
+      if (await gameEngine.isGameOver(game)) { return; }
+
+      opponent.graveyard.push(opponent.trap);
+      opponent.trap = undefined;
+
+      return await gameEngine.saveGame(game);
+    }
 
     opponentHero.health -= playerMinion.damage;
 
-    if (await gameController.isGameOver($game)) { return; }
+    if (await gameEngine.isGameOver(game)) { return; }
 
-    playerMinion.hasAttacked = true;
-
-    effectController.charge(playerMinion);
-
-    await gameController.saveGame($game);
+    await gameEngine.saveGame(game);
   });
 };
+
+export {attackHero};

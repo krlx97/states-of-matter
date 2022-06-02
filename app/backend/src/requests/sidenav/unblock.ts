@@ -1,14 +1,12 @@
-import type {App} from "models";
+import { playersDb } from "apis/mongo";
+import type {SocketEvent} from "models";
 
-export const unblock = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {socket, socketId} = socketService;
+const unblock: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("unblock", async (params) => {
     const {username} = params;
-    const updatePlayer = await $players.updateOne({socketId}, {
+    const updatePlayer = await playersDb.updateOne({socketId}, {
       $pull: {
         "social.blocked": username
       }
@@ -21,3 +19,5 @@ export const unblock = (app: App): void => {
     });
   });
 };
+
+export {unblock};

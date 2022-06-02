@@ -1,27 +1,24 @@
 import {PlayerStatus} from "@som/shared/enums";
-import type {App} from "models";
+import {transact} from "apis/eos";
+import {playersDb} from "apis/mongo";
+import type {SocketEvent} from "models";
 
-export const signup = (app: App): void => {
-  const {services} = app;
-  const {eosService, mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {socket} = socketService;
-
+const signup: SocketEvent = (socket): void => {
   socket.on("signup", async (params) => {
     const {username, publicKey, privateKeyHash} = params;
-    const $player = await $players.findOne({username});
+    const player = await playersDb.findOne({username});
 
-    if ($player) {
+    if (player) {
       socket.emit("notification", "Username taken.");
       return;
     }
 
     const [transaction, insertPlayer] = await Promise.all([
-      eosService.transact("signup", {
+      transact("signup", {
         username,
         public_key: publicKey
       }),
-      $players.insertOne({
+      playersDb.insertOne({
         socketId: "",
         username,
         publicKey,
@@ -33,6 +30,10 @@ export const signup = (app: App): void => {
         avatarId: 0,
         lobbyId: 0,
         gameId: 0,
+        games: {
+          casual: {won: 0, lost: 0},
+          ranked: {won: 0, lost: 0, elo: 1000}
+        },
         decks: [
           {id: 0, klass: 1, name: "Deck 1", cards: []},
           {id: 1, klass: 2, name: "Deck 2", cards: []},
@@ -57,3 +58,5 @@ export const signup = (app: App): void => {
     socket.emit("notification", "Account created successfully.");
   });
 };
+
+export {signup};

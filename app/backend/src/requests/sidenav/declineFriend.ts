@@ -1,14 +1,12 @@
-import type {App} from "models";
+import { playersDb } from "apis/mongo";
+import type {SocketEvent} from "models";
 
-export const declineFriend = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {socket, socketId} = socketService;
+const declineFriend: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("declineFriend", async (params) => {
     const {username} = params;
-    const $updatedPlayer = await $players.updateOne({socketId}, {
+    const $updatedPlayer = await playersDb.updateOne({socketId}, {
       $pull: {
         "social.requests": username
       }
@@ -19,3 +17,5 @@ export const declineFriend = (app: App): void => {
     socket.emit("declineFriend", {username});
   });
 };
+
+export {declineFriend};

@@ -1,16 +1,14 @@
 import {randomInt} from "crypto";
 import {PlayerStatus} from "@som/shared/enums";
-import type {App} from "models";
+import {lobbiesDb, playersDb} from "apis/mongo";
+import {isDeckValid} from "helpers/player";
+import type {SocketEvent} from "models";
 
-export const makeLobby = (app: App): void => {
-  const {controllers, services} = app;
-  const {gameController} = controllers;
-  const {mongoService, socketService} = services;
-  const {$lobbies, $players} = mongoService;
-  const {socket, socketId} = socketService;
+const makeLobby: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("makeLobby", async () => {
-    const player = await $players.findOne({socketId});
+    const player = await playersDb.findOne({socketId});
 
     if (!player) {
       socket.emit("notification", "Player not found.");
@@ -24,7 +22,7 @@ export const makeLobby = (app: App): void => {
       socket.emit("notification", "You can't make a lobby while in game.");
       return;
     }
-    if (!gameController.checkPlayersDeck(player.decks[player.deckId])) {
+    if (!isDeckValid(player.decks[player.deckId])) {
       socket.emit("notification", "Invalid deck.");
       return;
     }
@@ -32,7 +30,7 @@ export const makeLobby = (app: App): void => {
     const {username, avatarId} = player;
     const lobbyId = randomInt(1, 1000000);
     const [insertLobby, updatePlayer] = await Promise.all([
-      $lobbies.insertOne({
+      lobbiesDb.insertOne({
         lobbyId,
         host: {username, socketId, avatarId},
         challengee: {
@@ -41,7 +39,7 @@ export const makeLobby = (app: App): void => {
           avatarId: 0
         }
       }),
-      $players.updateOne({socketId}, {
+      playersDb.updateOne({socketId}, {
         $set: {
           lobbyId,
           status: PlayerStatus.INLOBBY
@@ -51,10 +49,12 @@ export const makeLobby = (app: App): void => {
 
     if (!insertLobby.insertedId || !updatePlayer.modifiedCount) { return; }
 
-    const lobby = await $lobbies.findOne({lobbyId});
+    const lobby = await lobbiesDb.findOne({lobbyId});
 
     if (!lobby) { return; }
 
     socket.emit("makeLobby", {lobby});
   });
 };
+
+export {makeLobby};

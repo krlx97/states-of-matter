@@ -49,7 +49,7 @@
 
   let xpProgressLen;
 
-  $:xpRequired = Math.pow($playerStore.lv * 10, $playerStore.lv / 100 + 1)
+  $:xpRequired = 1000 + ($playerStore.lv % 10) * 100;
   $:xpOffset = xpProgressLen - (xpProgressLen * ($playerStore.xp / xpRequired));
 
   onMount((): void => {

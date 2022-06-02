@@ -1,22 +1,21 @@
-import type {App} from "models";
+import { chatsDb, playersDb } from "apis/mongo";
+import { ioServer } from "apis/server";
+import type {SocketEvent} from "models";
 
-export const block = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$chats, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+const block: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("block", async (params) => {
     const {username} = params;
     const [sender, receiver] = await Promise.all([
-      $players.findOne({socketId}),
-      $players.findOne({username})
+      playersDb.findOne({socketId}),
+      playersDb.findOne({username})
     ]);
 
     if (!sender || !receiver) { return; }
 
     const [isUpdatedSender, isUpdatedReceiver, isDeletedChat] = await Promise.all([
-      $players.updateOne({socketId}, {
+      playersDb.updateOne({socketId}, {
         $pull: {
           "social.friends": username
         },
@@ -24,12 +23,12 @@ export const block = (app: App): void => {
           "social.blocked": username
         }
       }),
-      $players.updateOne({username}, {
+      playersDb.updateOne({username}, {
         $pull: {
           "social.friends": sender.username
         }
       }),
-      $chats.deleteOne({
+      chatsDb.deleteOne({
         players: {
           $all: [receiver.username, sender.username]
         }
@@ -43,8 +42,10 @@ export const block = (app: App): void => {
     ) { return; }
 
     socket.emit("blockSender", {username});
-    io.to(receiver.socketId).emit("blockReceiver", {
+    ioServer.to(receiver.socketId).emit("blockReceiver", {
       username: sender.username
     });
   });
 };
+
+export {block};

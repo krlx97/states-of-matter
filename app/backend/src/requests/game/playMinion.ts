@@ -1,37 +1,59 @@
-import {CardType} from "@som/shared/enums";
-import type {App} from "models";
+import {CardType, Effect} from "@som/shared/enums";
+import {gamesDb, playersDb} from "apis/mongo";
+import gameEngine from "helpers/game";
+import type {SocketEvent} from "models";
+import type {GameMinion} from "models/game";
 
-export const playMinion = (app: App): void => {
-  const {controllers, services} = app;
-  const {gameController} = controllers;
-  const {mongoService, socketService} = services;
-  const {$games, $players} = mongoService;
-  const {socket, socketId} = socketService;
+const playMinion: SocketEvent = (socket): void => {
+  const socketId = socket.id;
+  const {triggerEffect} = gameEngine;
 
   socket.on("playMinion", async (params) => {
     const {field, gid} = params;
-    const $player = await $players.findOne({socketId});
+    const $player = await playersDb.findOne({socketId});
 
     if (!$player) { return; }
 
     const {username, gameId} = $player;
-    const $game = await $games.findOne({gameId});
+    const game = await gamesDb.findOne({gameId});
 
-    if (!$game) { return; }
+    if (!game) { return; }
+    if (game.currentPlayer !== username) { return; }
 
-    const {player} = gameController.getPlayers($game, username);
-    const {hand, minion, hero} = player;
+    const {player, opponent} = gameEngine.getPlayers(game, username);
+    const {hand, minion, hero, graveyard} = player;
     const handCard = hand.find((card) => card.gid === gid);
 
     if (!handCard) { return; }
     if (handCard.type !== CardType.MINION) { return; }
     if (minion[field]) { return; }
-    if (!handCard.manaCost || handCard.manaCost > hero.mana) { return; }
+    if (handCard.manaCost > hero.mana) { return; }
 
     hero.mana -= handCard.manaCost;
-    minion[field] = handCard;
+    minion[field] = handCard as GameMinion;
     hand.splice(hand.indexOf(handCard), 1);
 
-    await gameController.saveGame($game);
+    const summonedMinion = minion[field];
+
+    if (!summonedMinion) { return; }
+
+    if (opponent.trap && opponent.trap.effects.includes(Effect.SMITE)) {
+      summonedMinion.health = summonedMinion.maxHealth;
+
+      graveyard.push(summonedMinion);
+      minion[field] = undefined;
+
+      opponent.graveyard.push(opponent.trap);
+      opponent.trap = undefined;
+    }
+
+    triggerEffect.charge(summonedMinion);
+    triggerEffect.quickShot(summonedMinion, opponent);
+    triggerEffect.necro(summonedMinion);
+    triggerEffect.spellweave(summonedMinion, player);
+
+    await gameEngine.saveGame(game);
   });
 };
+
+export {playMinion};

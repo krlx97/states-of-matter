@@ -12,8 +12,13 @@
     socketService.socket.emit("startGame", {lobbyId});
   };
 
-  const onDestroyLobby = (): void => { socketService.socket.emit("destroyLobby"); };
-  const onLeaveLobby = (): void => { socketService.socket.emit("leaveLobby"); };
+  const onDestroyLobby = (): void => {
+    socketService.socket.emit("destroyLobby");
+  };
+
+  const onLeaveLobby = (): void => {
+    socketService.socket.emit("leaveLobby");
+  };
 </script>
 
 <style lang="scss">

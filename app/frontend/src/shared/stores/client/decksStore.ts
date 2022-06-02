@@ -12,12 +12,23 @@ interface DecksStore {
     id: number;
     name: string;
     amount: number;
+    manaCost: number;
   }>;
-  cardsInDeck: number;
-}
+  selectedDeck: {
+    id: number;
+    name: string;
+    klass: number;
+    cardsInDeck: number;
+  };
+};
 
 export const decksStore: Writable<DecksStore> = writable({
   deckSlots: [],
   deckCards: [],
-  cardsInDeck: 0
+  selectedDeck: {
+    id: 0,
+    name: "",
+    klass: 0,
+    cardsInDeck: 0
+  }
 });

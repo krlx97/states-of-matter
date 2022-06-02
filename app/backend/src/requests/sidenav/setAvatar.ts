@@ -1,14 +1,14 @@
-import type {App} from "models";
+import { playersDb } from "apis/mongo";
+import { getSocketIds } from "helpers/player";
+import { ioServer } from "apis/server";
+import type {SocketEvent} from "models";
 
-export const setAvatar = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {io, socket, socketId} = socketService;
+const setAvatar: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("setAvatar", async (params) => {
     const {avatarId} = params;
-    const player = await $players.findOneAndUpdate({socketId}, {
+    const player = await playersDb.findOneAndUpdate({socketId}, {
       $set: {avatarId}
     }, {
       returnDocument: "after"
@@ -17,9 +17,11 @@ export const setAvatar = (app: App): void => {
     if (!player.value) { return; }
 
     const {username, social: {friends}} = player.value;
-    const socketIds = await mongoService.getSocketIds(friends);
+    const socketIds = await getSocketIds(friends);
 
     socket.emit("setAvatarSender", {avatarId});
-    io.to(socketIds).emit("setAvatarReceiver", {username, avatarId});
+    ioServer.to(socketIds).emit("setAvatarReceiver", {username, avatarId});
   });
 };
+
+export {setAvatar};

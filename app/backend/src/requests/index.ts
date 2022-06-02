@@ -1,75 +1,8 @@
-import {disconnect, getPrivateKeyHash, signin, signup} from "./auth";
+import {auth} from "./auth";
+import {client} from "./client";
+import {game} from "./game";
+import {sidenav} from "./sidenav";
 
-import {
-  destroyLobby,
-  joinCasualQueue,
-  joinLobby,
-  leaveLobby,
-  makeLobby,
-  saveDeck,
-  selectDeck,
-  sendToken,
-  setDeckKlass,
-  setDeckName,
-  startGame
-} from "./client";
+const requests = [...auth, ...client, ...game, ...sidenav];
 
-import {
-  attackHero,
-  attackMinion,
-  endTurn,
-  hoverCard,
-  playMinion,
-  unhoverCard
-} from "./game";
-
-import {sendChatMsg, updateStatus} from "./global";
-
-import {
-  acceptFriend,
-  addFriend,
-  block,
-  declineFriend,
-  setAvatar,
-  signout,
-  unblock,
-  unfriend
-} from "./sidenav";
-
-export const requests = [
-  sendChatMsg,
-  updateStatus,
-
-  disconnect,
-  getPrivateKeyHash,
-  signin,
-  signup,
-
-  destroyLobby,
-  joinCasualQueue,
-  joinLobby,
-  leaveLobby,
-  makeLobby,
-  saveDeck,
-  selectDeck,
-  sendToken,
-  setDeckKlass,
-  setDeckName,
-  startGame,
-
-  attackHero,
-  attackMinion,
-  endTurn,
-  hoverCard,
-  playMinion,
-  unhoverCard,
-
-  acceptFriend,
-  addFriend,
-  block,
-  declineFriend,
-  setAvatar,
-  signout,
-  unblock,
-  unfriend
-];
+export {requests};

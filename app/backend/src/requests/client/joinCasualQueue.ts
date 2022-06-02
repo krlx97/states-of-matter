@@ -1,30 +1,46 @@
-import type {App} from "models";
+import { PlayerStatus } from "@som/shared/enums";
+import {casualQueuePlayersDb, playersDb} from "apis/mongo";
+import gameEngine from "helpers/game";
+import type {SocketEvent} from "models";
 
-export const joinCasualQueue = (app: App): void => {
-  const {controllers, services} = app;
-  const {gameController} = controllers;
-  const {mongoService, socketService} = services;
-  const {$players, $casualQueue} = mongoService;
-  const {socket, socketId} = socketService;
+const joinCasualQueue: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("joinCasualQueue", async () => {
-    const $player = await $players.findOne({socketId});
+    const player = await playersDb.findOne({socketId});
 
-    if (!$player) { return; }
+    if (!player) { return; }
 
-    const {username, lv} = $player;
+    const {username, lv} = player;
+    const casualQueuePlayers = await casualQueuePlayersDb.find().toArray();
 
-    const allPlayersInQueue = await $casualQueue.find().toArray();
+    for (const opponent of casualQueuePlayers) {
+      if (opponent.lv < lv - 100 || opponent.lv < lv + 100) {
+        const deleteCasualQueuePlayer = await casualQueuePlayersDb.deleteOne({
+          username: opponent.username
+        });
 
-    for (const player of allPlayersInQueue) {
-      if (player.lv < lv - 10 || player.lv < lv + 10) {
-        await gameController.startGame(player.username, username);
+        if (!deleteCasualQueuePlayer.deletedCount) { return; }
+
+        await gameEngine.startGame("casual", opponent.username, username);
+
         return;
       }
     }
 
-    const insertedPlayerInQueue = await $casualQueue.insertOne({username, lv});
+    const insertCasualQueuePlayer = await casualQueuePlayersDb.insertOne({username, lv});
+    const updatedPlayer = await playersDb.findOneAndUpdate({socketId}, {
+      $set: {
+        status: PlayerStatus.IN_CASUAL_QUEUE
+      }
+    }, {
+      returnDocument: "after"
+    });
 
-    if (!insertedPlayerInQueue.insertedId) { return; }
+    if (!insertCasualQueuePlayer.insertedId || !updatedPlayer.value) { return; }
+
+    socket.emit("joinCasualQueue");
   });
 };
+
+export {joinCasualQueue};

@@ -1,7 +1,7 @@
 <script lang="ts">
   import {playerStore} from "stores";
   import Governance from "./Governance.svelte";
-  import Leaderboards from "./Leaderboards.svelte";
+  import Leaderboards from "./leaderboards/Leaderboards.svelte";
   import Market from "./Market.svelte";
   import Collection from "./collection/Collection.svelte";
   import Decks from "./decks/Decks.svelte";
@@ -29,6 +29,10 @@
     height: 100%;
     width: 100%;
     @include flex(column);
+    background-image: url("/assets/clientbg.png");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
 
     &__header {
       height: 128px;
@@ -58,24 +62,29 @@
 
 <div class="client">
   <div class="client__header">
-    <div class="links">
-      {#each views as view}
-        <div
-          class="link"
-          class:link--active={view.name === currentView.name}
-          on:click={() => currentView = view}>
-          {view.name}
-        </div>
-      {/each}
+    <div style="display: flex; align-items: center;"> <!-- ;w; -->
+      <img src="assets/logo.png" alt="Logo" style="margin: 0 1em"/>
+      <div class="links">
+        {#each views as view}
+          <div
+            class="link"
+            class:link--active={view.name === currentView.name}
+            on:click={() => currentView = view}>
+            {view.name}
+          </div>
+        {/each}
+      </div>
     </div>
     <div class="client__header__currencies">
       <div class="client__header__currency">
         <Img src="currencies/LMT.png" alt="LMT"/>
+        <br/>
         <Text>{$playerStore.wallet[1]}</Text>
       </div>
       <div class="client__header__currency">
         <Img src="currencies/DMT.png" alt="DMT"/>
-        <Text>0</Text>
+        <br/>
+        <Text>{$playerStore.wallet[2]}</Text>
       </div>
     </div>
   </div>

@@ -6,7 +6,8 @@ interface Card {
   damage?: number;
   health?: number;
   manaCost: number;
-  effect: string;
+  lore: string;
+  effects: number[];
 }
 
 export type {Card};

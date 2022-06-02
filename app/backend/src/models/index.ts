@@ -1,18 +1,7 @@
-import type {EffectController, GameController} from "controllers";
-import type {EosService, MongoService, SocketService} from "services";
+import type {Socket} from "socket.io";
+import type {SocketRequests} from "@som/shared/types/requests";
+import type {SocketResponses} from "@som/shared/types/responses";
 
-export interface Controllers {
-  gameController: GameController;
-  effectController: EffectController
-}
+type SocketEvent = (socket: Socket<SocketRequests, SocketResponses>) => void;
 
-export interface Services {
-  eosService: EosService;
-  mongoService: MongoService;
-  socketService: SocketService;
-}
-
-export interface App {
-  controllers: Controllers;
-  services: Services;
-}
+export type {SocketEvent};

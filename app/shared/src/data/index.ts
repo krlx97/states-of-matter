@@ -1,3 +1,5 @@
+import {CardKlass, CardType, Effect} from "../enums/index.js";
+
 interface Card {
   id: number;
   klass: number;
@@ -6,150 +8,186 @@ interface Card {
   damage?: number;
   health?: number;
   manaCost: number;
-  effect: string;
+  lore: string;
   effects: Array<number>;
 }
 
-
-interface Passive {
-  name: string;
-  amount: number;
-  info: string;
-}
-interface Active {
-  name: string;
-  manaCost: number;
-  info: string;
-}
-interface Special {
-  effect: string;
-  amount: number;
-}
 interface Hero {
   name: string;
   klass: number;
-  damage: number;
   health: number;
   mana: number;
-  passive: Passive;
-  active: Active;
-  special: Special;
+  effects: Array<number>;
 }
 
-import {CardKlass, CardType, Effect} from "../enums/index.js";
-
-export const lore = new Map([
-  
+export const effectInfo = new Map([
+  [Effect.CHARGE,       "Can attack on the same turn when summoned"],
+  [Effect.QUICK_SHOT,   "When Normal Summoned deal 2 Damage to a random enemy Minion"],
+  [Effect.MULTI_STRIKE, "Can attack twice per turn."],
+  [Effect.NECRO,        "Normal summon -2 ATK, -2 HP, Special summon +5 ATK, +5 HP."],
+  [Effect.SPELLWEAVE,   "Gain +1 ATK for every spell and trap card in your graveyard."],
+  [Effect.PUPPETEER,    `
+    When Normal Summoned, Special Summon a Minion based on Hero Class. The
+    Minion can attack, has unique effect and inherits class specific buffs.
+  `],
+  [Effect.REBIRTH,      "Special summon 1 Minion from the graveyard."],
+  [Effect.EXHAUST,      "Reduce ATK and HP of one enemy Minion by 5."],
+  [Effect.RELOAD,       "Draw one card."],
+  [Effect.MIRRORS_EDGE, "Reflect next incoming attack back to the enemy Hero."],
+  [Effect.SMITE,        "Destroy the enemies next Minion Card."],
+  [Effect.ANTI_MAGE,    "Destroy the enemies next Magic card."]
 ]);
 
 const cards: Array<Card> = [{
   id: 0,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  name: "Neutral card 1",
+  name: "Seafarer",
   damage: 10,
-  health: 70,
-  manaCost: 30,
-  effect: "Neutral card 1 can attack twice.",
-  effects: [Effect.GREED]
+  health: 5,
+  manaCost: 4,
+  lore: `
+    The darkness that spreads across the stone wall lured many men to their
+    doom. Driven by curiosity, greed or forces greater than themselves, they
+    would spend months crossing mountains where only birds and those possesed
+    by gas spirits dare to dwell. All who returned from that perilious journey
+    lost their sanity. One can see them walking aimlessly, saying things that
+    are stripped of any meaning.
+    Greenish aura surrounds their malnourished, deformed bodies. Eyes have lost
+    all color, and look like the blackest void. However, they are often
+    possesed with powerful spirits of Ether who needed vessels in order to move
+    across the mountains, driven by the similar wishes as the humans who
+    crossed to their side. That is the reason why those with power negotiate
+    with spirits who use their bodies and use them for help in the war. In
+    return, they promised to find a way to transplant them into other, better
+    bodies.
+    Human soul which still suffers inside is barely relevant to anyone.
+  `,
+  effects: [Effect.CHARGE]
 }, {
   id: 1,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  name: "Neutral card 2",
-  damage: 11,
-  health: 80,
-  manaCost: 35,
-  effect: "Neutral card 2 effect",
-  effects: [Effect.BLIND]
+  name: "Avet",
+  damage: 15,
+  health: 15,
+  manaCost: 18,
+  lore: `
+    Humans, as powerful as they can be, are not immortal. Dark spirits of the
+    Ether decided not to use vessels which could not serve them for longer
+    periods of time, but to create their own. They condensed dark matter and
+    created bodies which look like solid shadows to human eye. Able to move
+    through almost everything, they are valuable asset in fights. Although they
+    are not dependent on bodies of the others, they still need energy in order
+    to preserve themselves far from their realms. When they appear, one can see
+    all vegetation, animals and even humans in terrible pain, for avet sucks
+    anything which it deems as a viable source of life.
+    They are intelligent and they are not necessarily malignant, but only
+    powerful humans can collaborate with them without being drained.
+  `,
+  effects: [Effect.QUICK_SHOT]
 }, {
   id: 2,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  name: "Neutral card 3",
-  damage: 12,
-  health: 90,
-  manaCost: 40,
-  effect: "Neutral card 3 effect",
-  effects: [Effect.CHARGE]
+  name: "Guiding Lights",
+  damage: 8,
+  health: 20,
+  manaCost: 12,
+  lore: `
+    During nights when moon is still young and stars are not visible, lone
+    pilgrims could see shining, many-colored (usually rainbow spectre) lights.
+    They hum, spin around and help humans see in the night, often showing them
+    a faster route or a good place to rest. Nobody knows when they appeared,
+    but many texts written by the aristocracy of the old mentions that “they
+    are not spirits which can be classified among those of this realm“.
+    Individual intelligence is not noticeable among guiding lights, but the
+    theory is that they are aspects of the light in general, and that they are
+    connected to the ultimate intelligence of that aspect of Ether. They are
+    helpful to people not just because they show the road, but also for they
+    move fast and can confuse potential enemies. Even though these lights are
+    reluctant to participate in a war, they will help humans whose cause is
+    just.
+  `,
+  effects: [Effect.MULTI_STRIKE]
 }, {
   id: 3,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  name: "Neutral card 4",
-  damage: 13,
-  health: 100,
-  manaCost: 45,
-  effect: "Neutral card 4 effect",
-  effects: []
+  name: "Gravedigger",
+  damage: 10,
+  health: 10,
+  manaCost: 10,
+  lore: "Gravedigger lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.NECRO]
 }, {
   id: 4,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  name: "Neutral card 5",
-  damage: 14,
-  health: 110,
-  manaCost: 50,
-  effect: "Neutral card 5 effect",
-  effects: []
+  name: "Spellweaver",
+  damage: 5,
+  health: 10,
+  manaCost: 12,
+  lore: "Spellweaver lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.SPELLWEAVE]
 }, {
   id: 5,
   klass: CardKlass.NEUTRAL,
   type: CardType.MINION,
-  name: "Neutral card 6",
+  name: "Puppeteer",
   damage: 15,
-  health: 120,
-  manaCost: 55,
-  effect: "Neutral card 6 effect",
-  effects: []
+  health: 10,
+  manaCost: 7,
+  lore: "Puppeteer lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.PUPPETEER]
 }, {
   id: 6,
   klass: CardKlass.NEUTRAL,
   type: CardType.MAGIC,
-  name: "Neutral card 7",
-  manaCost: 60,
-  effect: "Neutral card 7 effect",
-  effects: []
+  name: "Rebirth",
+  manaCost: 15,
+  lore: "Rebirth lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.REBIRTH]
 }, {
   id: 7,
   klass: CardKlass.NEUTRAL,
   type: CardType.MAGIC,
-  name: "Neutral card 8",
-  manaCost: 60,
-  effect: "Neutral card 8 effect",
-  effects: []
+  name: "Exhaust",
+  manaCost: 12,
+  lore: "Exhaust lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.EXHAUST]
 }, {
   id: 8,
   klass: CardKlass.NEUTRAL,
   type: CardType.MAGIC,
-  name: "Neutral card 9",
-  manaCost: 60,
-  effect: "Neutral card 9 effect",
-  effects: []
+  name: "Reload",
+  manaCost: 10,
+  lore: "Reload lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.RELOAD]
 }, {
   id: 9,
   klass: CardKlass.NEUTRAL,
   type: CardType.TRAP,
-  name: "Neutral card 10",
-  manaCost: 60,
-  effect: "Neutral card 10 effect",
-  effects: []
+  name: "Mirrors Edge",
+  manaCost: 10,
+  lore: "Mirrors Edge lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.MIRRORS_EDGE]
 }, {
   id: 10,
   klass: CardKlass.NEUTRAL,
   type: CardType.TRAP,
-  name: "Neutral card 11",
-  manaCost: 60,
-  effect: "Neutral card 11 effect",
-  effects: []
+  name: "Smite",
+  manaCost: 9,
+  lore: "Smite lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.SMITE]
 }, {
   id: 11,
   klass: CardKlass.NEUTRAL,
   type: CardType.TRAP,
-  name: "Neutral card 12",
-  manaCost: 60,
-  effect: "Neutral card 12 effect",
-  effects: []
+  name: "Anti-Mage",
+  manaCost: 7,
+  lore: "Anti-Mage lore coming soon ༼ つ ◕_◕ ༽つ",
+  effects: [Effect.ANTI_MAGE]
 }, {
   id: 50,
   klass: CardKlass.SOLID,
@@ -158,7 +196,7 @@ const cards: Array<Card> = [{
   damage: 1,
   health: 1,
   manaCost: 1,
-  effect: "Solid card 1 effect",
+  lore: "Solid card 1 effect",
   effects: []
 }, {
   id: 51,
@@ -168,7 +206,7 @@ const cards: Array<Card> = [{
   damage: 2,
   health: 2,
   manaCost: 2,
-  effect: "Solid card 2 effect",
+  lore: "Solid card 2 effect",
   effects: []
 }, {
   id: 52,
@@ -178,7 +216,7 @@ const cards: Array<Card> = [{
   damage: 3,
   health: 3,
   manaCost: 3,
-  effect: "Solid card 3 effect",
+  lore: "Solid card 3 effect",
   effects: []
 }, {
   id: 53,
@@ -188,7 +226,7 @@ const cards: Array<Card> = [{
   damage: 4,
   health: 4,
   manaCost: 4,
-  effect: "Solid card 4 effect",
+  lore: "Solid card 4 effect",
   effects: []
 }, {
   id: 54,
@@ -198,7 +236,7 @@ const cards: Array<Card> = [{
   damage: 5,
   health: 5,
   manaCost: 5,
-  effect: "Solid card 5 effect",
+  lore: "Solid card 5 effect",
   effects: []
 }, {
   id: 55,
@@ -208,7 +246,7 @@ const cards: Array<Card> = [{
   damage: 6,
   health: 6,
   manaCost: 6,
-  effect: "Solid card 6 effect",
+  lore: "Solid card 6 effect",
   effects: []
 }, {
   id: 56,
@@ -216,7 +254,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Solid card 7",
   manaCost: 7,
-  effect: "Solid card 7 effect",
+  lore: "Solid card 7 effect",
   effects: []
 }, {
   id: 57,
@@ -224,7 +262,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Solid card 8",
   manaCost: 8,
-  effect: "Solid card 8 effect",
+  lore: "Solid card 8 effect",
   effects: []
 }, {
   id: 58,
@@ -232,7 +270,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Solid card 9",
   manaCost: 9,
-  effect: "Solid card 9 effect",
+  lore: "Solid card 9 effect",
   effects: []
 }, {
   id: 59,
@@ -240,7 +278,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Solid card 10",
   manaCost: 10,
-  effect: "Solid card 10 effect",
+  lore: "Solid card 10 effect",
   effects: []
 }, {
   id: 60,
@@ -248,7 +286,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Solid card 11",
   manaCost: 11,
-  effect: "Solid card 11 effect",
+  lore: "Solid card 11 effect",
   effects: []
 }, {
   id: 61,
@@ -256,7 +294,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Solid card 12",
   manaCost: 12,
-  effect: "Solid card 12 effect",
+  lore: "Solid card 12 effect",
   effects: []
 }, {
   id: 100,
@@ -266,7 +304,7 @@ const cards: Array<Card> = [{
   damage: 1,
   health: 1,
   manaCost: 1,
-  effect: "Liquid card 1 effect",
+  lore: "Liquid card 1 effect",
   effects: []
 }, {
   id: 101,
@@ -276,7 +314,7 @@ const cards: Array<Card> = [{
   damage: 2,
   health: 2,
   manaCost: 2,
-  effect: "Liquid card 2 effect",
+  lore: "Liquid card 2 effect",
   effects: []
 }, {
   id: 102,
@@ -286,7 +324,7 @@ const cards: Array<Card> = [{
   damage: 3,
   health: 3,
   manaCost: 3,
-  effect: "Liquid card 3 effect",
+  lore: "Liquid card 3 effect",
   effects: []
 }, {
   id: 103,
@@ -296,7 +334,7 @@ const cards: Array<Card> = [{
   damage: 4,
   health: 4,
   manaCost: 4,
-  effect: "Liquid card 4 effect",
+  lore: "Liquid card 4 effect",
   effects: []
 }, {
   id: 104,
@@ -306,7 +344,7 @@ const cards: Array<Card> = [{
   damage: 5,
   health: 5,
   manaCost: 5,
-  effect: "Liquid card 5 effect",
+  lore: "Liquid card 5 effect",
   effects: []
 }, {
   id: 105,
@@ -316,7 +354,7 @@ const cards: Array<Card> = [{
   damage: 6,
   health: 6,
   manaCost: 6,
-  effect: "Liquid card 6 effect",
+  lore: "Liquid card 6 effect",
   effects: []
 }, {
   id: 106,
@@ -324,7 +362,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Liquid card 7",
   manaCost: 7,
-  effect: "Liquid card 7 effect",
+  lore: "Liquid card 7 effect",
   effects: []
 }, {
   id: 107,
@@ -332,7 +370,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Liquid card 8",
   manaCost: 8,
-  effect: "Liquid card 8 effect",
+  lore: "Liquid card 8 effect",
   effects: []
 }, {
   id: 108,
@@ -340,7 +378,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Liquid card 9",
   manaCost: 9,
-  effect: "Liquid card 9 effect",
+  lore: "Liquid card 9 effect",
   effects: []
 }, {
   id: 109,
@@ -348,7 +386,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Liquid card 10",
   manaCost: 10,
-  effect: "Liquid card 10 effect",
+  lore: "Liquid card 10 effect",
   effects: []
 }, {
   id: 110,
@@ -356,7 +394,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Liquid card 11",
   manaCost: 11,
-  effect: "Liquid card 11 effect",
+  lore: "Liquid card 11 effect",
   effects: []
 }, {
   id: 111,
@@ -364,7 +402,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Liquid card 12",
   manaCost: 12,
-  effect: "Liquid card 12 effect",
+  lore: "Liquid card 12 effect",
   effects: []
 }, {
   id: 150,
@@ -374,7 +412,7 @@ const cards: Array<Card> = [{
   damage: 1,
   health: 1,
   manaCost: 1,
-  effect: "Gas card 1 effect",
+  lore: "Gas card 1 effect",
   effects: []
 }, {
   id: 151,
@@ -384,7 +422,7 @@ const cards: Array<Card> = [{
   damage: 2,
   health: 2,
   manaCost: 2,
-  effect: "Gas card 2 effect",
+  lore: "Gas card 2 effect",
   effects: []
 }, {
   id: 152,
@@ -394,7 +432,7 @@ const cards: Array<Card> = [{
   damage: 3,
   health: 3,
   manaCost: 3,
-  effect: "Gas card 3 effect",
+  lore: "Gas card 3 effect",
   effects: []
 }, {
   id: 153,
@@ -404,7 +442,7 @@ const cards: Array<Card> = [{
   damage: 4,
   health: 4,
   manaCost: 4,
-  effect: "Gas card 4 effect",
+  lore: "Gas card 4 effect",
   effects: []
 }, {
   id: 154,
@@ -414,7 +452,7 @@ const cards: Array<Card> = [{
   damage: 5,
   health: 5,
   manaCost: 5,
-  effect: "Gas card 5 effect",
+  lore: "Gas card 5 effect",
   effects: []
 }, {
   id: 155,
@@ -424,7 +462,7 @@ const cards: Array<Card> = [{
   damage: 6,
   health: 6,
   manaCost: 6,
-  effect: "Gas card 6 effect",
+  lore: "Gas card 6 effect",
   effects: []
 }, {
   id: 156,
@@ -432,7 +470,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Gas card 7",
   manaCost: 7,
-  effect: "Gas card 7 effect",
+  lore: "Gas card 7 effect",
   effects: []
 }, {
   id: 157,
@@ -440,7 +478,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Gas card 8",
   manaCost: 8,
-  effect: "Gas card 8 effect",
+  lore: "Gas card 8 effect",
   effects: []
 }, {
   id: 158,
@@ -448,7 +486,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Gas card 9",
   manaCost: 9,
-  effect: "Gas card 9 effect",
+  lore: "Gas card 9 effect",
   effects: []
 }, {
   id: 159,
@@ -456,7 +494,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Gas card 10",
   manaCost: 10,
-  effect: "Gas card 10 effect",
+  lore: "Gas card 10 effect",
   effects: []
 }, {
   id: 160,
@@ -464,7 +502,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Gas card 11",
   manaCost: 11,
-  effect: "Gas card 11 effect",
+  lore: "Gas card 11 effect",
   effects: []
 }, {
   id: 161,
@@ -472,7 +510,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Gas card 12",
   manaCost: 12,
-  effect: "Gas card 12 effect",
+  lore: "Gas card 12 effect",
   effects: []
 }, {
   id: 200,
@@ -482,7 +520,7 @@ const cards: Array<Card> = [{
   damage: 1,
   health: 1,
   manaCost: 1,
-  effect: `
+  lore: `
     If Plasma card 1 procs
     <span class="f--red"><i class="fas fa-khanda"></i></span>,
     it can attack again.
@@ -496,7 +534,7 @@ const cards: Array<Card> = [{
   damage: 2,
   health: 2,
   manaCost: 2,
-  effect: `
+  lore: `
     When summoned, 10% of your Life Points are transfered into *cardname*
     damage
   `,
@@ -509,7 +547,7 @@ const cards: Array<Card> = [{
   damage: 3,
   health: 3,
   manaCost: 3,
-  effect: `
+  lore: `
     Gains
     <span class="f--red">+1% <i class="fas fa-khanda"></i></span>
     for each
@@ -528,7 +566,7 @@ const cards: Array<Card> = [{
   damage: 4,
   health: 4,
   manaCost: 4,
-  effect: `
+  lore: `
     Gains <span class="f--red">+20% <i class="fas fa-khanda"></i></span> for
     each Minion on your field, self included.
   `,
@@ -541,7 +579,7 @@ const cards: Array<Card> = [{
   damage: 5,
   health: 5,
   manaCost: 5,
-  effect: `
+  lore: `
     Executes Minions below
     <span class="f--green">5% <i class="fas fa-heart"></i></span>
     after combat.
@@ -559,7 +597,7 @@ const cards: Array<Card> = [{
   damage: 6,
   health: 6,
   manaCost: 6,
-  effect: `
+  lore: `
     If Plasma card 6 procs
     <span class="f--red"><i class="fas fa-khanda"></i></span>
     , the opposing card is stunned.
@@ -573,7 +611,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Plasma card 7",
   manaCost: 7,
-  effect: `
+  lore: `
     Give one minion
     <span class="f--red">+6/6 <i class="fas fa-khanda"></i></span>.
   `,
@@ -584,7 +622,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Plasma card 8",
   manaCost: 8,
-  effect: "Plasma card 8 effect",
+  lore: "Plasma card 8 effect",
   effects: []
 }, {
   id: 208,
@@ -592,7 +630,7 @@ const cards: Array<Card> = [{
   type: CardType.MAGIC,
   name: "Plasma card 9",
   manaCost: 9,
-  effect: "Plasma card 9 effect",
+  lore: "Plasma card 9 effect",
   effects: []
 }, {
   id: 209,
@@ -600,7 +638,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Plasma card 10",
   manaCost: 10,
-  effect: `
+  lore: `
     The next Minion your opponent attacks will gain
     <span class="f--red">+6/6 <i class="fas fa-khanda"></i></span>
     until the end of their turn.
@@ -612,7 +650,7 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Plasma card 11",
   manaCost: 11,
-  effect: "Plasma card 11 effect",
+  lore: "Plasma card 11 effect",
   effects: []
 }, {
   id: 211,
@@ -620,145 +658,126 @@ const cards: Array<Card> = [{
   type: CardType.TRAP,
   name: "Plasma card 12",
   manaCost: 12,
-  effect: "Plasma card 12 effect",
+  lore: "Plasma card 12 effect",
   effects: []
 }];
 
-const solidHero: Hero = {
+const heroes: Array<Hero> = [{
   name: "Solid Hero",
   klass: CardKlass.SOLID,
-  damage: 55,
-  health: 1500,
-  mana: 100,
-  passive: {
-    name: "Thick Armor",
-    amount: 10,
-    info: `
-      Solid Hero and Minions take
-      <span class="f--yellow">% Reduced Damage <i class="fas fa-shield-alt fa-fw"></i></span>,
-      when defending.
-    `
-  },
-  active: {
-    name: "Taunt",
-    manaCost: 10,
-    info: `
-      Solid Hero can apply a Taunt buff on Solid Minions or himself, giving it
-      additional
-      <span class="f--yellow"><i class="fas fa-shield-alt fa-fw"></i></span>,
-      and forcing the enemy Hero and Minions to attack that minion for their
-      next turn.
-    `
-  },
-  special: {
-    amount: 0,
-    effect: ""
-  },
-};
-
-const liquidHero: Hero = {
+  health: 100,
+  mana: 20,
+  effects: []
+}, {
   name: "Liquid Hero",
   klass: CardKlass.LIQUID,
-  damage: 30,
-  health: 600,
-  mana: 100,
-  passive: {
-    name: "Passive",
-    amount: 25,
-    info: `
-      Liquid Hero and Minions heal
-      <span class="f--green">50% missing <i class="fas fa-heart fa-fw"></i></span>
-      whenever a Liquid Minion dies.
-    `
-  },
-  active: {
-    name: "Active",
-    manaCost: 30,
-    info: `
-      Liquid hero and minions heal
-      <span class="f--green">10% missing <i class="fas fa-heart"></i></span>.
-    `
-  },
-  special: {
-    amount: 0,
-    effect: ""
-  },
-};
-
-const gasHero: Hero = {
+  health: 100,
+  mana: 20,
+  effects: []
+}, {
   name: "Gas Hero",
   klass: CardKlass.GAS,
-  damage: 10,
-  health: 1000,
-  mana: 100,
-  passive: {
-    name: `
-      <span class="f--gas">Neurotoxin <i class="fas fa-radiation fa-fw"></i></span>
-    `,
-    amount: 1,
-    info: `
-      When attacking, Gas Hero and Minions apply
-      <span class="f--gas"><i class="fas fa-radiation fa-fw"></i></span>
-      debuff to the entire enemy field, dealing
-      <span class="f--orange">1 <i class="fas fa-fire fa-fw"></i></span>
-      each turn to the affected targets. This effect can stack.
-    `
-  },
-  active: {
-    name: "Active",
-    manaCost: 25,
-    info: `
-      ...
-    `
-  },
-  special: {
-    amount: 0,
-    effect: ""
-  },
-};
-
-const plasmaHero: Hero = {
+  health: 100,
+  mana: 20,
+  effects: []
+}, {
   name: "Plasma Hero",
   klass: CardKlass.PLASMA,
-  damage: 30,
-  health: 800,
-  mana: 100,
-  passive: {
-    name: `
-      <span class="f--red">Radiation <i class="fas fa-burn fa-fw"></i></span>
-    `,
-    amount: 10,
-    info: `
-      <br>
-      When attacking, Plasma Hero and Minions apply
-      <span class="f--red"><i class="fas fa-burn fa-fw"></i></span>
-      debuff, which deals
-      <span class="f--orange">1 <i class="fas fa-fire fa-fw"></i></span>
-      to the affected Minions or Hero each turn. This effect can stack.
-    `
-  },
-  active: {
-    name: "Unstable Core",
-    manaCost: 50,
-    info: `
-      Plasma Hero applies Unstable Core debuff on one enemy Minion or Hero.
-      Plasma Hero and Minions attacking the affected target will deal additional
-      <span class="f--orange">10% <i class="fas fa-fire fa-fw"></i></span>,
-      and apply
-      <span class="f--red">3 <i class="fas fa-burn fa-fw"></i></span>
-      additional stacks until the end of your turn.
-    `
-  },
-  special: {
-    amount: 0,
-    effect: ""
-  },
-}
+  health: 100,
+  mana: 20,
+  effects: []
+}];
 
-const heroes: Array<Hero> = [
-  solidHero, liquidHero, gasHero, plasmaHero
-];
+// passive: {
+//     name: "Thick Armor",
+//     amount: 10,
+//     info: `
+//       Solid Hero and Minions take
+//       <span class="f--yellow">% Reduced Damage <i class="fas fa-shield-alt fa-fw"></i></span>,
+//       when defending.
+//     `
+//   },
+//   active: {
+//     name: "Taunt",
+//     manaCost: 10,
+//     info: `
+//       Solid Hero can apply a Taunt buff on Solid Minions or himself, giving it
+//       additional
+//       <span class="f--yellow"><i class="fas fa-shield-alt fa-fw"></i></span>,
+//       and forcing the enemy Hero and Minions to attack that minion for their
+//       next turn.
+//     `
+//   },
 
+// passive: {
+//     name: "Passive",
+//     amount: 25,
+//     info: `
+//       Liquid Hero and Minions heal
+//       <span class="f--green">50% missing <i class="fas fa-heart fa-fw"></i></span>
+//       whenever a Liquid Minion dies.
+//     `
+//   },
+//   active: {
+//     name: "Active",
+//     manaCost: 30,
+//     info: `
+//       Liquid hero and minions heal
+//       <span class="f--green">10% missing <i class="fas fa-heart"></i></span>.
+//     `
+//   },
+// passive: {
+//     name: `
+//       <span class="f--red">Radiation <i class="fas fa-burn fa-fw"></i></span>
+//     `,
+//     amount: 10,
+//     info: `
+//       <br>
+//       When attacking, Plasma Hero and Minions apply
+//       <span class="f--red"><i class="fas fa-burn fa-fw"></i></span>
+//       debuff, which deals
+//       <span class="f--orange">1 <i class="fas fa-fire fa-fw"></i></span>
+//       to the affected Minions or Hero each turn. This effect can stack.
+//     `
+//   },
+//   active: {
+//     name: "Unstable Core",
+//     manaCost: 50,
+//     info: `
+//       Plasma Hero applies Unstable Core debuff on one enemy Minion or Hero.
+//       Plasma Hero and Minions attacking the affected target will deal additional
+//       <span class="f--orange">10% <i class="fas fa-fire fa-fw"></i></span>,
+//       and apply
+//       <span class="f--red">3 <i class="fas fa-burn fa-fw"></i></span>
+//       additional stacks until the end of your turn.
+//     `
+//   },
+// passive: {
+//     name: `
+//       <span class="f--red">Radiation <i class="fas fa-burn fa-fw"></i></span>
+//     `,
+//     amount: 10,
+//     info: `
+//       <br>
+//       When attacking, Plasma Hero and Minions apply
+//       <span class="f--red"><i class="fas fa-burn fa-fw"></i></span>
+//       debuff, which deals
+//       <span class="f--orange">1 <i class="fas fa-fire fa-fw"></i></span>
+//       to the affected Minions or Hero each turn. This effect can stack.
+//     `
+//   },
+//   active: {
+//     name: "Unstable Core",
+//     manaCost: 50,
+//     info: `
+//       Plasma Hero applies Unstable Core debuff on one enemy Minion or Hero.
+//       Plasma Hero and Minions attacking the affected target will deal additional
+//       <span class="f--orange">10% <i class="fas fa-fire fa-fw"></i></span>,
+//       and apply
+//       <span class="f--red">3 <i class="fas fa-burn fa-fw"></i></span>
+//       additional stacks until the end of your turn.
+//     `
+//   },
 const passives = [{
   klass: CardKlass.SOLID,
   text: `

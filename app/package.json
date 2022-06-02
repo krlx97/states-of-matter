@@ -5,5 +5,9 @@
     "node": "16.13.2",
     "npm": "8.1.2"
   },
-  "workspaces": ["backend", "frontend", "shared"]
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ]
 }

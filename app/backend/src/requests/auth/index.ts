@@ -1,4 +1,8 @@
-export {disconnect} from "./disconnect";
-export {getPrivateKeyHash} from "./getPrivateKeyHash";
-export {signin} from "./signin";
-export {signup} from "./signup";
+import {disconnect} from "./disconnect";
+import {getPrivateKeyHash} from "./getPrivateKeyHash";
+import {signin} from "./signin";
+import {signup} from "./signup";
+
+const auth = [disconnect, getPrivateKeyHash, signin, signup];
+
+export {auth};

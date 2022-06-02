@@ -1,11 +1,35 @@
-export {destroyLobby} from "./destroyLobby";
-export {joinCasualQueue} from "./joinCasualQueue";
-export {joinLobby} from "./joinLobby";
-export {leaveLobby} from "./leaveLobby";
-export {makeLobby} from "./makeLobby";
-export {saveDeck} from "./saveDeck";
-export {selectDeck} from "./selectDeck";
-export {sendToken} from "./sendToken";
-export {setDeckKlass} from "./setDeckKlass";
-export {setDeckName} from "./setDeckName";
-export {startGame} from "./startGame";
+import {destroyLobby} from "./destroyLobby";
+import {getLeaderboardsByLevel} from "./getLeaderboardsByLevel";
+import {joinCasualQueue} from "./joinCasualQueue";
+import {joinLobby} from "./joinLobby";
+import {joinRankedQueue} from "./joinRankedQueue";
+import {leaveCasualQueue} from "./leaveCasualQueue";
+import {leaveLobby} from "./leaveLobby";
+import {leaveRankedQueue} from "./leaveRankedQueue";
+import {makeLobby} from "./makeLobby";
+import {saveDeck} from "./saveDeck";
+import {selectDeck} from "./selectDeck";
+import {sendToken} from "./sendToken";
+import {setDeckKlass} from "./setDeckKlass";
+import {setDeckName} from "./setDeckName";
+import {startCustomGame} from "./startCustomGame";
+
+const client = [
+  destroyLobby,
+  getLeaderboardsByLevel,
+  joinCasualQueue,
+  joinLobby,
+  joinRankedQueue,
+  leaveCasualQueue,
+  leaveLobby,
+  leaveRankedQueue,
+  makeLobby,
+  saveDeck,
+  selectDeck,
+  sendToken,
+  setDeckKlass,
+  setDeckName,
+  startCustomGame
+];
+
+export {client};

@@ -1,22 +1,26 @@
 <script lang="ts">
   import Avatars from "./Avatars/Avatars.svelte";
-  import CardbackSkins from "./CardbackSkins.svelte";
+  import CardBackSkins from "./CardBackSkins.svelte";
+  import CardBorderSkins from "./CardBorderSkins.svelte";
   import CardSkins from "./CardSkins.svelte";
 
-  const navs = [
-    {name: "Avatars", component: Avatars},
-    {name: "Card Skins", component: CardSkins},
-    {name: "Cardback Skins", component: CardbackSkins}
+  const routes = [
+    {name: "Cards",           component: CardSkins},
+    {name: "Card Borders",    component: CardBorderSkins},
+    {name: "Card Backs",      component: CardBackSkins},
+    {name: "Avatars",         component: Avatars},
   ];
 
-  let selekted = navs[0];
+  let selekted = routes[0];
 </script>
 
 <style lang="scss">
   @import "../../shared/styles/variables";
 
-  .non-fungible__tokens {
+  .skins {
     padding: $spacing-md;
+    display: flex;
+    flex-direction: column;
   }
   nav {
     display: flex;
@@ -29,13 +33,14 @@
   }
 </style>
 
-<div class="non-fungible__tokens">
-  <div>Skins</div>
-
+<div class="skins">
   <nav>
-    {#each navs as nav}
-      <div class:selected={selekted.name === nav.name} on:click={() => selekted = nav}>
-        {nav.name}
+    {#each routes as route}
+      <div
+        class:selected={selekted.name === route.name}
+        on:click={() => selekted = route}
+      >
+        {route.name}
       </div>
     {/each}
   </nav>

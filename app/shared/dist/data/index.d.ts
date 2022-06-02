@@ -1,3 +1,4 @@
+import { CardKlass, Effect } from "../enums/index.js";
 interface Card {
     id: number;
     klass: number;
@@ -6,35 +7,17 @@ interface Card {
     damage?: number;
     health?: number;
     manaCost: number;
-    effect: string;
+    lore: string;
     effects: Array<number>;
-}
-interface Passive {
-    name: string;
-    amount: number;
-    info: string;
-}
-interface Active {
-    name: string;
-    manaCost: number;
-    info: string;
-}
-interface Special {
-    effect: string;
-    amount: number;
 }
 interface Hero {
     name: string;
     klass: number;
-    damage: number;
     health: number;
     mana: number;
-    passive: Passive;
-    active: Active;
-    special: Special;
+    effects: Array<number>;
 }
-import { CardKlass } from "../enums/index.js";
-export declare const lore: Map<unknown, unknown>;
+export declare const effectInfo: Map<Effect, string>;
 declare const cards: Array<Card>;
 declare const heroes: Array<Hero>;
 declare const passives: {

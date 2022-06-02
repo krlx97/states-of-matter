@@ -1,46 +1,20 @@
 <script lang="ts">
-  import ProgressBar from "./ProgressBar.svelte";
-  import Text from "./Text.svelte";
-  import Img from "./Img.svelte";
-  import type {Hero} from "../shared/models/view";
+  import {CardKlass} from "@som/shared/enums";
+  import type {GameHero} from "@som/shared/types/client";
 
-  let hero: Hero;
+  let hero: GameHero;
   let health: number = hero.health;
   let mana: number = hero.health;
   let isHealthBarVisible = false;
   let isManaBarVisible = false;
 
   let abilityTooltip: HTMLElement;
-  let passiveTooltip: HTMLElement;
-  let damageTooltip: HTMLElement;
-  let manaTooltip: HTMLElement;
-
-  enum heroKlass {SOLID = 1, LIQUID = 2, GAS = 3, PLASMA = 4};
 
   const abilityMouseMove = (event: MouseEvent): void => {
     const {offsetX, offsetY} = event;
 
     abilityTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
     abilityTooltip.style.left = `calc(-80px + ${offsetX}px)`;
-  };
-
-  const passiveMouseMove = (event: MouseEvent): void => {
-    const {offsetX, offsetY} = event;
-
-    passiveTooltip.style.bottom = `calc(48px + ${-offsetY}px)`;
-    passiveTooltip.style.left = `calc(-80px + ${offsetX}px)`;
-  };
-  const damageMouseMove = (event: MouseEvent): void => {
-    const {offsetX, offsetY} = event;
-
-    damageTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
-    damageTooltip.style.left = `calc(-80px + ${offsetX}px)`;
-  };
-  const manaMouseMove = (event: MouseEvent): void => {
-    const {offsetX, offsetY} = event;
-
-    manaTooltip.style.bottom = `calc(64px + ${-offsetY}px)`;
-    manaTooltip.style.left = `calc(-80px + ${offsetX}px)`;
   };
 
   export {hero, health, mana,isHealthBarVisible, isManaBarVisible};
@@ -52,152 +26,163 @@
 
   .card {
     position: relative;
-    height: 100%;
-    width: 100%;
-    box-shadow: $elevation-sm;
-    transition: box-shadow 225ms ease-in-out;
+    display: flex;
+    border: 1px solid $light-grey;
+    box-sizing: border-box;
 
-    &:hover {
-      box-shadow: $elevation-lg;
-      cursor: pointer;
+    &:hover {cursor: pointer;}
+    &__overlay {z-index: 1;}
+
+    &__img {
+      position: absolute;
+      top: 29px;
+      left: 18px;
+      height: 142px;
+      width: 108px;
     }
 
-    &__bar {
+    &__type {
       position: absolute;
-      bottom: 52px;
+      top: 9px;
+      left: 9px;
+      z-index: 3;
+
+      &__img {
+        height: 16px;
+        width: 16px;
+      }
+    }
+
+    &__name {
+      position: absolute;
+      top: 12px;
       left: 50%;
-      width: 80%;
-      box-shadow: $elevation-sm;
       transform: translateX(-50%);
+      width: 84px;
+      font-size: 0.8rem;
+      text-align: center;
+      z-index: 3;
+    }
+
+    &__klass {
+      position: absolute;
+      top: 9px;
+      right: 9px;
+      z-index: 3;
+
+      &__img {
+        height: 16px;
+        width: 16px;
+      }
+    }
+
+    &__healthbar {
+      position: absolute;
+      bottom: 3px;
+      left: 11px;
+      height: 3px;
+      width: 43px;
+      z-index: 3;
+
+      &__progress {
+        height: 3px;
+        background-color: rgb(133, 199, 0);
+        border-radius: 3px;
+        transition: width 250ms linear;
+      }
     }
 
     &__manabar {
       position: absolute;
-      bottom: 40px;
-      left: 50%;
-      width: 70%;
-      box-shadow: $elevation-sm;
-      transform: translateX(-50%);
+      bottom: 3px;
+      right: 11px;
+      height: 3px;
+      width: 43px;
+      z-index: 3;
+
+      &__progress {
+        height: 3px;
+        background-color: $blue;
+        border-radius: 3px;
+        transition: width 250ms linear;
+      }
     }
-    &__header {
-      height: 36px;
-      @include flex($align-items: center);
-      background-color: $dark-grey;
+
+    &__mana {
+      position: absolute;
+      bottom: 6px;
+      right: 19px;
+      width: 28px;
+      z-index: 3;
+      font-size: 0.8rem;
+      text-align: center;
     }
-    &__attrs {
-      height: 36px;
-      @include flex($align-items: center, $justify-content: space-evenly);
-      background-color: $dark-grey;
+
+    &__health {
+      position: absolute;
+      bottom: 6px;
+      left: 19px;
+      width: 28px;
+      z-index: 3;
+      font-size: 0.8rem;
+      text-align: center;
     }
   }
 
-  .tooltip {
-    display: none;
-    position: absolute;
-    bottom: 0;
-    left: 100%;
-    width: 160px;
-    padding: $spacing-sm;
-    background-color: $light-grey;
-    box-shadow: $elevation-lg;
-    box-sizing: border-box;
-    font-size: $font-sm;
-  }
-
-  .stat {
-    position: relative;
-    @include flex(column, center, space-between);
-    font-size: $font-sm;
-
-    span {
-      color: white;
-    }
-    // &:last-child { margin-bottom: 0; }
-
-    &__type {
-      color: white;
-      &:hover .tooltip { display: initial; }
-    }
-   
-    &__solid { color: $solid }
-    &__liquid { color: $liquid }
-    &__gas { color: $gas }
-    &__plasma { color: $plasma }
-  }
+  // .tooltip {
+  //   display: none;
+  //   position: absolute;
+  //   bottom: 0;
+  //   left: 100%;
+  //   width: 160px;
+  //   padding: $spacing-sm;
+  //   background-color: $light-grey;
+  //   box-shadow: $elevation-lg;
+  //   box-sizing: border-box;
+  //   font-size: $font-sm;
+  // }
 </style>
 
 <div class="card">
 
-  <div class="card__header">
-    <div class="stat stat__type" on:mousemove={passiveMouseMove}>
-      <img src="assets/attrs/hero.png" alt="Hero"/>
-
-      <div class="tooltip" bind:this={passiveTooltip}>
-        
-        <br/>
-        <p>
-          {@html hero.passive.info}
-        </p>
-        <hr/>
-        <p>
-          {@html hero.active.info}
-        </p>
-      </div>
-    </div>
-
-    <div>
-      {hero.name}
-    </div>
+  <div class="card__type">
+    <img class="card__type__img" src="assets/attrs/hero.png" alt="Hero"/>
   </div>
 
-  <Img src="classes/{hero.klass}_hero.jpg" alt={hero.name}/>
+  <div class="card__name">{hero.name}</div>
+
+  <div class="card__klass">
+    {#if hero.klass === CardKlass.SOLID}
+      <img class="card__klass__img" src="assets/classes/{CardKlass.SOLID}.png" alt="Minion"/>
+    {:else if hero.klass === CardKlass.LIQUID}
+      <img class="card__klass__img" src="assets/classes/{CardKlass.LIQUID}.png" alt="Magic"/>
+    {:else if hero.klass === CardKlass.GAS}
+      <img class="card__klass__img" src="assets/classes/{CardKlass.GAS}.png" alt="Magic"/>
+    {:else}
+      <img class="card__klass__img" src="assets/classes/{CardKlass.PLASMA}.png" alt="Magic"/>
+    {/if}
+  </div>
+
+  <img class="card__overlay" src="assets/cards/herofront.png" alt="Card front"/>
+  <img class="card__img" src="assets/classes/{hero.klass}_hero.jpg" alt={hero.name}/>
+
+  <div class="card__health">{hero.health}</div>
+  <div class="card__mana">{hero.mana}</div>
 
   {#if isHealthBarVisible}
-    <div class="card__bar">
-      <ProgressBar size="sm" progress={health / hero.health * 100} color="green"/>
+    <div class="card__healthbar">
+      <div
+        class="card__healthbar__progress"
+        style={`width: ${hero.health / hero.maxHealth * 100}%`}
+      ></div>
     </div>
   {/if}
   {#if isManaBarVisible}
     <div class="card__manabar">
-      <ProgressBar size="sm" progress={mana / hero.mana * 100} color="blue"/>
+      <div
+        class="card__manabar__progress"
+        style={`width: ${hero.mana / hero.maxMana * 100}%`}
+      ></div>
     </div>
   {/if}
-
-  <div class="card__attrs">
-
-    
-
-    <div class="stat stat__mana">
-      <img src="assets/attrs/mana.png" alt="Mana Capacity"/>
-      <Text size="xsm">{mana || hero.mana}</Text>
-    </div>
-
-    <div class="stat stat__health">
-      <img src="assets/attrs/health.png" alt="Health"/>
-      <Text size="xsm">{health || hero.health}</Text>
-    </div>
-
-    <div class="stat stat__damage">
-      <img src="assets/attrs/damage.png" alt="Damage"/>
-      <Text size="xsm">{hero.damage}</Text>
-    </div>
-
-    <!-- {#if hero.klass === 1}
-      <div class="stat stat__solid">
-        <i class="fas fa-shield-alt fa-fw"></i> <span>4</span>
-      </div>
-    {:else if hero.klass === 2}
-      <div class="stat stat__liquid">
-        <i class="fas fa-tint fa-fw"></i> <span>4</span>
-      </div>
-    {:else if hero.klass === 3}
-      <div class="stat stat__gas">
-        <i class="fas fa-radiation fa-fw"></i> <span>4</span>
-      </div>
-    {:else if hero.klass === 4}
-      <div class="stat stat__plasma">
-        <i class="fas fa-khanda fa-fw"></i> <span>4</span>
-      </div>
-    {/if} -->
-  </div>
 </div>

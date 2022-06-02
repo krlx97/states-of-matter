@@ -1,15 +1,14 @@
-import type {App} from "models";
-import type {Player} from "services/MongoService/PlayerService.models";
+import { chatsDb, playersDb } from "apis/mongo";
+import { Player } from "@som/shared/types/mongo";
+import { ioServer } from "apis/server";
+import type {SocketEvent} from "models";
 
-export const unfriend = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$chats, $players} = mongoService;
-  const {io, socket, socketId} = socketService;
+const unfriend: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("unfriend", async (params) => {
     const {username} = params;
-    const sender = await $players.findOneAndUpdate({socketId}, {
+    const sender = await playersDb.findOneAndUpdate({socketId}, {
       $pull: {
         "social.friends": username
       } as Partial<Player>
@@ -19,7 +18,7 @@ export const unfriend = (app: App): void => {
 
     if (!sender.value) { return; }
 
-    const receiver = await $players.findOneAndUpdate({username}, [{
+    const receiver = await playersDb.findOneAndUpdate({username}, [{
       $pull: {
         "social.friends": sender.value.username
       }
@@ -29,7 +28,7 @@ export const unfriend = (app: App): void => {
 
     if (!receiver.value) { return; }
 
-    const deleteChat = await $chats.deleteOne({
+    const deleteChat = await chatsDb.deleteOne({
       players: {
         $all: [username, sender.value.username]
       }
@@ -38,8 +37,10 @@ export const unfriend = (app: App): void => {
     if (!deleteChat.deletedCount) { return; }
 
     socket.emit("unfriendSender", {username});
-    io.to(receiver.value.socketId).emit("unfriendReceiver", {
+    ioServer.to(receiver.value.socketId).emit("unfriendReceiver", {
       username: sender.value.username
     });
   });
 };
+
+export {unfriend};

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {heroes} from "@som/shared/data";
   import {gameStore} from "stores";
   import Hero from "../../ui/Hero.svelte";
 </script>
@@ -15,7 +14,7 @@
 
 <div class="hero">
   <Hero
-    hero={heroes.find((hero) => hero.klass === $gameStore.player.hero.id)}
+    hero={$gameStore.player.hero}
     health={$gameStore.player.hero.health}
     mana={$gameStore.player.hero.mana}
     isHealthBarVisible={true}

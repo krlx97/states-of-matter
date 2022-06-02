@@ -7,19 +7,21 @@
   "exports": {
     "./data": "./dist/data/index.js",
     "./enums": "./dist/enums/index.js",
-    "./interfaces/requests": "./dist/interfaces/requests/index.js",
-    "./interfaces/responses": "./dist/interfaces/responses/index.js",
-    "./interfaces/mongo": "./dist/interfaces/mongo/index.js",
-    "./interfaces/client": "./dist/interfaces/client/index.js"
+    "./types/requests": "./dist/types/requests/index.js",
+    "./types/responses": "./dist/types/responses/index.js",
+    "./types/mongo": "./dist/types/mongo/index.js",
+    "./types/client": "./dist/types/client/index.js"
   },
   "typesVersions": {
     "*": {
       "data": ["dist/data/index.d.ts"],
       "enums": ["dist/enums/index.d.ts"],
-      "interfaces/requests": ["dist/interfaces/requests/index.d.ts"],
-      "interfaces/responses": ["dist/interfaces/responses/index.d.ts"],
-      "interfaces/mongo": ["dist/interfaces/mongo/index.d.ts"],
-      "interfaces/client": ["dist/interfaces/client/index.d.ts"]
+      "types/requests": ["dist/types/requests/index.d.ts"],
+      "types/responses": ["dist/types/responses/index.d.ts"],
+      "types/mongo": ["dist/types/mongo/index.d.ts"],
+      "types/client": ["dist/types/client/index.d.ts"],
+
+      "types/mongo/game": ["dist/types/mongo/Game.d.ts"]
     }
   },
   "devDependencies": {

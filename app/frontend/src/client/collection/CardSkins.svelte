@@ -1,14 +1,13 @@
 <style lang="scss">
   .coming-soon {
-    height: 100%;
-    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 4rem;
+    flex-grow: 1;
+    font-size: 2rem;
   }
 </style>
 
 <div class="coming-soon">
-  Cardback Skins coming soon... 😉
+  Card Skins coming soon... 😉
 </div>

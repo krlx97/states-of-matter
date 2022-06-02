@@ -21,11 +21,13 @@ export const selectDeck = () => {
 
       decks.deckCards = deck.cards.map((deckCard) => {
         const card = cards.find((card) => card.id === deckCard.id);
-        const {id, klass, name} = card;
+        const {id, klass, name, manaCost} = card;
         const {amount} = deckCard;
 
-        return {klass, id, name, amount};
-      });
+        return {klass, id, name, amount, manaCost};
+      }).sort((a, b) => a.manaCost - b.manaCost);
+
+      decks.selectedDeck = decks.deckSlots.find(({id}) => id === deckId);
 
       return decks;
     });

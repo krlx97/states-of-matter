@@ -1,19 +1,28 @@
 <script lang="ts">
+  import {createEventDispatcher} from "svelte";
   import {miscService, socketService} from "services";
   import {decksStore, playerStore} from "stores";
   import Button from "../../ui/Button.svelte";
-  import ProgressBar from "../../ui/ProgressBar.svelte";
 
-  export let deck: any;
+  let areActionButtonsVisible = false;
+  let deck: {
+    id: number;
+    name: string;
+    klass: number;
+    cardsInDeck: number;
+  } = undefined;
+  const dispatch = createEventDispatcher();
 
-  $: progress = (deck.cardsInDeck / 30) * 100;
+  $: progress = deck ? (deck.cardsInDeck / 30) * 100 : ($decksStore.selectedDeck.cardsInDeck / 30) * 100;
 
   const selectDeck = () => {
     socketService.socket.emit("selectDeck", {deckId: deck.id});
+    dispatch("toggleDeckSlots");
   };
 
   const changeDeckName = () => {
-    miscService.openModal("changeDeckName", {id: deck.id});
+    const {id} = $decksStore.selectedDeck;
+    miscService.openModal("changeDeckName", {id});
   };
 
   const saveDeck = () => {
@@ -23,60 +32,53 @@
 
   const clearDeck = () => {
     $decksStore.deckCards = [];
-    $decksStore.cardsInDeck = 0;
+    $decksStore.selectedDeck.cardsInDeck = 0;
   };
 
+  const switchDeck = (): void => {
+    dispatch("toggleDeckSlots");
+  };
+
+  export {areActionButtonsVisible, deck};
 </script>
 
 <style lang="scss">
   @import "../../shared/styles/variables";
 
-  .selected {
-    border-bottom: 2px solid $purple;
-    box-sizing: border-box;
-  }
-
   .deck {
+    position: relative;
+    height: 96px;
     width: 256px;
-    margin-bottom: $spacing-md;
-    padding: $spacing-sm;
+    // margin: $spacing-md;
+    padding: $spacing-md;
     display: flex;
+    // background-image: url(/assets/card.png);
     background-color: $light-grey;
+    border-radius: 4px;
     box-sizing: border-box;
     box-shadow: $elevation-sm;
-    border-radius: 4px;
-    transition: box-shadow 225ms ease-in-out;
-
-    &:hover {
-      box-shadow: $elevation-lg;
-    }
 
     &__img {
-      
-      cursor: pointer;
-
-      // border: 1px solid red;
-      // box-sizing: border-box;
+      margin-right: $spacing-md;
     }
 
-    &__footer {
-      width: 100%;
-      margin-left: $spacing-sm;
+    &__info {
+      // height: 96px;
+      flex-grow: 1;
       display: flex;
-      font-size: $font-md;
+      flex-direction: column;
+      align-items: center;
+      // justify-content: space-between;
 
-      // border: 1px solid green;
-      // box-sizing: border-box;
-
-      &__info {
-        flex-grow: 1;
+      &__title {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
       }
 
       &__actions {
-        display: flex;
-        // flex-direction: column;
-        // align-items: center;
-        // justify-content: center;
+        align-self: flex-end;
       }
     }
   }
@@ -85,41 +87,52 @@
     display: flex;
     justify-content: space-between;
   }
+
+  .bar {
+    height: 4px;
+    width: 100%;
+    margin-top: $spacing-sm;
+    background-color: white;
+    border-radius: 4px;
+
+    &__progress {
+      height: 4px;
+      background-color: $purple;
+      border-radius: 4px;
+      transition: width 250ms linear;
+    }
+  }
 </style>
 
-<div class="deck" class:selected={deck.id === $playerStore.deckId}>
-  <img class="deck__img" src="assets/classes/64/{deck.klass}.png" alt="Class" on:click={selectDeck}/>
-
-  <div class="deck__footer">
-    <div class="deck__footer__info">
-
-      <div class="decktitle">
-        <div>{deck.name}</div>
-        <div>
-          {deck.cardsInDeck} / 30
-          {#if deck.cardsInDeck < 30}
-            <i class="fas fa-exclamation fa-fw"></i>
-          {:else}
-            <i class="fas fa-check fa-fw"></i>
-          {/if}
-        </div>
-      </div>
-
-      <ProgressBar color={"purple"} progress={progress}/>
-
-      <div class="deck__footer__actions">
+<div class="deck">
+  <img class="deck__img" src="assets/classes/64/{deck ? deck.klass : $decksStore.selectedDeck.klass}.png" alt="Class"/>
+  <div class="deck__info">
+    <div class="deck__info__title">
+      <div>{deck ? deck.name : $decksStore.selectedDeck.name}</div>
+      <div>{deck ? deck.cardsInDeck : $decksStore.selectedDeck.cardsInDeck} / 30</div>
+    </div>
+    <div class="bar">
+      <div class="bar__progress" style="width: {progress}%"></div>
+    </div>
+    {#if areActionButtonsVisible}
+      <div class="deck__info__actions">
         <Button style="icon" color="grey" on:click={changeDeckName}>
-          <i class="fas fa-edit fa-fw"></i>
+          <img src="assets/icons/write.png" alt="Rename"/>
         </Button>
         <Button style="icon" color="grey" on:click={clearDeck}>
-          <i class="fas fa-trash fa-fw"></i>
+          <img src="assets/icons/delete.png" alt="Delete"/>
         </Button>
         <Button style="icon" color="grey" on:click={saveDeck}>
-          <i class="fas fa-save fa-fw"></i>
+          <img src="assets/icons/save.png" alt="Save"/>
+        </Button>
+        <Button style="icon" color="grey" on:click={switchDeck}>
+          <img src="assets/icons/down.png" alt="Switch"/>
         </Button>
       </div>
-    </div>
-
-    
+    {:else}
+      <Button style="icon" color="grey" on:click={selectDeck}>
+        <img src="assets/icons/check.png" alt="Check"/>
+      </Button>
+    {/if}
   </div>
 </div>

@@ -153,7 +153,7 @@
         <hr/>
         <Text color="green" size="xsm">Effect:</Text>
         <br/>
-        <Text size="sm">{@html card.effect}</Text>
+        <!-- <Text size="sm">{@html card.effect}</Text> -->
       </div>
 
     </div>

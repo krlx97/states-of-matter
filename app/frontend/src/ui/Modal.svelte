@@ -19,6 +19,7 @@
     z-index: 100;
   }
   .modal {
+    max-width: 640px;
     padding: $spacing-md;
     background-color: $light-grey;
     border-radius: 4px;

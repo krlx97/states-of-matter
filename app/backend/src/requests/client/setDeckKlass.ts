@@ -1,14 +1,12 @@
-import type {App} from "models";
+import {playersDb} from "apis/mongo";
+import type {SocketEvent} from "models";
 
-export const setDeckKlass = (app: App): void => {
-  const {services} = app;
-  const {mongoService, socketService} = services;
-  const {$players} = mongoService;
-  const {socket, socketId} = socketService;
+const setDeckKlass: SocketEvent = (socket): void => {
+  const socketId = socket.id;
 
   socket.on("setDeckKlass", async (params) => {
     const {deckId, klass} = params;
-    const $updatePlayer = await $players.updateOne({
+    const $updatePlayer = await playersDb.updateOne({
       socketId,
       "decks.id": deckId
     }, {
@@ -22,3 +20,5 @@ export const setDeckKlass = (app: App): void => {
     socket.emit("setDeckKlass", {deckId, klass});
   });
 };
+
+export {setDeckKlass};

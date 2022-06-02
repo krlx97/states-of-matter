@@ -26,7 +26,7 @@
   .red {color: $red}
   .grey {color: $dark-grey}
 
-  .xsm {font-size: $font-xsm}
+  .xsm {font-size: 0.5rem}
   .sm {font-size: $font-sm}
   .md {font-size: $font-md}
   .lg {font-size: $font-lg}

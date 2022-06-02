@@ -11,6 +11,8 @@
     name: string;
     token: string;
     amount: string;
+    chain_id: number;
+    ticker: string;
   }
 
   let token: Tkn;
@@ -24,20 +26,21 @@
   };
 
   const onSendToken = (): void => {
-    const {username, publicKey, privateKey, last_nonce} = $playerStore;
-    const signature = eccService.sign(`transfer:${last_nonce + 1}`, privateKey);
+    const {username, publicKey, privateKey, nonce} = $playerStore;
+    console.log($playerStore);
+    const signature = eccService.sign(`${nonce + 1}`, privateKey);
 
     socketService.socket.emit("sendToken", {
-      chain_id: form.chain.id,
+      chain_id: token.chain_id,
       relayer: "admin",
       from: username,
       to: form.to,
-      quantity: `${form.amount} ${form.chain.text}`,
-      fee: `${form.chain.text === "TLOS" ? "0.0010" : "0.001"} ${form.chain.text}`,
+      quantity: `${form.amount} ${token.ticker}`,
+      fee: `${form.chain.text === "TLOS" ? "0.0010" : "0.001"} ${token.ticker}`,
       nonce: 1,
       memo: "test",
       sig: signature,
-      isWithdraw: scoops
+      isWithdraw: form.isWithdraw
     });
   };
 
@@ -84,26 +87,40 @@
     box-sizing: border-box;
 
     &__img {margin-right: $spacing-md;}
-    &__content {@include flex(column);}
+    &__content {@include flex(column); flex-grow: 1;}
+  }
+
+  .overflow-fix {
+    padding: $spacing-md;
+    box-sizing: border-box;
   }
 </style>
 
 <div class="token-wrapper" class:isRequestsToggled>
   <div class="token">
-    <div class="token__img" on:click={toggleRequests}>
+    <div class="token__img">
       <Img src="currencies/{token.token}.png" alt={token.name}/>
     </div>
     <div class="token__content">
       <Text>{token.name}</Text>
       <Text>{token.amount}</Text>
     </div>
+    <Button style="icon" color="grey" on:click={toggleRequests}>
+      {#if isRequestsToggled}
+        <img src="assets/icons/up.png" alt="Up"/>
+      {:else}
+        <img src="assets/icons/down.png" alt="Down"/>
+      {/if}
+    </Button>
   </div>
   {#if isRequestsToggled}
     <div transition:slide={transitionSlide}>
       {#if token.token === "DMT"}
-        <Text size="lg">Token not tradeable.</Text>
+        <div style="padding: 1em">
+          <h3>Token not tradeable.</h3>
+        </div>
       {:else}
-        <Form on:submit={onSendToken}>
+        <form class="overflow-fix" on:submit|preventDefault={onSendToken}>
           <Input placeholder="To" maxlength={12} bind:value={form.to}/>
           <!-- <Input placeholder="Game Wallet" type="radio" value={false} bind:group={form.isWithdraw}/>
           <Input placeholder="Telos Wallet" type="radio" value={true} bind:group={form.isWithdraw}/> -->
@@ -117,7 +134,7 @@
           <Button type="submit">
             <Text>SEND</Text>
           </Button>
-        </Form>
+        </form>
         <!-- <div style="width: 256px;">{JSON.stringify(form)}</div> -->
       {/if}
     </div>

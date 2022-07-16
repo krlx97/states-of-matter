@@ -1,8 +1,5 @@
-import {CardType, Effect} from "@som/shared/enums";
-import {gamesDb, playersDb} from "apis/mongo";
 import gameEngine from "helpers/game";
 import type {SocketEvent} from "models";
-import type {GameMinion} from "models/game";
 
 const playMinion: SocketEvent = (socket): void => {
   const socketId = socket.id;
@@ -10,49 +7,28 @@ const playMinion: SocketEvent = (socket): void => {
 
   socket.on("playMinion", async (params) => {
     const {field, gid} = params;
-    const $player = await playersDb.findOne({socketId});
+    const data = await gameEngine.getGame(socketId);
 
-    if (!$player) { return; }
+    if (!data) { return; }
 
-    const {username, gameId} = $player;
-    const game = await gamesDb.findOne({gameId});
+    const {$game, player, opponent} = data;
 
-    if (!game) { return; }
-    if (game.currentPlayer !== username) { return; }
+    if ($game.currentPlayer !== player.username) { return; }
 
-    const {player, opponent} = gameEngine.getPlayers(game, username);
-    const {hand, minion, hero, graveyard} = player;
-    const handCard = hand.find((card) => card.gid === gid);
-
-    if (!handCard) { return; }
-    if (handCard.type !== CardType.MINION) { return; }
-    if (minion[field]) { return; }
-    if (handCard.manaCost > hero.mana) { return; }
-
-    hero.mana -= handCard.manaCost;
-    minion[field] = handCard as GameMinion;
-    hand.splice(hand.indexOf(handCard), 1);
-
-    const summonedMinion = minion[field];
+    const summonedMinion = gameEngine.playMinion(player, gid, field);
 
     if (!summonedMinion) { return; }
 
-    if (opponent.trap && opponent.trap.effects.includes(Effect.SMITE)) {
-      summonedMinion.health = summonedMinion.maxHealth;
+    const isSmiteTriggered = triggerEffect.smite(player, opponent, summonedMinion, field);
 
-      graveyard.push(summonedMinion);
-      minion[field] = undefined;
-
-      opponent.graveyard.push(opponent.trap);
-      opponent.trap = undefined;
+    if (!isSmiteTriggered) {
+      triggerEffect.charge(summonedMinion);
+      triggerEffect.quickShot(summonedMinion, opponent);
+      triggerEffect.necro(summonedMinion);
+      triggerEffect.spellweave(summonedMinion, player);
     }
 
-    triggerEffect.charge(summonedMinion);
-    triggerEffect.quickShot(summonedMinion, opponent);
-    triggerEffect.necro(summonedMinion);
-    triggerEffect.spellweave(summonedMinion, player);
-
-    await gameEngine.saveGame(game);
+    await gameEngine.saveGame($game);
   });
 };
 

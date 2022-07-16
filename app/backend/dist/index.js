@@ -1,6 +1,6 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { PlayerStatus, Effect, CardType } from '@som/shared/enums';
+import { PlayerStatus, CardType, Effect } from '@som/shared/enums';
 import { MongoClient } from 'mongodb';
 import { Api, JsonRpc } from 'eosjs';
 import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig.js';
@@ -617,16 +617,19 @@ const generateGameFrontend = (game, username) => {
 };
 
 const getGame = async (socketId) => {
-    const player = await playersDb.findOne({ socketId });
-    if (!player) {
+    const $player = await playersDb.findOne({ socketId });
+    if (!$player) {
         return;
     }
-    const { gameId } = player;
-    const game = await gamesDb.findOne({ gameId });
-    if (!game) {
+    const { username, gameId } = $player;
+    const $game = await gamesDb.findOne({ gameId });
+    if (!$game) {
         return;
     }
-    return { player, game };
+    const { playerA, playerB } = $game;
+    const player = playerA.username === username ? playerA : playerB;
+    const opponent = playerA.username === username ? playerB : playerA;
+    return { $game, player, opponent };
 };
 
 const getPlayers = (game, username) => {
@@ -646,6 +649,27 @@ const isGameOver = async (game) => {
         return true;
     }
     return false;
+};
+
+const playMinion$1 = (player, gid, field) => {
+    const { hand, minion, hero } = player;
+    const handCard = hand.find((card) => card.gid === gid);
+    if (!handCard) {
+        return;
+    } // hand card not found by gid
+    if (handCard.type !== CardType.MINION) {
+        return;
+    } // hand card isn't minion
+    if (minion[field]) {
+        return;
+    } // field already inhibits a minion
+    if (handCard.manaCost > hero.mana) {
+        return;
+    } // hero doesn't have enough mana
+    hero.mana -= handCard.manaCost;
+    minion[field] = handCard;
+    hand.splice(hand.indexOf(handCard), 1);
+    return minion[field];
 };
 
 const saveGame = async (game) => {
@@ -713,6 +737,16 @@ const charge = (minion) => {
     }
 };
 
+const mirrorsEdge = (player, opponent, damage) => {
+    if (opponent.trap && opponent.trap.effects.includes(Effect.MIRRORS_EDGE)) {
+        player.hero.health -= damage;
+        opponent.graveyard.push(opponent.trap);
+        opponent.trap = undefined;
+        return true;
+    }
+    return false;
+};
+
 const multiStrike = (minion) => {
     if (minion.effects.includes(Effect.MULTI_STRIKE) && !minion.hasTriggeredEffect) {
         minion.canAttack = true;
@@ -751,8 +785,16 @@ const quickShot = (minion, opponent) => {
     }
 };
 
-const smite = (opponent, minion) => {
-    if (opponent.trap && opponent.trap.effects.includes(Effect.SMITE)) ;
+const smite = (player, opponent, minion, field) => {
+    if (opponent.trap && opponent.trap.effects.includes(Effect.SMITE)) {
+        minion.health = minion.maxHealth;
+        player.graveyard.push(minion);
+        player.minion[field] = undefined;
+        opponent.graveyard.push(opponent.trap);
+        opponent.trap = undefined;
+        return true;
+    }
+    return false;
 };
 
 const spellweave = (minion, player) => {
@@ -770,6 +812,7 @@ const spellweave = (minion, player) => {
 
 const triggerEffect = {
     charge,
+    mirrorsEdge,
     multiStrike,
     necro,
     quickShot,
@@ -786,6 +829,7 @@ const gameEngine = {
     getGame,
     getPlayers,
     isGameOver,
+    playMinion: playMinion$1,
     saveGame,
     startGame,
     triggerEffect
@@ -1211,14 +1255,11 @@ const attackHero = (socket) => {
         }
         playerMinion.canAttack = false;
         triggerEffect.multiStrike(playerMinion);
-        if (opponent.trap && opponent.trap.effects.includes(Effect.MIRRORS_EDGE)) {
-            player.hero.health -= playerMinion.damage;
+        const isTriggered = triggerEffect.mirrorsEdge(player, opponent, playerMinion.damage);
+        if (isTriggered) {
             if (await gameEngine.isGameOver(game)) {
                 return;
             }
-            opponent.graveyard.push(opponent.trap);
-            opponent.trap = undefined;
-            return await gameEngine.saveGame(game);
         }
         opponentHero.health -= playerMinion.damage;
         if (await gameEngine.isGameOver(game)) {
@@ -1410,52 +1451,26 @@ const playMinion = (socket) => {
     const { triggerEffect } = gameEngine;
     socket.on("playMinion", async (params) => {
         const { field, gid } = params;
-        const $player = await playersDb.findOne({ socketId });
-        if (!$player) {
+        const data = await gameEngine.getGame(socketId);
+        if (!data) {
             return;
         }
-        const { username, gameId } = $player;
-        const game = await gamesDb.findOne({ gameId });
-        if (!game) {
+        const { $game, player, opponent } = data;
+        if ($game.currentPlayer !== player.username) {
             return;
         }
-        if (game.currentPlayer !== username) {
-            return;
-        }
-        const { player, opponent } = gameEngine.getPlayers(game, username);
-        const { hand, minion, hero, graveyard } = player;
-        const handCard = hand.find((card) => card.gid === gid);
-        if (!handCard) {
-            return;
-        }
-        if (handCard.type !== CardType.MINION) {
-            return;
-        }
-        if (minion[field]) {
-            return;
-        }
-        if (handCard.manaCost > hero.mana) {
-            return;
-        }
-        hero.mana -= handCard.manaCost;
-        minion[field] = handCard;
-        hand.splice(hand.indexOf(handCard), 1);
-        const summonedMinion = minion[field];
+        const summonedMinion = gameEngine.playMinion(player, gid, field);
         if (!summonedMinion) {
             return;
         }
-        if (opponent.trap && opponent.trap.effects.includes(Effect.SMITE)) {
-            summonedMinion.health = summonedMinion.maxHealth;
-            graveyard.push(summonedMinion);
-            minion[field] = undefined;
-            opponent.graveyard.push(opponent.trap);
-            opponent.trap = undefined;
+        const isSmiteTriggered = triggerEffect.smite(player, opponent, summonedMinion, field);
+        if (!isSmiteTriggered) {
+            triggerEffect.charge(summonedMinion);
+            triggerEffect.quickShot(summonedMinion, opponent);
+            triggerEffect.necro(summonedMinion);
+            triggerEffect.spellweave(summonedMinion, player);
         }
-        triggerEffect.charge(summonedMinion);
-        triggerEffect.quickShot(summonedMinion, opponent);
-        triggerEffect.necro(summonedMinion);
-        triggerEffect.spellweave(summonedMinion, player);
-        await gameEngine.saveGame(game);
+        await gameEngine.saveGame($game);
     });
 };
 
@@ -1487,11 +1502,9 @@ const playTrap = (socket) => {
         if (handCard.type !== CardType.TRAP) {
             return;
         }
-        console.log("playtrap");
         if (handCard.manaCost > hero.mana) {
             return;
         }
-        console.log(handCard);
         hero.mana -= handCard.manaCost;
         player.trap = handCard;
         hand.splice(hand.indexOf(handCard), 1);

@@ -4,6 +4,9 @@ contract/som.abi
 contract/som.wasm
 
 app/node_modules
+
+eternisvm/frontend/node_modules
+eternisvm/backend/node_modules
 # app/backend/dist
 # app/frontend/dist/build
 

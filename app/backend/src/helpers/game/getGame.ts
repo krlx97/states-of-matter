@@ -1,16 +1,20 @@
 import {gamesDb, playersDb} from "apis/mongo";
 
 const getGame = async (socketId: string) => {
-  const player = await playersDb.findOne({socketId});
+  const $player = await playersDb.findOne({socketId});
 
-  if (!player) { return; }
+  if (!$player) { return; }
 
-  const {gameId} = player;
-  const game = await gamesDb.findOne({gameId});
+  const {username, gameId} = $player;
+  const $game = await gamesDb.findOne({gameId});
 
-  if (!game) { return; }
+  if (!$game) { return; }
 
-  return {player, game};
+  const {playerA, playerB} = $game;
+  const player = playerA.username === username ? playerA : playerB;
+  const opponent = playerA.username === username ? playerB : playerA;
+
+  return {$game, player, opponent};
 };
 
 export {getGame};

@@ -28,12 +28,9 @@ const playTrap: SocketEvent = (socket): void => {
     const handCard = hand.find((card) => card.gid === gid);
 
     if (!handCard) { return; }
-    
     if (handCard.type !== CardType.TRAP) { return; }
-    console.log("playtrap");
     if (handCard.manaCost > hero.mana) { return; }
 
-console.log(handCard);
     hero.mana -= handCard.manaCost;
     player.trap = handCard as GameTrap;
     hand.splice(hand.indexOf(handCard), 1);

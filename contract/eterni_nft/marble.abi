@@ -1,0 +1,649 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "addsetting",
+            "base": "",
+            "fields": [
+                {
+                    "name": "group_name",
+                    "type": "name"
+                },
+                {
+                    "name": "setting_name",
+                    "type": "name"
+                },
+                {
+                    "name": "initial_value",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "attribute",
+            "base": "",
+            "fields": [
+                {
+                    "name": "attribute_name",
+                    "type": "name"
+                },
+                {
+                    "name": "points",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "decreasepts",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "attribute_name",
+                    "type": "name"
+                },
+                {
+                    "name": "points_to_subtract",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "destroynft",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "group",
+            "base": "",
+            "fields": [
+                {
+                    "name": "group_name",
+                    "type": "name"
+                },
+                {
+                    "name": "manager",
+                    "type": "name"
+                },
+                {
+                    "name": "title",
+                    "type": "string"
+                },
+                {
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "name": "supply",
+                    "type": "uint64"
+                },
+                {
+                    "name": "issued_supply",
+                    "type": "uint64"
+                },
+                {
+                    "name": "supply_cap",
+                    "type": "uint64"
+                },
+                {
+                    "name": "settings",
+                    "type": "pair_name_bool[]"
+                }
+            ]
+        },
+        {
+            "name": "increasepts",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "attribute_name",
+                    "type": "name"
+                },
+                {
+                    "name": "points_to_add",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "init",
+            "base": "",
+            "fields": [
+                {
+                    "name": "initial_version",
+                    "type": "string"
+                },
+                {
+                    "name": "initial_admin",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "logevent",
+            "base": "",
+            "fields": [
+                {
+                    "name": "event_name",
+                    "type": "name"
+                },
+                {
+                    "name": "event_value",
+                    "type": "uint64"
+                },
+                {
+                    "name": "event_time",
+                    "type": "time_point_sec"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "newattribute",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "attribute_name",
+                    "type": "name"
+                },
+                {
+                    "name": "initial_points",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "newgroup",
+            "base": "",
+            "fields": [
+                {
+                    "name": "title",
+                    "type": "string"
+                },
+                {
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "name": "group_name",
+                    "type": "name"
+                },
+                {
+                    "name": "manager",
+                    "type": "name"
+                },
+                {
+                    "name": "supply_cap",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "newnft",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "group_name",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "newtag",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "tag_name",
+                    "type": "name"
+                },
+                {
+                    "name": "content",
+                    "type": "string"
+                },
+                {
+                    "name": "checksum",
+                    "type": "string?"
+                },
+                {
+                    "name": "algorithm",
+                    "type": "string?"
+                }
+            ]
+        },
+        {
+            "name": "nft",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "group",
+                    "type": "name"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "pair_name_bool",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "name"
+                },
+                {
+                    "name": "value",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "removetag",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "tag_name",
+                    "type": "name"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "rmgroup",
+            "base": "",
+            "fields": [
+                {
+                    "name": "group_name",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "rmvattribute",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "attribute_name",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "rmvsetting",
+            "base": "",
+            "fields": [
+                {
+                    "name": "group_name",
+                    "type": "name"
+                },
+                {
+                    "name": "setting_name",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "setadmin",
+            "base": "",
+            "fields": [
+                {
+                    "name": "new_admin",
+                    "type": "name"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "setmanager",
+            "base": "",
+            "fields": [
+                {
+                    "name": "group_name",
+                    "type": "name"
+                },
+                {
+                    "name": "new_manager",
+                    "type": "name"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "setpoints",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "attribute_name",
+                    "type": "name"
+                },
+                {
+                    "name": "new_points",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "setversion",
+            "base": "",
+            "fields": [
+                {
+                    "name": "new_version",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "tag",
+            "base": "",
+            "fields": [
+                {
+                    "name": "tag_name",
+                    "type": "name"
+                },
+                {
+                    "name": "content",
+                    "type": "string"
+                },
+                {
+                    "name": "checksum",
+                    "type": "string"
+                },
+                {
+                    "name": "algorithm",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "toggle",
+            "base": "",
+            "fields": [
+                {
+                    "name": "group_name",
+                    "type": "name"
+                },
+                {
+                    "name": "setting_name",
+                    "type": "name"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "tokenconfigs",
+            "base": "",
+            "fields": [
+                {
+                    "name": "standard",
+                    "type": "name"
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                },
+                {
+                    "name": "admin",
+                    "type": "name"
+                },
+                {
+                    "name": "last_serial",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "transfernft",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "new_owner",
+                    "type": "name"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "updatetag",
+            "base": "",
+            "fields": [
+                {
+                    "name": "serial",
+                    "type": "uint64"
+                },
+                {
+                    "name": "tag_name",
+                    "type": "name"
+                },
+                {
+                    "name": "new_content",
+                    "type": "string"
+                },
+                {
+                    "name": "new_checksum",
+                    "type": "string?"
+                },
+                {
+                    "name": "new_algorithm",
+                    "type": "string?"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "addsetting",
+            "type": "addsetting",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "decreasepts",
+            "type": "decreasepts",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "destroynft",
+            "type": "destroynft",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "increasepts",
+            "type": "increasepts",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "init",
+            "type": "init",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "logevent",
+            "type": "logevent",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "newattribute",
+            "type": "newattribute",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "newgroup",
+            "type": "newgroup",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "newnft",
+            "type": "newnft",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "newtag",
+            "type": "newtag",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "removetag",
+            "type": "removetag",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "rmgroup",
+            "type": "rmgroup",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "rmvattribute",
+            "type": "rmvattribute",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "rmvsetting",
+            "type": "rmvsetting",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setadmin",
+            "type": "setadmin",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setmanager",
+            "type": "setmanager",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setpoints",
+            "type": "setpoints",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setversion",
+            "type": "setversion",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "toggle",
+            "type": "toggle",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "transfernft",
+            "type": "transfernft",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "updatetag",
+            "type": "updatetag",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "attributes",
+            "type": "attribute",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "groups",
+            "type": "group",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "nfts",
+            "type": "nft",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "tags",
+            "type": "tag",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "tokenconfigs",
+            "type": "tokenconfigs",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "kv_tables": {},
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}

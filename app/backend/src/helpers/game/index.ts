@@ -6,6 +6,7 @@ import {generateGameFrontend} from "./generateGameFe";
 import {getGame} from "./getGame";
 import {getPlayers} from "./getPlayers";
 import {isGameOver} from "./isGameOver";
+import {playMinion} from "./playMinion";
 import {saveGame} from "./saveGame";
 import {startGame} from "./startGame";
 import triggerEffect from "./triggerEffect";
@@ -19,6 +20,7 @@ const gameEngine = {
   getGame,
   getPlayers,
   isGameOver,
+  playMinion,
   saveGame,
   startGame,
   triggerEffect

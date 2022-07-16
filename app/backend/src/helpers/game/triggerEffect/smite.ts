@@ -1,16 +1,20 @@
 import {Effect} from "@som/shared/enums";
 import type {GameMinion, GamePlayer} from "models/game";
 
-const smite = (opponent: GamePlayer, minion: GameMinion): void => {
+const smite = (player: GamePlayer, opponent: GamePlayer, minion: GameMinion, field: "a" | "b" | "c" | "d"): boolean => {
   if (opponent.trap && opponent.trap.effects.includes(Effect.SMITE)) {
-      // summonedMinion.health = summonedMinion.maxHealth;
+    minion.health = minion.maxHealth;
 
-      // graveyard.push(summonedMinion);
-      // minion[field] = undefined;
+    player.graveyard.push(minion);
+    player.minion[field] = undefined;
 
-      // opponent.graveyard.push(opponent.trap);
-      // opponent.trap = undefined;
-    }
+    opponent.graveyard.push(opponent.trap);
+    opponent.trap = undefined;
+
+    return true;
+  }
+
+  return false;
 };
 
 export {smite};

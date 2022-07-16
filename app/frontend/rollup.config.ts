@@ -41,8 +41,13 @@ export default {
   },
   plugins: [
     commonjs(),
-    cssOnly({output: "bundle.css"}),
-    nodeResolve({browser: true, dedupe: ["svelte"]}),
+    cssOnly({
+      output: "bundle.css"
+    }),
+    nodeResolve({
+      browser: true,
+      dedupe: ["svelte"]
+    }),
     typescript(),
     svelte({
       preprocess: preprocess({sourceMap: !production}),

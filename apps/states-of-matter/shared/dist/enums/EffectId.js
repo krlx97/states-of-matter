@@ -1,0 +1,74 @@
+var EffectId;
+(function (EffectId) {
+    // Neutral
+    EffectId[EffectId["CHARGE"] = 0] = "CHARGE";
+    EffectId[EffectId["QUICK_SHOT"] = 1] = "QUICK_SHOT";
+    EffectId[EffectId["MULTI_STRIKE"] = 2] = "MULTI_STRIKE";
+    EffectId[EffectId["NECRO"] = 3] = "NECRO";
+    EffectId[EffectId["SPELLWEAVE"] = 4] = "SPELLWEAVE";
+    EffectId[EffectId["PUPPETEER"] = 5] = "PUPPETEER";
+    EffectId[EffectId["REBIRTH"] = 6] = "REBIRTH";
+    EffectId[EffectId["EXHAUST"] = 7] = "EXHAUST";
+    EffectId[EffectId["RELOAD"] = 8] = "RELOAD";
+    EffectId[EffectId["MIRRORS_EDGE"] = 9] = "MIRRORS_EDGE";
+    EffectId[EffectId["SMITE"] = 10] = "SMITE";
+    EffectId[EffectId["ANTI_MAGE"] = 11] = "ANTI_MAGE";
+    // Solid
+    EffectId[EffectId["S_HERO"] = 12] = "S_HERO";
+    EffectId[EffectId["SMITH"] = 13] = "SMITH";
+    EffectId[EffectId["INITIATIVE"] = 14] = "INITIATIVE";
+    EffectId[EffectId["MITIGATE"] = 15] = "MITIGATE";
+    EffectId[EffectId["SHIELDWALL"] = 16] = "SHIELDWALL";
+    EffectId[EffectId["BREAK"] = 17] = "BREAK";
+    EffectId[EffectId["BOND"] = 18] = "BOND";
+    EffectId[EffectId["SSPELL1"] = 19] = "SSPELL1";
+    EffectId[EffectId["SSPELL2"] = 20] = "SSPELL2";
+    EffectId[EffectId["SSPELL3"] = 21] = "SSPELL3";
+    EffectId[EffectId["REDIRECT"] = 22] = "REDIRECT";
+    EffectId[EffectId["BULWARK"] = 23] = "BULWARK";
+    EffectId[EffectId["STRAP3"] = 24] = "STRAP3";
+    // Liquid
+    EffectId[EffectId["L_HERO"] = 25] = "L_HERO";
+    EffectId[EffectId["HEAL"] = 26] = "HEAL";
+    EffectId[EffectId["RADIATING_HEAL"] = 27] = "RADIATING_HEAL";
+    EffectId[EffectId["SACRIFICE"] = 28] = "SACRIFICE";
+    EffectId[EffectId["IMBUE"] = 29] = "IMBUE";
+    EffectId[EffectId["VIVIFY"] = 30] = "VIVIFY";
+    EffectId[EffectId["CLEANSE"] = 31] = "CLEANSE";
+    EffectId[EffectId["LINK"] = 32] = "LINK";
+    EffectId[EffectId["SWAP"] = 33] = "SWAP";
+    EffectId[EffectId["CONTROL"] = 34] = "CONTROL";
+    EffectId[EffectId["CLEANSING_WATERS"] = 35] = "CLEANSING_WATERS";
+    EffectId[EffectId["LTRAP2"] = 36] = "LTRAP2";
+    EffectId[EffectId["LTRAP3"] = 37] = "LTRAP3";
+    // Gas
+    EffectId[EffectId["G_HERO"] = 38] = "G_HERO";
+    EffectId[EffectId["GMINION1"] = 39] = "GMINION1";
+    EffectId[EffectId["GMINION2"] = 40] = "GMINION2";
+    EffectId[EffectId["GMINION3"] = 41] = "GMINION3";
+    EffectId[EffectId["GMINION4"] = 42] = "GMINION4";
+    EffectId[EffectId["GMINION5"] = 43] = "GMINION5";
+    EffectId[EffectId["GMINION6"] = 44] = "GMINION6";
+    EffectId[EffectId["GMAGIC1"] = 45] = "GMAGIC1";
+    EffectId[EffectId["GMAGIC2"] = 46] = "GMAGIC2";
+    EffectId[EffectId["GMAGIC3"] = 47] = "GMAGIC3";
+    EffectId[EffectId["GTRAP1"] = 48] = "GTRAP1";
+    EffectId[EffectId["GTRAP2"] = 49] = "GTRAP2";
+    EffectId[EffectId["GTRAP3"] = 50] = "GTRAP3";
+    // plasma
+    EffectId[EffectId["P_HERO"] = 51] = "P_HERO";
+    EffectId[EffectId["EXECUTE"] = 52] = "EXECUTE";
+    EffectId[EffectId["PMINION2"] = 53] = "PMINION2";
+    EffectId[EffectId["PMINION3"] = 54] = "PMINION3";
+    EffectId[EffectId["PMINION4"] = 55] = "PMINION4";
+    EffectId[EffectId["PMINION5"] = 56] = "PMINION5";
+    EffectId[EffectId["PMINION6"] = 57] = "PMINION6";
+    EffectId[EffectId["PMAGIC1"] = 58] = "PMAGIC1";
+    EffectId[EffectId["PMAGIC2"] = 59] = "PMAGIC2";
+    EffectId[EffectId["PMAGIC3"] = 60] = "PMAGIC3";
+    EffectId[EffectId["PTRAP1"] = 61] = "PTRAP1";
+    EffectId[EffectId["PTRAP2"] = 62] = "PTRAP2";
+    EffectId[EffectId["PTRAP3"] = 63] = "PTRAP3";
+})(EffectId || (EffectId = {}));
+;
+export { EffectId };

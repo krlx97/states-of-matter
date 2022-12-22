@@ -1,14 +1,17 @@
 .vscode
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
-contract/som.abi
-contract/som.wasm
+apps/signer/node_modules
 
-app/node_modules
+apps/states-of-matter/node_modules
 
-eternisvm/frontend/node_modules
-eternisvm/backend/node_modules
-# app/backend/dist
-# app/frontend/dist/build
+apps/svm-wallet/backend/node_modules
+apps/svm-wallet/frontend/node_modules
+apps/svm-wallet/frontend/.angular
+apps/svm-wallet/frontend/dist
 
-# app/shared/dist
-# app/shared/tsconfig.tsbuildinfo
+contracts/eosio.token/build
+contracts/eterni_svm/build

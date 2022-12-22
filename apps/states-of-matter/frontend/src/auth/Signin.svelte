@@ -24,9 +24,10 @@
 <div class="signin">
   <h1>Sign in</h1>
   <p>
-    Eternitas Virtual Wallet is not audited yet. We do, however, offer a bounty
-    hunt of up to 100,000 VMT to anyone who finds & fixes bugs in the smart contract
-    <a href="https://github.com/krlx97/states-of-matter" target="_blank">code</a>.
+    States of Matter is currently in
+    <a href="https://github.com/krlx97/states-of-matter" target="_blank">Closed Alpha v0.3.0</a>.
+    Things can and will break! If you have complaints or suggestions, come chat with us on our
+    <a href="https://discord.com/invite/4xazmkjrkn" target="_blank">discord</a>.
   </p>
   <form on:submit|preventDefault={onSignin}>
     <label>

@@ -17,4 +17,6 @@ ioServer.on("connection", (socket): void => {
   });
 });
 
-httpServer.listen(settings.server.port);
+const server = await httpServer.listen(settings.server.port);
+console.log(ioServer);
+console.log(server);

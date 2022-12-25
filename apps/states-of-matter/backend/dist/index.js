@@ -10,7 +10,7 @@ import { cards } from '@som/shared/data';
 
 const settings = {
     mongo: {
-        uri: "mongodb://0.0.0.0:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.1"
+        uri: "mongodb://localhost:27017"
     },
     eos: {
         endpoint: "https://testnet.telos.net",

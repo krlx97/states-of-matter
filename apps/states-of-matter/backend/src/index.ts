@@ -11,6 +11,7 @@ process.on("uncaughtException", (error, origin): void => {
 });
 
 ioServer.on("connection", (socket): void => {
+  console.log("Socket server listening on port: 4201");
   requests.forEach((request): void => {
     request(socket);
   });

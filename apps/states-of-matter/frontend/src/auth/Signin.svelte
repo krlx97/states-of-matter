@@ -29,6 +29,9 @@
     Things can and will break! If you have complaints or suggestions, come chat with us on our
     <a href="https://discord.com/invite/4xazmkjrkn" target="_blank">discord</a>.
   </p>
+  <p>
+    Card effects are currently disabled as we are in the process of implementing buffs/debuffs for cards in game.
+  </p>
   <form on:submit|preventDefault={onSignin}>
     <label>
       <div>Username</div>

@@ -3,7 +3,7 @@ import type {SocketResponses} from "@som/shared/types/responses";
 import type {SocketRequests} from "@som/shared/types/requests";
 
 export class SocketService {
-  public readonly socket: Socket<SocketResponses, SocketRequests> = io("wss://127.0.0.1:4201", {
+  public readonly socket: Socket<SocketResponses, SocketRequests> = io("wss://localhost:4201", {
     transports: ['websocket'],
     upgrade: false,
     forceNew: false

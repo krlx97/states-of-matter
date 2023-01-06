@@ -26,15 +26,18 @@ const buildDeck = (player: Player): GameCards => {
         name,
         type,
         manaCost,
-        effect: 0,
+        effect,
         damage,
         health,
         maxHealth: health,
         canAttack: false,
-        hasTriggeredEffect: false
+        hasTriggeredEffect: false,
+        buffs: [],
+        debuffs: []
       };
     } else {
-      builtCard = {gid, id, klass, name, type, manaCost, effect: 0};
+      builtCard = {gid, id, klass, name, type, manaCost, effect,buffs: [],
+        debuffs: []};
     }
 
     deck.push(builtCard);
@@ -46,6 +49,7 @@ const buildDeck = (player: Player): GameCards => {
   for (let i = deck.length - 1; i > 0; i -= 1) {
     const j = randomInt(0, i + 1);
     const temp = deck[i];
+
     deck[i] = deck[j];
     deck[j] = temp;
   }

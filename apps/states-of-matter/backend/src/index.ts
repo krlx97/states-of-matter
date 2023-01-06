@@ -11,6 +11,7 @@ process.on("uncaughtException", (error, origin): void => {
 });
 
 ioServer.on("connection", (socket): void => {
+  console.log("Connected");
   requests.forEach((request): void => {
     request(socket);
   });

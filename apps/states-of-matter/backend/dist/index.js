@@ -139,7 +139,7 @@ const getSocketIds = async (players) => {
 const isDeckValid = (playerDeck) => {
     const numberOfCards = playerDeck
         .cards
-        .reduce((value, card) => value += card.amount, 0);
+        .reduce((value, { amount }) => value += amount, 0);
     if (numberOfCards !== 30) {
         return false;
     }
@@ -589,16 +589,19 @@ const buildDeck = (player) => {
                 name,
                 type,
                 manaCost,
-                effect: 0,
+                effect,
                 damage,
                 health,
                 maxHealth: health,
                 canAttack: false,
-                hasTriggeredEffect: false
+                hasTriggeredEffect: false,
+                buffs: [],
+                debuffs: []
             };
         }
         else {
-            builtCard = { gid, id, klass, name, type, manaCost, effect: 0 };
+            builtCard = { gid, id, klass, name, type, manaCost, effect, buffs: [],
+                debuffs: [] };
         }
         deck.push(builtCard);
         deckCard.amount > 1 && deck.push(builtCard);
@@ -846,6 +849,7 @@ const playMinion$1 = (player, gid, field) => {
     } // hero doesn't have enough mana
     hero.mana -= handCard.manaCost;
     minion[field] = handCard;
+    minion[field]?.buffs.push(minion[field]?.effect.id); // wtf? o.O
     hand.splice(hand.indexOf(handCard), 1);
     return minion[field];
 };
@@ -938,14 +942,14 @@ const startGame = async (type, playerA, playerB, gameId2 = 0) => {
 };
 
 const charge = (minion) => {
-    if (!minion.hasTriggeredEffect && minion.effect === EffectId.CHARGE) {
+    if (!minion.hasTriggeredEffect && minion.effect.id === EffectId.CHARGE) {
         minion.canAttack = true;
         minion.hasTriggeredEffect = true;
     }
 };
 
 const mirrorsEdge = (player, opponent, damage) => {
-    if (opponent.trap && opponent.trap.effect === EffectId.MIRRORS_EDGE) {
+    if (opponent.trap && opponent.trap.effect.id === EffectId.MIRRORS_EDGE) {
         player.hero.health -= damage;
         opponent.graveyard.push(opponent.trap);
         opponent.trap = undefined;
@@ -955,7 +959,7 @@ const mirrorsEdge = (player, opponent, damage) => {
 };
 
 const multiStrike = (minion) => {
-    if (minion.effect === EffectId.MULTI_STRIKE && !minion.hasTriggeredEffect) {
+    if (minion.effect.id === EffectId.MULTI_STRIKE && !minion.hasTriggeredEffect) {
         minion.canAttack = true;
         minion.hasTriggeredEffect = true;
     }
@@ -1697,7 +1701,7 @@ const attackMinion = (socket) => {
         }
         playerMinion.canAttack = false;
         triggerEffect.multiStrike(playerMinion);
-        if (opponent.trap && opponent.trap.effect === EffectId.MIRRORS_EDGE) {
+        if (opponent.trap && opponent.trap.effect.id === EffectId.MIRRORS_EDGE) {
             player.hero.health -= playerMinion.damage;
             if (await gameEngine.isGameOver($game)) {
                 return;
@@ -1838,7 +1842,7 @@ const playMagic = (socket) => {
         if (handCard.manaCost > hero.mana) {
             return;
         }
-        if (handCard.effect === EffectId.RELOAD) {
+        if (handCard.effect.id === EffectId.RELOAD) {
             hero.mana -= handCard.manaCost;
             await gameEngine.drawCard($game, player);
             hand.splice(hand.indexOf(handCard), 1);
@@ -2428,6 +2432,7 @@ process.on("uncaughtException", (error, origin) => {
     console.log(`Uncaught Exception: ${error}`);
 });
 ioServer.on("connection", (socket) => {
+    console.log("Connected");
     requests.forEach((request) => {
         request(socket);
     });

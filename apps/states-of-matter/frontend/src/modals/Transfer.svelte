@@ -3,6 +3,7 @@
   import {eccService, socketService} from "services";
   import {accountStore, modalStore} from "stores";
   import Modal from "../ui/Modal.svelte";
+    import { isNameValid } from "validators";
 
   const token = $modalStore.data;
 
@@ -13,7 +14,6 @@
 
   const errors = {
     name: {
-      value: true,
       length: true,
       valid: true
     },
@@ -62,15 +62,19 @@
     remaining = (parseFloat(liquid) - parseFloat(`${quantity}` ? `${quantity}` : `0.0000 ${token.symbol}`)).toFixed(4);
   };
 
-  const onInput = (): void => {
+  const onValidateInput = (): void => {
     errors.quantity.value = quantity !== null;
     errors.quantity.min = quantity >= 0.0001;
     errors.quantity.decimals = (quantity.toString().split(".")[1] || []).length <= 4;
-    errors.name.value = to !== null;
     errors.name.length = to.length >= 3;
-    errors.name.valid = /^[a-z1-5.\s]*$/.test(to);
+    errors.name.valid = isNameValid(to);
 
-    disabled = !errors.quantity.value || !errors.quantity.min || errors.quantity.decimals;
+    disabled =
+      !errors.quantity.value ||
+      !errors.quantity.min ||
+      !errors.quantity.decimals ||
+      !errors.name.length ||
+      !errors.name.valid;
 
     const balancee = parseFloat($modalStore.data.liquid);
     const total = balancee - quantity;
@@ -80,10 +84,6 @@
     getRemaining();
     getTotal();
     getFee();
-  };
-
-  const onChange = (): void => {
-    onInput();
   };
 
   const onTransfer = (): void => {
@@ -154,17 +154,6 @@
     display: flex;
     justify-content: space-between;
   }
-
-  .error {
-    margin: var(--spacing-md);
-    color: rgb(var(--red));
-  }
-
-  .submit-batn {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
 </style>
 
 <Modal>
@@ -177,58 +166,48 @@
     <form id="transferForm" on:submit|preventDefault={onTransfer}>
 
       <label>
-        <div class="label-body">To</div>
+        <div class="label__title">To</div>
         <input
           placeholder="To"
           maxlength="12"
           required
           bind:value={to}
-          on:input={onInput}
-          on:change={onChange}
+          on:input={onValidateInput}
         />
+        {#if !errors.name.length}
+          <div class="label__error">Minimum 3 characters.</div>
+        {:else if !errors.name.valid}
+          <div class="label__error">Only a-z letters, 1-5 numbers and . (dot) allowed.</div>
+        {/if}
       </label>
 
-      {#if !errors.name.value}
-        <div class="error">Mustn't be empty.</div>
-      {/if}
-      {#if !errors.name.length}
-        <div class="error">Must contain at least 3 characters</div>
-      {/if}
-      {#if !errors.name.valid}
-        <div class="error">Must only contain a-z, 1-5 and . (dot).</div>
-      {/if}
-
       <label>
-        <div>Quantity</div>
+        <div class="label__title">Quantity</div>
         <input
           placeholder="Quantity"
           type="number"
+          min="0.0001"
           step="0.0001"
           bind:value={quantity}
-          on:input={onInput}
-          on:change={onChange}
+          on:input={onValidateInput}
         />
+        <!-- <a matSuffix class="set-max" (click)="setMax()">MAX</a> -->
+        {#if !errors.quantity.value}
+          <div class="label__error">Mustn't be empty.</div>
+        {:else if !errors.quantity.decimals}
+          <div class="label__error">Up to four decimal places allowed.</div>
+        {:else if !errors.quantity.balance}
+          <div class="label__error">Insufficient balance.</div>
+        {:else if !isEnoughForFee}
+          <div class="label__error">Insufficient balance to pay the fees.</div>
+        {:else if !errors.quantity.min}
+          <div class="label__error">Minimum 0.0001 VMT.</div>
+        {/if}
       </label>
-      <!-- <a matSuffix class="set-max" (click)="setMax()">MAX</a> -->
-      {#if !errors.quantity.value}
-        <div class="error">Mustn't be empty.</div>
-      {/if}
-      {#if !errors.quantity.decimals}
-        <div class="error">Up to four decimal places allowed.</div>
-      {/if}
-      {#if !errors.quantity.balance}
-        <div class="error">Insufficient balance.</div>
-      {/if}
-      {#if !isEnoughForFee}
-        <div class="error">Insufficient balance to pay the fees.</div>
-      {/if}
-      {#if !errors.quantity.min}
-        <div class="error">Minimum 0.0001 VMT.</div>
-      {/if}
 
       <label>
-        <div>Memo</div>
-        <input placeholder="Memo" maxlength="256" bind:value={memo}>
+        <div class="label__title">Memo</div>
+        <input placeholder="Memo" maxlength="256" bind:value={memo}/>
       </label>
 
       <label class="label--checkbox">
@@ -258,10 +237,8 @@
       </div>
     </div>
 
-    <div class="submit-batn">
-      <button form="transferForm">
-        TRANSFER
-      </button>
+    <div class="form__submit">
+      <button form="transferForm" {disabled}>TRANSFER</button>
     </div>
   </div>
 </Modal>

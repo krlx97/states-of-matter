@@ -47,27 +47,25 @@
     remaining = (parseFloat(liquid) - parseFloat(`${stake}` ? `${stake}` : `0.0000 ${$modalStore.data.symbol}`)).toFixed(4);
   };
 
-  const onInput = (): void => {
+  const onValidateInput = (): void => {
     isValue = stake !== null;
     isMin = stake >= 0.0001;
     isValidAsset = (stake.toString().split(".")[1] || []).length <= 4;
-    disabled = !isMin || !isValidAsset;
 
+    
     const vmt = $accountStore.wallet.fungible.find((liquid) => liquid.symbol === $modalStore.data.symbol);
     const {liquid} = vmt;
-
+    
     const balancee = parseFloat(liquid);
     const total = balancee - stake;
-
+    
     isEnoughMoney = total >= 0;
+    
+    disabled = !isValue || !isMin || !isValidAsset || !isEnoughForFee || !isEnoughMoney;
 
     getRemaining();
     getTotal();
     getFee();
-  };
-
-  const onChange = (): void => {
-    onInput();
   };
 
   const onSubmit = (): void => {
@@ -92,6 +90,10 @@
 </script>
 
 <style>
+  .stake {
+    width: 320px;
+  }
+
   h1 {
     margin: 0;
     margin-bottom: var(--spacing-md);
@@ -104,14 +106,11 @@
     margin-bottom: var(--spacing-md);
     line-height: 1.4;
   }
+
   img {
     height: 16px;
     width: 16px;
     /* vertical-align: bottom; */
-  }
-  input {width: 100%}
-  label {
-    margin-bottom: var(--spacing-md);
   }
   .info {
     margin-bottom: var(--spacing-md);
@@ -131,57 +130,43 @@
     display: flex;
     justify-content: space-between;
   }
-  .stake {
-    width: 320px;
-  }
-  .error {
-    margin: var(--spacing-md);
-    color: rgb(var(--red));
-  }
-
-  .submit-batn {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
+ 
 </style>
 
 <Modal>
   <div class="stake">
     <h1>Stake</h1>
+
     <p>
       Stake your liquid {$modalStore.data.symbol} to receive daily rewards
       fueled by NFT minting.
     </p>
+
     <form id="stakeForm" on:submit|preventDefault={onSubmit}>
+
       <label>
-        <div class="label-body">Amount</div>
+        <div class="label__title">Amount</div>
         <input
-          type="number"
           placeholder="Amount"
+          type="number"
           min="0.0001"
           step="0.0001"
           required
           bind:value={stake}
-          on:input={onInput}
-          on:change={onChange}/>
+          on:input={onValidateInput}
+        />
+        {#if !isValue}
+          <span class="label__error">Mustn't be empty</span>
+        {:else if !isValidAsset}
+          <span class="label__error">Up to four decimal places allowed</span>
+        {:else if !isEnoughMoney}
+          <span class="label__error">Insufficient balance</span>
+        {:else if !isEnoughForFee}
+          <span class="label__error">Insufficient balance to pay the fees</span>
+        {:else if !isMin}
+          <span class="label__error">Minimum 0.0001 VMT.</span>
+        {/if}
       </label>
-
-      {#if !isValue}
-        <span class="error">Mustn't be empty</span>
-      {/if}
-      {#if !isValidAsset}
-        <span class="error">Up to four decimal places allowed</span>
-      {/if}
-      {#if !isEnoughMoney}
-        <span class="error">Insufficient balance</span>
-      {/if}
-      {#if !isEnoughForFee}
-        <span class="error">Insufficient balance to pay the fees</span>
-      {/if}
-      {#if !isMin}
-        <span class="error">Minimum 0.0001 VMT.</span>
-      {/if}
 
     </form>
 
@@ -200,8 +185,10 @@
         <span>REMAINING</span> <span>{remaining} <img src="assets/currencies/{$modalStore.data.symbol}.png" alt={$modalStore.data.symbol}/></span>
       </div>
     </div>
-    <div class="submit-batn">
+
+    <div class="form__submit">
       <button form="stakeForm" {disabled}>STAKE</button>
     </div>
+
   </div>
 </Modal>

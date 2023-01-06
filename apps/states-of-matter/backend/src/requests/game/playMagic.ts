@@ -28,7 +28,7 @@ const playMagic: SocketEvent = (socket): void => {
     if (handCard.type !== CardType.MAGIC) { return; }
     if (handCard.manaCost > hero.mana) { return; }
 
-    if (handCard.effect === EffectId.RELOAD) {
+    if (handCard.effect.id === EffectId.RELOAD) {
       hero.mana -= handCard.manaCost;
       await gameEngine.drawCard($game, player);
       hand.splice(hand.indexOf(handCard), 1);

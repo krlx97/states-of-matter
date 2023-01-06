@@ -1,6 +1,5 @@
 <script lang="ts">
   import {decksStore} from "stores";
-    import { empty } from "svelte/internal";
   import DeckCard from "./DeckCard.svelte";
 </script>
 

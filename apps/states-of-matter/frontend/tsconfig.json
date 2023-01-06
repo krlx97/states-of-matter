@@ -20,7 +20,8 @@
       "models": ["src/shared/models"],
       "responses": ["src/shared/responses"],
       "services": ["src/shared/services"],
-      "stores": ["src/shared/stores"]
+      "stores": ["src/shared/stores"],
+      "validators": ["src/shared/validators"]
     }
   },
   "include": [

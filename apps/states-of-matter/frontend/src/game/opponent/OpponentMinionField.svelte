@@ -4,6 +4,7 @@
   import {floatingTextStore, gameStore, hoveredCardStore, playerStore, selectedCardStore} from "stores";
   import FloatingText from "../FloatingText.svelte";
   import Card from "../../ui/Card.svelte";
+    import { cardEffectNames } from "data";
 
   export let field: "a" | "b" | "c" | "d";
 
@@ -46,6 +47,17 @@
 
   }
 
+  .buffs {
+    position: absolute;
+    top: -24px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .buff {color: rgb(var(--green));}
+  .debuff {color: rgb(var(--red));}
+
   .isHovered {
     transform: translateY(-8px);
   }
@@ -57,6 +69,14 @@
   {/each}
   {#if minion}
     <div class:isHovered on:click={onAttackCard} on:keypress={onAttackCard}>
+      <div class="buffs">
+        {#each minion.buffs as buff}
+          <div class="buff">{cardEffectNames.get(buff)}</div>
+        {/each}
+        {#each minion.debuffs as debuff}
+          <div class="debuff">{cardEffectNames.get(debuff)}</div>
+        {/each}
+      </div>
       <Card card={getCard()} health={minion.health} damage={minion.damage} isClient={false} isOpponent/>
     </div>
   {:else}

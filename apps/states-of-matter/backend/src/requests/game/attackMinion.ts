@@ -29,7 +29,7 @@ const attackMinion: SocketEvent = (socket): void => {
     playerMinion.canAttack = false;
     triggerEffect.multiStrike(playerMinion);
 
-    if (opponent.trap && opponent.trap.effect === EffectId.MIRRORS_EDGE) {
+    if (opponent.trap && opponent.trap.effect.id === EffectId.MIRRORS_EDGE) {
       player.hero.health -= playerMinion.damage;
 
       if (await gameEngine.isGameOver($game)) { return; }

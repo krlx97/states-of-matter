@@ -2,10 +2,12 @@
   import {PlayerStatus} from "@som/shared/enums";
   import {onDestroy, onMount} from "svelte";
   import {miscService, socketService} from "services";
-  import {casualQueueJoinTime, playerStore} from "stores";
+  import {casualQueueJoinTime, playerStore, decksStore} from "stores";
 
   $: isInCasualQueue = $playerStore.status === PlayerStatus.IN_CASUAL_QUEUE;
   $: isInRankedQueue = $playerStore.status === PlayerStatus.IN_RANKED_QUEUE;
+
+  let isDeckValid = false;
 
   let interval: NodeJS.Timer;
   let timeInQueue = "";
@@ -35,6 +37,16 @@
   };
 
   onMount((): void => {
+    const numberOfCards = $decksStore
+      .deckCards
+      .reduce((value, {amount}) => value += amount, 0);
+
+      console.log(numberOfCards);
+
+    if (numberOfCards === 30) {
+      isDeckValid = true;
+    }
+
     interval = setInterval((): void => {
       const date = new Date(Date.now() - $casualQueueJoinTime);
       const minutes = date.getMinutes();
@@ -51,10 +63,20 @@
 
 <style>
   .modes {
+    position: relative;
     height: 100%;
     width: 100%;
     display: flex;
     align-items: center;
+  }
+
+  .invalid-deck {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    line-height: 1.4;
   }
 
   .modes__mode {
@@ -82,9 +104,17 @@
   .add-margin {
     margin-right: var(--spacing-md);
   }
+
+  .red {color: rgb(var(--red));}
 </style>
 
 <div class="modes">
+  {#if !isDeckValid}
+    <div class="invalid-deck red">
+      You must add 30 cards in your selected deck before you can play. Head over
+      to Decks page and build your deck first!
+    </div>
+  {/if}
   <div class="modes__mode">
     <h2>CASUAL</h2>
     <div class="modes__mode__info">
@@ -98,7 +128,7 @@
     {#if isInCasualQueue}
       <button on:click={onLeaveCasualQueue}>LEAVE</button>
     {:else}
-      <button on:click={onJoinCasualQueue} disabled={isInRankedQueue}>
+      <button on:click={onJoinCasualQueue} disabled={isInRankedQueue || !isDeckValid}>
         PLAY
       </button>
     {/if}
@@ -116,7 +146,7 @@
     {#if isInRankedQueue}
       <button on:click={onLeaveRankedQueue}>LEAVE</button>
     {:else}
-      <button on:click={onJoinRankedQueue} disabled={isInCasualQueue}>
+      <button on:click={onJoinRankedQueue} disabled={isInCasualQueue || !isDeckValid}>
         PLAY
       </button>
     {/if}
@@ -132,12 +162,12 @@
       <button
         class="add-margin"
         on:click={onMakeLobby}
-        disabled={isInCasualQueue || isInRankedQueue}>
+        disabled={isInCasualQueue || isInRankedQueue || !isDeckValid}>
         CREATE
       </button>
       <button
         on:click={onJoinLobby}
-        disabled={isInCasualQueue || isInRankedQueue}>
+        disabled={isInCasualQueue || isInRankedQueue || !isDeckValid}>
         JOIN
       </button>
     </div>

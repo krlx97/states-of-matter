@@ -12,6 +12,7 @@ const playMinion = (player: GamePlayer, gid: number, field: "a" | "b" | "c" | "d
 
   hero.mana -= handCard.manaCost;
   minion[field] = handCard;
+  minion[field]?.buffs.push(minion[field]?.effect.id as number); // wtf? o.O
   hand.splice(hand.indexOf(handCard), 1);
 
   return minion[field];

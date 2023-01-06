@@ -11,7 +11,8 @@ export default defineConfig({
       models: resolve("./src/shared/models"),
       responses: resolve("./src/shared/responses"),
       services: resolve("./src/shared/services"),
-      stores: resolve("./src/shared/stores")
+      stores: resolve("./src/shared/stores"),
+      validators: resolve("./src/shared/validators")
     }
   }
 });

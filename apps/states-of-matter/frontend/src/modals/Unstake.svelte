@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { eccService, socketService } from "services";
-  import {accountStore, modalStore} from "stores";
   import {onMount} from "svelte";
+  import {eccService, socketService} from "services";
+  import {accountStore, modalStore} from "stores";
   import Modal from "../ui/Modal.svelte";
 
   let stake = 0;
@@ -48,7 +48,7 @@
     remaining = (parseFloat(staked) - parseFloat(`${stake}` ? `${stake}` : `0.0000 ${$modalStore.data.symbol}`)).toFixed(4);
   };
 
-  const onInput = (): void => {
+  const onValidateInput = (): void => {
     isValue = stake !== null;
     isMin = stake >= 0.0001;
     isValidAsset = (stake.toString().split(".")[1] || []).length <= 4;
@@ -65,10 +65,6 @@
     getRemaining();
     getTotal();
     getFee();
-  };
-
-  const onChange = (): void => {
-    onInput();
   };
 
   const onSubmit = (): void => {
@@ -93,6 +89,10 @@
 </script>
 
 <style>
+  .unstake {
+    width: 320px;
+  }
+
   h1 {
     margin: 0;
     margin-bottom: var(--spacing-md);
@@ -105,15 +105,13 @@
     margin-bottom: var(--spacing-md);
     line-height: 1.4;
   }
+
   img {
     height: 16px;
     width: 16px;
     vertical-align: bottom;
   }
-  input {width: 100%}
-  label {
-    margin-bottom: var(--spacing-md);
-  }
+
   .info {
     margin-bottom: var(--spacing-md);
     padding: var(--spacing-sm);
@@ -128,28 +126,15 @@
       rgba(63, 63, 63, 1) 100%
     ) 1;
   }
+
   .amt {
     display: flex;
     justify-content: space-between;
   }
-  .stake {
-    width: 320px;
-    /* padding: var(--spacing-md); */
-  }
-  .error {
-    margin: var(--spacing-md);
-    color: rgb(var(--red));
-  }
-
-  .submit-batn {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
 </style>
 
 <Modal>
-  <div class="stake">
+  <div class="unstake">
     <h1>Unstake</h1>
     <p>
       Unstake your staked {$modalStore.data.symbol} and claim them after 21
@@ -157,7 +142,7 @@
     </p>
     <form id="stakeForm" on:submit|preventDefault={onSubmit}>
       <label>
-        <div class="label-body">Amount</div>
+        <div class="label__title">Amount</div>
         <input
           type="number"
           placeholder="Amount"
@@ -165,26 +150,20 @@
           step="0.0001"
           required
           bind:value={stake}
-          on:input={onInput}
-          on:change={onChange}
+          on:input={onValidateInput}
         />
+        {#if !isValue}
+          <div class="label__error">Mustn't be empty</div>
+        {:else if !isValidAsset}
+          <div class="label__error">Up to four decimal places allowed</div>
+        {:else if !isEnoughMoney}
+          <div class="label__error">Insufficient balance</div>
+        {:else if !isEnoughForFee}
+          <div class="label__error">Insufficient balance to pay the fees</div>
+        {:else if !isMin}
+          <div class="label__error">Minimum 0.0001 {$modalStore.data.symbol}.</div>
+        {/if}
       </label>
-
-      {#if !isValue}
-        <span class="error">Mustn't be empty</span>
-      {/if}
-      {#if !isValidAsset}
-        <span class="error">Up to four decimal places allowed</span>
-      {/if}
-      {#if !isEnoughMoney}
-        <span class="error">Insufficient balance</span>
-      {/if}
-      {#if !isEnoughForFee}
-        <span class="error">Insufficient balance to pay the fees</span>
-      {/if}
-      {#if !isMin}
-        <span class="error">Minimum 0.0001 {$modalStore.data.symbol}.</span>
-      {/if}
 
     </form>
 
@@ -204,7 +183,7 @@
       </div>
     </div>
 
-    <div class="submit-batn">
+    <div class="form__submit">
       <button form="stakeForm" {disabled}>UNSTAKE</button>
     </div>
   </div>

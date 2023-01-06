@@ -16,7 +16,12 @@ interface GameCard {
     klass: number;
     type: number;
     manaCost: number;
-    effect: number;
+    effect: {
+        id: number;
+        type: number;
+    };
+    buffs: Array<number>;
+    debuffs: Array<number>;
 }
 export interface GameMagic extends GameCard {
 }

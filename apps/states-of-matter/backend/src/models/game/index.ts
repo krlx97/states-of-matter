@@ -56,11 +56,16 @@ interface Game extends Document {
 interface GameCard {
   id: number;
   gid: number;
-  name: string;
   klass: number;
   type: number;
+  name: string;
   manaCost: number;
-  effect: number;
+  effect: {
+    id: number;
+    type: number;
+  };
+  buffs: Array<number>;
+  debuffs: Array<number>;
 }
 
 type GameCards = Array<GameMagic | GameMinion | GameTrap>;

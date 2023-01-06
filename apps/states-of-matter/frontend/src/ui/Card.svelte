@@ -1,6 +1,6 @@
 <script lang="ts">
   import {CardType, CardKlass} from "@som/shared/enums";
-  import {cardEffects, cardSkins} from "data";
+  import {cardEffectNames, cardEffects, cardSkins} from "data";
   import {gameStore, playerStore} from "stores";
   import type {Card} from "@som/shared/types/game";
 
@@ -165,7 +165,11 @@
     {/if}
 
     {#if card.type !== CardType.HERO}
-      <div class="tooltip2">{cardEffects.get(card.effect.id)}</div>
+      <div class="tooltip2">
+        {cardEffectNames.get(card.effect.id)}
+        <hr/>
+        {cardEffects.get(card.effect.id)}
+      </div>
     {/if}
   </div>
 

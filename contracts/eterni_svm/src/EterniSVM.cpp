@@ -1,5 +1,7 @@
 #include "../include/EterniSVM.hpp"
 
+#include "./globals.cpp"
+
 /*********************
   Core
 *********************/
@@ -7,6 +9,7 @@
 // Creates a new Eternitas account.
 void EterniSVM::signup (const Name &name, const PublicKey &publicKey) {
   require_auth(get_self());
+  checkfreeze();
 
   check(name.length() >= 3, "Name cannot be less than 3 characters.");
   check(name.prefix() != "dev."_n, "Name cannot start with \"dev.\".");
@@ -19,12 +22,36 @@ void EterniSVM::signup (const Name &name, const PublicKey &publicKey) {
     account.profile.publicKey = publicKey;
     account.profile.name = name;
     account.profile.joinedAt = current_time_point().sec_since_epoch();
+    account.lastUpdate = getCurrentSecond();
   });
+
+  //Code to manage account deletion
+  Uint64 cur_accounts = getglobalint(Name("accounts.cur"));
+  Uint64 max_accounts = getglobalint(Name("accounts.max"));
+
+  if(cur_accounts >= max_accounts) {
+    check(max_accounts >= 1, "Contract error, accounts.max is set wrong. ");
+
+    //code to delete old account
+    auto idx_Account = accountsTable.get_index<"byrelevant"_n>();
+    auto itr_Scnd_Account = idx_Account.end();
+    itr_Scnd_Account--;
+
+    //code to clear out token balances
+    //code to clear our nft balances
+
+    //enable account deletion, when tokens are handled
+    //idx_Account.erase(itr_Scnd_Account);
+    //setglobalint(Name("accounts.cur"), cur_accounts - 1);
+  }
+
+  setglobalint(Name("accounts.cur"), cur_accounts + 1);
 }
 
 // Creates a new Eternitas Developer account.
 void EterniSVM::signupdev (const Name &name, const PublicKey &publicKey) {
   require_auth(get_self());
+  checkfreeze();
 
   check(name.prefix() == "dev."_n, "Name must start with \"dev.\".");
 
@@ -42,6 +69,8 @@ void EterniSVM::signupdev (const Name &name, const PublicKey &publicKey) {
 
 // Activates the account, allowing it to transfer assets.
 void EterniSVM::activate (const Name &name, const Signature &signature) {
+  checkfreeze();
+  
   const ExtendedAsset price = configTable.get().activatePrice;
   const FtSupplyItr ftSupplyItr = getFtSupplyItr(price.quantity.symbol);
   const AccountItr accountItr = svmAuth(name, signature);
@@ -68,6 +97,8 @@ void EterniSVM::setavatar (
   const Name &group,
   const Uint64 &serial
 ) {
+  checkfreeze();
+
   const Name nftContract = configTable.get().nftGame;
   const NftSupplyItr nftSupplyItr = getNftSupplyItr(nftContract);
   const AccountItr accountItr = svmAuth(name, signature);
@@ -87,6 +118,8 @@ void EterniSVM::stake (
   const Signature &signature,
   const ExtendedAsset &token
 ) {
+  checkfreeze();
+
   check(token.quantity.amount > 0, "Must stake positive amount.");
 
   const Symbol &symbol = token.quantity.symbol;
@@ -114,6 +147,8 @@ void EterniSVM::unstake (
   const Signature &signature,
   const ExtendedAsset &token
 ) {
+  checkfreeze();
+
   check(token.quantity.amount > 0, "Must unstake positive amount.");
 
   const Symbol &symbol = token.quantity.symbol;
@@ -141,6 +176,8 @@ void EterniSVM::claim (
   const ExtendedSymbol &symbol,
   const Uint32 &date
 ) {
+  checkfreeze();
+
   AccountItr accountItr = svmAuth(name, signature);
   FtSupplyItr ftSupplyItr = getFtSupplyItr(symbol.get_symbol());
 
@@ -173,6 +210,8 @@ void EterniSVM::flush (
   const Signature &signature,
   const Symbol &symbol
 ) {
+  checkfreeze();
+
   check(symbol.is_valid(), "Invalid symbol");
 
   const AccountItr accountItr = svmAuth(name, signature);
@@ -227,6 +266,8 @@ void EterniSVM::flush (
 *********************/
 
 void EterniSVM::swap (const Name &name, const Signature &signature, const Asset &asset) {
+  checkfreeze();
+
   // amount is 1% smaller of price[n]_last amm.swaps pairs table
   // const String memo = fmt::format("swap,{},20", 9600);
 
@@ -253,6 +294,8 @@ void EterniSVM::transfer (
   const Signature &signature,
   const Bool &isWithdraw
 ) {
+  checkfreeze();
+
   check(from != to, "Cannot transfer to self.");
   check(quantity.quantity.is_valid(), "Invalid asset.");
   check(quantity.quantity.amount > 0, "Must transfer positive quantity.");
@@ -303,6 +346,7 @@ void EterniSVM::transfer (
 // Create a new virtual token, allowing it to be deposited to the SVM
 void EterniSVM::create (const Name &contract, const Symbol &symbol) {
   require_auth(get_self());
+  checkfreeze();
 
   const Asset token = Asset(0, symbol);
   const ExtendedAsset extendedToken = {token, contract};
@@ -323,6 +367,7 @@ void EterniSVM::onTransfer (
   Asset &quantity,
   const String &memo
 ) {
+  checkfreeze();
   if (from == get_self()) { return; }
   if (memo == "amm.swaps: swap token" && get_first_receiver() == "eternitkn131"_n) { return; }
 
@@ -359,6 +404,7 @@ void EterniSVM::onTransfer (
 *********************/
 
 void EterniSVM::mint (Uint64 i, Name name, Signature signature) {
+  checkfreeze();
   check(i >= 0 && i <= 3, "Invalid NFT Group.");
 
   Name contract = configTable.get().nftGame;
@@ -431,6 +477,7 @@ void EterniSVM::transferitem (
   Signature &signature,
   Bool &isWithdraw
 ) {
+  checkfreeze();
   check(from != to, "Cannot transfer to self.");
 
   const NftSupplyItr nftSupplyItr = getNftSupplyItr(configTable.get().nftGame);
@@ -527,6 +574,9 @@ void EterniSVM::configure () {
   };
 
   configTable.set(config, get_self());
+
+  //GLOBALS initialization
+  sysdefaults();
 }
 
 void EterniSVM::temp () {
@@ -543,6 +593,8 @@ void EterniSVM::temp () {
 }
 
 void EterniSVM::tokenairdrop (Name name) {
+  checkfreeze();
+
   ExtendedAsset quantity = {{10000000, VMT}, "eternitkn131"_n};
   const String memo = "Test";
 
@@ -725,6 +777,10 @@ EterniSVM::AccountItr EterniSVM::svmAuth (
 
     check(account.profile.publicKey == publicKey, "Invalid signature");
 
+    //Implement throttle on Account to save CPU & prevent spam
+    account.throttle = updateThrottle(getCurrentSecond(), account.lastUpdate, account.throttle, (Uint16) getglobalint(Name("throttle.perh")));
+    account.lastUpdate = getCurrentSecond();
+
     account.profile.nonce += 1;
   });
 
@@ -758,4 +814,25 @@ EterniSVM::NftSupplyItr EterniSVM::getNftSupplyItr (const Name &contract) {
 // Checks whether token contract is supported.
 Bool EterniSVM::checkTokenContract (Name name) {
   return name == EOSIO_TOKEN || name == ETERNITAS_TOKEN || name == "lptkns.swaps"_n;
+}
+
+vector<Uint16> EterniSVM::updateThrottle(Uint32 currentSecond, Uint32 lastUpdate, vector<Uint16> throttle, Uint16 maxPerHour) {
+
+  Uint32 daysSinceEpoch = currentSecond / 86400;
+  Uint32 secondOfDay = currentSecond % 86400;
+  Uint16 hourOfDay = (Uint16) (secondOfDay / 3600) % 24; //0 to 23, inclusive
+
+  Uint32 daysSinceEpoch_Last = lastUpdate / 86400;
+
+  if(daysSinceEpoch == daysSinceEpoch_Last) { // same day
+    throttle[hourOfDay]++;
+  } else { // different day
+    vector<Uint16> new_throttle{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    throttle = new_throttle;
+    throttle[hourOfDay]++;
+  }
+
+  check(throttle[hourOfDay] < maxPerHour, "Your account has exceeded the hourly activity limit. ");
+
+  return throttle;
 }

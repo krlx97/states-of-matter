@@ -15,3 +15,7 @@ apps/svm-wallet/frontend/dist
 
 contracts/eosio.token/build
 contracts/eterni_svm/build
+
+contracts/eterni_svm/.eosproj
+contracts/eterni_svm/EterniSVM.abi
+contracts/eterni_svm/EterniSVM.wasm

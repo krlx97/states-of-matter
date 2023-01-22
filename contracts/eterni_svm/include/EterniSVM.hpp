@@ -5,6 +5,7 @@
 #include <eosio/eosio.hpp>
 #include <eosio/singleton.hpp>
 
+
 using eosio::action;
 using eosio::assert_recover_key;
 using eosio::asset;
@@ -23,6 +24,7 @@ using eosio::sha256;
 using eosio::signature;
 using eosio::singleton;
 using eosio::symbol;
+using eosio::print;
 
 using std::make_tuple;
 using std::map;
@@ -40,16 +42,21 @@ using PublicKey = eosio::public_key;
 using Signature = eosio::signature;
 using Symbol = eosio::symbol;
 using String = std::string;
+using TimePointSec = eosio::time_point_sec;
 
 using Bool = bool;
 using Uint8 = uint8_t;
 using Uint16 = uint16_t;
 using Uint32 = uint32_t;
 using Uint64 = uint64_t;
+using Uint128 = uint128_t;
 
 #define ON_NOTIFY(action) [[eosio::on_notify(action)]]
 
 CONTRACT EterniSVM: public Contract {
+  public:
+    #include "./globals.hpp"
+
   public:
     const Symbol TLOS = {"TLOS", 4};
     const Symbol VMT = {"VMT", 4};
@@ -224,9 +231,31 @@ CONTRACT EterniSVM: public Contract {
     TABLE Account {
       Profile profile;
       Tokens tokens;
+      Uint32 lastUpdate; //last account activity, in seconds since epoch
+
+      //Implenting a throttle allows for the possibility of users
+      //  signing to their Virtual Account directly, not requiring
+      vector<Uint16> throttle{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //24hr throttle for user activity, relies on global "throttle.perh"
 
       Uint64 primary_key () const {
         return profile.name.value;
+      }
+      Uint128 by_relevant() const {
+        // by_relevant() -- secondary index
+        // Rank by users who own the least NFT's, and the oldest dormant accounts will be indexed at the bottom
+        // Limitation:  people should only have uint32_t quantity maximum NFT's in ownership
+        // Purpose:  the lowest valued accounts are prime for deletion
+        //  Note:  Ideally NFT ownership is changed away from a vector, would be better on CPU
+        //
+        //  Auto-Delete Accounts:
+        //         When a new account is created, the lowest ranked account could be deleted as follows:
+        //         - Pull from the numerical bottom of the list, and prepare to delete that account
+        //         - Move out fungible balances to a holding account
+        //         - Destroy or move NFT's to a holding account
+        //         - Ideally, record a log somewhere on-chain (NET record), of the account closure and funds moved
+        //            with this, the account could be restored at a later date by admin / governance
+        //         - Delete virtual account
+        return ((Uint128) tokens.nonFungible.serials.size() << 96) | ((Uint128) lastUpdate << 64) | (Uint128) profile.name.value;
       }
     };
 
@@ -254,7 +283,14 @@ CONTRACT EterniSVM: public Contract {
     using ConfigSingleton = singleton<"config"_n, Config>;
 
     using ConfigIndex = multi_index<"config"_n, Config>; // bug fix
-    using AccountIndex = multi_index<"accounts"_n, Account>;
+
+    //New declaration of AccountIndex
+    using AccountIndex = multi_index<
+      Name("accounts"),
+      Account,
+      eosio::indexed_by<"byrelevant"_n, eosio::const_mem_fun<Account, Uint128, &Account::by_relevant>>
+    >;
+
     using FtSupplyIndex = multi_index<"ftsupplies"_n, FtSupply>;
     using NftSupplyIndex = multi_index<"nftsupplies"_n, NftSupply>;
 
@@ -278,6 +314,9 @@ CONTRACT EterniSVM: public Contract {
     FtSupplyItr getFtSupplyItr (const Symbol &symbol);
     NftSupplyItr getNftSupplyItr (const Name &contract);
     Bool checkTokenContract (Name name);
+
+    Uint32 getCurrentSecond() { return current_time_point().sec_since_epoch(); };
+    vector<Uint16> updateThrottle(Uint32 currentSecond, Uint32 lastUpdate, vector<Uint16> throttle, Uint16 maxPerHour);
 
     /*********************
       External

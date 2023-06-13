@@ -1,0 +1,77 @@
+<script lang="ts">
+  import {socketService} from "services";
+  import {gameStore, playerStore} from "stores";
+
+  const onEndTurn = (): void => {
+    socketService.socket.emit("endTurn");
+  };
+</script>
+
+<style>
+  .game-timer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 160px;
+    display: flex;
+    align-items: center;
+  }
+
+  .bar {
+    height: 90%;
+    width: 12px;
+    /* margin: var(--spacing-md) 0 var(--spacing-md) 0; */
+    /* box-sizing: border-box; */
+    margin-left: 8px;
+    background-color: rgb(31, 31, 31);
+  }
+  .progress {
+    height: 60%;
+    width: 8px;
+    margin: 2px;
+    /* box-sizing: border-box; */
+    background-color: rgb(var(--purple));
+  }
+
+.info {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+  }
+
+  .glow {
+    animation: glow4 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow4 {
+    from {
+      text-shadow: 0 0 0 rgb(var(--purple));
+    } to {
+      text-shadow: 2px 2px 16px rgb(var(--purple));
+    }
+  }
+
+
+  .bgd {
+    /* width: 75%; */
+    /* text-align: center; */
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background-color: rgb(var(--dark-grey));
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
+</style>
+
+<div class="game-timer">
+  <div class="info">
+    <div class="bgd" class:glow={$gameStore.opponent.name === $gameStore.currentPlayer}>{$gameStore.opponent.name}</div>
+    <button on:click={onEndTurn}>END TURN</button>
+    <div class="bgd" class:glow={$playerStore.name === $gameStore.currentPlayer}>{$gameStore.player.name}</div>
+  </div>
+  <div class="bar">
+    <div class="progress"></div>
+  </div>
+</div>

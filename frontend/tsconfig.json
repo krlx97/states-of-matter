@@ -1,0 +1,25 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "allowJs": true,
+    "checkJs": true,
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "paths": {
+      "data": ["src/shared/data"],
+      "models": ["src/shared/models"],
+      "responses": ["src/shared/responses"],
+      "services": ["src/shared/services"],
+      "stores": ["src/shared/stores"],
+      "validators": ["src/shared/validators"],
+      "ui": ["src/shared/ui"]
+    }
+  },
+  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
+  "references": [{
+    "path": "./tsconfig.node.json"
+  }]
+}

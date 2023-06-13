@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "svelte.svelte-vscode",
+    "equinusocio.vsc-material-theme-icons",
+    "equinusocio.vsc-material-theme",
+    "nomicfoundation.hardhat-solidity",
+    "remixproject.ethereum-remix"
+  ]
+}

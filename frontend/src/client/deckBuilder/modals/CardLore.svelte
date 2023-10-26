@@ -3,7 +3,7 @@
   import {socketService} from "services";
   import {modalStore, walletStore} from "stores";
   import {CardComponent, ModalComponent} from "ui";
-  import CardSkin from "./CardSkin.svelte";
+  import CardSkinComponent from "./CardSkin.svelte";
 
   const {socket} = socketService;
   const {id} = $modalStore.data;
@@ -119,17 +119,17 @@
       <div class="skins">
         <!-- Default skin -->
         <div class="skin">
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+          <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
           <img
             class="skin__img"
             src="assets/cards/{$modalStore.data.id}.jpg"
             alt="Default Skin"
-            on:click={onDefaultSkin}
-            on:keypress={onDefaultSkin}
-          />
+            on:click="{onDefaultSkin}"/>
         </div>
         <!-- Custom skins -->
         {#each cardView.skins as skin}
-          <CardSkin skinId={skin}/>
+          <CardSkinComponent skinId="{skin}"/>
           <!-- <div class="skin" on:click={() => onSelectSkin(skin)} on:keypress={() => onSelectSkin(skin)}>
             {#if !doesOwn(skin)}
               <div class="skin--disabled">

@@ -1,13 +1,13 @@
 import {CardType, EffectId, LogType} from "@som/shared/enums";
-import gameEngine from "helpers/game";
+import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const playMinion: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {triggerEffect} = gameEngine;
+  const {effect} = gameHelpers;
 
   socket.on("playMinion", async (params) => {
-    const [getGameData, getGameError] = await gameEngine.getGame(socketId);
+    const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
 
     if (!getGameData) {
       return error(getGameError);
@@ -16,7 +16,7 @@ const playMinion: SocketRequest = (socket, error): void => {
     const {$game, player, opponent} = getGameData;
     const {field, gid} = params;
 
-    if (player.minion[field]) {
+    if (player.field[field]) {
       return error("Field already inhibits a Minion.");
     }
 
@@ -34,10 +34,10 @@ const playMinion: SocketRequest = (socket, error): void => {
       return error("Not enough mana.");
     }
 
-    player.hero.mana -= card.manaCost;
-    player.minion[field] = card;
+    player.field.hero.mana -= card.manaCost;
+    player.field[field] = card;
 
-    const minion = player.minion[field];
+    const minion = player.field[field];
 
     if (!minion) {
       return error("Error summoning card.");
@@ -52,126 +52,124 @@ const playMinion: SocketRequest = (socket, error): void => {
     // Step 2: Check for on summon trap cards
     // Step 3: Trigger on summon effects
 
+    // [1] INSERT BUFFS / DEBUFFS
     switch (minion.effect) {
+      // Neutral
       case EffectId.BLAZE:
         const hasAttackedTwice = true;
-        gameEngine.insertBuff(minion, EffectId.BLAZE, {hasAttackedTwice});
+        gameHelpers.insertBuff(minion, EffectId.BLAZE, {hasAttackedTwice});
+        break;
+      case EffectId.ELUSIVE:
+        gameHelpers.insertBuff(minion, EffectId.ELUSIVE);
+        break;
+      case EffectId.REVENGE:
+        gameHelpers.insertBuff(minion, EffectId.REVENGE);
+        break;
+      // Solid
+      case EffectId.UNITY:
+        gameHelpers.insertBuff(minion, EffectId.UNITY);
+        break;
+      case EffectId.UNBREAKABLE:
+        gameHelpers.insertBuff(minion, EffectId.UNBREAKABLE);
+        break;
+      case EffectId.PROTECTOR:
+        gameHelpers.insertBuff(minion, EffectId.TAUNT);
+        break;
+      // ---------- [ L I Q U I D ] ----------
+      case EffectId.RISING_FURY:
+        gameHelpers.insertBuff(minion, EffectId.RISING_FURY);
+        break;
+      case EffectId.REGENERATION:
+        gameHelpers.insertBuff(minion, EffectId.REGENERATION);
+        break;
+      case EffectId.SACRIFICE:
+        gameHelpers.insertBuff(minion, EffectId.SACRIFICE);
+        break;
+      case EffectId.SHADOWSTRIKE:
+        gameHelpers.insertBuff(minion, EffectId.SHADOWSTRIKE);
+        break;
+      case EffectId.LEECH:
+        gameHelpers.insertBuff(minion, EffectId.LEECH);
+        break;
+      case EffectId.RESILIENT:
+        gameHelpers.insertBuff(minion, EffectId.RESILIENT);
+        break;
+      // Gas
+      case EffectId.ACIDIC_DEATH:
+        gameHelpers.insertBuff(minion, EffectId.ACIDIC_DEATH);
+        break;
+      case EffectId.STEALTH:
+        gameHelpers.insertBuff(minion, EffectId.STEALTH);
+        break;
+      case EffectId.POISONOUS_TOUCH:
+        gameHelpers.insertBuff(minion, EffectId.POISONOUS_TOUCH);
+        break;
+      case EffectId.CORROSIVE_TOUCH:
+        gameHelpers.insertBuff(minion, EffectId.CORROSIVE_TOUCH);
+        break;
+      // ---------- [ P L A S M A ] ----------
+      case EffectId.SELF_DESTRUCT:
+        gameHelpers.insertBuff(minion, EffectId.SELF_DESTRUCT);
+        break;
+      case EffectId.RAMPAGE:
+        gameHelpers.insertBuff(minion, EffectId.RAMPAGE);
+        break;
+      case EffectId.BACKSTAB:
+        gameHelpers.insertBuff(minion, EffectId.BACKSTAB);
+        break;
+      case EffectId.MARKSMANSHIP:
+        gameHelpers.insertBuff(minion, EffectId.MARKSMANSHIP);
+        break;
+      case EffectId.OVERPOWER:
+        gameHelpers.insertBuff(minion, EffectId.OVERPOWER);
+        break;
+      case EffectId.EXECUTE:
+        gameHelpers.insertBuff(minion, EffectId.EXECUTE);
         break;
     }
 
+    // [2] ON SUMMON TRAP TRIGGERS
     if (trap && !isElusive) {
       switch (trap.effect) {
         case EffectId.SMITE:
-          triggerEffect.smite({player, opponent, minion, trap, field});
+          effect.smite({player, opponent, minion, trap, field});
           break;
         case EffectId.BANISH:
-          triggerEffect.banish({player, opponent, minion, trap, field});
+          effect.banish({player, opponent, minion, trap, field});
           break;
         case EffectId.POISONED_GROUND:
-          triggerEffect.poisonedGround({player: opponent, minion, trap});
+          effect.poisonedGround({player: opponent, minion, trap});
           break;
       }
     } else {
+      // [3] TRIGGER ON SUMMON EFFECTS
       switch (minion.effect) {
         // ---------- [ N E U T R A L ] ----------
         case EffectId.SHADOW_SURGE:
-          triggerEffect.shadowSurge({minion});
+          effect.shadowSurge({minion});
           break;
         case EffectId.QUICK_SHOT:
-          triggerEffect.quickShot({opponent});
+          effect.quickShot({opponent});
           break;
         case EffectId.NECROMANCY:
-          gameEngine.insertDebuff(minion, EffectId.NECROMANCY, {
-            health: -2,
-            damage: -2
-          });
-
-          const isPositive = false;
-
-          triggerEffect.necromancy({minion, isPositive});
-
-          break;
-        case EffectId.ELUSIVE:
-          gameEngine.insertBuff(minion, EffectId.ELUSIVE);
-          break;
-        case EffectId.REVENGE:
-          gameEngine.insertBuff(minion, EffectId.REVENGE);
+          effect.necromancy({minion, isPositive: false});
           break;
         // ---------- [ S O L I D ] ----------
         case EffectId.GLORY:
-          triggerEffect.glory({opponent, minion});
-          break;
-        case EffectId.UNITY:
-          gameEngine.insertBuff(minion, EffectId.UNITY);
+          effect.glory({opponent, minion});
           break;
         case EffectId.SPELLWEAVE:
-          triggerEffect.spellweave({player, minion});
+          effect.spellweave({player, minion});
           break;
         case EffectId.SHIELDWALL:
-          triggerEffect.shieldwall({player, field});
-          break;
-        case EffectId.UNBREAKABLE:
-          gameEngine.insertBuff(minion, EffectId.UNBREAKABLE);
-          break;
-        case EffectId.PROTECTOR:
-          gameEngine.insertBuff(minion, EffectId.TAUNT);
-          break;
-        // ---------- [ L I Q U I D ] ----------
-        case EffectId.RISING_FURY:
-          gameEngine.insertBuff(minion, EffectId.RISING_FURY);
-          break;
-        case EffectId.REGENERATION:
-          gameEngine.insertBuff(minion, EffectId.REGENERATION);
-          break;
-        case EffectId.SACRIFICE:
-          gameEngine.insertBuff(minion, EffectId.SACRIFICE);
-          break;
-        case EffectId.SHADOWSTRIKE:
-          gameEngine.insertBuff(minion, EffectId.SHADOWSTRIKE);
-          break;
-        case EffectId.LEECH:
-          gameEngine.insertBuff(minion, EffectId.LEECH);
-          break;
-        case EffectId.RESILIENT:
-          gameEngine.insertBuff(minion, EffectId.RESILIENT);
+          effect.shieldwall({player, field});
           break;
         // ---------- [ G A S ] ----------
-        case EffectId.ACIDIC_DEATH:
-          gameEngine.insertBuff(minion, EffectId.ACIDIC_DEATH);
-          break;
-        case EffectId.STEALTH:
-          gameEngine.insertBuff(minion, EffectId.STEALTH);
-          break;
-        case EffectId.POISONOUS_TOUCH:
-          gameEngine.insertBuff(minion, EffectId.POISONOUS_TOUCH);
-          break;
         case EffectId.TOXIC_SPRAY:
-          triggerEffect.toxicSpray({opponent});
-          break;
-        case EffectId.CORROSIVE_TOUCH:
-          gameEngine.insertBuff(minion, EffectId.CORROSIVE_TOUCH);
+          effect.toxicSpray({opponent});
           break;
         case EffectId.TOXIC_GAS:
-          triggerEffect.toxicGas({opponent});
-          break;
-        // ---------- [ P L A S M A ] ----------
-        case EffectId.SELF_DESTRUCT:
-          gameEngine.insertBuff(minion, EffectId.SELF_DESTRUCT);
-          break;
-        case EffectId.RAMPAGE:
-          gameEngine.insertBuff(minion, EffectId.RAMPAGE);
-          break;
-        case EffectId.BACKSTAB:
-          gameEngine.insertBuff(minion, EffectId.BACKSTAB);
-          break;
-        case EffectId.MARKSMANSHIP:
-          gameEngine.insertBuff(minion, EffectId.MARKSMANSHIP);
-          break;
-        case EffectId.OVERPOWER:
-          gameEngine.insertBuff(minion, EffectId.OVERPOWER);
-          break;
-        case EffectId.EXECUTE:
-          gameEngine.insertBuff(minion, EffectId.EXECUTE);
+          effect.toxicGas({opponent});
           break;
         default:
           return error("Effect not found.");
@@ -185,7 +183,7 @@ const playMinion: SocketRequest = (socket, error): void => {
       minionId: minion.id
     });
 
-    await gameEngine.saveGame($game);
+    await gameHelpers.saveGame($game);
   });
 };
 

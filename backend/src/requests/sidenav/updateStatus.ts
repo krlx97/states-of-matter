@@ -1,26 +1,29 @@
-import {mongo, server} from "apis";
-import {getSocketIds} from "helpers/player";
+import {mongo, server} from "app";
+import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
-const updateStatus: SocketRequest = (socket): void => {
+const updateStatus: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, players} = mongo;
-  const {io} = server;
+  const {$accounts, $players} = mongo;
 
   socket.on("updateFriend", async () => {
-    const $player = await players.findOne({socketId});
+    const $player = await $players.findOne({socketId});
 
-    if (!$player) { return; }
+    if (!$player) {
+      return error("Player not found.");
+    }
 
-    const $account = await accounts.findOne({name: $player.name});
+    const $account = await $accounts.findOne({name: $player.name});
 
-    if (!$account) { return; }
+    if (!$account) {
+      return error("Player account not found.");
+    }
 
     const {name, status} = $player;
-    const socketIds = await getSocketIds($account.social.friends);
+    const socketIds = await playerHelpers.getSocketIds($account.social.friends);
 
     if (socketIds.length) {
-      io.to(socketIds).emit("updateFriend", {name, status});
+      server.io.to(socketIds).emit("updateFriend", {name, status});
     }
   });
 };

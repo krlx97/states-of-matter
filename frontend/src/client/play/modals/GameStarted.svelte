@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte";
-  import {modalService} from "services";
+  import {modalService, soundService} from "services";
   import {gameStore, modalStore, playerStore} from "stores";
   import {ModalComponent, ProgressBarComponent} from "ui";
 
@@ -25,6 +25,7 @@
   };
 
   onMount((): void => {
+soundService.play("accept");
     requestAnimationFrame(progressBarAnimation);
   });
 </script>

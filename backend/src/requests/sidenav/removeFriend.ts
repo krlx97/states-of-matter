@@ -1,18 +1,18 @@
-import {mongo, server} from "apis";
+import {mongo, server} from "app";
 import type {UpdateFilter} from "mongodb";
-import type {Account, SocketRequest} from "@som/shared/types/backend";
+import type {SocketRequest} from "@som/shared/types/backend";
+import type {Account} from "@som/shared/types/mongo";
 
 const removeFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, chats, players} = mongo;
-  const {io} = server;
+  const {$accounts, $chats, $players} = mongo;
 
   socket.on("removeFriend", async (params) => {
     const {name} = params;
 
     const [$playerSender, $playerReceiver] = await Promise.all([
-      players.findOne({socketId}),
-      players.findOne({name})
+      $players.findOne({socketId}),
+      $players.findOne({name})
     ]);
 
     if (!$playerSender) {
@@ -28,7 +28,7 @@ const removeFriend: SocketRequest = (socket, error): void => {
       $accountReceiverUpdate,
       $chatDelete
     ] = await Promise.all([
-      accounts.findOneAndUpdate({
+      $accounts.findOneAndUpdate({
         name: $playerSender.name
       }, {
         $pull: {
@@ -38,7 +38,7 @@ const removeFriend: SocketRequest = (socket, error): void => {
         returnDocument: "after"
       }),
 
-      accounts.findOneAndUpdate({name}, {
+      $accounts.findOneAndUpdate({name}, {
         $pull: {
           "social.friends": $playerSender.name
         } as UpdateFilter<Account> | Partial<Account>
@@ -46,7 +46,7 @@ const removeFriend: SocketRequest = (socket, error): void => {
         returnDocument: "after"
       }),
 
-      chats.deleteOne({
+      $chats.deleteOne({
         players: {
           $all: [name, $playerSender.name]
         }
@@ -67,7 +67,7 @@ const removeFriend: SocketRequest = (socket, error): void => {
 
     socket.emit("removeFriendSender", {name});
 
-    io.to($playerReceiver.socketId).emit("removeFriendReceiver", {
+    server.io.to($playerReceiver.socketId).emit("removeFriendReceiver", {
       name: $accountSenderUpdate.value.name
     });
   });

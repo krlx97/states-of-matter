@@ -1,9 +1,9 @@
-import {mongo} from "apis";
+import {mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const selectDeck: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {players} = mongo;
+  const {$players} = mongo;
 
   socket.on("selectDeck", async (params) => {
     const {deckId} = params;
@@ -12,7 +12,7 @@ const selectDeck: SocketRequest = (socket, error): void => {
       return error("Invalid deck range.");
     }
 
-    const $playerUpdate = await players.updateOne({socketId}, {
+    const $playerUpdate = await $players.updateOne({socketId}, {
       $set: {deckId}
     });
 

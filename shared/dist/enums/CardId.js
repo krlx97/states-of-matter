@@ -41,6 +41,7 @@ var CardId;
     CardId[CardId["LIQUID_10"] = 131] = "LIQUID_10";
     CardId[CardId["LIQUID_11"] = 132] = "LIQUID_11";
     CardId[CardId["LIQUID_12"] = 133] = "LIQUID_12";
+    // Gas
     CardId[CardId["GAS_HERO"] = 150] = "GAS_HERO";
     CardId[CardId["GAS_1"] = 156] = "GAS_1";
     CardId[CardId["GAS_2"] = 157] = "GAS_2";
@@ -54,6 +55,7 @@ var CardId;
     CardId[CardId["GAS_10"] = 181] = "GAS_10";
     CardId[CardId["GAS_11"] = 182] = "GAS_11";
     CardId[CardId["GAS_12"] = 183] = "GAS_12";
+    // Plasma
     CardId[CardId["PLASMA_HERO"] = 200] = "PLASMA_HERO";
     CardId[CardId["PLASMA_1"] = 206] = "PLASMA_1";
     CardId[CardId["PLASMA_2"] = 207] = "PLASMA_2";

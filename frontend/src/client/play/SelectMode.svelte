@@ -1,7 +1,7 @@
 <script lang="ts">
   import {QueueId} from "@som/shared/enums";
   import {onDestroy, onMount} from "svelte";
-  import {modalService, socketService} from "services";
+  import {modalService, socketService, soundService} from "services";
   import {casualQueueJoinTime, playerStore, tutorialStore} from "stores";
   import {ProgressBarComponent} from "ui";
   import JoinLobby from "./modals/JoinLobby.svelte";
@@ -18,22 +18,27 @@
   let rank: string;
 
   const onMakeLobby = (): void => {
+    soundService.play("click");
     socketService.socket.emit("createLobby");
   };
 
   const onJoinLobby = (): void => {
+    soundService.play("click");
     modalService.open(JoinLobby);
   };
 
   const onJoinCasualQueue = (): void => {
+    soundService.play("click");
     socketService.socket.emit("joinQueue", {queueId: QueueId.CASUAL});
   };
 
   const onJoinRankedQueue = (): void => {
+    soundService.play("click");
     socketService.socket.emit("joinQueue", {queueId: QueueId.RANKED});
   };
 
   const onLeaveQueue = (): void => {
+    soundService.play("click");
     socketService.socket.emit("leaveQueue");
     clearInterval(interval);
     document.title = "States of Matter";
@@ -81,6 +86,7 @@
     height: 440px;
     width: 100%;
     display: flex;
+    padding: var(--spacing-xl);
     /* align-items: center; */
   }
 
@@ -90,8 +96,8 @@
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
-    line-height: 1.4;
-  font-size: var(--spacing-xlg);
+    line-height: 1.5;
+    font-size: var(--spacing-xlg);
   }
 
   .mode {
@@ -132,6 +138,8 @@ text-align: justify;
 
   .mode__actions {
     margin-top: var(--spacing-md);
+    display: flex;
+    justify-content: space-evenly;
   }
 
   .red {color: rgb(var(--red));}
@@ -156,6 +164,12 @@ text-align: justify;
         {:else}
           <h2>CASUAL</h2>
         {/if}
+
+        <div class="mode__info">
+          Jump into the casual queue and get matched with players of similar skill
+          level for fair and balanced play. Gain experience and earn rewards as you
+          level up, showcasing your progress to the world. Ready to have some fun?
+        </div>
 
         <div class="mode__stats">
           <table>
@@ -184,11 +198,7 @@ text-align: justify;
             }]}/>
           {/if}
         </div>
-        <!-- <div class="mode__info">
-          Jump into the casual queue and get matched with players of similar skill
-          level for fair and balanced play. Gain experience and earn rewards as you
-          level up, showcasing your progress to the world. Ready to have some fun?
-        </div> -->
+
         <div class="mode__actions">
           {#if isInCasualQueue}
             <button class="button" on:click={onLeaveQueue}>LEAVE</button>
@@ -206,6 +216,11 @@ text-align: justify;
         {:else}
           <h2>RANKED</h2>
         {/if}
+
+        <div class="mode__info">
+          Ready to show off your skills? Enter the Ranked queue and compete against other players of your skill level in a highly competitive environment. Rise through the ranks and earn rewards as you climb the ladder, showcasing your dominance to the world. So what are you waiting for? Step into the queue and prove you're the best!
+        </div>
+
         <div class="mode__stats">
           <div>
             <img class="rank__img" src="assets/ranks/{rank}.png" alt={rank}/>
@@ -245,10 +260,7 @@ text-align: justify;
           {/if}
 
         </div>
-        <!-- <div class="mode__info">
-        
-          Ready to show off your skills? Enter the Ranked queue and compete against other players of your skill level in a highly competitive environment. Rise through the ranks and earn rewards as you climb the ladder, showcasing your dominance to the world. So what are you waiting for? Step into the queue and prove you're the best!
-        </div> -->
+
         <div class="mode__actions">
           {#if isInRankedQueue}
             <button class="button" on:click={onLeaveQueue}>LEAVE</button>

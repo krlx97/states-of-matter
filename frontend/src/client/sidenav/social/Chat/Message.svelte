@@ -9,6 +9,8 @@
   $: isSender = message.name === $playerStore.name;
   $: isReceiver = message.name !== $playerStore.name;
 
+  console.log(message.name);
+
   const flyParams: FlyParams = {
     duration: 250,
     easing: quadInOut,
@@ -48,11 +50,7 @@
   }
 </style>
 
-<div class="message" class:isSender class:isReceiver in:fly={{
-    duration: 250,
-    easing: quadInOut,
-    x: isSender ? 64 : -64
-  }}>
+<div class="message" class:isSender class:isReceiver in:fly="{flyParams}">
   <div class="message__date">
     {new Date(message.date).toLocaleDateString()} | {new Date(message.date).toLocaleTimeString()}
   </div>

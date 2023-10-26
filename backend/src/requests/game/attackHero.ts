@@ -1,13 +1,13 @@
 import {EffectId} from "@som/shared/enums";
-import gameEngine from "helpers/game";
+import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const attackHero: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {triggerEffect} = gameEngine;
+  const {effect} = gameHelpers;
 
   socket.on("attackHero", async (params) => {
-    const [getGameData, getGameError] = await gameEngine.getGame(socketId);
+    const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
 
     if (!getGameData) {
       return error(getGameError);
@@ -17,6 +17,7 @@ const attackHero: SocketRequest = (socket, error): void => {
     const {$game, player, opponent} = getGameData;
     const playerMinion = player.minion[attacker];
     const opponentHero = opponent.hero;
+    const animations: any[] = [];
 
     if (!playerMinion) {
       return;
@@ -37,57 +38,72 @@ const attackHero: SocketRequest = (socket, error): void => {
     const {trap} = opponent;
 
     if (trap && trap.effect === EffectId.MIRRORS_EDGE) {
-      triggerEffect.mirrorsEdge({
+      animations.push(...effect.mirrorsEdge({
         player,
+        playerMinion,
         opponent,
-        minion: playerMinion,
-        trap
-      });
+        opponentTrap: trap
+      }));
 
-      if (await gameEngine.isGameOver($game)) { return; }
+      if (await gameHelpers.isGameOver($game)) { return; }
+    }
+
+    if (opponent.trap && opponent.trap.effect === EffectId.RICOCHET) {
+      animations.push(...effect.ricochet({
+        player,
+        playerMinion,
+        opponent,
+        opponentTrap: opponent.trap
+      }));
     }
 
     if (trap && trap.effect === EffectId.RETRIBUTION) {
-      gameEngine.triggerEffect.retribution({player, field: attacker});
+      gameHelpers.effect.retribution({player, field: attacker});
     }
 
     if (trap && trap.effect === EffectId.FROSTBITE) {
-      gameEngine.triggerEffect.frostbite({minion: playerMinion, player: opponent, trap: trap});
+      animations.push(...effect.frostbite({
+        player,
+        playerMinion,
+        playerMinionField: attacker,
+        opponent,
+        opponentTrap: trap
+      }));
     }
 
     if (trap && trap.effect === EffectId.RUSTY_NEEDLE) {
-      gameEngine.insertDebuff(playerMinion, EffectId.NEUROTOXIN);
+      gameHelpers.insertDebuff(playerMinion, EffectId.NEUROTOXIN);
     }
 
     if (trap && trap.effect === EffectId.NOXIOUS_FUMES) {
       const field = attacker;
-      triggerEffect.noxiousFumes({opponent: player, minion: playerMinion, field});
+      effect.noxiousFumes({opponent: player, minion: playerMinion, field});
     }
 
     if (trap && trap.effect === EffectId.EXPLOSIVE) {
       const field = attacker;
-      triggerEffect.explosive({player, opponent, trap, field});
+      effect.explosive({player, opponent, trap, field});
     }
 
     if (playerMinion.health && playerMinion.buffs.find((buff) => buff.id === EffectId.CORROSIVE_TOUCH)) {
-      gameEngine.triggerEffect.corrosiveTouch({opponent});
+      gameHelpers.effect.corrosiveTouch({opponent});
     }
 
     if (playerMinion.health && playerMinion.buffs.find((buff) => buff.id === EffectId.RAMPAGE)) {
-      triggerEffect.rampage({minion: playerMinion});
+      effect.rampage({minion: playerMinion});
     }
 
     if (playerMinion.health && playerMinion.buffs.find((buff) => buff.id === EffectId.BACKSTAB)) {
-      triggerEffect.backstab({opponent, minion: playerMinion});
+      effect.backstab({opponent, minion: playerMinion}); // only trigger, handle animation here
     }
 
     opponentHero.health -= playerMinion.damage;
 
-    if (await gameEngine.isGameOver($game)) {
+    if (await gameHelpers.isGameOver($game)) {
       return;
     }
 
-    await gameEngine.saveGame($game);
+    await gameHelpers.saveGame($game);
   });
 };
 

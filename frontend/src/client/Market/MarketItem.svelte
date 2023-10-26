@@ -1,15 +1,14 @@
 <script lang="ts">
-  import {utils} from "ethers";
   import {items} from "data";
   import {ethersService, modalService, socketService } from "services";
   import {playerStore} from "stores";
   import {CurrencyComponent, ItemComponent} from "ui";
   import BuyItemComponent from "./modals/BuyItem.svelte";
+    import { parseUnits } from "ethers";
 
   let item: any;
   let item2 = items.find(({id}) => id === parseInt(item.skinId))
 
-  console.log({item, item2});
   const onBuyItem = (): void => {
     modalService.open(BuyItemComponent, {item});
   };
@@ -59,17 +58,17 @@
       </tr>
       <tr>
         <td>PRICE</td>
-        <td><CurrencyComponent name="crystals" number={utils.parseUnits(item.price)}/></td>
+        <td><CurrencyComponent name="ecr" number={parseUnits(item.price)}/></td>
       </tr>
       <tr>
         <td>BUYOUT</td>
-        <td><CurrencyComponent name="crystals" number={utils.parseUnits(item.price).mul(utils.parseUnits(item.amount, 0))}/></td>
+        <td><CurrencyComponent name="ecr" number={parseUnits(item.price) * BigInt(item.amount)}/></td>
       </tr>
     </table>
     {#if item.sellerName === $playerStore.name}
-      <button on:click={onCancelItem}>CANCEL</button>
+      <button class="button" on:click={onCancelItem}>CANCEL</button>
     {:else}
-      <button on:click={onBuyItem}>BUY</button>
+      <button class="button" on:click={onBuyItem}>BUY</button>
     {/if}
   </div>
 </div>

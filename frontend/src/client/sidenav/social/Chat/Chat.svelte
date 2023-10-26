@@ -1,11 +1,12 @@
 <script lang="ts">
   import {afterUpdate} from "svelte";
-  import {slide} from "svelte/transition";
+  import {fade, slide} from "svelte/transition";
   import {modalService, socketService} from "services";
   import {accountStore} from "stores";
   import MessageComponent from "./Message.svelte";
   import RemoveFriendComponent from "../modals/RemoveFriend.svelte";
   import BlockFriendComponent from "../modals/BlockFriend.svelte";
+import { FormFieldComponent } from "ui";
 
   let text = "";
   let messagesElement: HTMLElement;
@@ -43,12 +44,19 @@
   .chat {
     position: absolute;
     bottom: 0;
-    right: 448px;
+    right: 437px;
     height: 640px;
     width: 480px;
     display: flex;
     flex-direction: column;
-    background-color: rgb(var(--light-grey));
+    background-color: rgba(31, 31, 31, 0.1);
+    border: 2px solid rgb(var(--grey));
+    border-radius: 8px;
+    /* background-color: rgb(var(--dark-grey)); */
+    backdrop-filter: blur(32px);
+    overflow: hidden;
+    /* remove!! */
+    z-index: 100;
   }
 
   .chat__header {
@@ -90,6 +98,8 @@
   .chat__form {
     width: 100%;
     flex-shrink: 1;
+padding: var(--spacing-md);
+    box-sizing: border-box;
   }
 
   .chat__form input {
@@ -102,17 +112,17 @@
 </style>
 
 {#if $accountStore.social.chat.isOpen}
-  <div class="chat" in:slide>
+  <div class="chat" in:slide out:fade>
     <div class="chat__header">
       <div class="chat__header__main">
-        <button class="button--icon" on:click={onRemoveFriend}>
+        <button class="button-icon" on:click={onRemoveFriend}>
           <i class="fa-solid fa-user-xmark"></i>
         </button>
-        <button class="button--icon" on:click={onBlockFriend}>
+        <button class="button-icon" on:click={onBlockFriend}>
           <i class="fa-sharp fa-solid fa-ban"></i>
         </button>
       </div>
-      <button class="button--icon" on:click={onChatClose}>
+      <button class="button-icon" on:click={onChatClose}>
         <i class="fa-solid fa-times"></i>
       </button>
     </div>
@@ -124,7 +134,7 @@
     </div>
 
     <form class="chat__form" on:submit|preventDefault={onSendMessage}>
-      <input placeholder="Message" bind:value={text}/>
+      <FormFieldComponent label="Message" bind:value={text}/>
     </form>
   </div>
 {/if}

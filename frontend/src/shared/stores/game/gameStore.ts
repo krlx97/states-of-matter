@@ -1,6 +1,6 @@
 import {writable} from "svelte/store";
 import {GameType} from "@som/shared/enums";
-import type {GameView} from "@som/shared/types/frontend";
+import type {GameView} from "@som/shared/types/views";
 
 export const gameStore = writable<GameView>({
   id: 0,

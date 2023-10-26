@@ -66,16 +66,13 @@
   }
 </style>
 
-<div
-  class="deck-card"
-  on:click={onRemoveFromDeck}
-  on:keypress={onRemoveFromDeck}
->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="deck-card" on:click="{onRemoveFromDeck}">
   <img
     class="deck-card__img"
     src="assets/cards/sm/{card.id}.jpg"
-    alt={card.name}
-  />
+    alt="{card.name}"/>
   <div class="deck-card__info">
     <div>{card.name}</div>
     <div>{card.amount} / 2</div>

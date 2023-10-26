@@ -1,17 +1,16 @@
 <script lang="ts">
-  import { playerStore } from "stores";
-import DeckCardsComponent from "./DeckCards.svelte";
+  import {playerStore, tutorialStore} from "stores";
+  import {TutorialComponent} from "ui";
+  import DeckCardsComponent from "./DeckCards.svelte";
   import DeckSlotsComponent from "./DeckSlots.svelte";
   import HeroCardsComponent from "./HeroCards.svelte";
   import KlassCardsComponent from "./KlassCards.svelte";
   import SelectedDeckComponent from "./SelectedDeck.svelte";
-    import { TutorialComponent } from "ui";
-    import { tutorialStore } from "stores";
-    import DeckBuilderTutorial1 from "./tutorial/DeckBuilderTutorial1.svelte";
-    import DeckBuilderTutorial2 from "./tutorial/DeckBuilderTutorial2.svelte";
-    import DeckBuilderTutorial3 from "./tutorial/DeckBuilderTutorial3.svelte";
-    import DeckBuilderTutorial4 from "./tutorial/DeckBuilderTutorial4.svelte";
-    import DeckBuilderTutorial5 from "./tutorial/DeckBuilderTutorial5.svelte";
+  import DeckBuilderTutorial1 from "./tutorial/DeckBuilderTutorial1.svelte";
+  import DeckBuilderTutorial2 from "./tutorial/DeckBuilderTutorial2.svelte";
+  import DeckBuilderTutorial3 from "./tutorial/DeckBuilderTutorial3.svelte";
+  import DeckBuilderTutorial4 from "./tutorial/DeckBuilderTutorial4.svelte";
+  import DeckBuilderTutorial5 from "./tutorial/DeckBuilderTutorial5.svelte";
 
   $: isTutorial = $tutorialStore.name === "deckBuilder" && $tutorialStore.currentStep === 4;
 
@@ -32,7 +31,7 @@ import DeckCardsComponent from "./DeckCards.svelte";
 
   .deck-builder__inner {
     display: flex;
-    gap: var(--spacing-xlg);
+    gap: var(--spacing-xl);
   }
 
 .isTutorial {
@@ -44,7 +43,7 @@ import DeckCardsComponent from "./DeckCards.svelte";
 <div class="deck-builder">
   <div class="deck-builder__inner">
     <div class:isTutorial>
-      <SelectedDeckComponent on:toggleDeckSlots={onToggleDeckSlots}/>
+      <SelectedDeckComponent on:toggleDeckSlots="{onToggleDeckSlots}"/>
       {#if areDeckSlotsVisible}
         <DeckSlotsComponent/>
       {:else}
@@ -58,7 +57,7 @@ import DeckCardsComponent from "./DeckCards.svelte";
   </div>
 </div>
 {#if !$playerStore.tutorial.deckBuilder}
-  <TutorialComponent tutorial="deckBuilder" steps={[{
+  <TutorialComponent tutorial="deckBuilder" steps="{[{
     position: "top: 50%; left: 50%; transform: translate(-50%, -50%)",
     component: DeckBuilderTutorial1
   }, {
@@ -73,5 +72,5 @@ import DeckCardsComponent from "./DeckCards.svelte";
   }, {
     position: "top: 118px; left: 560px;",
     component: DeckBuilderTutorial5
-  }]}/>
+  }]}"/>
 {/if}

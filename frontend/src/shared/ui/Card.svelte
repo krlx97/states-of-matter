@@ -21,6 +21,7 @@
 
   const onToggleKlassTooltip = (): void => {
     isToggled = !isToggled;
+    klassTooltip.style.zIndex = isToggled ? "10" : "-1";
     klassTooltip.style.opacity = isToggled ? "1" : "0";
   };
 
@@ -58,6 +59,10 @@
     /* overflow: hidden; */
     height: var(--card-height);
     width: var(--card-width);
+    border: 2px solid rgb(127, 127, 127);
+    border-radius: 8px;
+    /* box-sizing: border-box; */
+    overflow: hidden;
   }
 
   .card:hover {
@@ -92,7 +97,7 @@
     position: absolute;
     top: 3px;
     right: 3px;
-    z-index: 7;
+    z-index: 11;
   }
 
   .card__klass__tooltip {
@@ -105,16 +110,16 @@
     width: var(--card-width);
     /* height: 136px;
     width: 108px; */
-    padding: var(--spacing-xsm);
+    padding: var(--spacing-xs);
     opacity: 0;
     /* background-color: rgba(32, 32, 32, 0.95); */
     /* backdrop-filter: blur(32px); */
-    background-color: rgba(32, 32, 32, 0.98);
+    background-color: rgba(32, 32, 32, 0.95);
     box-sizing: border-box;
-    border: 1px solid rgb(102, 102, 102);
-    border-radius: 6px;
+    /* border: 1px solid rgb(102, 102, 102); */
+    border-radius: 8px;
     /* text-align: justify; */
-    z-index: 6;
+    z-index: -1;
     line-height: 1.5;
     font-size: var(--font-sm);
     transition: opacity 250ms cubic-bezier(var(--ease-in-out-quad));
@@ -190,7 +195,7 @@
     left: 50%;
     height: 136px;
     width: 108px;
-    padding: var(--spacing-xsm);
+    padding: var(--spacing-xs);
     display: none;
     background-color: rgba(32, 32, 32, 0.95);
     box-sizing: border-box;
@@ -198,8 +203,6 @@
     transform: translateX(-50%);
     z-index: 0;
   }
-
-  
 
   .card__avatar {
     position: absolute;
@@ -212,6 +215,7 @@
   }
 </style>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="card">
   <div class="card__type">
     {#if card.type === CardType.HERO}
@@ -236,6 +240,7 @@
     </div>
   </div>
 
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div class="card__klass" on:click={onToggleKlassTooltip}>
     {#if card.klass === CardKlass.SOLID}
       <img src="assets/classes/24/{CardKlass.SOLID}.png" alt="Solid"/>
@@ -252,7 +257,7 @@
     <div class="card__klass__tooltip" bind:this={klassTooltip}>
       {cardView ? cardView.effect.name : "nema"}
       <hr/>
-      {@html cardView.effect.description}
+      {@html cardView.effect.description || ""}
     </div>
 
   <div class="card__name">{cardView ? cardView.name : "nema"}</div>

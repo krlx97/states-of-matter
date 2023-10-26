@@ -9,8 +9,7 @@
     display: flex;
     align-items: center;
     margin: var(--spacing-xsm) 0;
-    /* justify-content: center; */
-  }
+      }
 
   .icon img {
     margin-right: var(--spacing-xsm);
@@ -28,7 +27,8 @@
   Classes:
   <br/>
   <div class="icon">
-    <img src="assets/classes/24/0.png" alt="Neutral"/> Neutral (General Purpose)<br/>
+    <img src="assets/classes/24/0.png" alt="Neutral"/>
+    Neutral (General Purpose)<br/>
   </div>
   <div class="icon">
     <img src="assets/classes/24/1.png" alt="Solid"/> Solid (Durability)<br/>

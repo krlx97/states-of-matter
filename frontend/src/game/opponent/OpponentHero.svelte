@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {socketService} from "services";
+  import {socketService, soundService} from "services";
   import {gameStore, selectedCardStore, playerStore} from "stores";
   import {CardComponent} from "ui";
 
@@ -11,6 +11,7 @@
     if ($gameStore.currentPlayer !== $playerStore.name) { return; }
     if (!attacker) { return; }
 
+    soundService.play("directAttack");
     socketService.socket.emit("attackHero", {attacker});
   };
 </script>

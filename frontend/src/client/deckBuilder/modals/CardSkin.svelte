@@ -37,6 +37,7 @@
     border-radius: 50%;
     overflow: hidden;
   }
+
   .skin:hover {
     border-color: white;
   }
@@ -62,12 +63,15 @@
     width: 64px;
     /* z-index: 9; */
   }
+
 .skin:first-child {
     margin-left: 0;
   }
 </style>
 
-<div class="skin" on:click={onSelectSkin} on:keypress={onSelectSkin}>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="skin" on:click="{onSelectSkin}">
   {#if !doesOwn()}
     <div class="skin--disabled">
       <i class="fa-solid fa-lock"></i>

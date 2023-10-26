@@ -3,7 +3,7 @@ import {addFriend} from "./addFriend";
 import {blockFriend} from "./blockFriend";
 import {declineFriend} from "./declineFriend";
 import {removeFriend} from "./removeFriend";
-import {sendChatMsg} from "./sendChatMsg";
+import {sendChatMessage} from "./sendChatMessage";
 import {setAvatar} from "./setAvatar";
 import {unblockFriend} from "./unblockFriend";
 import {updateStatus} from "./updateStatus";
@@ -14,7 +14,7 @@ const sidenav = [
   blockFriend,
   declineFriend,
   removeFriend,
-  sendChatMsg,
+  sendChatMessage,
   setAvatar,
   unblockFriend,
   updateStatus

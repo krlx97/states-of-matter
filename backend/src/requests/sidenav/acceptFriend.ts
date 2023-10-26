@@ -1,18 +1,18 @@
-import {mongo, server} from "apis";
+import {mongo, server} from "app";
 import type {UpdateFilter} from "mongodb";
-import type {Account, SocketRequest} from "@som/shared/types/backend";
+import type {SocketRequest} from "@som/shared/types/backend";
+import type {Account} from "@som/shared/types/mongo";
 
 const acceptFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, chats, players} = mongo;
-  const {io} = server;
+  const {$accounts, $chats, $players} = mongo;
 
   socket.on("acceptFriend", async (params) => {
     const {name} = params;
 
     const [$playerSender, $playerReceiver] = await Promise.all([
-      players.findOne({socketId}),
-      players.findOne({name})
+      $players.findOne({socketId}),
+      $players.findOne({name})
     ]);
 
     if (!$playerSender) {
@@ -24,7 +24,7 @@ const acceptFriend: SocketRequest = (socket, error): void => {
     }
 
     const [$accountSender, $accountReceiver, $chatInsert] = await Promise.all([
-      accounts.findOneAndUpdate({
+      $accounts.findOneAndUpdate({
         name: $playerSender.name
       }, {
         $pull: {
@@ -37,7 +37,7 @@ const acceptFriend: SocketRequest = (socket, error): void => {
         returnDocument: "after"
       }),
 
-      accounts.findOneAndUpdate({name}, {
+      $accounts.findOneAndUpdate({name}, {
         $push: {
           "social.friends": $playerSender.name
         }
@@ -45,7 +45,7 @@ const acceptFriend: SocketRequest = (socket, error): void => {
         returnDocument: "after"
       }),
 
-      chats.insertOne({
+      $chats.insertOne({
         players: [$playerSender.name, $playerReceiver.name],
         messages: []
       })
@@ -69,7 +69,7 @@ const acceptFriend: SocketRequest = (socket, error): void => {
       status: $playerReceiver.status
     });
 
-    io.to($playerReceiver.socketId).emit("acceptFriendReceiver", {
+    server.io.to($playerReceiver.socketId).emit("acceptFriendReceiver", {
       name: $playerSender.name,
       avatarId: $accountSender.value.avatarId,
       status: $playerSender.status

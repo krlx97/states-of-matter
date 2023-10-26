@@ -1,17 +1,16 @@
-import {mongo, server} from "apis";
+import {mongo, server} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const addFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, players} = mongo;
-  const {io} = server;
+  const {$accounts, $players} = mongo;
 
   socket.on("addFriend", async (params) => {
     const {name} = params;
 
     const [$playerSender, $playerReceiver] = await Promise.all([
-      players.findOne({socketId}),
-      players.findOne({name})
+      $players.findOne({socketId}),
+      $players.findOne({name})
     ]);
 
     if (!$playerSender) {
@@ -23,8 +22,8 @@ const addFriend: SocketRequest = (socket, error): void => {
     }
 
     const [$accountSender, $accountReceiver] = await Promise.all([
-      accounts.findOne({name: $playerSender.name}),
-      accounts.findOne({name: $playerReceiver.name})
+      $accounts.findOne({name: $playerSender.name}),
+      $accounts.findOne({name: $playerReceiver.name})
     ]);
 
     if (!$accountSender) {
@@ -59,7 +58,7 @@ const addFriend: SocketRequest = (socket, error): void => {
       return error("This player is already your friend.");
     }
 
-    const $playerUpdate = await accounts.updateOne({name}, {
+    const $playerUpdate = await $accounts.updateOne({name}, {
       $push: {
         "social.requests": $accountSender.name
       }
@@ -71,7 +70,7 @@ const addFriend: SocketRequest = (socket, error): void => {
 
     socket.emit("notification", "Friend request sent.");
 
-    io.to($playerReceiver.socketId).emit("addFriend", {
+    server.io.to($playerReceiver.socketId).emit("addFriend", {
       name: $accountSender.name
     });
   });

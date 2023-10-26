@@ -4,17 +4,16 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
+    "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
+    "isolatedModules": true,
     "baseUrl": ".",
-    "resolveJsonModule": true,
     "paths": {
       "data": ["src/shared/data"],
-      "models": ["src/shared/models"],
       "responses": ["src/shared/responses"],
       "services": ["src/shared/services"],
       "stores": ["src/shared/stores"],
-      "validators": ["src/shared/validators"],
       "ui": ["src/shared/ui"]
     }
   },

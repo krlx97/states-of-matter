@@ -1,19 +1,19 @@
-import {mongo} from "apis";
+import {mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const defaultSkin: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {players} = mongo;
+  const {$players} = mongo;
 
   socket.on("defaultSkin", async (params) => {
-    const $player = await players.findOne({socketId});
+    const $player = await $players.findOne({socketId});
 
     if (!$player) {
       return error("Player not found, try relogging.");
     }
 
     const {cardId} = params;
-    const $playerUpdate = await players.updateOne({socketId}, {
+    const $playerUpdate = await $players.updateOne({socketId}, {
       $pull: {
         skins: {cardId}
       }

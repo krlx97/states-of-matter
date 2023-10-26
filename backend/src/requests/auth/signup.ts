@@ -1,11 +1,11 @@
 import {hash} from "bcrypt";
 import {cards} from "@som/shared/data";
 import {PlayerStatus, QueueId} from "@som/shared/enums";
-import {mongo} from "apis";
+import {mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const signup: SocketRequest = (socket, error): void => {
-  const {accounts, players} = mongo;
+  const {$accounts, $players} = mongo;
 
   socket.on("signup", async (params) => {
     const {name, password} = params;
@@ -14,7 +14,7 @@ const signup: SocketRequest = (socket, error): void => {
       return error("Maximum 16 characters.");
     }
 
-    const $account = await accounts.findOne({name});
+    const $account = await $accounts.findOne({name});
 
     if ($account) {
       return error("Name taken.");
@@ -23,7 +23,7 @@ const signup: SocketRequest = (socket, error): void => {
     const passwordHash = await hash(password, 12);
 
     const [insertAccount, insertPlayer] = await Promise.all([
-      accounts.insertOne({
+      $accounts.insertOne({
         name,
         passwordHash,
         publicKey: "",
@@ -35,7 +35,7 @@ const signup: SocketRequest = (socket, error): void => {
           blocked: []
         }
       }),
-      players.insertOne({
+      $players.insertOne({
         socketId: "",
         name,
         experience: 0,
@@ -63,14 +63,14 @@ const signup: SocketRequest = (socket, error): void => {
           deckBuilder: false,
           game: false,
           play: false,
-          wallet: false
+          inventory: false
         }
       })
     ]);
 
     if (!insertAccount.insertedId) {
       if (insertPlayer.insertedId) {
-        await mongo.players.deleteOne({
+        await $players.deleteOne({
           _id: insertPlayer.insertedId
         });
       }
@@ -80,7 +80,7 @@ const signup: SocketRequest = (socket, error): void => {
 
     if (!insertPlayer.insertedId) {
       if (insertAccount.insertedId) {
-        await mongo.accounts.deleteOne({
+        await $accounts.deleteOne({
           _id: insertAccount.insertedId
         });
       }

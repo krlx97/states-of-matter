@@ -21,10 +21,10 @@
     /* border-radius: 8px; */
   }
 
-  .green {background-color: rgb(133, 199, 0)}
-  .red {background-color: rgb(var(--red));}
-  .blue {background-color: rgb(0, 174, 191)}
-  .purple {background-color: rgb(var(--main)); box-shadow: 0 0 4px 0 rgb(var(--main));}
+  .green {background-color: rgb(var(--gas))}
+  .red {background-color: rgb(var(--solid));}
+  .blue {background-color: rgb(var(--liquid))}
+  .purple {background-color: rgb(var(--plasma))}
   .grey {
     background-color: rgb(127, 127, 127);
   }

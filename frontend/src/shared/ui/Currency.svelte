@@ -1,11 +1,11 @@
 <script lang="ts">
-  import {BigNumber, ethers} from "ethers";
+  import {formatUnits} from "ethers"
 
-  const {utils} = ethers;
-  let name: "crystals" | "essence";
-  let number: BigNumber;
+  let name: "ese" | "ecr" | "wtlos" | "lpecr" | "tlos";
+  let number: bigint;
+  let isIconVisible = true;
 
-  export {name, number};
+  export {name, number, isIconVisible};
 </script>
 
 <style>
@@ -38,7 +38,19 @@
 </style>
 
 <div class="currency">
-  {utils.formatUnits(number.sub(number.mod(1e14)))}
-  <img src="assets/currencies/sm/{name}.png" alt={name}/>
-  <div class="currency__full">{utils.formatUnits(number)}</div>
+  {#if name === "ese"}
+    {number}
+  {:else}
+    {parseFloat(formatUnits(number.toString())).toFixed(3)}
+  {/if}
+  {#if isIconVisible}
+    <img src="assets/currencies/xs/{name}.png" alt="{name}"/>
+  {/if}
+  <div class="currency__full">
+    {#if name === "ese"}
+      {number}
+    {:else}
+      {formatUnits(number.toString())}
+    {/if}
+  </div>
 </div>

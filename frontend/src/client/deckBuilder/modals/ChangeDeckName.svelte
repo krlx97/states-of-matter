@@ -1,52 +1,35 @@
 <script lang="ts">
-  import {modalService} from "services";
+  import {formService, modalService} from "services";
   import {deckStore} from "stores";
-  import {ModalComponent} from "ui";
+  import {FormFieldComponent, ModalComponent} from "ui";
 
-  const errors = {
-    name: {
-      length: true
-    }
+  const formStore = formService.create({
+    name: ["", "name"]
+  });
+
+  const onInput = (): void => {
+    formService.validate(formStore);
   };
 
-  let name = "";
-  let disabled = true;
-
-  const validateInput = (): void => {
-    errors.name.length = name.length >= 1;
-    disabled = !errors.name.length;
-  };
-
-  const onSetDeckName = (): void => {
-    $deckStore.name = name;
+  const onSubmit = (): void => {
+    $deckStore.name = $formStore.fields.name.value;
     modalService.close();
   };
 </script>
 
-<style>
-  form {
-    width: 320px;
-  }
-</style>
-
 <ModalComponent>
-  <form on:submit|preventDefault={onSetDeckName}>
-    <label>
-      <div class="label__title">Deck name</div>
-      <input
-        placeholder="Deck name"
-        maxlength="12"
-        required
-        bind:value={name}
-        on:input={validateInput}
-        on:change={validateInput}
-      />
-      {#if !errors.name.length}
-        <div class="label__error">Minimum 1 character.</div>
-      {/if}
-    </label>
+  <div class="modal">
+    <form on:submit|preventDefault="{onSubmit}">
+    <FormFieldComponent
+        label="Deck name"
+        error="{$formStore.fields.name.error}"
+        bind:value="{$formStore.fields.name.value}"
+        on:input="{onInput}"/>
     <div class="form__submit">
-      <button class="button" {disabled}>CHANGE</button>
+      <button class="button" disabled="{$formStore.isDisabled}">
+          CHANGE
+        </button>
     </div>
   </form>
+</div>
 </ModalComponent>

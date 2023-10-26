@@ -139,7 +139,7 @@ const cardsView = new Map([
             effect: {
                 name: "Diminish",
                 description: colors `
-        Target enemy minion loses ${["orange", "2 danage"]}.
+        Target enemy minion loses ${["orange", "2 damage"]}.
       `
             },
             skins: []
@@ -830,6 +830,6 @@ const cardsView = new Map([
                 description: "Reduce attacking Minions damage to 1."
             },
             skins: []
-        }],
+        }]
 ]);
 export { cardsView };

@@ -1,5 +1,4 @@
 import {writable} from "svelte/store";
-import type {Card, Field} from "@som/shared/types/frontend";
 
 interface SelectedCard {
   field: "a" | "b" | "c" | "d" | undefined;

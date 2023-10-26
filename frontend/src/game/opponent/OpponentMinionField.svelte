@@ -3,7 +3,7 @@
   import {create_in_transition} from "svelte/internal";
   import {cards} from "@som/shared/data";
   import {cardEffectNames} from "data";
-  import {socketService} from "services";
+  import {socketService, soundService} from "services";
   import {floatingTextStore, gameStore, nodeStore, playerStore, selectedCardStore} from "stores";
   import {CardComponent} from "ui";
   import FloatingText from "../FloatingText.svelte";

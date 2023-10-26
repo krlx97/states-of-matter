@@ -1,4 +1,4 @@
-import {mongo} from "apis";
+import {mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 /**
@@ -9,10 +9,10 @@ import type {SocketRequest} from "@som/shared/types/backend";
 **/
 
 const getLeaderboards: SocketRequest = (socket, error): void => {
-  const {accounts, players} = mongo;
+  const {$accounts, $players} = mongo;
 
   socket.on("getLeaderboards", async () => {
-    const byLevel = (await players
+    const byLevel = (await $players
       .find()
       .limit(100)
       .sort({
@@ -22,13 +22,13 @@ const getLeaderboards: SocketRequest = (socket, error): void => {
     ).map(({name, level}) => ({name, level, avatarId: 1}));
 
     for (let i = 0; i < byLevel.length; i += 1) {
-      const $account = await accounts.findOne({name: byLevel[i].name});
+      const $account = await $accounts.findOne({name: byLevel[i].name});
       if (!$account) { return; }
       const {avatarId} = $account;
       byLevel[i].avatarId = avatarId;
     }
 
-    const byElo = (await players
+    const byElo = (await $players
       .find()
       .limit(100)
       .sort({
@@ -38,7 +38,7 @@ const getLeaderboards: SocketRequest = (socket, error): void => {
     ).map(({name, elo}) => ({name, elo, avatarId: 1}));
 
     for (let i = 0; i < byElo.length; i += 1) {
-      const $account = await accounts.findOne({name: byElo[i].name});
+      const $account = await $accounts.findOne({name: byElo[i].name});
       if (!$account) { return; }
       const {avatarId} = $account;
       byElo[i].avatarId = avatarId;

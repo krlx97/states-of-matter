@@ -1,17 +1,16 @@
-import {mongo, server} from "apis";
+import {mongo, server} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const blockFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, chats, players} = mongo;
-  const {io} = server;
+  const {$accounts, $chats, $players} = mongo;
 
   socket.on("blockFriend", async (params) => {
     const {name} = params;
 
     const [$playerSender, $playerReceiver] = await Promise.all([
-      players.findOne({socketId}),
-      players.findOne({name})
+      $players.findOne({socketId}),
+      $players.findOne({name})
     ]);
 
     if (!$playerSender) {
@@ -27,7 +26,7 @@ const blockFriend: SocketRequest = (socket, error): void => {
       $accountReceiverUpdate,
       $chatDelete
     ] = await Promise.all([
-      accounts.updateOne({
+      $accounts.updateOne({
         name: $playerSender.name
       }, {
         $pull: {
@@ -38,7 +37,7 @@ const blockFriend: SocketRequest = (socket, error): void => {
         }
       }),
 
-      accounts.updateOne({
+      $accounts.updateOne({
         name: $playerReceiver.name
       }, {
         $pull: {
@@ -46,7 +45,7 @@ const blockFriend: SocketRequest = (socket, error): void => {
         }
       }),
 
-      chats.deleteOne({
+      $chats.deleteOne({
         players: {
           $all: [$playerReceiver.name, $playerSender.name]
         }
@@ -67,7 +66,7 @@ const blockFriend: SocketRequest = (socket, error): void => {
 
     socket.emit("blockFriendSender", {name});
 
-    io.to($playerReceiver.socketId).emit("blockFriendReceiver", {
+    server.io.to($playerReceiver.socketId).emit("blockFriendReceiver", {
       name: $playerSender.username
     });
   });

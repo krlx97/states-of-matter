@@ -110,10 +110,10 @@
     <div class="social__section__toolbar">
       <div>Friends <b>{$accountStore.social.friends.length}</b></div>
       <div class="social__section__toolbar__actions">
-        <button class="button--icon" on:click={onAddFriend}>
+        <button class="button-icon" on:click={onAddFriend}>
           <i class="fa-solid fa-user-plus"></i>
         </button>
-        <button class="button--icon" on:click={onToggleFriends}>
+        <button class="button-icon" on:click={onToggleFriends}>
           <i
             class="fa-solid fa-chevron-down chevron"
             bind:this={friendsToggleIcon}
@@ -137,7 +137,7 @@
   <div class="social__section">
     <div class="social__section__toolbar">
       <div>Requests <b>{$accountStore.social.requests.length}</b></div>
-      <button class="button--icon" on:click={toggleRequests}>
+      <button class="button-icon" on:click={toggleRequests}>
         <i
           class="fa-solid fa-chevron-down chevron"
           bind:this={requestsToggleIcon}
@@ -160,7 +160,7 @@
   <div class="social__section">
     <div class="social__section__toolbar">
       <div>Blocked <b>{$accountStore.social.blocked.length}</b></div>
-      <button class="button--icon" on:click={toggleBlocked}>
+      <button class="button-icon" on:click={toggleBlocked}>
         <i
           class="fa-solid fa-chevron-down chevron"
           bind:this={blockedToggleIcon}

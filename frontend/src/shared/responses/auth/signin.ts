@@ -21,7 +21,7 @@ const signin = (): void => {
 
     if (accountFrontend.publicKey) {
       ethersService.key = accountFrontend.publicKey;
-      await ethersService.loadUser();
+      await ethersService.reloadUser();
     }
 
     if (lobbyFrontend) {

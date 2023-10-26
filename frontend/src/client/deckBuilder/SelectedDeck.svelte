@@ -90,19 +90,22 @@
       <div>{$deckStore.cardsInDeck}/30</div>
     </div>
 
-    <ProgressBarComponent bars={[{color: "purple", progress}]}/>
+    <ProgressBarComponent bars="{[{
+      color: "purple",
+      progress
+    }]}"/>
 
     <div class="selected-deck__info__actions">
-      <button class="button--icon" on:click={clearDeck}>
+      <button class="button-icon" on:click="{clearDeck}">
         <i class="fa-solid fa-trash"></i>
       </button>
-      <button class="button--icon" on:click={changeDeckName}>
+      <button class="button-icon" on:click="{changeDeckName}">
         <i class="fa-solid fa-pen-to-square"></i>
       </button>
-      <button class="button--icon" on:click={saveDeck}>
+      <button class="button-icon" on:click="{saveDeck}">
         <i class="fa-solid fa-floppy-disk"></i>
       </button>
-      <button class="button--icon" on:click={switchDeck}>
+      <button class="button-icon" on:click="{switchDeck}">
         <i class="fa-solid fa-arrows-rotate"></i>
       </button>
     </div>

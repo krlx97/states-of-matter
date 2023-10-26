@@ -40,7 +40,7 @@ enum CardId {
   LIQUID_10 = 131,
   LIQUID_11,
   LIQUID_12,
-
+  // Gas
   GAS_HERO = 150,
   GAS_1 = 156,
   GAS_2,
@@ -54,6 +54,7 @@ enum CardId {
   GAS_10 = 181,
   GAS_11,
   GAS_12,
+  // Plasma
   PLASMA_HERO = 200,
   PLASMA_1 = 206,
   PLASMA_2,

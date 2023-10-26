@@ -1,20 +1,20 @@
 import {items} from "@som/shared/data";
-import {contracts, mongo} from "apis";
+import {contracts, mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const selectSkin: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, players} = mongo;
+  const {$accounts, $players} = mongo;
 
   socket.on("selectSkin", async (params) => {
-    const $player = await players.findOne({socketId});
+    const $player = await $players.findOne({socketId});
 
     if (!$player) {
       return error("Player not found.");
     }
 
     const {name} = $player;
-    const $account = await accounts.findOne({name});
+    const $account = await $accounts.findOne({name});
 
     if (!$account) {
       return error("Account not found.");
@@ -33,7 +33,7 @@ const selectSkin: SocketRequest = (socket, error): void => {
       return error("You do not own the skin.");
     }
 
-    const $playerUpdate = await players.updateOne({
+    const $playerUpdate = await $players.updateOne({
       socketId,
       "skins.cardId": item.cardId
     }, {
@@ -45,7 +45,7 @@ const selectSkin: SocketRequest = (socket, error): void => {
     if (!$playerUpdate.modifiedCount) {
       // most likely failed because skins.$ object not found, in that case add
       // it instead.
-      const $playerUpdate2 = await players.updateOne({socketId}, {
+      const $playerUpdate2 = await $players.updateOne({socketId}, {
         $addToSet: {
           skins: {cardId: item.cardId, skinId: id}
         }

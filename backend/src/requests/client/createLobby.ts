@@ -1,16 +1,16 @@
 import {randomInt} from "crypto";
 import {PlayerStatus} from "@som/shared/enums";
-import {mongo} from "apis";
-import {isDeckValid} from "helpers/player";
+import {mongo} from "app";
+import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
-import type {LobbyView} from "@som/shared/types/frontend";
+import type {LobbyView} from "@som/shared/types/views";
 
 const createLobby: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, players, lobbies} = mongo;
+  const {$accounts, $players, $lobbies} = mongo;
 
   socket.on("createLobby", async () => {
-    const $player = await players.findOne({socketId});
+    const $player = await $players.findOne({socketId});
 
     if (!$player) {
       return error("Player not found, try relogging.");
@@ -24,12 +24,12 @@ const createLobby: SocketRequest = (socket, error): void => {
     if ($player.queueId) {
       return error("Can't make a lobby while in queue.");
     }
-    if (!isDeckValid($player.decks[$player.deckId])) {
+    if (!playerHelpers.isDeckValid($player.decks[$player.deckId])) {
       return error("Invalid deck.");
     }
 
     const {name} = $player;
-    const $account = await accounts.findOne({name});
+    const $account = await $accounts.findOne({name});
 
     if (!$account) {
       return error("Account not found, try relogging.");
@@ -47,8 +47,8 @@ const createLobby: SocketRequest = (socket, error): void => {
     }
 
     const [$lobbyInsert, $playerUpdate] = await Promise.all([
-      lobbies.insertOne(lobby),
-      players.updateOne({socketId}, {
+      $lobbies.insertOne(lobby),
+      $players.updateOne({socketId}, {
         $set: {
           lobbyId: id,
           status: PlayerStatus.IN_LOBBY

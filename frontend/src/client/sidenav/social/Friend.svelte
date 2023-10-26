@@ -21,9 +21,12 @@
 
 <style>
   .friend {
-    padding: var(--spacing-md);
+    height: 96px;
+    width: 384px;
+    padding: var(--spacing-md) 3em;
     display: flex;
     align-items: center;
+box-sizing: border-box;
     /* background: linear-gradient(
       180deg,
       rgba(179, 105, 244, 0.1) 0%,
@@ -39,8 +42,8 @@
       rgba(255, 255, 255, 1) 50%,
       rgba(63, 63, 63, 1) 100%
     ) 1; */
-    background-image: url(assets/avatars/11.png);
-    border-radius: 6px;
+    background-image: url(assets/banners/1.png);
+    /* border-radius: 6px; */
   }
 
   .friend__info {
@@ -68,7 +71,7 @@
     {/if}
   </div>
 
-  <button class="button--icon" on:click={onChat}>
+  <button class="button-icon" on:click={onChat}>
     <i class="fa-solid fa-comment"></i>
   </button>
 </div>

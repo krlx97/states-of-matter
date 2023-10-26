@@ -193,9 +193,10 @@ height: var(--card-height);
 </style>
 
 <div class="field" bind:this={fieldElement}>
-  {#each $floatingTextStore.player[field] as text}
-    <FloatingText {text}/>
-  {/each}
+  {#if $floatingTextStore.player[field]}
+    <FloatingText {field}/>
+  {/if}
+
   {#if minion}
     <div class="wtfff" class:isSelected on:click={onAttackSelect} on:keypress={onAttackSelect} bind:this={cardElement}>
       <div class="buffs">
@@ -208,10 +209,10 @@ height: var(--card-height);
       </div>
       <CardComponent card={minion} isClient={false}/>
     </div>
-  <!-- {:else} -->
-  {/if}
+  {:else}
     <div class="field-empty" class:isSummonable on:click={onPlayCard} on:keypress={onPlayCard}>
       {field}
     </div>
+  {/if}
   <div class="damage-dealt" bind:this={damageDealtElement}>3</div>
 </div>

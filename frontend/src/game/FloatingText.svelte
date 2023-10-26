@@ -1,51 +1,51 @@
 <script lang="ts">
   import {onMount} from "svelte";
+  import {floatingTextStore} from "stores";
 
   let floatingText: HTMLDivElement;
-  let text: any;
+  let field: any;
+  let frame = 0;
+  let opacity = 1;
 
   const anime = (ts: number): void => {
-    floatingText.style.transform = `translateY(-${text.frame / 5}px)`;
+    floatingText.style.transform = `translateY(-${frame / 2}px)`;
 
-    if (text.frame >= 210) {
-      text.opacity -= 1 / 210;
-      floatingText.style.opacity = text.opacity.toString();
+    if (frame >= 210) {
+      opacity -= 1 / 210;
+      floatingText.style.opacity = opacity.toString();
     }
 
-    text.frame += 1;
+    frame += 1;
 
-    if (text.frame <= 420) {
-      text.animationId = requestAnimationFrame(anime);
+    if (frame <= 420) {
+      requestAnimationFrame(anime);
     } else {
-      cancelAnimationFrame(text.animationId);
-      floatingText.remove();
+      $floatingTextStore.player[field] = "";
     }
   };
 
   onMount((): void => {
-    floatingText.style.left = `${text.left}px`;
-
-    text.animationId = requestAnimationFrame(anime);
+    requestAnimationFrame(anime);
   });
 
-  export {text};
+  export {field};
 </script>
 
 <style>
   .floating-text {
     position: absolute;
     bottom: 0;
-    left: 0;
+    left: 50%;
     padding: 0.5em;
     display: flex;
     align-items: center;
-    background-color: rgb(var(--light-grey));
-    border-radius: 4px;
-    box-shadow: var(--elevation-sm);
+    background-color: rgb(var(--dark-grey));
+    transform: translateX(-50%);
+    border-radius: 8px;
     z-index: 1000;
   }
 </style>
 
 <div class="floating-text" bind:this={floatingText}>
-  {@html text.text}
+  {@html $floatingTextStore.player[field]}
 </div>

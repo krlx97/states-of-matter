@@ -1,27 +1,31 @@
 import {CardKlass, EffectId} from "@som/shared/enums";
-import gameEngine from "helpers/game";
+import {Animations} from "@som/shared/types/game";
+import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
-import { getRandomMinion } from "helpers/game/getRandomMinion";
-import { deductHealth } from "helpers/game/deductHealth";
-import { deductHealth2 } from "helpers/game/deductHealth2";
-import { insertDebuff } from "helpers/game/insertDebuff";
+import { Field } from "@som/shared/types/mongo";
 
 const attackMinion: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {triggerEffect} = gameEngine;
+  const {effect} = gameHelpers;
 
   socket.on("attackMinion", async (params) => {
-    const [getGameData, getGameError] = await gameEngine.getGame(socketId);
+    const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
 
     if (!getGameData) {
       return error(getGameError);
     }
 
     const {attacked, attacker} = params;
+
+    if (attacked === "hero" || attacker === "hero") {
+      return error("Cannot attack hero.");
+    }
+
     const {$game, player, opponent} = getGameData;
-    const playerMinion = player.minion[attacker];
-    const opponentMinion = opponent.minion[attacked];
-    const animate = []; // push sequences and emit with saveGame, loop animate on frontend, play all animations, and overwrite game state.
+    const playerMinion = player.field[attacker];
+    const opponentMinion = opponent.field[attacked];
+    const opponentTrap = opponent.trap;
+    let animations: Animations = [];
 
     if (!playerMinion) {
       return error("Players minion not found.");
@@ -31,8 +35,27 @@ const attackMinion: SocketRequest = (socket, error): void => {
       return error("Opponents minion not found.");
     }
 
-    // check if any of the opposing minions has Taunt, and whether the player minion has Marksmanship
-    // return error if not
+    const fields: ["hero", "a", "b", "c", "d"] = ["hero", "a", "b", "c", "d"];
+    const selected = fields.find((field) => field === attacked);
+
+    if (!selected) {
+      return error("Error");
+    }
+
+    fields.splice(fields.indexOf(selected), 1);
+
+    for (const field of fields) {
+      const fieldCard = opponent.field[field];
+
+      if (fieldCard) {
+        const taunt = fieldCard.buffs.find((buff) => buff.id === EffectId.TAUNT);
+        const marksmanship = playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
+
+        if (taunt && !marksmanship) {
+          return error("Cannot attack this minion, other has taunt.");
+        }
+      }
+    }
 
     if (
       opponentMinion.buffs.find((buff) => buff.id === EffectId.STEALTH) &&
@@ -53,150 +76,158 @@ const attackMinion: SocketRequest = (socket, error): void => {
       playerMinion.canAttack = false;
     }
 
-    if (opponent.trap && opponent.trap.effect === EffectId.MIRRORS_EDGE) {
-      triggerEffect.mirrorsEdge({
+
+    let isAttackNegated = false;
+
+    if (opponentTrap && opponentTrap.effect === EffectId.MIRRORS_EDGE) {
+      animations.push(
+        ...effect.mirrorsEdge({player, playerMinion, opponent, opponentTrap})
+      );
+
+      if (await gameHelpers.isGameOver($game)) { return; }
+
+      isAttackNegated = true;
+    }
+
+    if (opponentTrap && opponentTrap.effect === EffectId.RICOCHET) {
+      animations.push(
+        ...effect.ricochet({player, playerMinion, opponent, opponentTrap})
+      );
+
+      isAttackNegated = true;
+    }
+
+    if (opponentTrap && opponentTrap.effect === EffectId.FROSTBITE) {
+      animations.push(...effect.frostbite({
         player,
+        playerMinion,
+        playerMinionField: attacker,
         opponent,
-        minion: playerMinion,
-        trap: opponent.trap
-      });
-
-      animate.push({
-        type: 1,
-        field: "hero",
-        damage: playerMinion.damage
-      });
-
-      if (await gameEngine.isGameOver($game)) { return; }
+        opponentTrap
+      }));
     }
 
-    let ricochetData: any = [];
+    if (opponentTrap && opponentTrap.effect === EffectId.RUSTY_NEEDLE) {
+      gameHelpers.insertDebuff(playerMinion, EffectId.NEUROTOXIN);
+    }
 
-    if (opponent.trap && opponent.trap.effect === EffectId.RICOCHET) {
-      ricochetData = triggerEffect.ricochet({
+    if (opponentTrap && opponentTrap.effect === EffectId.NOXIOUS_FUMES) {
+      animations.push(...effect.noxiousFumes({
         player,
+        playerMinion,
+        playerMinionField: attacker,
         opponent,
-        minionCard: playerMinion,
-        trapCard: opponent.trap
-      });
+        opponentTrap
+      }));
     }
 
-    if (opponent.trap && opponent.trap.effect === EffectId.FROSTBITE) {
-      gameEngine.triggerEffect.frostbite({minion: playerMinion, player: opponent, trap: opponent.trap});
-
-      animate.push({
-        type: 0,
-        field: attacker,
-        text: "+Frostbite"
-      });
+    if (opponentTrap && opponentTrap.effect === EffectId.EXPLOSIVE) {
+      animations.push(...effect.explosive({
+        player,
+        playerMinionField: attacker,
+        opponent,
+        opponentTrap
+      }));
     }
 
-    if (opponent.trap && opponent.trap.effect === EffectId.RUSTY_NEEDLE) {
-      insertDebuff(playerMinion, EffectId.NEUROTOXIN);
+    if (opponentTrap && opponentTrap.effect === EffectId.CONSTRICTION) {
+      animations.push(
+        ...effect.constriction({player, playerMinion, opponent, opponentTrap})
+      );
     }
 
-    if (opponent.trap && opponent.trap.effect === EffectId.NOXIOUS_FUMES) {
-      triggerEffect.noxiousFumes({opponent: player, minion: playerMinion, field: attacker});
-    }
-
-    if (opponent.trap && opponent.trap.effect === EffectId.EXPLOSIVE) {
-      triggerEffect.explosive({player, opponent, trap: opponent.trap, field: attacker});
-    }
-
-    if (opponent.trap && opponent.trap.effect === EffectId.CONSTRICTION) {
-      triggerEffect.constriction({player, opponent, trap: opponent.trap, minion: playerMinion});
-    }
-
-    // remove this?
-    const attackerDamage = playerMinion.damage;
-    const attackedDamage = opponentMinion.damage;
 
     if (playerMinion.buffs.find((buff) => buff.id === EffectId.POISONOUS_TOUCH)) {
-      gameEngine.insertDebuff(opponentMinion, EffectId.NEUROTOXIN);
+      gameHelpers.insertDebuff(opponentMinion, EffectId.NEUROTOXIN);
     }
     if (playerMinion.buffs.find((buff) => buff.id === EffectId.CORROSIVE_TOUCH)) {
-      gameEngine.triggerEffect.corrosiveTouch({opponent});
-      if (await gameEngine.isGameOver($game)) {
+      gameHelpers.effect.corrosiveTouch({opponent});
+      if (await gameHelpers.isGameOver($game)) {
         return;
       }
     }
     if (playerMinion.buffs.find((buff) => buff.id === EffectId.OVERPOWER)) {
       if (playerMinion.damage > opponentMinion.health) {
-        gameEngine.triggerEffect.overpower({opponent, damage: playerMinion.damage - opponentMinion.health});
-        if (await gameEngine.isGameOver($game)) {
+        gameHelpers.effect.overpower({opponent, damage: playerMinion.damage - opponentMinion.health});
+        if (await gameHelpers.isGameOver($game)) {
           return;
         }
       }
     }
 
     if (opponentMinion.buffs.find((buff) => buff.id === EffectId.POISONOUS_TOUCH)) {
-      gameEngine.insertDebuff(playerMinion, EffectId.NEUROTOXIN);
+      gameHelpers.insertDebuff(playerMinion, EffectId.NEUROTOXIN);
     }
     if (opponentMinion.buffs.find((buff) => buff.id === EffectId.CORROSIVE_TOUCH)) {
-      gameEngine.triggerEffect.corrosiveTouch({opponent: player});
-      if (await gameEngine.isGameOver($game)) {
+      gameHelpers.effect.corrosiveTouch({opponent: player});
+      if (await gameHelpers.isGameOver($game)) {
         return;
       }
     }
     if (opponentMinion.buffs.find((buff) => buff.id === EffectId.OVERPOWER)) {
       if (opponentMinion.damage > playerMinion.health) {
-        gameEngine.triggerEffect.overpower({opponent, damage: opponentMinion.damage - playerMinion.health});
-        if (await gameEngine.isGameOver($game)) {
+        gameHelpers.effect.overpower({opponent, damage: opponentMinion.damage - playerMinion.health});
+        if (await gameHelpers.isGameOver($game)) {
           return;
         }
       }
     }
 
-    deductHealth(player, opponent, playerMinion, opponentMinion);
 
-    animate.push({
-      type: 1,
-      field: attacked,
-      damage: playerMinion.damage
-    });
-
-    if (ricochetData.length && ricochetData[0] !== true) {
-      deductHealth(player, opponent, opponentMinion, playerMinion);
-
-      animate.push({
-        type: 1,
+    if (!isAttackNegated) {
+      gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage);
+      animations.push({
+        type: "DAMAGE",
         field: attacker,
-        damage: opponentMinion.damage
+        damageTaken: opponentMinion.damage,
+        name: player.name
+      });
+
+      gameHelpers.deductHealth(opponent, opponentMinion, playerMinion.damage);
+      animations.push({
+        type: "DAMAGE",
+        field: attacked,
+        damageTaken: playerMinion.damage,
+        name: opponent.name
       });
     }
 
     if (playerMinion.health <= 0 || (playerMinion.health === 1 && opponentMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
       if (player.trap && player.trap.effect === EffectId.LAST_STAND) {
-        gameEngine.triggerEffect.lastStand({minion: playerMinion, opponent: player, trap: player.trap})
+        gameHelpers.effect.lastStand({minion: playerMinion, opponent: player, trap: player.trap})
       } else {
         const hasAcidicDeathBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
         const hasSelfDescturctDebuff = playerMinion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
         if (player.trap && player.trap.effect === EffectId.REFLECTION) {
-          gameEngine.triggerEffect.reflection({player, opponent, trap: player.trap});
+          gameHelpers.effect.reflection({player, opponent, trap: player.trap});
         }
 
-        gameEngine.moveToGraveyard(player, playerMinion, attacker);
-
+        gameHelpers.moveToGraveyard(player, playerMinion, attacker);
+        animations.push({
+          type: "DEATH",
+          field: attacker,
+          name: player.name
+        });
         if (hasSelfDescturctDebuff) {
-          gameEngine.triggerEffect.selfDestruct({player});
-          if (await gameEngine.isGameOver($game)) {
+          gameHelpers.effect.selfDestruct({player});
+          if (await gameHelpers.isGameOver($game)) {
             return;
           }
         }
 
         if (hasAcidicDeathBuff) {
-          triggerEffect.acidicDeath({player, opponent});
+          effect.acidicDeath({player, opponent});
         }
 
         (Object.keys(player.minion) as Array<keyof typeof player.minion>).forEach((key) => {
           const minion = player.minion[key];
           if (!minion) { return; }
           if (minion.buffs.find((buff) => buff.id === EffectId.RISING_FURY)) {
-            gameEngine.triggerEffect.risingFury({minionCard: minion});
+            gameHelpers.effect.risingFury({minionCard: minion});
           }
           if (minion.buffs.find((buff) => buff.id === EffectId.SACRIFICE)) {
             if (playerMinion.klass === CardKlass.LIQUID) {
-              const minion = getRandomMinion(player);
+              const minion = gameHelpers.getRandomMinion(player);
               if (!minion) {return; }
               minion.health += 3;
             }
@@ -205,30 +236,34 @@ const attackMinion: SocketRequest = (socket, error): void => {
       }
     } else {
       if (playerMinion.buffs.find((buff) => buff.id === EffectId.RAMPAGE)) {
-        triggerEffect.rampage({minion: playerMinion});
+        effect.rampage({minion: playerMinion});
       }
     }
 
     if (opponentMinion.health <= 0 || (opponentMinion.health === 1 && playerMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
       if (opponent.trap && opponent.trap.effect === EffectId.LAST_STAND) {
-        gameEngine.triggerEffect.lastStand({minion: opponentMinion, opponent, trap: opponent.trap})
+        gameHelpers.effect.lastStand({minion: opponentMinion, opponent, trap: opponent.trap})
       } else {
         const hasAcidicDeathBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
         const hasSelfDescturctDebuff = playerMinion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
         if (opponent.trap && opponent.trap.effect === EffectId.REFLECTION) {
-          gameEngine.triggerEffect.reflection({player: opponent, opponent: player, trap: opponent.trap});
+          gameHelpers.effect.reflection({player: opponent, opponent: player, trap: opponent.trap});
         }
-        gameEngine.moveToGraveyard(opponent, opponentMinion, attacked);
-
+        gameHelpers.moveToGraveyard(opponent, opponentMinion, attacked);
+        animations.push({
+          type: "DEATH",
+          field: attacked,
+          name: opponent.name
+        });
         if (hasSelfDescturctDebuff) {
-          gameEngine.triggerEffect.selfDestruct({player});
-          if (await gameEngine.isGameOver($game)) {
+          gameHelpers.effect.selfDestruct({player});
+          if (await gameHelpers.isGameOver($game)) {
             return;
           }
         }
 
         if (hasAcidicDeathBuff) {
-          triggerEffect.acidicDeath({player, opponent});
+          effect.acidicDeath({player, opponent});
         }
       }
 
@@ -236,11 +271,11 @@ const attackMinion: SocketRequest = (socket, error): void => {
         const minion = opponent.minion[key];
         if (!minion) { return; }
         if (minion.buffs.find((buff) => buff.id === EffectId.RISING_FURY)) {
-          gameEngine.triggerEffect.risingFury({minionCard: minion});
+          gameHelpers.effect.risingFury({minionCard: minion});
         }
         if (minion.buffs.find((buff) => buff.id === EffectId.SACRIFICE)) {
           if (opponentMinion.klass === CardKlass.LIQUID) {
-            const minion = getRandomMinion(opponent);
+            const minion = gameHelpers.getRandomMinion(opponent);
             if (!minion) {return; }
             minion.health += 3;
           }
@@ -248,14 +283,13 @@ const attackMinion: SocketRequest = (socket, error): void => {
       });
     } else {
       if (opponentMinion.buffs.find((buff) => buff.id === EffectId.RAMPAGE)) {
-        triggerEffect.rampage({minion: opponentMinion});
+        effect.rampage({minion: opponentMinion});
       }
     }
 
-    // await gameEngine.floatingText($game, player.name, attacked, attacker, opponentMinion.damage, playerMinion.damage);
     // $game.battleLogs.push(attacked, attacker, playerMinion.id, opponentMinion.id);
 
-    await gameEngine.attackMinionSave($game, player.name, attacker, attacked, attackerDamage, attackedDamage);
+    await gameHelpers.attackMinionSave($game, animations);
   });
 };
 

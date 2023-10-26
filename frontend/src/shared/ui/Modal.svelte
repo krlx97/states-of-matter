@@ -33,7 +33,7 @@
     padding: var(--spacing-md);
     backdrop-filter: blur(32px);
     background-color: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgb(127, 127, 127);
+    border: 1px solid rgb(127, 127, 127);
     border-radius: 8px;
     box-sizing: border-box;
   }

@@ -6,8 +6,8 @@
 <style>
   .hero {
     position: relative;
-    border: 2px solid rgb(96, 133, 29);
-    border-radius: 8px;
+    /* border: 2px solid rgb(96, 133, 29);
+    border-radius: 8px; */
     z-index: 0;
   }
 </style>

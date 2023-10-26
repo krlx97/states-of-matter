@@ -1,11 +1,12 @@
 import {writable} from "svelte/store";
 import {PlayerStatus} from "@som/shared/enums";
-import type {AccountFrontend} from "@som/shared/types/frontend";
+import type {AccountView} from "@som/shared/types/views";
 
-const accountStore = writable<AccountFrontend>({
+const accountStore = writable<AccountView>({
   name: "",
   publicKey: "",
   avatarId: 0,
+  bannerId: 0,
   social: {
     friends: [],
     requests: [],

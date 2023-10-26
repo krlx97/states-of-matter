@@ -1,9 +1,11 @@
 import {PlayerStatus, QueueId} from "@som/shared/enums";
-import {modalService, socketService} from "services";
+import {modalService, notificationService, socketService, soundService} from "services";
 import {gamePopupStore, playerStore} from "stores";
 
 const declineGame = (): void => {
   socketService.socket.on("declineGame", (): void => {
+    soundService.play("cancel");
+
     playerStore.update((store) => {
       store.status = PlayerStatus.ONLINE;
       store.queueId = QueueId.NONE;
@@ -16,6 +18,8 @@ const declineGame = (): void => {
       store.playersAccepted = 0;
       return store;
     });
+
+    notificationService.show("Match has been declined. You have been removed from the queue.");
 
     modalService.close();
   });

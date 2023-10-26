@@ -8,82 +8,33 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "ethers": "^5.7.2",
-    "mongodb": "^5.1.0",
-    "socket.io": "^4.6.1"
+    "ethers": "^6.6.4",
+    "mongodb": "^5.7.0",
+    "socket.io": "^4.7.1"
   },
   "devDependencies": {
-    "typescript": "^5.0.2"
+    "typescript": "^5.1.6"
   },
   "exports": {
     "./data": "./dist/data/index.js",
     "./enums": "./dist/enums/index.js",
     "./types/backend": "./dist/types/backend/index.js",
-    "./types/backend/account": "./dist/types/backend/Account/index.js",
-    "./types/backend/casual-queue-player": "./dist/types/backend/CasualQueuePlayer/index.js",
-    "./types/backend/chat": "./dist/types/backend/Chat/index.js",
-    "./types/backend/game": "./dist/types/backend/Game/index.js",
-    "./types/backend/game-popup": "./dist/types/backend/GamePopup/index.js",
-    "./types/backend/lobby": "./dist/types/backend/Lobby/index.js",
-    "./types/backend/market-item": "./dist/types/backend/MarketItem/index.js",
-    "./types/backend/player": "./dist/types/backend/Player/index.js",
-    "./types/backend/ranked-queue-player": "./dist/types/backend/RankedQueuePlayer/index.js",
-    "./types/frontend": "./dist/types/frontend/index.js",
-    "./types/frontend/game-view": "./dist/types/frontend/GameView/index.js",
+    "./types/game": "./dist/types/game/index.js",
+    "./types/mongo": "./dist/types/mongo/index.js",
     "./types/requests": "./dist/types/requests/index.js",
     "./types/responses": "./dist/types/responses/index.js",
-    "./types/game": "./dist/types/game/index.js"
+    "./types/views": "./dist/types/views/index.js"
   },
   "typesVersions": {
     "*": {
-      "data": [
-        "dist/data/index.d.ts"
-      ],
-      "enums": [
-        "dist/enums/index.d.ts"
-      ],
-      "types/backend": [
-        "dist/types/backend/index.d.ts"
-      ],
-      "types/backend/account": [
-        "dist/types/backend/Account/index.d.ts"
-      ],
-      "types/backend/casual-queue-player": [
-        "dist/types/backend/CasualQueuePlayer/index.d.ts"
-      ],
-      "types/backend/chat": [
-        "dist/types/backend/Chat/index.d.ts"
-      ],
-      "types/backend/game": [
-        "dist/types/backend/Game/index.d.ts"
-      ],
-      "types/backend/game-popup": [
-        "dist/types/backend/GamePopup/index.d.ts"
-      ],
-      "types/backend/lobby": [
-        "dist/types/backend/Lobby/index.d.ts"
-      ],
-      "types/backend/market-item": [
-        "dist/types/backend/MarketItem/index.d.ts"
-      ],
-      "types/backend/player": [
-        "dist/types/backend/Player/index.d.ts"
-      ],
-      "types/backend/ranked-queue-player": [
-        "dist/types/backend/RankedQueuePlayer/index.d.ts"
-      ],
-      "types/frontend": [
-        "dist/types/frontend/index.d.ts"
-      ],
-      "types/requests": [
-        "dist/types/requests/index.d.ts"
-      ],
-      "types/responses": [
-        "dist/types/responses/index.d.ts"
-      ],
-      "types/game": [
-        "dist/types/game/index.d.ts"
-      ]
+      "data": ["dist/data/index.d.ts"],
+      "enums": ["dist/enums/index.d.ts"],
+      "types/backend": ["dist/types/backend/index.d.ts"],
+      "types/game": ["dist/types/game/index.d.ts"],
+      "types/mongo": ["dist/types/mongo/index.d.ts"],
+      "types/requests": ["dist/types/requests/index.d.ts"],
+      "types/responses": ["dist/types/responses/index.d.ts"],
+      "types/views": ["dist/types/views/index.d.ts"]
     }
   }
 }

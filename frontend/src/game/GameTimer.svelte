@@ -1,8 +1,9 @@
 <script lang="ts">
-  import {socketService} from "services";
+  import {socketService, soundService} from "services";
   import {gameStore, playerStore} from "stores";
 
   const onEndTurn = (): void => {
+    soundService.play("endTurn");
     socketService.socket.emit("endTurn");
   };
 </script>
@@ -68,7 +69,7 @@
 <div class="game-timer">
   <div class="info">
     <div class="bgd" class:glow={$gameStore.opponent.name === $gameStore.currentPlayer}>{$gameStore.opponent.name}</div>
-    <button on:click={onEndTurn}>END TURN</button>
+    <button class="button" style="white-space: nowrap;" on:click={onEndTurn}>END TURN</button>
     <div class="bgd" class:glow={$playerStore.name === $gameStore.currentPlayer}>{$gameStore.player.name}</div>
   </div>
   <div class="bar">

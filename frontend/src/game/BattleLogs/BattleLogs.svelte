@@ -7,6 +7,7 @@
 </script>
 
 <style>
+
   .battle-logs {
     position: absolute;
     top: 50%;

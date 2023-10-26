@@ -36,10 +36,8 @@
   export {card};
 </script>
 
-<div
-  on:click={onAddToDeck}
-  on:keypress={onAddToDeck}
-  on:contextmenu|preventDefault={onViewLore}
->
-  <CardComponent {card} health={0} damage={0}/>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div on:click="{onAddToDeck}" on:contextmenu|preventDefault="{onViewLore}">
+  <CardComponent {card} health="{0}" damage="{0}"/>
 </div>

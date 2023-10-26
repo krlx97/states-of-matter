@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte";
-  import {socketService} from "services";
+  import {socketService, soundService} from "services";
   import {gamePopupStore} from "stores";
   import {ModalComponent, ProgressBarComponent} from "ui";
 
@@ -9,10 +9,12 @@
   let start = 0;
 
   const onAccept = (): void => {
+soundService.play("click");
     socket.emit("acceptGame");
   };
 
   const onDecline = (): void => {
+soundService.play("click");
     socket.emit("declineGame");
   };
 

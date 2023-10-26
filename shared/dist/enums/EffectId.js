@@ -1,31 +1,3 @@
-var BuffId;
-(function (BuffId) {
-    BuffId[BuffId["BLAZE"] = 0] = "BLAZE";
-    BuffId[BuffId["NECROMANCY"] = 1] = "NECROMANCY";
-    BuffId[BuffId["ELUSIVE"] = 2] = "ELUSIVE";
-    BuffId[BuffId["REVENGE"] = 3] = "REVENGE";
-    BuffId[BuffId["DIMINISH"] = 4] = "DIMINISH";
-    BuffId[BuffId["UNITY"] = 5] = "UNITY";
-    BuffId[BuffId["SPELLWEAVE"] = 6] = "SPELLWEAVE";
-    BuffId[BuffId["UNBREAKABLE"] = 7] = "UNBREAKABLE";
-    BuffId[BuffId["RISING_FURY"] = 8] = "RISING_FURY";
-    BuffId[BuffId["REGENERATION"] = 9] = "REGENERATION";
-    BuffId[BuffId["SACRIFICE"] = 10] = "SACRIFICE";
-    BuffId[BuffId["SHADOWSTRIKE"] = 11] = "SHADOWSTRIKE";
-    BuffId[BuffId["LEECH"] = 12] = "LEECH";
-    BuffId[BuffId["RESILIENT"] = 13] = "RESILIENT";
-    BuffId[BuffId["ACIDIC_DEATH"] = 14] = "ACIDIC_DEATH";
-    BuffId[BuffId["POISONOUS_TOUCH"] = 15] = "POISONOUS_TOUCH";
-    BuffId[BuffId["CORROSIVE_TOUCH"] = 16] = "CORROSIVE_TOUCH";
-    BuffId[BuffId["CONTAMINATED_AIR"] = 17] = "CONTAMINATED_AIR";
-    BuffId[BuffId["SELF_DESTRUCT"] = 18] = "SELF_DESTRUCT";
-    BuffId[BuffId["RAMPAGE"] = 19] = "RAMPAGE";
-    BuffId[BuffId["BACKSTAB"] = 20] = "BACKSTAB";
-    BuffId[BuffId["MARKSMANSHIP"] = 21] = "MARKSMANSHIP";
-    BuffId[BuffId["OVERPOWER"] = 22] = "OVERPOWER";
-    BuffId[BuffId["EXECUTE"] = 23] = "EXECUTE";
-    BuffId[BuffId["HYSTERIA"] = 24] = "HYSTERIA";
-})(BuffId || (BuffId = {}));
 var EffectId;
 (function (EffectId) {
     // ========== COMMON / BUFFS ==========

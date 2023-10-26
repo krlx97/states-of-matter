@@ -1,20 +1,28 @@
 <script lang="ts">
   import {socketService} from "services";
-  import {ModalComponent} from "ui";
+  import {FormFieldComponent, ModalComponent} from "ui";
 
-  let id: number;
+  let id = "";
 
-  const onJoinLobby = (): void => {
-    socketService.socket.emit("joinLobby", {id});
+  const onInput = (): void => {
+
+  };
+
+  const onSubmit = (): void => {
+    socketService.socket.emit("joinLobby", {id: parseInt(id)});
   };
 </script>
 
 <ModalComponent>
-  <form on:submit|preventDefault={onJoinLobby}>
-    <label>
-      <div>Lobby ID</div>
-      <input placeholder="Lobby ID" type="number" bind:value={id}/>
-    </label>
-    <button>JOIN</button>
+  <div class="modal">
+    <form on:submit|preventDefault="{onSubmit}">
+    <FormFieldComponent
+        label="Lobby ID"
+        bind:value="{id}"
+        on:input="{onInput}"/>
+    <div class="form__submit">
+    <button class="button">JOIN</button>
+</div>
   </form>
+</div>
 </ModalComponent>

@@ -3,6 +3,7 @@
   import {accountStore, playerStore} from "stores";
   import {modalService} from "services";
   import SetAvatarComponent from "./social/modals/SetAvatar.svelte";
+import Tasks from "./Tasks.svelte";
 
   let xpProgressLen: number;
 
@@ -11,6 +12,10 @@
 
   const onSetAvatar = (): void => {
     modalService.open(SetAvatarComponent);
+  };
+
+  const onViewTasks = (): void => {
+    modalService.open(Tasks);
   };
 
   onMount((): void => {
@@ -90,6 +95,12 @@
     {$playerStore.name}<br/>
     Level {$playerStore.level}<br/>
     {$playerStore.experience} / {xpRequired}<br/>
+  </div>
+
+<div>
+    <button class="button-icon" on:click={onViewTasks}>
+      <i class="fa-solid fa-list-check"></i>
+    </button>
   </div>
 
 </div>

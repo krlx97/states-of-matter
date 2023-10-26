@@ -1,14 +1,14 @@
 import {PlayerStatus} from "@som/shared/enums";
-import {mongo, server} from "apis";
-import {getSocketIds} from "helpers/player";
+import {mongo, server} from "app";
+import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const disconnect: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, players} = mongo;
+  const {$accounts, $players} = mongo;
 
-  socket.on("disconnect", async (reason) => {
-    const $playerUpdate = await players.findOneAndUpdate({socketId}, {
+  socket.on("disconnect", async () => {
+    const $playerUpdate = await $players.findOneAndUpdate({socketId}, {
       $set: {
         socketId: "",
         status: PlayerStatus.OFFLINE
@@ -22,14 +22,14 @@ const disconnect: SocketRequest = (socket, error): void => {
     }
 
     const {name, status} = $playerUpdate.value;
-    const $account = await accounts.findOne({name});
+    const $account = await $accounts.findOne({name});
 
     if (!$account) {
       return error("Account not found.");
     }
 
-    const socketIds = await getSocketIds($account.social.friends);
-    server.io.to(socketIds).emit("updateStatus", {name, status});
+    const socketIds = await playerHelpers.getSocketIds($account.social.friends);
+    server.io.to(socketIds).emit("updateFriend", {name, status});
   });
 };
 

@@ -1,9 +1,9 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
   import {CardType} from "@som/shared/enums";
+import {tutorialStore} from "stores";
   import KlassCardComponent from "./KlassCard.svelte";
-    import { tutorialStore } from "stores";
-
+    
   let selectedKlass = 0;
   const klasses = [0, 1, 2, 3, 4];
   $: isTutorial = $tutorialStore.name === "deckBuilder" && $tutorialStore.currentStep === 3;
@@ -13,7 +13,7 @@
   .cards__klasses {
     display: flex;
     justify-content: space-evenly;
-    margin: var(--spacing-xlg) 0 var(--spacing-sm) 0;
+    margin: var(--spacing-xl) 0 var(--spacing-sm) 0;
   }
 
   .cards__klasses__klass {
@@ -67,12 +67,12 @@
 <div class:isTutorial>
 <div class="cards__klasses">
   {#each klasses as klass}
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
       class="cards__klasses__klass"
-      class:cards__klasses__klass-selected={klass === selectedKlass}
-      on:click={() => selectedKlass = klass}
-      on:keypress={() => selectedKlass = klass}
-    >
+      class:cards__klasses__klass-selected="{klass === selectedKlass}"
+      on:click="{() => selectedKlass = klass}">
       <img src="assets/classes/48/{klass}.png" alt="Klass {klass}"/>
     </div>
   {/each}

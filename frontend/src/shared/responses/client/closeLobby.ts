@@ -18,10 +18,10 @@ const closeLobby = (): void => {
       }
     });
 
-    playerStore.update((player) => {
-      player.status = PlayerStatus.ONLINE;
-      player.lobbyId = 0;
-      return player;
+    playerStore.update((store) => {
+      store.status = PlayerStatus.ONLINE;
+      store.lobbyId = 0;
+      return store;
     });
 
     socket.emit("updateFriend");

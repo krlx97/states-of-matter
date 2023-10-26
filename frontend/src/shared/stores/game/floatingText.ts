@@ -12,35 +12,35 @@ interface Text {
 
 interface FloatingTextStore {
   player: {
-    hero: Text[],
-    a: Text[],
-    b: Text[],
-    c: Text[],
-    d: Text[]
+    hero: string,
+    a: string,
+    b: string,
+    c: string,
+    d: string
   },
   opponent: {
-    hero: Text[],
-    a: Text[],
-    b: Text[],
-    c: Text[],
-    d: Text[]
+    hero: string,
+    a: string,
+    b: string,
+    c: string,
+    d: string
   },
 }
 
 const floatingTextStore = writable<FloatingTextStore>({
   player: {
-    hero: [],
-    a: [],
-    b: [],
-    c: [],
-    d: []
+    hero: "",
+    a: "",
+    b: "",
+    c: "",
+    d: ""
   },
   opponent: {
-    hero: [],
-    a: [],
-    b: [],
-    c: [],
-    d: []
+    hero: "",
+    a: "",
+    b: "",
+    c: "",
+    d: ""
   },
 });
 

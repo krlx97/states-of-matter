@@ -1,10 +1,10 @@
-import {mongo, server} from "apis";
-import {getSocketIds} from "helpers/player";
+import {mongo, server} from "app";
+import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const setAvatar: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, players} = mongo;
+  const {$accounts, $players} = mongo;
 
   socket.on("setAvatar", async (params) => {
     const {avatarId} = params;
@@ -13,13 +13,13 @@ const setAvatar: SocketRequest = (socket, error): void => {
       return error("Invalid avatar.");
     }
 
-    const $player = await players.findOne({socketId});
+    const $player = await $players.findOne({socketId});
 
     if (!$player) {
       return error("Player not found, try relogging.");
     }
 
-    const $accountUpdate = await accounts.findOneAndUpdate({
+    const $accountUpdate = await $accounts.findOneAndUpdate({
       name: $player.name
     }, {
       $set: {avatarId}
@@ -32,7 +32,7 @@ const setAvatar: SocketRequest = (socket, error): void => {
     }
 
     const {name, social} = $accountUpdate.value;
-    const socketIds = await getSocketIds(social.friends);
+    const socketIds = await playerHelpers.getSocketIds(social.friends);
 
     socket.emit("setAvatarSender", {avatarId});
     server.io.to(socketIds).emit("setAvatarReceiver", {name, avatarId});

@@ -1,5 +1,5 @@
 import {writable} from "svelte/store";
-import type {LobbyView} from "@som/shared/types/frontend";
+import type {LobbyView} from "@som/shared/types/views";
 
 const lobbyStore = writable<LobbyView>({
   id: 0,

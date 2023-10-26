@@ -1,1 +1,14 @@
+<<<<<<< HEAD
+.deps
+.vscode
+!.vscode/extensions.json
 node_modules
+backend/dist
+contracts/SomGame/artifacts
+contracts/SomTokens/artifacts
+frontend/dist
+shared/dist
+package-lock.json
+=======
+node_modules
+>>>>>>> d3cae4fc7eaa541fd8f777f07ed2ab3f6d9b04b1

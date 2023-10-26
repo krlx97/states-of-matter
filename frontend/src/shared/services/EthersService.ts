@@ -1,115 +1,129 @@
-import {ethers} from "ethers";
-import SomCurrency from "@som/contracts/SomCurrency/artifacts/SomCurrency.json";
-import SomGame from "@som/contracts/SomGame/artifacts/SomGame.json";
-import SomSkins from "@som/contracts/SomSkins/artifacts/SomSkins.json";
-import {items} from "data";
-import {walletStore} from "stores";
 import {get} from "svelte/store";
+import {JsonRpcProvider, Contract, BrowserProvider} from "ethers";
 
-const wtlosAbi = [
-  "function deposit () payable",
-  "function increaseAllowance (address spender, uint256 addedValue) public returns (bool)",
-  "function allowance (address owner, address spender) public view returns (uint256)",
-  "function approve(address spender, uint256 amount) public returns (bool)"
-];
+import SomGame from "@som/contracts/SomGame/artifacts/SomGame.json" assert {
+  type: "json"
+};
 
-class EthersService {
-  private readonly _provider = window.ethereum ?
-    new ethers.providers.Web3Provider(window.ethereum) :
-    new ethers.providers.JsonRpcProvider("https://testnet.telos.net");
+import SomTokens from "@som/contracts/SomTokens/artifacts/SomTokens.json" assert {
+  type: "json"
+};
 
-  private readonly _signer = this._provider.getSigner();
-  public key: string;
+import {items} from "data";
+import {accountStore, walletStore} from "stores";
 
-  public readonly keys = {
-    currency: "0x767cdaEE9Ddd389d83F1CE10D1e601d626088E60",
-    skins: "0xC003f2577F8bF63C9FE879A5CD28Cd707656e95b",
-    game: "0x5Cad21599aDF8bdf37879Ed63532B6a4418d876b",
-    wtlos: "0xaE85Bf723A9e74d6c663dd226996AC1b8d075AA9"
-  };
+const provider = window.ethereum ?
+  new BrowserProvider(window.ethereum) :
+  new JsonRpcProvider("https://testnet.telos.net");
 
-  public readonly contracts = {
-    currency: new ethers.Contract(this.keys.currency, SomCurrency.abi, this._provider),
-    skins: new ethers.Contract(this.keys.skins, SomSkins.abi, this._provider),
-    game: new ethers.Contract(this.keys.game, SomGame.abi, this._provider),
-    wtlos: new ethers.Contract(this.keys.wtlos, wtlosAbi, this._provider)
-  };
+const signer = await provider.getSigner();
 
-  public readonly sign = {
-    currency: this.contracts.currency.connect(this._signer),
-    skins: this.contracts.skins.connect(this._signer),
-    game: this.contracts.game.connect(this._signer),
-    wtlos: this.contracts.wtlos.connect(this._signer)
-  };
+const keys = {
+  somTokens: "0x67330dE5F081a6d92DCa4917579935991F3F8413",
+  somGame: "0x33d5072eD42ce7c61019454DECCAe48D559a9204"
+};
 
-  public async transact (
-    contract: keyof typeof this.sign,
-    action: string,
-    params: any[]
-  ): Promise<boolean> {
-    const tx = await this.sign[contract][action](...params).catch(console.log);
-    if (!tx) { return false; }
-    const fin = await tx.wait();
-    if (!fin) { return false; }
-    return true;
-  }
+const contracts = {
+  somTokens: new Contract(keys.somTokens, SomTokens.abi, provider),
+  somGame: new Contract(keys.somGame, SomGame.abi, provider)
+};
 
-  public format (val: ethers.BigNumber) {
-    return ethers.utils.formatUnits(val);
-  }
+const sign = {
+  somTokens: contracts.somTokens.connect(signer),
+  somGame: contracts.somGame.connect(signer)
+};
 
-  public async loadUser (): Promise<void> {
-    const {key} = this;
-    console.log({key});
-    const {currency, skins, game} = this.contracts;
-    const player = await game.players(key);
-    const total = await game.total();
-    const pool = await game.pool();
-    const theItems = [];
+const transact = async (contract: keyof typeof sign, action: string, params: any[]): Promise<boolean> => {
+  const tx = await sign[contract][action](...params).catch(console.log);
+  if (!tx) { return false; }
+  const fin = await tx.wait();
+  if (!fin) { return false; }
+  return true;
+};
 
-    // for (const item of items) {
-    //   theItems.push({
-    //     id: item.id,
-    //     balance: await skins.balanceOf(key, item.id)
-    //   });
-    // }
+const reloadUser = async (): Promise<void> => {
+  const {somTokens, somGame} = contracts;
+  const key = get(accountStore).publicKey;
+  // const player = await somGame.players(key);
+  // const total = await somGame.total();
+  // console.log(player);
+  const theItems = [];
 
-    walletStore.set({
-      crystals: {
-        balance: await currency.balanceOf(key),
-        staked: player.staked,
-        unstaked: player.unstaked,
-        vesting: player.vesting,
-        rewards: player.rewards,
-        airdrops: player.airdrops,
-        starterPack: player.hasClaimedStarterPack,
-
-
-        liquidity: await game.userLiquidity(key)
-      },
-      crystalsGlobal: {
-        cap: await currency.cap(),
-        totalSupply: await currency.totalSupply(),
-        staked: total.staked,
-        unstaked: total.unstaked,
-        burned: total.burned,
-        rewards: total.rewards,
-        airdrops: total.airdrops,
-      },
-      crystalsPool: {
-        toRewards: pool.toRewards,
-        toBurned: pool.toBurned,
-      },
-      essence: {
-        balance: await skins.balanceOf(key, 0)
-      },
-      isApprovedForAll: await skins.isApprovedForAll(key, this.keys.game),
-      allowance: await currency.allowance(key, this.keys.game),
-      items: theItems
+  for (const item of items) {
+    theItems.push({
+      id: item.id,
+      balance: 100n
     });
-
-    console.log(get(walletStore));
   }
+
+  walletStore.set({
+    ese: {
+      balance: 100000n
+      // balance: await somTokens.balanceOf(key, 0)
+    },
+    ecr: {
+      balance: 1000000000000000000000n,
+      staked: 1000000000000000000000n,
+      unstaked: 1000000000000000000000n,
+      vesting: 100,
+      rewards: 1000000000000000000000n,
+      airdrops: 100,
+      starterPack: true
+      // balance: await somTokens.balanceOf(key, 1),
+      // staked: await player.staking(1).staked,
+      // unstaked: await player.staking(1).unstaked,
+      // vesting: await player.staking(1).vesting,
+      // rewards: player.rewards,
+      // airdrops: player.airdrops,
+      // starterPack: player.hasClaimedStarterPack
+    },
+    wtlos: {
+      balance: 10000000000000000000n
+      // balance: await somTokens.balanceOf(key, 2)
+    },
+    lpecr: {
+      balance: 10000000000000000000000n,
+      staked: 100000000000000000000n,
+      unstaked: 10000000000000000000n,
+      vesting: 1000,
+      // balance: await somTokens.balanceOf(key, 3),
+      // staked: await player.staking(3).staked,
+      // unstaked: await player.staking(3).unstaked,
+      // vesting: await player.staking(3).vesting,
+    },
+    liquidity: {
+      ecr: 10000000000000000000000n,
+      wtlos: 1000000000000000000000n
+    },
+    crystalsGlobal: {
+      totalSupply: 1000000000000000000000000000n,
+      staked: 112300000000000000000000000n,
+      unstaked: 151584720000000000000000000n,
+      rewards: 100000000000000000000n,
+      burned: 45126670000000000000000000n,
+      firstDailyWins: 165,
+      airdrops: 47654,
+      // totalSupply: await somTokens.totalSupply(1),
+      // staked: await total.staked(1),
+      // unstaked: await total.unstaked(1),
+      // rewards: total.rewards,
+      // liquidity: total.liquidity,
+      // burned: total.burned,
+      // firstDailyWins: total.firstDailyWins,
+      // airdrops: total.airdrops,
+    },
+    lpecrGlobal: {
+      totalSupply: 100000n * 10n ** 18n,
+      staked: 11230n * 10n ** 18n,
+      unstaked: 15158n * 10n ** 18n,
+    },
+    isApprovedForAll: true,
+    starterPack: false,
+    // isApprovedForAll: await somTokens.isApprovedForAll(key, keys.somGame),
+    items: theItems
+  });
 }
 
-export {EthersService};
+const ethersService = {key: "", keys, contracts, transact, reloadUser};
+
+export {ethersService};

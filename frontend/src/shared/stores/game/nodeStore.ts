@@ -1,6 +1,31 @@
 import {writable} from "svelte/store";
 
-const nodeStore = writable({
+interface NodeStore {
+  player: {
+    a: HTMLElement,
+    aDamage: HTMLElement,
+    b: HTMLElement,
+    bDamage: HTMLElement,
+    c: HTMLElement,
+    cDamage: HTMLElement,
+    d: HTMLElement,
+    dDamage: HTMLElement,
+    graveyard: HTMLElement
+  },
+  opponent: {
+    a: HTMLElement,
+    aDamage: HTMLElement,
+    b: HTMLElement,
+    bDamage: HTMLElement,
+    c: HTMLElement,
+    cDamage: HTMLElement,
+    d: HTMLElement,
+    dDamage: HTMLElement,
+    graveyard: HTMLElement
+  },
+}
+
+const nodeStore = writable<NodeStore>({
   player: {
     a: undefined,
     aDamage: undefined,

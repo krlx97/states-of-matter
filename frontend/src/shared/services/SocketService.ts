@@ -1,17 +1,17 @@
 import {io, type Socket} from "socket.io-client";
-import type {SocketResponses} from "@som/shared/types/responses";
-import type {SocketRequests} from "@som/shared/types/requests";
+import type {Responses} from "@som/shared/types/responses";
+import type {Requests} from "@som/shared/types/requests";
 
-class SocketService {
-  public readonly socket: Socket<SocketResponses, SocketRequests> = io(
-    /*"wss://api.eternitas.games"*/
-    "ws://localhost:4201",
-    {
-      transports: ["websocket"],
-      upgrade: false,
-      forceNew: false
-    }
-  );
-}
+const socket: Socket<Responses, Requests> = io(
+  // "wss://api.eternitas.games",
+  "ws://localhost:4201",
+  {
+    transports: ["websocket"],
+    upgrade: false,
+    forceNew: false
+  }
+);
 
-export {SocketService};
+const socketService = {socket};
+
+export {socketService};

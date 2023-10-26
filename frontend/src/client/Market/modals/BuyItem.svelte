@@ -1,9 +1,8 @@
 <script lang="ts">
-  import {BigNumber, ethers, utils} from "ethers";
+    import { parseUnits } from "ethers";
   import {ethersService, socketService} from "services";
   import {modalStore, walletStore} from "stores";
   import {CurrencyComponent, ModalComponent} from "ui";
-  import {buyItemAmountValidator} from "validators";
 
   const {item} = $modalStore.data;
   const errors = {
@@ -21,13 +20,13 @@
   let disabled = true;
   let isLoading = false;
 
-  let remaining = $walletStore.crystals.balance;
+  let remaining = $walletStore.ecr.balance;
   let transfer = 0;
-  let thePrice = BigNumber.from(0);
-  let buyout = BigNumber.from(0);
+  let thePrice = 0n;
+  let buyout = 0n;
 
   const onValidateInput = (): void => {
-    errors.amount = buyItemAmountValidator(item, amount);
+    // errors.amount = buyItemAmountValidator(item, amount);
 
     disabled =
       !errors.amount.hasValue ||
@@ -42,43 +41,35 @@
       errors.amount.hasCorrectDecimals
     ) {
       transfer = parseInt(amount);
-      thePrice = ethers.utils.parseUnits(item.price, 18).mul(amount);
-      remaining = $walletStore.crystals.balance.sub(thePrice);
+      thePrice = BigInt(item.price) * BigInt (amount);
+      remaining = $walletStore.ecr.balance - thePrice;
     } else {
       transfer = 0;
-      thePrice = BigNumber.from(0);
-      remaining = $walletStore.crystals.balance;
+      thePrice = 0n;
+      remaining = $walletStore.ecr.balance;
     }
   };
 
-  const onSetMax = (): void => {
-    amount = ethers.utils.parseUnits(item.price, 18).mul(ethers.utils.parseUnits(item.amount, 0)).gt($walletStore.crystals.balance) ?
-      $walletStore.crystals.balance.div(ethers.utils.parseUnits(item.price, 18)).toString() : // nema
-      item.amount; // ima
+  // const onSetMax = (): void => {
+  //   amount = ethers.utils.parseUnits(item.price, 18).mul(ethers.utils.parseUnits(item.amount, 0)).gt($walletStore.crystals.balance) ?
+  //     $walletStore.crystals.balance.div(ethers.utils.parseUnits(item.price, 18)).toString() : // nema
+  //     item.amount; // ima
 
-    onValidateInput();
-  };
+  //   onValidateInput();
+  // };
 
   const onBuyItem = async (): Promise<void> => {
     isLoading = true;
-    const {game} = ethersService.keys;
+    const {somGame} = ethersService.keys;
 
-    if (!$walletStore.allowance.gte(thePrice)) {
-      const isConfirmed = await ethersService.transact("currency", "increaseAllowance", [game, thePrice]);
-      if (!isConfirmed) {
-        isLoading = false;
-        return;
-      }
-    }
-
-    const isConfirmed = await ethersService.transact("game", "buyItem", [item.listingId, amount]);
+    const isConfirmed = await ethersService.transact("somGame", "buyItem", [item.listingId, amount]);
     if (!isConfirmed) {
       isLoading = false;
       return;
     }
 
     socketService.socket.emit("getMarketItems" as any);
-    await ethersService.loadUser();
+    await ethersService.reloadUser();
     onValidateInput();
     isLoading = false;
   };
@@ -100,9 +91,9 @@
           bind:value={amount}
           on:input={onValidateInput}
         />
-        <div class="label__suffix" on:click={onSetMax} on:keypress={onSetMax}>
+        <!-- <div class="label__suffix" on:click={onSetMax} on:keypress={onSetMax}>
           MAX
-        </div>
+        </div> -->
         {#if !errors.amount.hasValue}
           <div class="label__error">Mustn't be empty.</div>
         {:else if !errors.amount.isValid}
@@ -124,15 +115,15 @@
       <table>
         <tr>
           <td>PRICE</td>
-          <td><CurrencyComponent name="crystals" number={ethers.utils.parseUnits(item.price, 18)}/></td>
+          <td><CurrencyComponent name="ecr" number={parseUnits(item.price)}/></td>
         </tr>
         <tr>
           <td>TOTAL</td>
-          <td><CurrencyComponent name="crystals" number={thePrice}/></td>
+          <td><CurrencyComponent name="ecr" number={thePrice}/></td>
         </tr>
         <tr>
           <td>REMAINING</td>
-          <td><CurrencyComponent name="crystals" number={remaining}/></td>
+          <td><CurrencyComponent name="ecr" number={remaining}/></td>
         </tr>
       </table>
     </div>

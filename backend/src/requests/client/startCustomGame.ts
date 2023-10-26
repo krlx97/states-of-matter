@@ -1,14 +1,14 @@
 import {GameType} from "@som/shared/enums";
-import {mongo} from "apis";
-import gameEngine from "helpers/game";
+import {mongo} from "app";
+import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const startCustomGame: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {lobbies, players} = mongo;
+  const {$lobbies, $players} = mongo;
 
   socket.on("startCustomGame", async () => {
-    const $player = await players.findOne({socketId});
+    const $player = await $players.findOne({socketId});
 
     if (!$player) {
       return error("Player not found, please relog.");
@@ -18,7 +18,7 @@ const startCustomGame: SocketRequest = (socket, error): void => {
     }
 
     const id = $player.lobbyId;
-    const $lobby = await lobbies.findOne({id});
+    const $lobby = await $lobbies.findOne({id});
 
     if (!$lobby) {
       return error("Lobby not found.");
@@ -27,7 +27,7 @@ const startCustomGame: SocketRequest = (socket, error): void => {
       return error("You are not the host.");
     }
 
-    const $lobbyDelete = await lobbies.deleteOne({id});
+    const $lobbyDelete = await $lobbies.deleteOne({id});
 
     if (!$lobbyDelete.deletedCount) {
       return error("Failed to delete lobby.");
@@ -35,7 +35,7 @@ const startCustomGame: SocketRequest = (socket, error): void => {
 
     const {host, challengee} = $lobby;
 
-    await gameEngine.startGame(
+    await gameHelpers.startGame(
       $lobby.id,
       GameType.CUSTOM,
       host.name,

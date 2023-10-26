@@ -31,7 +31,7 @@
 
 <style>
   .item {
-    height: 160px;
+    /* height: 180px; */
     width: 112px;
     color: rgb(127, 127, 127);
     background-color: rgb(31, 31, 31);
@@ -54,9 +54,13 @@
   }
 
   .item__title {
-    padding-top: 6px;
+    /* padding: 6px; */
+    height: 32px;
     text-align: center;
-    font-size: var(--font-xsm);
+    font-size: var(--font-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .none:hover {
@@ -65,18 +69,18 @@
   }
 
   .uncommon:hover {
-    border-color: rgb(var(--green));
-    color: rgb(var(--green));
+    border-color: rgb(var(--gas));
+    color: rgb(var(--gas));
   }
 
   .rare:hover {
-    border-color: rgb(var(--blue));
-    color: rgb(var(--blue));
+    border-color: rgb(var(--liquid));
+    color: rgb(var(--liquid));
   }
 
   .epic:hover {
-    border-color: rgb(var(--purple));
-    color: rgb(var(--purple));
+    border-color: rgb(var(--plasma));
+    color: rgb(var(--plasma));
   }
 </style>
 

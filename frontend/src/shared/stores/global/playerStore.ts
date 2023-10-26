@@ -1,6 +1,6 @@
 import {writable} from "svelte/store";
 import {PlayerStatus} from "@som/shared/enums";
-import type {PlayerView} from "@som/shared/types/frontend";
+import type {PlayerView} from "@som/shared/types/views";
 
 const playerStore = writable<PlayerView>({
   name: "",
@@ -24,7 +24,7 @@ const playerStore = writable<PlayerView>({
     deckBuilder: false,
     game: false,
     play: false,
-    wallet: false
+    inventory: false
   }
 });
 

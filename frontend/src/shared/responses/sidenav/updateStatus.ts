@@ -2,7 +2,7 @@ import {socketService} from "services";
 import {accountStore} from "stores";
 
 const updateStatus = (): void => {
-  socketService.socket.on("updateStatus", (params): void => {
+  socketService.socket.on("updateFriend", (params): void => {
     const {name, status} = params;
 
     accountStore.update((store) => {

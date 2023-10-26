@@ -1,18 +1,21 @@
 <script lang="ts">
-  import {socketService} from "services";
+  import {socketService, soundService} from "services";
   import {lobbyStore, playerStore} from "stores";
 
   const {socket} = socketService;
 
   const onStartGame = (): void => {
+    soundService.play("click");
     socket.emit("startCustomGame");
   };
 
   const onCloseLobby = (): void => {
+    soundService.play("click");
     socket.emit("closeLobby");
   };
 
   const onLeaveLobby = (): void => {
+    soundService.play("click");
     socket.emit("leaveLobby");
   };
 </script>

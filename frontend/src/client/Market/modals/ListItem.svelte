@@ -1,10 +1,8 @@
 <script lang="ts">
-  import {BigNumber, utils} from "ethers";
   import {items} from "data";
   import {ethersService} from "services";
   import {walletStore} from "stores";
   import {CurrencyComponent, ModalComponent} from "ui";
-  import {listItemAmountValidator, listItemPriceValidator} from "validators";
 
   const errors = {
     amount: {
@@ -30,16 +28,16 @@
 
   let remaining = $walletStore.items.find((item) => item.id === id).balance;
   let transfer = 0;
-  let thePrice = BigNumber.from(0);
-  let buyout = BigNumber.from(0);
+  let thePrice = 0n;
+  let buyout = 0n;
 
-  const getBalance = (id: any): BigNumber => {
+  const getBalance = (id: any): BigInt => {
     return $walletStore.items.find((item) => item.id === id).balance;
   };
 
   const onValidateInput = (): void => {
-    errors.amount = listItemAmountValidator(id, amount);
-    errors.price = listItemPriceValidator(price);
+    // errors.amount = listItemAmountValidator(id, amount);
+    // errors.price = listItemPriceValidator(price);
 
     disabled =
       !errors.amount.hasValue ||
@@ -69,11 +67,11 @@
       errors.price.isValid &&
       errors.price.hasCorrectDecimals
     ) {
-      thePrice = utils.parseUnits(price);
-      buyout = thePrice.mul(amount);
+      thePrice = BigInt(price);
+      buyout = thePrice * BigInt(amount);
     } else {
-      thePrice = BigNumber.from(0);
-      buyout = BigNumber.from(0);
+      thePrice = 0n;
+      buyout = 0n;
     }
   };
 
@@ -84,10 +82,10 @@
 
   const onList = async (): Promise<void> => {
     isLoading = true;
-    const {game} = ethersService.keys;
+    const {somGame} = ethersService.keys;
 
     if (!$walletStore.isApprovedForAll) {
-      const isConfirmed = await ethersService.transact("skins", "setApprovalForAll", [game, true]);
+      const isConfirmed = await ethersService.transact("somTokens", "setApprovalForAll", [somGame, true]);
       if (!isConfirmed) {
         isLoading = false;
         return;
@@ -95,16 +93,16 @@
     }
 
     const isConfirmed = await ethersService.transact(
-      "game",
+      "somGame",
       "listItem",
-      [id, amount, utils.parseUnits(price)]
+      [id, amount, price]
     );
     if (!isConfirmed) {
       isLoading = false;
       return;
     }
 
-    await ethersService.loadUser();
+    await ethersService.reloadUser();
     onValidateInput();
     isLoading = false;
   };
@@ -186,11 +184,11 @@
         <br/>
         <tr>
           <td>PRICE</td>
-          <td><CurrencyComponent name="crystals" number={thePrice}/></td>
+          <td><CurrencyComponent name="ecr" number={thePrice}/></td>
         </tr>
         <tr>
           <td>BUYOUT</td>
-          <td><CurrencyComponent name="crystals" number={buyout}/></td>
+          <td><CurrencyComponent name="ecr" number={buyout}/></td>
         </tr>
       </table>
     </div>

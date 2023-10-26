@@ -35,7 +35,7 @@
   }
 </style>
 
-<div class="deck-cards" bind:this={deckCardsElement}>
+<div class="deck-cards" bind:this="{deckCardsElement}">
   {#if $deckStore.cards.length}
     {#each $deckStore.cards as card}
       <DeckCardComponent {card}/>

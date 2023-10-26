@@ -12,7 +12,7 @@ const endGame = (): void => {
       return player;
     });
 
-    socket.emit("updateStatus");
+    socket.emit("updateFriend");
   });
 };
 

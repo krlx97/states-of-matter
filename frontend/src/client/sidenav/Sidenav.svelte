@@ -11,7 +11,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    background-color: rgb(31, 31, 31);
+    /* background-color: rgb(31, 31, 31); */
     border: 0 solid;
     border-left-width: 1px;
     border-image: linear-gradient(

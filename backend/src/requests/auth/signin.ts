@@ -1,20 +1,25 @@
 import {compare} from "bcrypt"
-import {PlayerStatus} from "@som/shared/enums";
-import {mongo} from "apis";
-import {generatePlayerView} from "helpers/player";
-import {generateGameView} from "helpers/game/generateGameFe";
-import type {AccountFrontend, GameView} from "@som/shared/types/frontend";
+import {cards, cardsView} from "@som/shared/data";
+import {CardType, PlayerStatus} from "@som/shared/enums";
+import {mongo} from "app";
+import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
+
+import type {
+  AccountView,
+  GameView,
+  PlayerView
+} from "@som/shared/types/views";
 
 const signin: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {accounts, chats, games, lobbies, players} = mongo;
+  const {$accounts, $chats, $games, $lobbies, $players} = mongo;
 
   socket.on("signin", async (params) => {
     const {name, password} = params;
     let lobby, game: any;
 
-    const acc = await accounts.findOne({name});
+    const acc = await $accounts.findOne({name});
 
     if (!acc) {
       return error(`Account ${name} not found.`);
@@ -26,7 +31,7 @@ const signin: SocketRequest = (socket, error): void => {
       return error("Invalid password.");
     }
 
-    const $player = await players.findOneAndUpdate({name}, [{
+    const $player = await $players.findOneAndUpdate({name}, [{
       $set: {
         socketId,
         status: {
@@ -51,20 +56,20 @@ const signin: SocketRequest = (socket, error): void => {
     });
 
     if (!$player.value) {
-      return error("Error updating player.");
+      return error("Error updating player. xdf");
     }
 
     const friendsView: Array<any> = [];
 
     for (const friendname of acc.social.friends) {
       const [friend, friendAcc, chat] = await Promise.all([
-        players.findOne({
+        $players.findOne({
           name: friendname
         }),
-        accounts.findOne({
+        $accounts.findOne({
           name: friendname
         }),
-        chats.findOne({
+        $chats.findOne({
           players: {
             $all: [$player.value.name, friendname]
           }
@@ -96,22 +101,22 @@ const signin: SocketRequest = (socket, error): void => {
     let gameFrontend: GameView | undefined;
 
     if (lobbyId) {
-      lobby = await lobbies.findOne({id: lobbyId});
+      lobby = await $lobbies.findOne({id: lobbyId});
 
       if (!lobby) {
         return error("You are currently in a lobby that cannot be found. (Contact dev)");
       }
     } else if (gameId) {
-      game = await games.findOne({id: gameId});
+      game = await $games.findOne({id: gameId});
 
       if (!game) {
         return error("You are currently in a game that cannot be found. (Contact dev)");
       }
 
-      gameFrontend = generateGameView(game, $player.value.name);
+      gameFrontend = gameHelpers.generateGameView(game, $player.value.name);
     }
 
-    const accountFrontend: AccountFrontend = {
+    const accountFrontend: AccountView = {
       name,
       publicKey: acc.publicKey,
       avatarId: acc.avatarId,
@@ -119,7 +124,49 @@ const signin: SocketRequest = (socket, error): void => {
       social
     };
 
-    const playerFrontend = generatePlayerView($player.value);
+    const playerFrontend: PlayerView = {
+      name: $player.value.name,
+      experience: $player.value.experience,
+      level: $player.value.level,
+      elo: $player.value.elo,
+      joinedAt: $player.value.joinedAt,
+      status: $player.value.status,
+      queueId: $player.value.queueId,
+      deckId: $player.value.deckId,
+      lobbyId: $player.value.lobbyId,
+      gameId: $player.value.gameId,
+      gamePopupId: $player.value.gamePopupId,
+      games: $player.value.games,
+      decks: $player.value.decks.map((deck) => ({
+        id: deck.id,
+        klass: deck.klass,
+        name: deck.name,
+        cardsInDeck: deck.cards.reduce((acc, {amount}) => acc += amount, 0),
+        cards: deck.cards.map((deckCard) => {
+          const card = cards.find((card) => deckCard.id === card.id);
+
+          if (!card || card.type === CardType.HERO) {
+            console.log("Card not found, deck invalid, hero can't be in deck...?");
+            // this should never happen though...
+            return {id: 0, name: "", amount: 0, manaCost: 0};
+          }
+
+          const cardView = cardsView.get(card.id);
+
+          if (!cardView) {
+            return {id: 0, name: "", amount: 0, manaCost: 0};
+          }
+
+          const {id, amount} = deckCard;
+          const {manaCost} = card;
+          const {name} = cardView;
+
+          return {id, name, amount, manaCost};
+        })
+      })),
+      skins: $player.value.skins,
+      tutorial: $player.value.tutorial
+    };
 
     socket.emit("signin", {
       accountFrontend,

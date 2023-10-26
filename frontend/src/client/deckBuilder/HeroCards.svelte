@@ -1,9 +1,9 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
-  import {CardType} from "@som/shared/enums";
+import {CardType} from "@som/shared/enums";
+import {tutorialStore} from "stores";
   import HeroCardComponent from "./HeroCard.svelte";
-    import { tutorialStore } from "stores";
-
+    
   $: isTutorial = $tutorialStore.name === "deckBuilder" && $tutorialStore.currentStep === 2;
 </script>
 

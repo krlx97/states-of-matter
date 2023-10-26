@@ -2,14 +2,17 @@
   import {createEventDispatcher} from "svelte";
   import {socketService} from "services";
   import {ProgressBarComponent} from "ui";
-  import type {PlayerDeckView} from "@som/shared/types/frontend";
+  import type {PlayerDeckView} from "@som/shared/types/views";
 
   const dispatch = createEventDispatcher();
   let deck: PlayerDeckView;
   const progress = deck.cardsInDeck / 30 * 100;
 
   const selectDeck = (): void => {
-    socketService.socket.emit("selectDeck", {deckId: deck.id});
+    socketService.socket.emit("selectDeck", {
+      deckId: deck.id
+    });
+
     dispatch("toggleDeckSlots");
   };
 
@@ -66,7 +69,9 @@
   }
 </style>
 
-<div class="deck-slot" on:click={selectDeck} on:keypress={selectDeck}>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="deck-slot" on:click="{selectDeck}">
   <div class="deck-slot__img">
     <img src="assets/classes/48/{deck.klass}.png" alt="Class"/>
   </div>
@@ -75,6 +80,9 @@
       <div>{deck.name}</div>
       <div>{deck.cardsInDeck} / 30</div>
     </div>
-    <ProgressBarComponent bars={[{color: "purple", progress}]}/>
+    <ProgressBarComponent bars="{[{
+      color: "purple",
+      progress
+    }]}"/>
   </div>
 </div>

@@ -16,15 +16,19 @@
     height: 100%;
     width: 100%;
     display: flex;
+justify-content: center;
   }
 
   .leaderboards__players {
-    height: 740px;
-    padding: 1em;
+    height: 100vh;
+    padding: var(--spacing-md);
     flex-basis: 50%;
     display: flex;
     flex-direction: column;
+align-items: center;
+    gap: 1em;
     overflow-y: scroll;
+box-sizing: border-box;
   }
 
   .leaderboards__players::-webkit-scrollbar {
@@ -41,8 +45,11 @@
   }
 
   .leaderboards__players__player {
-    margin: var(--spacing-md);
-    /* padding: var(--spacing-md); */
+    width: 384px;
+    height: 96px;
+
+    /* margin-bottom: var(--spacing-md); */
+padding: 0 5em;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -52,7 +59,7 @@
     /* border-radius: 4px; */
     /* box-shadow: var(--elevation-sm); */
 
-    border-top-width: 0;
+    /* border-top-width: 0;
     border-right-width: 0;
     border-bottom-width: 1px;
     border-left-width: 0;
@@ -62,7 +69,9 @@
       rgba(63,63,63,1) 0%,
       rgba(255,255,255,1) 50%,
       rgba(63,63,63,1) 100%
-    ) 1;
+    ) 1; */
+    /* background-image: url(assets/banners/1.png); */
+
     /* background: linear-gradient(
       180deg,
       rgba(179, 105, 244, 0.1) 0%,
@@ -83,12 +92,12 @@
     <div class="leaderboards__players">
       <h1 class="title">Level Leaderboards</h1>
       {#each $leaderboardsStore.byLevel as {name, level, avatarId}, i}
-        <div class="leaderboards__players__player">
+        <div class="leaderboards__players__player" style={`background-image: url(assets/banners/${((Math.random() * 3) + 1).toFixed()}.png);`}>
           <img src="assets/avatars/{avatarId}.png" height="48" width="48" alt="Avatar"/>
           <div style="width: 92px; text-align: center;">
-            {name}
+            {name}<br/>{level}
           </div>
-          <div>Level {level}</div>
+          <!-- <div>Level </div> -->
           <div style="color: {i === 0 ? "#FFD700" : i === 1 ? "#C0C0C0" : i === 2 ? "#CD7F32" : "white"}; font-size: 32px;">#{i + 1}</div>
         </div>
       {/each}
@@ -96,12 +105,12 @@
     <div class="leaderboards__players">
       <h1 class="title">Elo Leaderboards</h1>
       {#each $leaderboardsStore.byElo as {name, elo, avatarId}, i}
-        <div class="leaderboards__players__player">
+        <div class="leaderboards__players__player" style={`background-image: url(assets/banners/${((Math.random() * 3) + 1).toFixed()}.png);`}>
           <img src="assets/avatars/{avatarId}.png" height="48" width="48" alt="Avatar"/>
           <div style="width: 92px; text-align: center;">
-            {name}
+            {name}<br/>{elo}
           </div>
-          <div>Elo {elo}</div>
+          <!-- <div>Elo </div> -->
           <div style="color: {i === 0 ? "#FFD700" : i === 1 ? "#C0C0C0" : i === 2 ? "#CD7F32" : "white"}; font-size: 32px;">#{i + 1}</div>
         </div>
       {/each}

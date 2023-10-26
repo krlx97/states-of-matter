@@ -1,14 +1,13 @@
 import {PlayerStatus} from "@som/shared/enums";
-import {mongo, server} from "apis";
+import {mongo, server} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const leaveLobby: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {lobbies, players} = mongo;
-  const {io} = server;
+  const {$lobbies, $players} = mongo;
 
   socket.on("leaveLobby", async () => {
-    const $player = await players.findOne({socketId});
+    const $player = await $players.findOne({socketId});
 
     if (!$player) {
       return error("Player not found.");
@@ -18,7 +17,7 @@ const leaveLobby: SocketRequest = (socket, error): void => {
     }
 
     const id = $player.lobbyId;
-    const $lobby = await lobbies.findOne({id});
+    const $lobby = await $lobbies.findOne({id});
 
     if (!$lobby) {
       return error("Lobby not found.");
@@ -28,7 +27,7 @@ const leaveLobby: SocketRequest = (socket, error): void => {
     }
 
     const [$lobbyUpdate, $playerUpdate, $playerHost] = await Promise.all([
-      lobbies.updateOne({id}, {
+      $lobbies.updateOne({id}, {
         $set: {
           challengee: {
             name: "",
@@ -36,13 +35,13 @@ const leaveLobby: SocketRequest = (socket, error): void => {
           }
         }
       }),
-      players.updateOne({socketId}, {
+      $players.updateOne({socketId}, {
         $set: {
           lobbyId: 0,
           status: PlayerStatus.ONLINE
         }
       }),
-      players.findOne({
+      $players.findOne({
         name: $lobby.host.name
       })
     ]);
@@ -50,15 +49,17 @@ const leaveLobby: SocketRequest = (socket, error): void => {
     if (!$lobbyUpdate.modifiedCount) {
       return error("Error updating lobby.");
     }
+
     if (!$playerUpdate.modifiedCount) {
       return error("Error updating player.");
     }
+
     if (!$playerHost) {
       return error("Lobby host not found.");
     }
 
     socket.emit("leaveLobbySender");
-    io.to($playerHost.socketId).emit("leaveLobbyReceiver");
+    server.io.to($playerHost.socketId).emit("leaveLobbyReceiver");
   });
 };
 

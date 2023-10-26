@@ -50,17 +50,17 @@ const declineGame: SocketRequest = (socket, error): void => {
       return error("Failed to delete game popup.");
     }
 
-    if (!$playerA.value) {
+    if (!$playerA) {
       return error("Player A in popup not found / updated.");
     }
 
-    if (!$playerB.value) {
+    if (!$playerB) {
       return error("Player B in popup not found / updated.");
     }
 
     io.to([
-      $playerA.value.socketId,
-      $playerB.value.socketId
+      $playerA.socketId,
+      $playerB.socketId
     ]).emit("declineGame");
   });
 };

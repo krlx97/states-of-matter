@@ -67,7 +67,7 @@ const joinLobby: SocketRequest = (socket, error): void => {
       })
     ]);
 
-    if (!$lobbyUpdate.value) {
+    if (!$lobbyUpdate) {
       return error("Error updating lobby.");
     }
 
@@ -79,7 +79,7 @@ const joinLobby: SocketRequest = (socket, error): void => {
       return error("Lobby host not found.");
     }
 
-    const {host, challengee} = $lobbyUpdate.value;
+    const {host, challengee} = $lobbyUpdate;
     const lobby: LobbyView = {id, host, challengee};
 
     socket.emit("joinLobbySender", {lobby});

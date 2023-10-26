@@ -28,7 +28,7 @@ const gamePopup = async (type: GameType, playerA: string, playerB: string) => {
     })
   ]);
 
-  if (!a.value || !b.value) {
+  if (!a || !b) {
     return;
   }
 
@@ -36,17 +36,17 @@ const gamePopup = async (type: GameType, playerA: string, playerB: string) => {
     id,
     type,
     playerA: {
-      name: a.value.name,
+      name: a.name,
       avatarId: 1,
-      level: a.value.level,
-      elo: a.value.elo,
+      level: a.level,
+      elo: a.elo,
       hasAccepted: false
     },
     playerB: {
-      name: b.value.name,
+      name: b.name,
       avatarId: 1,
-      level: b.value.level,
-      elo: b.value.elo,
+      level: b.level,
+      elo: b.elo,
       hasAccepted: false
     }
   });
@@ -77,17 +77,17 @@ const gamePopup = async (type: GameType, playerA: string, playerB: string) => {
         }
       });
 
-      if (!pa.value || !pb.value) { return; }
+      if (!pa || !pb) { return; }
 
-await $gamePopups.deleteOne({id});
+      await $gamePopups.deleteOne({id});
 
-      io.to(pa.value.socketId).emit("declineGame");
-      io.to(pb.value.socketId).emit("declineGame");
+      io.to(pa.socketId).emit("declineGame");
+      io.to(pb.socketId).emit("declineGame");
     }
   }, 10_000);
 
-  io.to(a.value.socketId).emit("gamePopup");
-  io.to(b.value.socketId).emit("gamePopup");
+  io.to(a.socketId).emit("gamePopup");
+  io.to(b.socketId).emit("gamePopup");
 };
 
 export {gamePopup};

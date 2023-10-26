@@ -53,11 +53,11 @@ const removeFriend: SocketRequest = (socket, error): void => {
       })
     ]);
 
-    if (!$accountSenderUpdate.value) {
+    if (!$accountSenderUpdate) {
       return error("Account sender not found.");
     }
 
-    if (!$accountReceiverUpdate.value) {
+    if (!$accountReceiverUpdate) {
       return error("Account receiver not found.");
     }
 
@@ -68,7 +68,7 @@ const removeFriend: SocketRequest = (socket, error): void => {
     socket.emit("removeFriendSender", {name});
 
     server.io.to($playerReceiver.socketId).emit("removeFriendReceiver", {
-      name: $accountSenderUpdate.value.name
+      name: $accountSenderUpdate.name
     });
   });
 };

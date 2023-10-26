@@ -17,11 +17,11 @@ const disconnect: SocketRequest = (socket, error): void => {
       returnDocument: "after"
     });
 
-    if (!$playerUpdate.value) {
+    if (!$playerUpdate) {
       return error("Error updating player.");
     }
 
-    const {name, status} = $playerUpdate.value;
+    const {name, status} = $playerUpdate;
     const $account = await $accounts.findOne({name});
 
     if (!$account) {

@@ -42,47 +42,47 @@ const startGame = async (
     }),
   ]);
 
-  if (!$playerA.value || !$playerB.value || !$accountA || !$accountB) {
+  if (!$playerA || !$playerB || !$accountA || !$accountB) {
     return;
   }
 
-  const game = generateGame(id, type, $playerA.value, $playerB.value);
+  const game = generateGame(id, type, $playerA, $playerB);
   const isInserted = await $games.insertOne(game);
 
   if (!isInserted.insertedId) {
     return;
   }
 
-  io.to($playerA.value.socketId).emit("startGame" as any, {
+  io.to($playerA.socketId).emit("startGame" as any, {
     playerA: {
-      name: $playerA.value.name,
+      name: $playerA.name,
       avatarId: $accountA.avatarId,
-      level: $playerA.value.level,
-      elo: $playerA.value.elo
+      level: $playerA.level,
+      elo: $playerA.elo
     },
     playerB: {
-      name: $playerB.value.name,
+      name: $playerB.name,
       avatarId: $accountB.avatarId,
-      level: $playerB.value.level,
-      elo: $playerB.value.elo
+      level: $playerB.level,
+      elo: $playerB.elo
     },
-    game: generateGameView(game, $playerA.value.name)
+    game: generateGameView(game, $playerA.name)
   });
 
-  io.to($playerB.value.socketId).emit("startGame" as any, {
+  io.to($playerB.socketId).emit("startGame" as any, {
     playerA: {
-      name: $playerA.value.name,
+      name: $playerA.name,
       avatarId: $accountA.avatarId,
-      level: $playerA.value.level,
-      elo: $playerA.value.elo
+      level: $playerA.level,
+      elo: $playerA.elo
     },
     playerB: {
-      name: $playerB.value.name,
+      name: $playerB.name,
       avatarId: $accountB.avatarId,
-      level: $playerB.value.level,
-      elo: $playerB.value.elo
+      level: $playerB.level,
+      elo: $playerB.elo
     },
-    game: generateGameView(game, $playerB.value.name)
+    game: generateGameView(game, $playerB.name)
   });
 };
 

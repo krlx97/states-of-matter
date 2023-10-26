@@ -1353,24 +1353,24 @@ const gamePopup = async (type, playerA, playerB) => {
             returnDocument: "after"
         })
     ]);
-    if (!a.value || !b.value) {
+    if (!a || !b) {
         return;
     }
     const inserted = await $gamePopups.insertOne({
         id,
         type,
         playerA: {
-            name: a.value.name,
+            name: a.name,
             avatarId: 1,
-            level: a.value.level,
-            elo: a.value.elo,
+            level: a.level,
+            elo: a.elo,
             hasAccepted: false
         },
         playerB: {
-            name: b.value.name,
+            name: b.name,
             avatarId: 1,
-            level: b.value.level,
-            elo: b.value.elo,
+            level: b.level,
+            elo: b.elo,
             hasAccepted: false
         }
     });
@@ -1399,16 +1399,16 @@ const gamePopup = async (type, playerA, playerB) => {
                     gamePopupId: 0
                 }
             });
-            if (!pa.value || !pb.value) {
+            if (!pa || !pb) {
                 return;
             }
             await $gamePopups.deleteOne({ id });
-            io.to(pa.value.socketId).emit("declineGame");
-            io.to(pb.value.socketId).emit("declineGame");
+            io.to(pa.socketId).emit("declineGame");
+            io.to(pb.socketId).emit("declineGame");
         }
     }, 10_000);
-    io.to(a.value.socketId).emit("gamePopup");
-    io.to(b.value.socketId).emit("gamePopup");
+    io.to(a.socketId).emit("gamePopup");
+    io.to(b.socketId).emit("gamePopup");
 };
 
 const generateGame = (id, type, playerA, playerB) => {
@@ -1586,43 +1586,43 @@ const startGame = async (id, type, playerA, playerB) => {
             name: playerB
         }),
     ]);
-    if (!$playerA.value || !$playerB.value || !$accountA || !$accountB) {
+    if (!$playerA || !$playerB || !$accountA || !$accountB) {
         return;
     }
-    const game = generateGame(id, type, $playerA.value, $playerB.value);
+    const game = generateGame(id, type, $playerA, $playerB);
     const isInserted = await $games.insertOne(game);
     if (!isInserted.insertedId) {
         return;
     }
-    io.to($playerA.value.socketId).emit("startGame", {
+    io.to($playerA.socketId).emit("startGame", {
         playerA: {
-            name: $playerA.value.name,
+            name: $playerA.name,
             avatarId: $accountA.avatarId,
-            level: $playerA.value.level,
-            elo: $playerA.value.elo
+            level: $playerA.level,
+            elo: $playerA.elo
         },
         playerB: {
-            name: $playerB.value.name,
+            name: $playerB.name,
             avatarId: $accountB.avatarId,
-            level: $playerB.value.level,
-            elo: $playerB.value.elo
+            level: $playerB.level,
+            elo: $playerB.elo
         },
-        game: generateGameView(game, $playerA.value.name)
+        game: generateGameView(game, $playerA.name)
     });
-    io.to($playerB.value.socketId).emit("startGame", {
+    io.to($playerB.socketId).emit("startGame", {
         playerA: {
-            name: $playerA.value.name,
+            name: $playerA.name,
             avatarId: $accountA.avatarId,
-            level: $playerA.value.level,
-            elo: $playerA.value.elo
+            level: $playerA.level,
+            elo: $playerA.elo
         },
         playerB: {
-            name: $playerB.value.name,
+            name: $playerB.name,
             avatarId: $accountB.avatarId,
-            level: $playerB.value.level,
-            elo: $playerB.value.elo
+            level: $playerB.level,
+            elo: $playerB.elo
         },
-        game: generateGameView(game, $playerB.value.name)
+        game: generateGameView(game, $playerB.name)
     });
 };
 
@@ -1680,10 +1680,10 @@ const disconnect = (socket, error) => {
         }, {
             returnDocument: "after"
         });
-        if (!$playerUpdate.value) {
+        if (!$playerUpdate) {
             return error("Error updating player.");
         }
-        const { name, status } = $playerUpdate.value;
+        const { name, status } = $playerUpdate;
         const $account = await $accounts.findOne({ name });
         if (!$account) {
             return error("Account not found.");
@@ -1730,7 +1730,7 @@ const signin = (socket, error) => {
             }], {
             returnDocument: "after"
         });
-        if (!$player.value) {
+        if (!$player) {
             return error("Error updating player. xdf");
         }
         const friendsView = [];
@@ -1744,7 +1744,7 @@ const signin = (socket, error) => {
                 }),
                 $chats.findOne({
                     players: {
-                        $all: [$player.value.name, friendname]
+                        $all: [$player.name, friendname]
                     }
                 })
             ]);
@@ -1767,7 +1767,7 @@ const signin = (socket, error) => {
                 isOpen: false
             }
         };
-        const { lobbyId, gameId } = $player.value;
+        const { lobbyId, gameId } = $player;
         let gameFrontend;
         if (lobbyId) {
             lobby = await $lobbies.findOne({ id: lobbyId });
@@ -1780,7 +1780,7 @@ const signin = (socket, error) => {
             if (!game) {
                 return error("You are currently in a game that cannot be found. (Contact dev)");
             }
-            gameFrontend = gameHelpers.generateGameView(game, $player.value.name);
+            gameFrontend = gameHelpers.generateGameView(game, $player.name);
         }
         const accountFrontend = {
             name,
@@ -1790,19 +1790,19 @@ const signin = (socket, error) => {
             social
         };
         const playerFrontend = {
-            name: $player.value.name,
-            experience: $player.value.experience,
-            level: $player.value.level,
-            elo: $player.value.elo,
-            joinedAt: $player.value.joinedAt,
-            status: $player.value.status,
-            queueId: $player.value.queueId,
-            deckId: $player.value.deckId,
-            lobbyId: $player.value.lobbyId,
-            gameId: $player.value.gameId,
-            gamePopupId: $player.value.gamePopupId,
-            games: $player.value.games,
-            decks: $player.value.decks.map((deck) => ({
+            name: $player.name,
+            experience: $player.experience,
+            level: $player.level,
+            elo: $player.elo,
+            joinedAt: $player.joinedAt,
+            status: $player.status,
+            queueId: $player.queueId,
+            deckId: $player.deckId,
+            lobbyId: $player.lobbyId,
+            gameId: $player.gameId,
+            gamePopupId: $player.gamePopupId,
+            games: $player.games,
+            decks: $player.decks.map((deck) => ({
                 id: deck.id,
                 klass: deck.klass,
                 name: deck.name,
@@ -1824,8 +1824,8 @@ const signin = (socket, error) => {
                     return { id, name, amount, manaCost };
                 })
             })),
-            skins: $player.value.skins,
-            tutorial: $player.value.tutorial
+            skins: $player.skins,
+            tutorial: $player.tutorial
         };
         socket.emit("signin", {
             accountFrontend,
@@ -2012,7 +2012,7 @@ const closeLobby = (socket, error) => {
         if (!$playerUpdate.modifiedCount) {
             return error("Error updating host.");
         }
-        if ($challengeeUpdate && !$challengeeUpdate.value) {
+        if ($challengeeUpdate && !$challengeeUpdate) {
             return error("Error updating challengee.");
         }
         socket.emit("closeLobby");
@@ -2027,10 +2027,10 @@ const closeLobby = (socket, error) => {
             }, {
                 returnDocument: "after"
             });
-            if (!$challengee.value) {
+            if (!$challengee) {
                 return error("Error updating challengee.");
             }
-            server.io.to($challengee.value.socketId).emit("closeLobby");
+            server.io.to($challengee.socketId).emit("closeLobby");
         }
     });
 };
@@ -2130,15 +2130,15 @@ const declineGame = (socket, error) => {
         if (!$gamePopupDelete.deletedCount) {
             return error("Failed to delete game popup.");
         }
-        if (!$playerA.value) {
+        if (!$playerA) {
             return error("Player A in popup not found / updated.");
         }
-        if (!$playerB.value) {
+        if (!$playerB) {
             return error("Player B in popup not found / updated.");
         }
         io.to([
-            $playerA.value.socketId,
-            $playerB.value.socketId
+            $playerA.socketId,
+            $playerB.socketId
         ]).emit("declineGame");
     });
 };
@@ -2280,7 +2280,7 @@ const joinLobby = (socket, error) => {
                 name: $lobby.host.name
             })
         ]);
-        if (!$lobbyUpdate.value) {
+        if (!$lobbyUpdate) {
             return error("Error updating lobby.");
         }
         if (!$playerUpdate.modifiedCount) {
@@ -2289,7 +2289,7 @@ const joinLobby = (socket, error) => {
         if (!$playerHost) {
             return error("Lobby host not found.");
         }
-        const { host, challengee } = $lobbyUpdate.value;
+        const { host, challengee } = $lobbyUpdate;
         const lobby = { id, host, challengee };
         socket.emit("joinLobbySender", { lobby });
         server.io.to($playerHost.socketId).emit("joinLobbyReceiver", { challengee });
@@ -3406,10 +3406,10 @@ const acceptFriend = (socket, error) => {
                 messages: []
             })
         ]);
-        if (!$accountSender.value) {
+        if (!$accountSender) {
             return error("Account sender not found.");
         }
-        if (!$accountReceiver.value) {
+        if (!$accountReceiver) {
             return error("Account receiver not found.");
         }
         if (!$chatInsert.insertedId) {
@@ -3417,12 +3417,12 @@ const acceptFriend = (socket, error) => {
         }
         socket.emit("acceptFriendSender", {
             name: $playerReceiver.name,
-            avatarId: $accountReceiver.value.avatarId,
+            avatarId: $accountReceiver.avatarId,
             status: $playerReceiver.status
         });
         server.io.to($playerReceiver.socketId).emit("acceptFriendReceiver", {
             name: $playerSender.name,
-            avatarId: $accountSender.value.avatarId,
+            avatarId: $accountSender.avatarId,
             status: $playerSender.status
         });
     });
@@ -3602,10 +3602,10 @@ const removeFriend = (socket, error) => {
                 }
             })
         ]);
-        if (!$accountSenderUpdate.value) {
+        if (!$accountSenderUpdate) {
             return error("Account sender not found.");
         }
-        if (!$accountReceiverUpdate.value) {
+        if (!$accountReceiverUpdate) {
             return error("Account receiver not found.");
         }
         if (!$chatDelete.deletedCount) {
@@ -3613,7 +3613,7 @@ const removeFriend = (socket, error) => {
         }
         socket.emit("removeFriendSender", { name });
         server.io.to($playerReceiver.socketId).emit("removeFriendReceiver", {
-            name: $accountSenderUpdate.value.name
+            name: $accountSenderUpdate.name
         });
     });
 };
@@ -3695,10 +3695,10 @@ const setAvatar = (socket, error) => {
         }, {
             returnDocument: "after"
         });
-        if (!$accountUpdate.value) {
+        if (!$accountUpdate) {
             return error("Failed to update account.");
         }
-        const { name, social } = $accountUpdate.value;
+        const { name, social } = $accountUpdate;
         const socketIds = await playerHelpers.getSocketIds(social.friends);
         socket.emit("setAvatarSender", { avatarId });
         server.io.to(socketIds).emit("setAvatarReceiver", { name, avatarId });

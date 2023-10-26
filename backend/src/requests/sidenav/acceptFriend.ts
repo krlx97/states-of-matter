@@ -51,11 +51,11 @@ const acceptFriend: SocketRequest = (socket, error): void => {
       })
     ]);
 
-    if (!$accountSender.value) {
+    if (!$accountSender) {
       return error("Account sender not found.");
     }
 
-    if (!$accountReceiver.value) {
+    if (!$accountReceiver) {
       return error("Account receiver not found.");
     }
 
@@ -65,13 +65,13 @@ const acceptFriend: SocketRequest = (socket, error): void => {
 
     socket.emit("acceptFriendSender", {
       name: $playerReceiver.name,
-      avatarId: $accountReceiver.value.avatarId,
+      avatarId: $accountReceiver.avatarId,
       status: $playerReceiver.status
     });
 
     server.io.to($playerReceiver.socketId).emit("acceptFriendReceiver", {
       name: $playerSender.name,
-      avatarId: $accountSender.value.avatarId,
+      avatarId: $accountSender.avatarId,
       status: $playerSender.status
     });
   });

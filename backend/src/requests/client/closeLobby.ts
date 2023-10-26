@@ -60,7 +60,7 @@ const closeLobby: SocketRequest = (socket, error): void => {
       return error("Error updating host.");
     }
 
-    if ($challengeeUpdate && !$challengeeUpdate.value) {
+    if ($challengeeUpdate && !$challengeeUpdate) {
       return error("Error updating challengee.");
     }
 
@@ -78,11 +78,11 @@ const closeLobby: SocketRequest = (socket, error): void => {
         returnDocument: "after"
       });
 
-      if (!$challengee.value) {
+      if (!$challengee) {
         return error("Error updating challengee.");
       }
 
-      server.io.to($challengee.value.socketId).emit("closeLobby");
+      server.io.to($challengee.socketId).emit("closeLobby");
     }
   });
 };

@@ -27,11 +27,11 @@ const setAvatar: SocketRequest = (socket, error): void => {
       returnDocument: "after"
     });
 
-    if (!$accountUpdate.value) {
+    if (!$accountUpdate) {
       return error("Failed to update account.");
     }
 
-    const {name, social} = $accountUpdate.value;
+    const {name, social} = $accountUpdate;
     const socketIds = await playerHelpers.getSocketIds(social.friends);
 
     socket.emit("setAvatarSender", {avatarId});

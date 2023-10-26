@@ -55,7 +55,7 @@ const signin: SocketRequest = (socket, error): void => {
       returnDocument: "after"
     });
 
-    if (!$player.value) {
+    if (!$player) {
       return error("Error updating player. xdf");
     }
 
@@ -71,7 +71,7 @@ const signin: SocketRequest = (socket, error): void => {
         }),
         $chats.findOne({
           players: {
-            $all: [$player.value.name, friendname]
+            $all: [$player.name, friendname]
           }
         })
       ]);
@@ -97,7 +97,7 @@ const signin: SocketRequest = (socket, error): void => {
       }
     };
 
-    const {lobbyId, gameId} = $player.value;
+    const {lobbyId, gameId} = $player;
     let gameFrontend: GameView | undefined;
 
     if (lobbyId) {
@@ -113,7 +113,7 @@ const signin: SocketRequest = (socket, error): void => {
         return error("You are currently in a game that cannot be found. (Contact dev)");
       }
 
-      gameFrontend = gameHelpers.generateGameView(game, $player.value.name);
+      gameFrontend = gameHelpers.generateGameView(game, $player.name);
     }
 
     const accountFrontend: AccountView = {
@@ -125,19 +125,19 @@ const signin: SocketRequest = (socket, error): void => {
     };
 
     const playerFrontend: PlayerView = {
-      name: $player.value.name,
-      experience: $player.value.experience,
-      level: $player.value.level,
-      elo: $player.value.elo,
-      joinedAt: $player.value.joinedAt,
-      status: $player.value.status,
-      queueId: $player.value.queueId,
-      deckId: $player.value.deckId,
-      lobbyId: $player.value.lobbyId,
-      gameId: $player.value.gameId,
-      gamePopupId: $player.value.gamePopupId,
-      games: $player.value.games,
-      decks: $player.value.decks.map((deck) => ({
+      name: $player.name,
+      experience: $player.experience,
+      level: $player.level,
+      elo: $player.elo,
+      joinedAt: $player.joinedAt,
+      status: $player.status,
+      queueId: $player.queueId,
+      deckId: $player.deckId,
+      lobbyId: $player.lobbyId,
+      gameId: $player.gameId,
+      gamePopupId: $player.gamePopupId,
+      games: $player.games,
+      decks: $player.decks.map((deck) => ({
         id: deck.id,
         klass: deck.klass,
         name: deck.name,
@@ -164,8 +164,8 @@ const signin: SocketRequest = (socket, error): void => {
           return {id, name, amount, manaCost};
         })
       })),
-      skins: $player.value.skins,
-      tutorial: $player.value.tutorial
+      skins: $player.skins,
+      tutorial: $player.tutorial
     };
 
     socket.emit("signin", {

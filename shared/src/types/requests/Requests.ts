@@ -1,6 +1,9 @@
 // Auth
-import type {Signin} from "./auth/Signin.js";
-import type {Signup} from "./auth/Signup.js";
+import type {GetNonce} from "./auth/GetNonce.js";
+import type {SigninMetamask} from "./auth/SigninMetamask.js";
+import type {SigninPassword} from "./auth/SigninPassword.js";
+import type {SignupMetamask} from "./auth/SignupMetamask.js";
+import type {SignupPassword} from "./auth/SignupPassword.js";
 // Client
 import type {DefaultSkin} from "./client/DefaultSkin.js";
 import type {FinishTutorial} from "./client/FinishTutorial.js";
@@ -28,8 +31,11 @@ import type {UnblockFriend} from "./sidenav/UnblockFriend.js";
 
 interface Requests {
   // Auth
-  signin: (params: Signin) => Promise<void>;
-  signup: (params: Signup) => Promise<void>;
+  getNonce: (params: GetNonce) => Promise<void>;
+  signinMetamask: (params: SigninMetamask) => Promise<void>;
+  signinPassword: (params: SigninPassword) => Promise<void>;
+  signupMetamask: (params: SignupMetamask) => Promise<void>;
+  signupPassword: (params: SignupPassword) => Promise<void>;
   // Client
   acceptGame: () => Promise<void>;
   closeLobby: () => Promise<void>;

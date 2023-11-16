@@ -29,6 +29,7 @@
     isLoading = true;
 
     const isConfirmed = await ethersService.transact("somGame", "claimStarterPack", []);
+
     if (!isConfirmed) {
       isLoading = false;
       return;
@@ -56,7 +57,7 @@
   }
 </style>
 
-{#if $accountStore.publicKey}
+{#if $accountStore.address}
   <div class="wallet">
     <div class:isTutorial>
       <CurrenciesComponent/>

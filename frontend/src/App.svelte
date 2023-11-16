@@ -1,16 +1,72 @@
 <script lang="ts">
   import {onMount} from "svelte";
   import {responses} from "responses";
-  import {accountStore, playerStore} from "stores";
+  import {accountStore, ethersStore, playerStore} from "stores";
   import ModalsComponent from "./Modals.svelte";
   import NotificationsComponent from "./Notifications.svelte";
   import AuthComponent from "./auth/Auth.svelte";
   import ClientComponent from "./client/Client.svelte";
   import GameComponent from "./game/Game.svelte";
+  import { ethersService } from "./shared/services/ethersService";
+  import { get } from "svelte/store";
+  import { socketService } from "services";
 
-  onMount((): void => {
+  onMount(async () => {
+    const {ethereum} = window;
+
+    await ethersService.init();
+
     responses.forEach((response): void => {
       response();
+    });
+
+    const token = localStorage.getItem("jsonwebtoken");
+
+    if (token) {
+      socketService.socket.emit("authenticate", {token});
+    }
+
+    if (!ethereum) {
+      return;
+    }
+
+    ethereum.on("accountsChanged", async (accounts) => {
+      if (accounts.length) {
+        const signer = await get(ethersStore).provider.getSigner();
+
+        ethersStore.update((store) => {
+          store.signer = signer;
+          store.isValid =
+            window.ethereum !== undefined
+            && store.signer?.address !== undefined
+            && store.chainId === 41n;
+
+          return store;
+        });
+      } else {
+        ethersStore.update((store) => {
+          store.signer = undefined;
+          store.isValid =
+            window.ethereum !== undefined
+            && store.signer?.address !== undefined
+            && store.chainId === 41n;
+
+          return store;
+        });
+      }
+    });
+
+    ethereum.on("chainChanged", async (chainId) => {
+      // const network = await get(ethersStore).provider.getNetwork();
+
+      ethersStore.update((store) => {
+        store.chainId = BigInt(chainId);
+        store.isValid =
+          window.ethereum !== undefined
+          && store.signer?.address !== undefined
+          && store.chainId === 41n;
+        return store;
+      });
     });
   });
 </script>

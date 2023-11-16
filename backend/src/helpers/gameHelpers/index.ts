@@ -2,7 +2,6 @@ import {effect} from "./effect";
 import {attackMinionSave} from "./attackMinionSave";
 import {buildDeck} from "./buildDeck";
 import {deductHealth} from "./deductHealth";
-import {drawCard} from "./drawCard";
 import {endGame} from "./endGame";
 import {gamePopup} from "./gamePopup";
 import {generateGame} from "./generateGame";
@@ -22,7 +21,6 @@ const gameHelpers = {
   attackMinionSave,
   buildDeck,
   deductHealth,
-  drawCard,
   endGame,
   gamePopup,
   generateGame,

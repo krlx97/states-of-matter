@@ -34,9 +34,9 @@ const deductHealth = (
 
       if (remaining < 0) {
         if (minion.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
-          minion.health -= 1;
+          minion.health.current -= 1;
         } else {
-          minion.health -= remaining;
+          minion.health.current -= remaining;
         }
       }
 
@@ -45,9 +45,9 @@ const deductHealth = (
     }
   } else { // no shield
     if (minion.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
-      minion.health -= 1;
+      minion.health.current -= 1;
     } else {
-      minion.health -= damage;
+      minion.health.current -= damage;
     }
   }
 

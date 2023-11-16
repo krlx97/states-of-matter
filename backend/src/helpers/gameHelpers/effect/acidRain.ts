@@ -10,14 +10,17 @@ interface AcidRain {
 
 const acidRain = (params: AcidRain): Animations => {
   const {opponent} = params;
+  const animations: Animations = [];
   const minionKeys = Object.keys(opponent.field) as Array<keyof typeof opponent.field>;
   const possibleMinions: Array<GameMinionCard> = [];
 
-  minionKeys.forEach((key) => {
+  minionKeys.forEach((key): void => {
     const minion = opponent.field[key];
 
     if (minion && minion.type !== CardType.HERO) {
-      const hasElusiveBuff = minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
+      const hasElusiveBuff = minion
+        .buffs
+        .find((buff): boolean => buff.id === EffectId.ELUSIVE);
 
       if (!hasElusiveBuff) {
         possibleMinions.push(minion);
@@ -31,7 +34,7 @@ const acidRain = (params: AcidRain): Animations => {
   insertDebuff(minion1, EffectId.NEUROTOXIN);
   insertDebuff(minion2, EffectId.NEUROTOXIN);
 
-  return [];
+  return animations;
 };
 
 export {acidRain};

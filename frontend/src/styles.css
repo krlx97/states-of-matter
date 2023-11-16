@@ -143,6 +143,10 @@ img {
     color 333ms cubic-bezier(var(--ease-in-out-quad));
 }
 
+.button img {
+  margin-right: var(--spacing-md);
+}
+
 .button:hover {
   border-color: rgb(var(--white));
   color: rgb(var(--white));

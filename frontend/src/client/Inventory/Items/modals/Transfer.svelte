@@ -1,7 +1,7 @@
 <script lang="ts">
   import {items} from "data";
   import {ethersService, formService} from "services";
-  import {modalStore, walletStore} from "stores";
+  import {accountStore, modalStore, walletStore} from "stores";
   import {FormFieldComponent, FormLoadingComponent} from "ui";
 
   const {id} = $modalStore.data;
@@ -45,7 +45,7 @@
         const isConfirmed = await ethersService.transact(
           "somTokens",
           "safeTransferFrom",
-          [ethersService.key, $formStore.fields.address.value, id, $formStore.fields.amount.value, []]
+          [$accountStore.publicKey, $formStore.fields.address.value, id, $formStore.fields.amount.value, []]
         );
 
         if (!isConfirmed) {

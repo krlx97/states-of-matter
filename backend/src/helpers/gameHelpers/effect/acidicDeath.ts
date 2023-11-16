@@ -16,15 +16,16 @@ const acidicDeath = (params: AcidicDeath): Animations => {
   const {player, opponent} = params;
   const playerMinionKeys = Object.keys(player.field) as Array<keyof typeof player.field>;
   const opponentMinionKeys = Object.keys(opponent.field) as Array<keyof typeof opponent.field>;
+  const animations: Animations = [];
 
   playerMinionKeys.forEach((key) => {
     const minion = player.field[key];
 
     if (!minion || minion.type === CardType.HERO) { return; }
 
-    deductHealth(player, minion, 1);
+    animations.push(...deductHealth(player, minion, 1));
 
-    if (minion.health <= 0) {
+    if (minion.health.current <= 0) {
       const {trap} = player;
 
       if (trap && trap.effect === EffectId.LAST_STAND) {
@@ -35,7 +36,7 @@ const acidicDeath = (params: AcidicDeath): Animations => {
         moveToGraveyard(player, minion, key);
 
         if (hasAcidicDeathBuff) {
-          acidicDeath({player, opponent});
+          animations.push(...acidicDeath({player, opponent}));
         }
       }
     }
@@ -46,9 +47,9 @@ const acidicDeath = (params: AcidicDeath): Animations => {
 
     if (!minion || minion.type === CardType.HERO) { return; }
 
-    deductHealth(opponent, minion, 1);
+    animations.push(...deductHealth(opponent, minion, 1));
 
-    if (minion.health <= 0) {
+    if (minion.health.current <= 0) {
       const {trap} = opponent;
 
       if (trap && trap.effect === EffectId.LAST_STAND) {
@@ -70,7 +71,7 @@ const acidicDeath = (params: AcidicDeath): Animations => {
     }
   });
 
-  return [true, "Acidic Death triggered."] as any;
+  return animations;
 };
 
 export {acidicDeath};

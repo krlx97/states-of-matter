@@ -1,14 +1,18 @@
-import {hash} from "bcrypt";
+import {verifyMessage} from "ethers";
 import {cards} from "@som/shared/data";
 import {PlayerStatus, QueueId} from "@som/shared/enums";
 import {mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
-const signup: SocketRequest = (socket, error): void => {
+const signupMetamask: SocketRequest = (socket, error): void => {
   const {$accounts, $players} = mongo;
 
-  socket.on("signup", async (params) => {
-    const {name, password} = params;
+  socket.on("signupMetamask", async (params) => {
+    const {name, address, signature} = params;
+
+    if (name.length < 3) {
+      return error("Minimum 3 characters.");
+    }
 
     if (name.length > 16) {
       return error("Maximum 16 characters.");
@@ -20,13 +24,18 @@ const signup: SocketRequest = (socket, error): void => {
       return error("Name taken.");
     }
 
-    const passwordHash = await hash(password, 12);
+    const recoveredAddress = verifyMessage("signup", signature);
+
+    if (recoveredAddress !== address) {
+      return error("Invalid signature.");
+    }
 
     const [insertAccount, insertPlayer] = await Promise.all([
       $accounts.insertOne({
         name,
-        passwordHash,
-        publicKey: "",
+        passwordHash: "",
+        address,
+        nonce: 0,
         avatarId: 0,
         bannerId: 0,
         social: {
@@ -92,4 +101,4 @@ const signup: SocketRequest = (socket, error): void => {
   });
 };
 
-export {signup};
+export {signupMetamask};

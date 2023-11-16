@@ -2,16 +2,20 @@
   import {slide} from "svelte/transition";
 
   let label = "";
-  let type: "text" | "password" = "text";
+  let type: "text" | "password" | "radio" | "checkbox" = "text";
   let icon = "";
   let error = "";
   let action: [string, () => void] | undefined = undefined;
   let value = "";
+  let name = "";
+  let group = "";
+  let disabled = false;
+  let checked = false;
 
   const id = label.toLowerCase();
   const alt = icon.toUpperCase();
 
-  export {label, type, icon, action, error, value};
+  export {label, type, icon, action, error, value, name, group, disabled, checked};
 </script>
 
 <style>
@@ -20,7 +24,7 @@
     padding-top: 8px; /* half of the 16px label overflows over form__field, so 8px accounts for it */
   }
 
-  input {
+  .input {
     height: 50px;
     width: 100%;
     /* Since input is 48px height and text is 16px vertical centered, there is 16px "padding" on top and bot. */
@@ -43,24 +47,28 @@
       color 0.2s cubic-bezier(var(--ease-in-out-quad));
   }
 
-  input:hover {
+  .input:disabled {
+    color: rgb(127, 127, 127);
+  }
+
+  .input:hover {
     border-color: white;
   }
 
-  input:focus {
+  .input:focus {
     border-color: rgb(var(--plasma));
     outline: 0;
   }
 
-  input:focus + label {
+  .input:focus + label {
     transform: translateY(-24px);
   }
 
-  input:not(:placeholder-shown) + label {
+  .input:not(:placeholder-shown) + label {
     transform: translateY(-24px);
   }
 
-  label {
+  .label {
     position: absolute;
     /* 8px top padding from form__field, +16px text padding */
     top: 24px;
@@ -105,24 +113,68 @@
     font: 16px/1 "Nunito";
     text-decoration: underline;
   }
+
+  .radio-field {
+    display: flex;
+    align-items: center;
+  }
+  input[type="radio"] {
+    margin: 0;
+    height: 24px;
+    width: 24px;
+    margin-right: var(--spacing-md);
+    accent-color: rgb(var(--plasma));
+  }
+
+  input[type="checkbox"] {
+    margin: 0;
+    margin-right: var(--spacing-md);
+    height: 24px;
+    width: 24px;
+    accent-color: rgb(var(--plasma));
+  }
 </style>
 
-<div class="form__field">
-  {#if type === "text"}
-    <input {id} placeholder=" " bind:value on:input/>
-  {:else}
-    <input {id} type="password" placeholder=" " bind:value on:input/>
-  {/if}
-  <label for="{id}">{label}</label>
-  <img src="assets/currencies/sm/{icon}.png" {alt}/>
-  <div class="form__field__more">
-    <div class="lt-red">
-      {#if error}
-        <div in:slide>{error}</div>
+{#if type === "text"}
+  <div class="form__field">
+    <input class="input" {id} {disabled} placeholder=" " bind:value on:input/>
+    <label class="label" for="{id}">{label}</label>
+    <img src="assets/currencies/sm/{icon}.png" {alt}/>
+    <div class="form__field__more">
+      <div class="lt-red">
+        {#if error}
+          <div in:slide>{error}</div>
+        {/if}
+      </div>
+      {#if action}
+        <button type="button" on:click="{action[1]}">{action[0]}</button>
       {/if}
     </div>
-    {#if action}
-      <button type="button" on:click="{action[1]}">{action[0]}</button>
-    {/if}
   </div>
-</div>
+{:else if type === "password"}
+  <div class="form__field">
+    <input class="input" {id} {disabled} type="password" placeholder=" " bind:value on:input/>
+    <label class="label" for="{id}">{label}</label>
+    <img src="assets/currencies/sm/{icon}.png" {alt}/>
+    <div class="form__field__more">
+      <div class="lt-red">
+        {#if error}
+          <div in:slide>{error}</div>
+        {/if}
+      </div>
+      {#if action}
+        <button type="button" on:click="{action[1]}">{action[0]}</button>
+      {/if}
+    </div>
+  </div>
+{:else if type === "radio"}
+  <div class="radio-field">
+    <input {id} type="radio" {value} {name} bind:group/>
+    <label for="{id}">{label}</label>
+  </div>
+{:else}
+  <div class="radio-field">
+    <input {id} type="checkbox" {value} {name} bind:checked/>
+    <label for="{id}">{label}</label>
+  </div>
+{/if}

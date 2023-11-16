@@ -10,3 +10,5 @@ export {
 
 export {floatingTextStore, gameNotificationStore, gameStore, nodeStore, selectedCardStore, tooltipStore} from "./game";
 export {accountStore, modalStore, notificationsStore, playerStore, tutorialStore} from "./global";
+
+export {ethersStore} from "./ethersStore";

@@ -14,7 +14,13 @@ const endTurn: SocketRequest = (socket, error): void => {
 
     const {$game, player, opponent} = getGameData;
 
-    await gameHelpers.drawCard($game, player, opponent);
+    const card = opponent.deck.pop();
+
+    if (!card) {
+      return await gameHelpers.endGame($game.id, player.name);
+    }
+
+    opponent.hand.push(card);
 
     player.field.hero.mana = 10;
 

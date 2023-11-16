@@ -9,8 +9,6 @@ import type {
   Player
 } from "@som/shared/types/mongo";
 
-import type {Game, Player} from "@som/shared/types/backend";
-
 const generateGame = (
   id: number,
   type: GameType,

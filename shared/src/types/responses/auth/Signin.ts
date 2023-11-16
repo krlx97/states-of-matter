@@ -6,10 +6,10 @@ import {
 } from "../../views/index.js";
 
 interface Signin {
-  accountFrontend: AccountView;
-  playerFrontend: PlayerView;
-  lobbyFrontend: LobbyView | undefined;
-  gameFrontend: GameView | undefined;
+  accountView: AccountView;
+  gameView: GameView | undefined;
+  lobbyView: LobbyView | undefined;
+  playerView: PlayerView;
 }
 
 export type {Signin};

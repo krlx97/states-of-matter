@@ -87,4 +87,3 @@ const startGame = async (
 };
 
 export {startGame};
-

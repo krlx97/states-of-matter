@@ -39,17 +39,29 @@ const buildDeck = (deck: PlayerDeck): GameCards => {
         klass,
         effect,
         type,
-        health,
-        damage,
-        manaCost,
-        maxHealth: health,
+        health: {
+          current: health,
+          default: health
+        },
+        damage: {
+          current: damage,
+          default: damage
+        },
+        manaCost: {
+          current: manaCost,
+          default: manaCost
+        },
+        // maxHealth: health,
         canAttack: false,
         buffs: [],
         debuffs: []
       };
     } else {
       const {type} = card;
-      gameCard = {id, gid, klass, effect, type, manaCost};
+      gameCard = {id, gid, klass, effect, type, manaCost: {
+        current: manaCost,
+        default: manaCost
+      }};
     }
 
     gameDeck.push(gameCard);

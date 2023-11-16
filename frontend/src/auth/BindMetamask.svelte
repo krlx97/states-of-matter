@@ -1,104 +1,78 @@
 <script lang="ts">
-  import {onMount} from "svelte";
+  import {onDestroy, onMount} from "svelte";
   import {ethersService, socketService} from "services";
+  import {ethersStore} from "stores";
+  import type { Unsubscriber } from "svelte/store";
 
   const {ethereum} = window;
-const stepValid = {
+
+  const stepValid = {
     one: false,
     two: false,
     three: true
   };
-  let selectedAccount = "";
-const onSelectNetwork = async () => {
+
+  const onSelectNetwork = async (): Promise<void> => {
+    if (!ethereum) { return; }
+
     try {
       await ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x29' }],
+        method: "wallet_switchEthereumChain",
+        params: [{
+          chainId: "0x29"
+        }],
       });
     } catch (switchError) {
       // This error code indicates that the chain has not been added to MetaMask.
       if (switchError.code === 4902) {
         try {
           await ethereum.request({
-      method: "wallet_addEthereumChain",
-      params: [{
-        chainId: "0x29",
-        rpcUrls: ["https://testnet.telos.net/evm"],
-        chainName: "Telos Testnet",
-        nativeCurrency: {
-          name: "TLOS",
-          symbol: "TLOS",
-          decimals: 18
-        },
-        blockExplorerUrls: ["https://teloscan.io/"]
-      }]
-    });
-        } catch (addError) {
-          // handle "add" error
-        }
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x29",
+              rpcUrls: ["https://testnet.telos.net/evm"],
+              chainName: "Telos Testnet",
+              nativeCurrency: {
+                name: "TLOS",
+                symbol: "TLOS",
+                decimals: 18
+              },
+              blockExplorerUrls: ["https://teloscan.io/"]
+            }]
+          });
+        } catch (addError) {}
       }
-      // handle other "switch" errors
     }
-    // ethereum.request({
-    //   method: "wallet_addEthereumChain",
-    //   params: [{
-    //     chainId: "0x29",
-    //     rpcUrls: ["https://testnet.telos.net/evm"],
-    //     chainName: "Telos Testnet",
-    //     nativeCurrency: {
-    //       name: "TLOS",
-    //       symbol: "TLOS",
-    //       decimals: 18
-    //     },
-    //     blockExplorerUrls: ["https://teloscan.io/"]
-    //   }]
-    // });
   };
 
   const onConnectMetamask = async (): Promise<void> => {
     const accounts = await ethereum.request({
       method: "eth_requestAccounts"
     });
-
-    selectedAccount = accounts[0] || "Account not selected";
   };
 
-  const onSignin = async (): Promise<void> => {
-    socketService.socket.emit("signin", {
-      publicKey: selectedAccount
-    });
-  };
+  let unsub: Unsubscriber;
 
   onMount(async (): Promise<void> => {
-    (ethereum as any).on("accountsChanged", (accounts) => {
-      selectedAccount = accounts[0];
-      stepValid.two = accounts[0] !== undefined;
+    unsub = ethersStore.subscribe((store): void => {
+      stepValid.one = window.ethereum !== undefined;
+      stepValid.two = store.signer?.address !== undefined;
+      stepValid.three = store.chainId === 41n;
     });
 
-    (ethereum as any).on("chainChanged", (chainId) => {
-      stepValid.three = chainId === "0x539";
-    });
+    stepValid.one = window.ethereum !== undefined;
+    stepValid.two = $ethersStore.signer?.address !== undefined;
+    stepValid.three = $ethersStore.chainId === 41n;
+  });
 
-    const accounts = await ethereum.request({
-      method: "eth_accounts"
-    });
-
-    const chainId = await ethereum.request({
-      method: "eth_chainId"
-    });
-
-    selectedAccount = accounts[0];
-
-    stepValid.one = typeof window.ethereum !== undefined;
-    stepValid.two = accounts[0] !== undefined;
-    stepValid.three = true;
-    // stepValid.three = chainId === "0x539";
+  onDestroy((): void => {
+    unsub();
   });
 </script>
 
 <style>
-
   .signin__steps {
+    margin: 1em 0;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
@@ -130,94 +104,59 @@ const onSelectNetwork = async () => {
     text-align: justify;
   }
 
-  
+  .a {
+    text-decoration: none;
+    color: white;
+  }
 </style>
 
 <div class="signin__steps">
-  <div>
-    To unlock level up rewards and access inventory and the market, it is necessary to link
-    your Metamask wallet. As States of Matter is a complex game, our team is
-    continually working to address any game balance issues that may arise. As a
-    result, the balance of the game may be adjusted, which could directly affect
-    the prices of in-game items on the market. Please keep in mind that any
-    speculation regarding these changes carries its own risks.
+
+  <div class="signin__step">
+    <div
+      class="signin__step__title"
+      class:green="{stepValid.one}"
+      class:lt-red="{!stepValid.one}">
+      Install metamask <b>{stepValid.one ? "✔" : "X"}</b>
+    </div>
+    {#if !stepValid.one}
+      <a class="a" href="https://metamask.io/" target="_blank">
+        <button class="button">
+          <img src="assets/icons/metamask.png" alt="Metamask"/> METAMASK.IO
+        </button>
+      </a>
+      Refresh this page after installation.
+    {/if}
   </div>
-    <div class="signin__step">
-      <div class="signin__step__title">
-        <b>Step 1</b> |
-        <span class:green={stepValid.one} class:red={!stepValid.one}>
-          Install metamask
-        </span>
-      </div>
-      {#if !stepValid.one}
-        <div class="signin__step__info">
-          You can go to metamask's website by clicking the button below. Once
-          you are there, download and install the metamask extension for your
-          browser, then follow the steps to create the metamask wallet. After
-          you have completed the installation, refresh this page to proceed.
-        </div>
-        <a href="https://metamask.io/" target="_blank">
-          <button>
-            <i class="fa-solid fa-up-right-from-square"></i> METAMASK.IO
-          </button>
-        </a>
-      {/if}
+
+  <div class="signin__step">
+    <div class="signin__step__title">
+      <span class:green={stepValid.two} class:lt-red={!stepValid.two}>
+        Connect metamask <b>{stepValid.two ? "✔" : "X"}</b>
+      </span>
     </div>
-
-    <div class="signin__step">
-      <div class="signin__step__title">
-        <b>Step 2</b> |
-        <span class:green={stepValid.two} class:red={!stepValid.two}>
-          Connect with metamask
-        </span>
-      </div>
-      {#if stepValid.one && !stepValid.two}
-        <div class="signin__step__info">
-          In order to display your wallet assets, you need to connect your
-          Metamask account to the game. Your game account will be linked to your
-          Metamask account. It's worth noting that if you change your Metamask
-          account, it's the same as changing your game account.
-        </div>
-        <div>
-          <button on:click={onConnectMetamask}>
-            CONNECT
-          </button>
-        </div>
-      {/if}
-    </div>
-
-    <div class="signin__step">
-      <div class="signin__step__title">
-        <b>Step 3</b> |
-        <span class:green={stepValid.three} class:red={!stepValid.three}>
-          Select Telos EVM network
-        </span>
-      </div>
-      {#if stepValid.one && stepValid.two && !stepValid.three}
-        <div class="signin__step__info">
-          States of Matter is powered by the Telos EVM network. To switch to
-          this network and add it to your Metamask extension, click the button
-          below.
-        </div>
-        <div>
-          <button on:click={onSelectNetwork}>SWITCH</button>
-        </div>
-      {/if}
-    </div>
-
-
-  </div>
-    {#if stepValid.one && stepValid.two && stepValid.three}
+    {#if stepValid.one && !stepValid.two}
       <div>
-        <div>Selected account</div>
-        <div class="purple font-sm"><pre>{selectedAccount}</pre></div>
-
-        <button on:click={onSignin} >
-          SIGNIN
+        <button class="button" on:click={onConnectMetamask}>
+          CONNECT
         </button>
       </div>
-    {:else}
+    {/if}
+  </div>
+
+  <div class="signin__step">
+    <div class="signin__step__title">
+      <span class:green={stepValid.three} class:lt-red={!stepValid.three}>
+        Select Telos EVM network <b>{stepValid.three ? "✔" : "X"}</b>
+      </span>
+    </div>
+    {#if stepValid.one && stepValid.two && !stepValid.three}
       <div>
-        Signin will be available once you complete all three steps.
+        <button class="button" on:click={onSelectNetwork}>
+          <img src="assets/icons/telosevm.png" alt="Telos EVM"/>TELOS EVM
+        </button>
       </div>
     {/if}
+  </div>
+
+</div>

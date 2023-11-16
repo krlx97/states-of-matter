@@ -4,19 +4,20 @@ import {CardType, PlayerStatus} from "@som/shared/enums";
 import {mongo} from "app";
 import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
-
+import jwt from "jsonwebtoken"
 import type {
   AccountView,
   GameView,
+  LobbyView,
   PlayerView
 } from "@som/shared/types/views";
 
-const signin: SocketRequest = (socket, error): void => {
+const signinPassword: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
   const {$accounts, $chats, $games, $lobbies, $players} = mongo;
 
-  socket.on("signin", async (params) => {
-    const {name, password} = params;
+  socket.on("signinPassword", async (params) => {
+    const {name, password, rememberMe} = params;
     let lobby, game: any;
 
     const acc = await $accounts.findOne({name});
@@ -25,10 +26,22 @@ const signin: SocketRequest = (socket, error): void => {
       return error(`Account ${name} not found.`);
     }
 
+    if (!acc.passwordHash) {
+      return error("Must login through metamask.");
+    }
+
     const isCorrectPassword = await compare(password, acc.passwordHash);
 
     if (!isCorrectPassword) {
       return error("Invalid password.");
+    }
+
+    let token: string | undefined;
+
+    if (rememberMe) {
+      token = jwt.sign({name}, "som", {
+        expiresIn: "30d"
+      });
     }
 
     const $player = await $players.findOneAndUpdate({name}, [{
@@ -56,7 +69,7 @@ const signin: SocketRequest = (socket, error): void => {
     });
 
     if (!$player) {
-      return error("Error updating player. xdf");
+      return error("Error updating player.");
     }
 
     const friendsView: Array<any> = [];
@@ -98,7 +111,8 @@ const signin: SocketRequest = (socket, error): void => {
     };
 
     const {lobbyId, gameId} = $player;
-    let gameFrontend: GameView | undefined;
+    let gameView: GameView | undefined;
+    let lobbyView: LobbyView | undefined;
 
     if (lobbyId) {
       lobby = await $lobbies.findOne({id: lobbyId});
@@ -106,6 +120,8 @@ const signin: SocketRequest = (socket, error): void => {
       if (!lobby) {
         return error("You are currently in a lobby that cannot be found. (Contact dev)");
       }
+
+      lobbyView = lobby;
     } else if (gameId) {
       game = await $games.findOne({id: gameId});
 
@@ -113,18 +129,19 @@ const signin: SocketRequest = (socket, error): void => {
         return error("You are currently in a game that cannot be found. (Contact dev)");
       }
 
-      gameFrontend = gameHelpers.generateGameView(game, $player.name);
+      gameView = gameHelpers.generateGameView(game, $player.name);
     }
 
-    const accountFrontend: AccountView = {
+    const accountView: AccountView = {
       name,
-      publicKey: acc.publicKey,
+      address: acc.address,
+      nonce: acc.nonce,
       avatarId: acc.avatarId,
       bannerId: acc.bannerId,
       social
     };
 
-    const playerFrontend: PlayerView = {
+    const playerView: PlayerView = {
       name: $player.name,
       experience: $player.experience,
       level: $player.level,
@@ -169,12 +186,13 @@ const signin: SocketRequest = (socket, error): void => {
     };
 
     socket.emit("signin", {
-      accountFrontend,
-      playerFrontend,
-      lobbyFrontend: lobby as any,
-      gameFrontend
+      accountView,
+      playerView,
+      lobbyView,
+      gameView,
+      token
     });
   });
 };
 
-export {signin};
+export {signinPassword};

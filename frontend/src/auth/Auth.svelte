@@ -26,7 +26,7 @@
     padding: var(--spacing-md);
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: space-between;
     backdrop-filter: blur(4px);
     background-color: rgba(31, 31, 31, 0.8);
     border: 0 solid;
@@ -68,7 +68,7 @@
         href="https://github.com/krlx97/states-of-matter"
         rel="noreferrer"
         target="_blank">
-        Closed Alpha v0.3.2
+        Closed Alpha v0.3.3
       </a>.
       Things can and will break! If you have complaints or suggestions, come
       chat with us on our

@@ -1,9 +1,9 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
   import {CardType} from "@som/shared/enums";
-import {tutorialStore} from "stores";
+  import {tutorialStore} from "stores";
   import KlassCardComponent from "./KlassCard.svelte";
-    
+
   let selectedKlass = 0;
   const klasses = [0, 1, 2, 3, 4];
   $: isTutorial = $tutorialStore.name === "deckBuilder" && $tutorialStore.currentStep === 3;

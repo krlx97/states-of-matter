@@ -1,7 +1,7 @@
-import {providers} from "ethers";
+import type {BrowserProvider, Eip1193Provider} from "ethers";
 
 declare global {
   interface Window {
-    ethereum: providers.ExternalProvider;
+    ethereum: (BrowserProvider & Eip1193Provider) | undefined;
   }
 }

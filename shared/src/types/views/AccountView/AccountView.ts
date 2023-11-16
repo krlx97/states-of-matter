@@ -2,7 +2,8 @@ import type {AccountSocialView} from "./AccountSocialView.js";
 
 interface AccountView {
   name: string;
-  publicKey: string;
+  address: string;
+  nonce: number;
   avatarId: number;
   bannerId: number;
   social: AccountSocialView;

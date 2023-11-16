@@ -4,32 +4,30 @@ import {accountStore, lobbyStore, gameStore, playerStore, deckStore} from "store
 const signin = (): void => {
   const {socket} = socketService;
 
-  socket.on("signin", async (params): Promise<void> => {
-    const {
-      accountFrontend,
-      playerFrontend,
-      lobbyFrontend,
-      gameFrontend
-    } = params;
+  socket.on("signin", async (params) => {
+    const {accountView, playerView, lobbyView, gameView, token} = params;
 
-    playerStore.set(playerFrontend);
-    accountStore.set(accountFrontend);
+    if (token) {
+      localStorage.setItem("jsonwebtoken", token);
+    }
+
+    playerStore.set(playerView);
+    accountStore.set(accountView);
 
     deckStore.set(
-      playerFrontend.decks.find((deck) => deck.id === playerFrontend.deckId)
+      playerView.decks.find((deck) => deck.id === playerView.deckId)
     );
 
-    if (accountFrontend.publicKey) {
-      ethersService.key = accountFrontend.publicKey;
+    if (accountView.address) {
       await ethersService.reloadUser();
     }
 
-    if (lobbyFrontend) {
-      lobbyStore.set(lobbyFrontend);
+    if (lobbyView) {
+      lobbyStore.set(lobbyView);
     }
 
-    if (gameFrontend) {
-      gameStore.set(gameFrontend);
+    if (gameView) {
+      gameStore.set(gameView);
     }
 
     socket.emit("updateFriend");

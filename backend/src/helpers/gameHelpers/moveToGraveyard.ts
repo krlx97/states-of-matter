@@ -1,31 +1,37 @@
-import {cards} from "@som/shared/data";
 import {EffectId} from "@som/shared/enums";
 import {revenge} from "./effect/revenge";
 import {unity} from "./effect/unity";
 import type {Field, GameMinionCard, GamePlayer, MinionField} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
 
-const moveToGraveyard = (player: GamePlayer, minion: GameMinionCard, field: MinionField): void => {
+const moveToGraveyard = (player: GamePlayer, minion: GameMinionCard, field: MinionField): Animations => {
   const hasRevengeBuff = minion.buffs.find((buff) => buff.id === EffectId.REVENGE) !== undefined;
   const hasUnityBuff = minion.buffs.find((buff) => buff.id === EffectId.UNITY) !== undefined;
+  const animations: Animations = [];
 
-  const card: any = cards.find((card) => card.id === minion.id);
-
-  if (!card) return;
-
-  minion.health = minion.maxHealth;
-  minion.damage = card.damage;
+  minion.health.current = minion.health.default;
+  minion.damage.current = minion.damage.default;
   minion.buffs = [];
   minion.debuffs = [];
+
   player.graveyard.push(minion);
   player.field[field] = undefined;
 
+  animations.push({
+    type: "DEATH",
+    field,
+    name: player.name
+  });
+
   if (hasRevengeBuff) {
-    revenge({player, field});
+    animations.push(...revenge({player, field}));
   }
 
   if (hasUnityBuff) {
-    unity({player});
+    animations.push(...unity({player}));
   }
+
+  return animations;
 };
 
 export {moveToGraveyard};

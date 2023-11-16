@@ -1,4 +1,5 @@
 // Auth
+import type {GetNonce} from "./auth/GetNonce.js";
 import type {Signin} from "./auth/Signin.js";
 // Client
 import type {CreateLobby} from "./client/CreateLobby.js";
@@ -36,6 +37,7 @@ interface Responses {
   // Global
   notification: (params: string) => void;
   // Auth
+  getNonce: (params: GetNonce) => void;
   signin: (params: Signin) => void;
   // Client
   acceptGame: () => void;

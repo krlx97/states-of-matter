@@ -51,7 +51,6 @@ const buildDeck = (deck: PlayerDeck): GameCards => {
           current: manaCost,
           default: manaCost
         },
-        // maxHealth: health,
         canAttack: false,
         buffs: [],
         debuffs: []

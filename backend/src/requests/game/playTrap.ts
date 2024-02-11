@@ -1,12 +1,14 @@
 import {CardType} from "@som/shared/enums";
 import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
+import { Animations } from "@som/shared/types/game";
 
 const playTrap: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
 
   socket.on("playTrap", async (params) => {
     const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
+    const animations: Animations = [];
 
     if (!getGameData) {
       return error(getGameError);
@@ -30,17 +32,22 @@ const playTrap: SocketRequest = (socket, error): void => {
       return error("Selected card is not Trap.");
     }
 
-    if (card.manaCost > player.field.hero.mana) {
+    if (card.manaCost.current > player.field.hero.mana.current) {
       return error("Not enough mana.");
     }
 
-    player.field.hero.mana -= card.manaCost;
+    player.field.hero.mana.current -= card.manaCost.current;
     hand.splice(hand.indexOf(card), 1);
     player.trap = card;
 
-    socket.emit("playTrap", {name});
+    animations.push({
+      type: "TRAP_SET",
+      name
+    });
 
-    await gameHelpers.saveGame($game);
+    // socket.emit("playTrap", {name});
+
+    await gameHelpers.attackMinionSave($game, animations);
   });
 };
 

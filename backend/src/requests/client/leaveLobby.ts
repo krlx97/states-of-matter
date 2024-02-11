@@ -12,6 +12,7 @@ const leaveLobby: SocketRequest = (socket, error): void => {
     if (!$player) {
       return error("Player not found.");
     }
+
     if (!$player.lobbyId) {
       return error("You are not in a lobby.");
     }
@@ -22,6 +23,7 @@ const leaveLobby: SocketRequest = (socket, error): void => {
     if (!$lobby) {
       return error("Lobby not found.");
     }
+
     if ($lobby.host.name === $player.name) {
       return error("Lobby host can't leave lobby.");
     }
@@ -29,10 +31,7 @@ const leaveLobby: SocketRequest = (socket, error): void => {
     const [$lobbyUpdate, $playerUpdate, $playerHost] = await Promise.all([
       $lobbies.updateOne({id}, {
         $set: {
-          challengee: {
-            name: "",
-            avatarId: 0
-          }
+          challengee: undefined
         }
       }),
       $players.updateOne({socketId}, {

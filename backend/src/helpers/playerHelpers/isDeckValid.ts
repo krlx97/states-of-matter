@@ -1,15 +1,11 @@
 import type {PlayerDeck} from "@som/shared/types/mongo";
 
 const isDeckValid = (playerDeck: PlayerDeck): boolean => {
-  const numberOfCards = playerDeck
+  // maybe check whether it includes a hero, since that is also invalid?
+  // or do this check in saveDeck, and remove this function altogether?
+  return playerDeck
     .cards
-    .reduce((value, {amount}) => value += amount, 0);
-
-  if (numberOfCards !== 30) {
-    return false;
-  }
-
-  return true;
+    .reduce((value, {amount}) => value += amount, 0) === 30;
 };
 
 export {isDeckValid};

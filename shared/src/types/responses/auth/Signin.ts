@@ -1,15 +1,10 @@
-import {
-  AccountView,
-  GameView,
-  LobbyView,
-  PlayerView
-} from "../../views/index.js";
+import {GameView, LobbyView, PlayerView} from "../../views/index.js";
 
 interface Signin {
-  accountView: AccountView;
+  playerView: PlayerView;
   gameView: GameView | undefined;
   lobbyView: LobbyView | undefined;
-  playerView: PlayerView;
+  token: string | undefined;
 }
 
 export type {Signin};

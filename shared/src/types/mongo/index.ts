@@ -1,11 +1,12 @@
-export type {Account, AccountSocial} from "./Account/index.js";
 export type {CasualQueuePlayer} from "./CasualQueuePlayer/index.js";
-export type {Chat, ChatMessage} from "./Chat/index.js";
+export type {Chat, ChatMessage, ChatMessages} from "./Chat/index.js";
 
 export type {
   Field,
+  FieldKeys,
   Game,
   GameAttackLog,
+  GameBaseCard,
   GameCard,
   GameCards,
   GameHeroCard,
@@ -15,20 +16,26 @@ export type {
   GameMinionLog,
   GamePlayer,
   GameTrapCard,
-  MinionField
+  MinionField,
+  MinionFieldKeys
 } from "./Game/index.js";
 
 export type {GamePopup, GamePopupPlayer} from "./GamePopup/index.js";
 export type {Lobby, LobbyPlayer} from "./Lobby/index.js";
-export type {MarketItem} from "./MarketItem/index.js";
 
 export type {
   Player,
   PlayerDeck,
   PlayerDeckCard,
+  PlayerDecks,
   PlayerGames,
   PlayerGamesTotal,
+  PlayerQuests,
+  PlayerRewards,
   PlayerSkin,
+  PlayerSkins,
+  PlayerSocial,
+  PlayerSocialList,
   PlayerTutorial
 } from "./Player/index.js";
 

@@ -1,7 +1,13 @@
 export type {Player} from "./Player.js";
 export type {PlayerDeck} from "./PlayerDeck.js";
 export type {PlayerDeckCard} from "./PlayerDeckCard.js";
+export type {PlayerDecks} from "./PlayerDecks.js";
 export type {PlayerGames} from "./PlayerGames.js";
 export type {PlayerGamesTotal} from "./PlayerGamesTotal.js";
+export type {PlayerQuests} from "./PlayerQuests.js";
+export type {PlayerRewards} from "./PlayerRewards.js";
 export type {PlayerSkin} from "./PlayerSkin.js";
+export type {PlayerSkins} from "./PlayerSkins.js";
+export type {PlayerSocial} from "./PlayerSocial.js";
+export type {PlayerSocialList} from "./PlayerSocialList.js";
 export type {PlayerTutorial} from "./PlayerTutorial.js";

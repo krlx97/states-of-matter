@@ -2,6 +2,7 @@
   import {onMount} from "svelte";
   import {socketService} from "services";
   import {playerStore, tutorialStore} from "stores";
+    import { ButtonComponent } from "ui";
 
   let tutorial: keyof typeof $playerStore.tutorial;
   let steps: Array<any>;
@@ -18,6 +19,7 @@
   };
 
   const onFinish = (): void => {
+    $tutorialStore.currentStep = 0;
     socketService.socket.emit("finishTutorial" as any, {tutorial});
   };
 
@@ -46,7 +48,7 @@
     /* margin: 32px; */
     width: 384px;
     z-index: 101;
-    padding: var(--spacing-md);
+    padding: var(--md);
 backdrop-filter: blur(32px);
     background-color: rgba(255, 255, 255, 0.1);
     border: 2px solid rgb(127, 127, 127);
@@ -56,13 +58,13 @@ backdrop-filter: blur(32px);
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-md);
+    gap: var(--md);
   }
 
   .text {
         /* text-align: justify; */
-    line-height: 1.4;
-    margin-bottom: var(--spacing-md);
+    line-height: 1.25;
+    margin-bottom: var(--md);
 
   }
 
@@ -87,13 +89,13 @@ backdrop-filter: blur(32px);
   <!-- </div> -->
   <div class="actions">
     <!-- {#if currentStep > 0} -->
-      <button on:click={onPreviousStep} disabled={currentStep < 1}>PREVIOUS</button>
+      <ButtonComponent on:click={onPreviousStep} disabled={currentStep < 1}>PREVIOUS</ButtonComponent>
     <!-- {/if} -->
     <div>{currentStep + 1} / {steps.length}</div>
     {#if currentStep >= steps.length - 1}
-      <button on:click={onFinish}>FINISH</button>
+      <ButtonComponent on:click={onFinish}>FINISH</ButtonComponent>
     {:else}
-      <button on:click={onNextStep}>NEXT</button>
+      <ButtonComponent on:click={onNextStep}>NEXT</ButtonComponent>
     {/if}
   </div>
 </div>

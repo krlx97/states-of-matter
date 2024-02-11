@@ -1,26 +1,22 @@
 import {ethersService, socketService} from "services";
-import {accountStore, lobbyStore, gameStore, playerStore, deckStore} from "stores";
+import {lobbyStore, gameStore, playerStore, snapshotsStore} from "stores";
 
 const signin = (): void => {
   const {socket} = socketService;
 
   socket.on("signin", async (params) => {
-    const {accountView, playerView, lobbyView, gameView, token} = params;
+    const {playerView, lobbyView, gameView, snapshots, token} = params;
 
     if (token) {
       localStorage.setItem("jsonwebtoken", token);
     }
 
+    snapshotsStore.set(snapshots);
     playerStore.set(playerView);
-    accountStore.set(accountView);
 
-    deckStore.set(
-      playerView.decks.find((deck) => deck.id === playerView.deckId)
-    );
-
-    if (accountView.address) {
+    // if (playerView.address) {
       await ethersService.reloadUser();
-    }
+    // }
 
     if (lobbyView) {
       lobbyStore.set(lobbyView);

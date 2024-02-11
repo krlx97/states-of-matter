@@ -1,11 +1,5 @@
-<div class="modal__title">Currencies</div>
-<div class="modal__info--tutorial">
+<div class="modal__title" style="font-size: var(--xl)">Currencies</div>
+<div class="modal__info--tutorial" style="text-align: justify; line-height: 1.25">
 
-States of Matter features two distinct currencies: Etheric Crystals and
-      Etheric Essence. These currencies can be obtained by leveling up in the
-      game. Etheric Crystals are exchangeable and can be utilized to unlock
-      chests, fuse shards, or purchase items in the game marketplace. In
-      contrast, Etheric Essence is soulbound and can only be spent on crafting
-      shards. You may also earn Etheric Essence by disenchanting skins that you
-      no longer need.
+In States of Matter, there are three currencies: Etheric Essence, Etheric Crystals, and Etheric Energy. Etheric Essence is soulbound and can be acquired by playing or disenchanting items, allowing you to craft items. Etheric Crystals, obtained through gameplay, can also be used for crafting and can be energized into Etheric Energy. The value of Etheric Energy gradually rises, so the longer you hold it, the more Etheric Crystals you'll receive when you solidify it.
 </div>

@@ -1,2 +1,3 @@
 type Field = "hero" | "a" | "b" | "c" | "d";
-export type {Field};
+type FieldKeys = Array<"hero" | "a" | "b" | "c" | "d">;
+export type {Field, FieldKeys};

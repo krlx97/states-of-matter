@@ -4,14 +4,14 @@ import {addFriend} from "./addFriend";
 import {blockFriendReceiver} from "./blockFriendReceiver";
 import {blockFriendSender} from "./blockFriendSender";
 import {declineFriend} from "./declineFriend";
+import {readChatMessages} from "./readChatMessages";
 import {removeFriendReceiver} from "./removeFriendReceiver";
 import {removeFriendSender} from "./removeFriendSender";
 import {sendChatMsgReceiver} from "./sendChatMsgReceiver";
 import {sendChatMsgSender} from "./sendChatMsgSender";
-import {setAvatarReceiver} from "./setAvatarReceiver";
-import {setAvatarSender} from "./setAvatarSender";
 import {unblockFriend} from "./unblockFriend";
-import {updateStatus} from "./updateStatus";
+import {updateFriend} from "./updateFriend";
+import {updatePlayer} from "./updatePlayer";
 
 const sidenav = [
   acceptFriendReceiver,
@@ -20,14 +20,14 @@ const sidenav = [
   blockFriendReceiver,
   blockFriendSender,
   declineFriend,
+  readChatMessages,
   removeFriendReceiver,
   removeFriendSender,
   sendChatMsgReceiver,
   sendChatMsgSender,
-  setAvatarReceiver,
-  setAvatarSender,
   unblockFriend,
-  updateStatus,
+  updateFriend,
+  updatePlayer
 ];
 
 export {sidenav};

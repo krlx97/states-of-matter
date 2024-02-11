@@ -1,17 +1,31 @@
+import type {Animations} from "@som/shared/types/game";
 import type {GameMinionCard, GamePlayer, GameTrapCard} from "@som/shared/types/mongo";
 
 interface HeartOfSteel {
-  minion: GameMinionCard;
-  player: GamePlayer;
-  trap: GameTrapCard;
+  opponent: GamePlayer;
+  opponentMinion: GameMinionCard;
+  opponentTrap: GameTrapCard;
+  field: any;
 }
 
-const heartOfSteel = (params: HeartOfSteel) => {
-  params.minion.damage += 3;
-  params.player.graveyard.push(params.trap);
-  params.player.trap = undefined;
+const heartOfSteel = (params: HeartOfSteel): Animations => {
+  const {opponent, opponentMinion, opponentTrap, field} = params;
 
-  return [true, ""];
+  opponentMinion.damage.current += 3;
+
+  opponent.graveyard.push(opponentTrap);
+  opponent.trap = undefined;
+
+  return [{
+    type: "TRAP",
+    name: opponent.name,
+    card: opponentTrap
+  }, {
+    type: "DAMAGE",
+    field,
+    name: opponent.name,
+    increment: 3
+  }];
 };
 
 export {heartOfSteel};

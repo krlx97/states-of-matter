@@ -2,19 +2,19 @@
   import {onMount} from "svelte";
   import {socketService, soundService} from "services";
   import {gamePopupStore} from "stores";
-  import {ModalComponent, ProgressBarComponent} from "ui";
+  import {ButtonComponent, ModalComponent, ProgressBarComponent} from "ui";
 
   const {socket} = socketService;
   let progress = 100;
   let start = 0;
 
   const onAccept = (): void => {
-soundService.play("click");
+    soundService.play("click");
     socket.emit("acceptGame");
   };
 
   const onDecline = (): void => {
-soundService.play("click");
+    soundService.play("click");
     socket.emit("declineGame");
   };
 
@@ -39,9 +39,13 @@ soundService.play("click");
 
 <style>
   .game-popup {
+    width: 320px;
+    height: 320px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--md);
   }
 
   .game-popup__title {
@@ -49,42 +53,40 @@ soundService.play("click");
     text-align: center;
   }
 
-  .game-popup__players {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-  }
-
   .game-popup__actions {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--md);
   }
-
-  .grey {color: rgb(31, 31, 31);}
 </style>
 
-<ModalComponent isClosable={false}>
+<ModalComponent isClosable={false} dark>
   <div class="game-popup">
-    <div class="game-popup__title">Game found</div>
-    <div class="game-popup__players">
-      <i
-        class="fa-solid fa-user fa-2x"
-        class:green={$gamePopupStore.playersAccepted > 0}
-        class:grey={$gamePopupStore.playersAccepted === 0}
-      ></i>
-      <i
-        class:green={$gamePopupStore.playersAccepted > 1}
-        class:grey={$gamePopupStore.playersAccepted < 2}
-        class="fa-solid fa-user fa-2x grey"
-      ></i>
-    </div>
-    <div class="game-popup__actions">
-      <button class="button" on:click={onAccept}>ACCEPT</button>
-      <button class="button" on:click={onDecline}>DECLINE</button>
-    </div>
+
+      <div class="game-popup__title">Game found</div>
+    <!-- <div>
+
+    </div> -->
+      <div>
+        {#if !$gamePopupStore.hasPlayerAccepted && !$gamePopupStore.hasOpponentAccepted}
+          Please accept the match.
+        {:else if $gamePopupStore.hasPlayerAccepted && !$gamePopupStore.hasOpponentAccepted}
+          Waiting for opponent...
+        {:else if !$gamePopupStore.hasPlayerAccepted && $gamePopupStore.hasOpponentAccepted}
+          Opponent has accepted the match.
+        {/if}
+      </div>
+
+    {#if !$gamePopupStore.hasPlayerAccepted}
+      <div class="game-popup__actions">
+        <ButtonComponent on:click={onAccept}>ACCEPT</ButtonComponent>
+        <ButtonComponent on:click={onDecline}>DECLINE</ButtonComponent>
+      </div>
+    {/if}
+
     <ProgressBarComponent bars={[{
       color: "purple",
       progress
     }]}/>
+
   </div>
 </ModalComponent>

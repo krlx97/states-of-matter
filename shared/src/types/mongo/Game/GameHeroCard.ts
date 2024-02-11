@@ -1,13 +1,16 @@
-import type {GameCard} from "./GameCard.js";
+import type {GameBaseCard} from "./GameBaseCard.js";
 import type {Ability, CardType, EffectId} from "../../../enums/index.js";
 
-interface GameHeroCard extends GameCard {
+interface Attribute {
+  current: number;
+  default: number;
+}
+
+interface GameHeroCard extends GameBaseCard {
   type: CardType.HERO;
-  health: number;
-  mana: number;
+  health: Attribute;
+  mana: Attribute;
   ability: Ability;
-  maxHealth: number;
-  maxMana: number;
   buffs: Array<{id: EffectId, data: any}>;
   debuffs: Array<{id: EffectId, data: any}>;
 }

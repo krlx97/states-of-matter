@@ -5,9 +5,10 @@ import type {SocketRequest} from "@som/shared/types/backend";
 
 const disconnect: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $players} = mongo;
+  const {$players} = mongo;
 
   socket.on("disconnect", async () => {
+    // console.log("DISCONNECT", socketId);
     const $playerUpdate = await $players.findOneAndUpdate({socketId}, {
       $set: {
         socketId: "",
@@ -17,18 +18,15 @@ const disconnect: SocketRequest = (socket, error): void => {
       returnDocument: "after"
     });
 
+    console.log($playerUpdate?.status);
+
     if (!$playerUpdate) {
       return error("Error updating player.");
     }
 
-    const {name, status} = $playerUpdate;
-    const $account = await $accounts.findOne({name});
-
-    if (!$account) {
-      return error("Account not found.");
-    }
-
-    const socketIds = await playerHelpers.getSocketIds($account.social.friends);
+    const {name, status, social} = $playerUpdate;
+    const socketIds = await playerHelpers.getSocketIds(social.friends);
+    // console.log(name, status);
     server.io.to(socketIds).emit("updateFriend", {name, status});
   });
 };

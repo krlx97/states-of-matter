@@ -1,4 +1,5 @@
 import {EffectId} from "@som/shared/enums";
+import type {Animations} from "@som/shared/types/game";
 import type {GameMinionCard, GamePlayer, MinionField} from "@som/shared/types/mongo";
 
 interface Revenge {
@@ -6,14 +7,14 @@ interface Revenge {
   field: MinionField;
 }
 
-const revenge = (params: Revenge) => {
+const revenge = (params: Revenge): Animations => {
   const {player, field} = params;
 
   const handCard = player.hand.find((card) => card.effect === EffectId.REVENGE) as GameMinionCard | undefined;
   const deckCard = player.deck.find((card) => card.effect === EffectId.REVENGE) as GameMinionCard | undefined;
 
   if (!handCard && !deckCard) {
-    return [false, "No copy of the card found."];
+    return [];
   }
 
   if (handCard) {
@@ -26,7 +27,12 @@ const revenge = (params: Revenge) => {
     player.deck.splice(index, 1);
   }
 
-  return [true, ""];
+  return [{
+    type: "SUMMON",
+    name: player.name,
+    field,
+    minion: player.field[field]
+  }];
 };
 
 export {revenge};

@@ -1,14 +1,17 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import {ethersService, formService, socketService} from "services";
-  import {FormFieldComponent} from "ui";
-    import { getAddress } from "ethers";
-    import { ethersStore } from "stores";
+  import {ButtonComponent, InputComponent, FormComponent, FormSubmitComponent} from "ui";
+  import { getAddress } from "ethers";
+  import { ethersStore } from "stores";
 
   const formStore = formService.create({
     name: ["", "name"],
     password: ["", "password"]
   });
+
+  const formStoreMetamask = formService.create({});
+  formService.validate(formStoreMetamask);
 
   let checked = false;
   let view = "password";
@@ -32,18 +35,11 @@
   };
 
   const onMetamask = async (): Promise<void> => {
-    // const accounts = await window.ethereum.request({
-    //   method: "eth_requestAccounts"
-    // });
-
-    socketService.socket.emit("getNonce", {
-      // address: getAddress(accounts[0])
-      address: $ethersStore.signer?.address as any
-    });
+    const address = $ethersStore.signer?.address;
+    socketService.socket.emit("getNonce", {address});
   };
 
   onMount(async () => {
-    // await ethersService.init();
     socketService.socket.on("getNonce", async (params) => {
       const {nonce} = params;
       const data = await ethersService.sign(`signin${nonce}`);
@@ -59,18 +55,22 @@
       });
     })
   });
+
+  onDestroy(() => {
+    socketService.socket.off("getNonce");
+  });
 </script>
 
 <style>
   button img {
     display: inline;
-    margin-right: var(--spacing-md);
+    margin-right: var(--md);
   }
 
   .alt-auth {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--md);
   }
 
   .floating {
@@ -99,15 +99,16 @@
 
 <div class="signin">
   {#if view === "password"}
-    <form on:submit|preventDefault="{onSubmit}">
+    <FormComponent on:submit="{onSubmit}">
       <div>Password signin</div>
-      <FormFieldComponent
+
+      <InputComponent
         label="Name"
         error="{$formStore.fields.name.error}"
         bind:value="{$formStore.fields.name.value}"
         on:input="{onInput}"/>
 
-      <FormFieldComponent
+      <InputComponent
         label="Password"
         type="{isPasswordVisible ? "text" : "password"}"
         error="{$formStore.fields.password.error}"
@@ -115,15 +116,12 @@
         bind:value="{$formStore.fields.password.value}"
         on:input="{onInput}"/>
 
-      <FormFieldComponent
-        label="Remember me"
-        type="checkbox"
-        bind:checked/>
+      <InputComponent label="Remember me" type="checkbox" bind:checked/>
 
-      <div class="form__submit">
-        <button class="button" disabled="{$formStore.isDisabled}">SIGNIN</button>
-      </div>
-    </form>
+      <svelte:fragment slot="submit">
+        <FormSubmitComponent {formStore}>SIGNIN</FormSubmitComponent>
+      </svelte:fragment>
+    </FormComponent>
 
     <div class="floating">
       <div class="floating__bar"></div>
@@ -132,28 +130,28 @@
     </div>
 
     <div class="alt-auth">
-      <button class="button" on:click="{() => view = "metamask"}">
-        <img src="assets/icons/metamask.png" alt="Metamask"/> METAMASK
-      </button>
+      <ButtonComponent on:click="{() => view = "metamask"}">
+        <img src="images/metamask.png" alt="Metamask" height="32" width="32"/> METAMASK
+      </ButtonComponent>
     </div>
   {:else}
-    <form on:submit|preventDefault="{onMetamask}">
+    <FormComponent on:submit="{onMetamask}">
       <div>Metamask signin</div>
 
-      <FormFieldComponent
+      <InputComponent
         label="Address"
         value="{$ethersStore.signer?.address}"
         disabled/>
 
-      <FormFieldComponent
+      <InputComponent
         label="Remember me"
         type="checkbox"
         bind:checked/>
 
-      <div class="form__submit">
-        <button class="button" disabled="{$formStore.isDisabled}">SIGNIN</button>
-      </div>
-    </form>
+      <svelte:fragment slot="submit">
+        <FormSubmitComponent formStore={formStoreMetamask}>SIGNIN</FormSubmitComponent>
+      </svelte:fragment>
+    </FormComponent>
 
     <div class="floating">
       <div class="floating__bar"></div>
@@ -162,9 +160,9 @@
     </div>
 
     <div class="alt-auth">
-      <button class="button" on:click="{() => view = "password"}">
+      <ButtonComponent on:click="{() => view = "password"}">
         PASSWORD
-      </button>
+      </ButtonComponent>
     </div>
   {/if}
 

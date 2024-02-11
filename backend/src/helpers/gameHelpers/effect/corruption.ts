@@ -25,9 +25,9 @@ const corruption = (params: Corruption) => {
     return [false, "Corruption negated."];
   }
 
-  card.health -= 2;
+  card.health.current -= 2;
 
-  if (card.health <= 0) {
+  if (card.health.current <= 0) {
     moveToGraveyard(player, card, field);
   } else {
     insertBuff(card, EffectId.OVERCHARGE);

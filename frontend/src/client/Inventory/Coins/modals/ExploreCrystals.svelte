@@ -1,80 +1,83 @@
 <script lang="ts">
+  import {onDestroy, onMount} from "svelte";
+  import Chart from "chart.js/auto";
   import {formatUnits} from "ethers";
-  import {walletStore} from "stores";
-  import {CurrencyComponent, ModalComponent, ProgressBarComponent} from "ui";
+  import {inventoryStore, snapshotsStore} from "stores";
+  import {ModalComponent, TableComponent} from "ui";
 
-  const liquid =
-    $walletStore.crystalsGlobal.totalSupply - (
-      $walletStore.crystalsGlobal.staked +
-      $walletStore.crystalsGlobal.unstaked +
-      $walletStore.crystalsGlobal.burned
-    );
+  const POW = 10n ** 18n;
+  let deployTimestamp = BigInt($inventoryStore.deployTimestamp * 1000n);
+  const REWARD_PER_MS = 1000000n;
+  const liquid = $inventoryStore.total.ecr;
+  let staked = ($inventoryStore.total.enrg * (1n * POW + ((BigInt(Date.now()) - deployTimestamp) * REWARD_PER_MS))) / POW;
+  let supply = liquid + staked;
+  let chartCanvas: HTMLCanvasElement;
+  let int: NodeJS.Timeout;
 
-  const convert = (val) => parseFloat(formatUnits(val));
+  onMount((): void => {
+    const ecrr = $snapshotsStore.find((s) => s.name === "ecr");
+    const labels = ecrr.snapshots.map(({date}) => new Date(date).toLocaleDateString());
+    const data = ecrr.snapshots.map(({supply}) => formatUnits(supply));
 
-  const liquidPercent = (convert(liquid) / convert($walletStore.crystalsGlobal.totalSupply) * 100).toFixed(2);
-  const stakedPercent = (convert($walletStore.crystalsGlobal.staked) / convert($walletStore.crystalsGlobal.totalSupply) * 100).toFixed(2);
-  const unstakedPercent = (convert($walletStore.crystalsGlobal.unstaked) / convert($walletStore.crystalsGlobal.totalSupply) * 100).toFixed(2);
-  const burnedPercent = (convert($walletStore.crystalsGlobal.burned) / convert($walletStore.crystalsGlobal.totalSupply) * 100).toFixed(2);
-  const inflationPercent = (convert(100000n * 10n ** 18n) / convert($walletStore.crystalsGlobal.totalSupply) * 100).toFixed(2);
+    new Chart(chartCanvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Supply",
+            data,
+            borderColor: "rgb(121, 108, 255)"
+          }
+        ]
+      },
+      // options: {
+      //   scales: {
+      //     y: {
+      //       ticks: {
+      //         display: false
+      //       }
+      //     }
+      //   },
+      //   plugins: {
+      //     legend: {
+      //       display: false
+      //     }
+      //   }
+      // }
+    });
+
+    int = setInterval((): void => {
+      staked = ($inventoryStore.total.enrg * (1n * POW + ((BigInt(Date.now()) - deployTimestamp) * REWARD_PER_MS))) / POW;
+      supply = liquid + staked;
+    }, 1);
+  });
+
+  onDestroy((): void => {
+    clearInterval(int);
+  });
+
+  $: items = [
+    ["Supply", supply, "ecr"],
+    ["Crystals", liquid, "ecr"],
+    ["Energy", staked, "ecr"]
+  ]
 </script>
 
-<ModalComponent>
-  <div class="modal">
-    <div class="modal__title">Etheric Crystals</div>
-    <div class="modal__info">
-      Before the Fall, people used state issued coins to trade, buy goods and
-      accumulate riches to go forward in the world. Nowadays, these coins are
-      just relics of the old times. Scattered through the planet, shards in
-      magnificent shades and shapes are used in a way similar to money. However,
-      they are actually imbued with energy which is power itself, not just a
-      mere convention.
-    </div>
-    <div class="modal__table">
-      <table>
-        <tr>
-          <td>ISSUED</td>
-          <td><CurrencyComponent name="ecr" number={$walletStore.crystalsGlobal.totalSupply}/></td>
-        </tr>
-        <tr>
-          <td>INFLATION [{inflationPercent}%]</td>
-          <td><CurrencyComponent name="ecr" number={100000n * 10n ** 18n}/></td>
-        </tr>
-        <tr>
-          <td>AIRDROPS LEFT</td>
-          <td>51251</td>
-        </tr>
-        <br/>
-        <tr>
-          <td class="lt-green">LIQUID [{liquidPercent}%]</td>
-          <td><CurrencyComponent name="ecr" number={liquid}/></td>
-        </tr>
-        <tr>
-          <td class="lt-purple">STAKED [{stakedPercent}%]</td>
-          <td><CurrencyComponent name="ecr" number={$walletStore.crystalsGlobal.staked}/></td>
-        </tr>
-        <tr>
-          <td class="lt-blue">UNSTAKED [{unstakedPercent}%]</td>
-          <td><CurrencyComponent name="ecr" number={$walletStore.crystalsGlobal.unstaked}/></td>
-        </tr>
-        <tr>
-          <td class="lt-red">BURNED [{burnedPercent}%]</td>
-          <td><CurrencyComponent name="ecr" number={$walletStore.crystalsGlobal.burned}/></td>
-        </tr>
-      </table>
-    </div>
-    <ProgressBarComponent bars={[{
-      color: "green",
-      progress: liquidPercent
-    }, {
-      color: "purple",
-      progress: stakedPercent
-    }, {
-      color: "blue",
-      progress: unstakedPercent
-    }, {
-      color: "red",
-      progress: burnedPercent
-    }]}/>
-  </div>
+<ModalComponent width="640px">
+  <svelte:fragment slot="title">Etheric Crystals</svelte:fragment>
+
+  <svelte:fragment slot="info">
+    Before the Fall, people used state issued coins to trade, buy goods and
+    accumulate riches to go forward in the world. Nowadays, these coins are
+    just relics of the old times. Scattered through the planet, shards in
+    magnificent shades and shapes are used in a way similar to money. However,
+    they are actually imbued with energy which is power itself, not just a
+    mere convention.
+  </svelte:fragment>
+
+  <svelte:fragment slot="content">
+    <canvas bind:this="{chartCanvas}"></canvas>
+    <TableComponent {items}/>
+  </svelte:fragment>
 </ModalComponent>

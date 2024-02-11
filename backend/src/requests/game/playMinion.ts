@@ -1,12 +1,14 @@
 import {CardType, EffectId, LogType} from "@som/shared/enums";
 import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
+import { Animations } from "@som/shared/types/game";
 
 const playMinion: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
   const {effect} = gameHelpers;
 
   socket.on("playMinion", async (params) => {
+    const animations: Animations = [];
     const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
 
     if (!getGameData) {
@@ -30,11 +32,11 @@ const playMinion: SocketRequest = (socket, error): void => {
       return error("Selected card is not Minion.");
     }
 
-    if (card.manaCost > player.hero.mana) {
+    if (card.manaCost.current > player.field.hero.mana.current) {
       return error("Not enough mana.");
     }
 
-    player.field.hero.mana -= card.manaCost;
+    player.field.hero.mana.current -= card.manaCost.current;
     player.field[field] = card;
 
     const minion = player.field[field];
@@ -45,6 +47,19 @@ const playMinion: SocketRequest = (socket, error): void => {
 
     player.hand.splice(player.hand.indexOf(card), 1);
 
+    animations.push({
+      type: "SUMMON",
+      name: player.name,
+      field,
+      minion,
+      necromancyFixPositive: false
+    }, {
+      type: "MANA_CAPACITY",
+      increment: -minion.manaCost.current,
+      field: "hero",
+      name: player.name
+    });
+
     const {trap} = opponent;
     const isElusive = minion.effect === EffectId.ELUSIVE;
 
@@ -54,29 +69,62 @@ const playMinion: SocketRequest = (socket, error): void => {
 
     // [1] INSERT BUFFS / DEBUFFS
     switch (minion.effect) {
-      // Neutral
-      case EffectId.BLAZE:
+      case EffectId.BLAZE: // Neutral
         const hasAttackedTwice = true;
         gameHelpers.insertBuff(minion, EffectId.BLAZE, {hasAttackedTwice});
+        animations.push({
+          type: "FLOATING_TEXT",
+          field,
+          name: player.name,
+          text: "BLAZE"
+        });
         break;
       case EffectId.ELUSIVE:
         gameHelpers.insertBuff(minion, EffectId.ELUSIVE);
+        animations.push({
+          type: "FLOATING_TEXT",
+          field,
+          name: player.name,
+          text: "ELUSIVE"
+        });
         break;
       case EffectId.REVENGE:
         gameHelpers.insertBuff(minion, EffectId.REVENGE);
+        animations.push({
+          type: "FLOATING_TEXT",
+          field,
+          name: player.name,
+          text: "REVENGE"
+        });
         break;
-      // Solid
-      case EffectId.UNITY:
+      case EffectId.UNITY: // Solid
         gameHelpers.insertBuff(minion, EffectId.UNITY);
+        animations.push({
+          type: "FLOATING_TEXT",
+          field,
+          name: player.name,
+          text: "UNITY"
+        });
         break;
       case EffectId.UNBREAKABLE:
         gameHelpers.insertBuff(minion, EffectId.UNBREAKABLE);
+        animations.push({
+          type: "FLOATING_TEXT",
+          field,
+          name: player.name,
+          text: "UNBREAKABLE"
+        });
         break;
       case EffectId.PROTECTOR:
         gameHelpers.insertBuff(minion, EffectId.TAUNT);
+        animations.push({
+          type: "FLOATING_TEXT",
+          field,
+          name: player.name,
+          text: "TAUNT"
+        });
         break;
-      // ---------- [ L I Q U I D ] ----------
-      case EffectId.RISING_FURY:
+      case EffectId.RISING_FURY: // Liquid
         gameHelpers.insertBuff(minion, EffectId.RISING_FURY);
         break;
       case EffectId.REGENERATION:
@@ -132,10 +180,16 @@ const playMinion: SocketRequest = (socket, error): void => {
     if (trap && !isElusive) {
       switch (trap.effect) {
         case EffectId.SMITE:
-          effect.smite({player, opponent, minion, trap, field});
+          animations.push(...effect.smite({player, opponent, minion, trap, field}));
           break;
         case EffectId.BANISH:
-          effect.banish({player, opponent, minion, trap, field});
+          effect.banish({
+            player,
+            opponent,
+            playerMinion: minion,
+            opponentTrap: trap,
+            playerMinionField: field
+          });
           break;
         case EffectId.POISONED_GROUND:
           effect.poisonedGround({player: opponent, minion, trap});
@@ -144,25 +198,45 @@ const playMinion: SocketRequest = (socket, error): void => {
     } else {
       // [3] TRIGGER ON SUMMON EFFECTS
       switch (minion.effect) {
-        // ---------- [ N E U T R A L ] ----------
-        case EffectId.SHADOW_SURGE:
-          effect.shadowSurge({minion});
+        case EffectId.SHADOW_SURGE: // Neutral
+          animations.push(...effect.shadowSurge.onNormalSummon({
+            player,
+            playerMinion: minion,
+            playerMinionField: field
+          }));
+
           break;
         case EffectId.QUICK_SHOT:
-          effect.quickShot({opponent});
+          animations.push(...effect.quickShot({opponent}));
           break;
         case EffectId.NECROMANCY:
-          effect.necromancy({minion, isPositive: false});
+          animations.push(...effect.necromancy({
+            player,
+            playerMinion: minion,
+            playerMinionField: field,
+            isPositive: false
+          }));
           break;
-        // ---------- [ S O L I D ] ----------
-        case EffectId.GLORY:
-          effect.glory({opponent, minion});
+        case EffectId.GLORY: // Solid
+          animations.push(...effect.glory({
+            player,
+            opponent,
+            minion,
+            playerMinionField: field,
+          }));
           break;
         case EffectId.SPELLWEAVE:
-          effect.spellweave({player, minion});
+          animations.push(...effect.spellweave({
+            player,
+            playerMinion: minion,
+            playerMinionField: field
+          }));
           break;
         case EffectId.SHIELDWALL:
-          effect.shieldwall({player, field});
+          animations.push(...effect.shieldwall({
+            player,
+            playerMinionField: field
+          }));
           break;
         // ---------- [ G A S ] ----------
         case EffectId.TOXIC_SPRAY:
@@ -171,8 +245,6 @@ const playMinion: SocketRequest = (socket, error): void => {
         case EffectId.TOXIC_GAS:
           effect.toxicGas({opponent});
           break;
-        default:
-          return error("Effect not found.");
       }
     }
 
@@ -183,7 +255,10 @@ const playMinion: SocketRequest = (socket, error): void => {
       minionId: minion.id
     });
 
-    await gameHelpers.saveGame($game);
+    
+
+    // await gameHelpers.saveGame($game, animations);
+    await gameHelpers.attackMinionSave($game, animations);
   });
 };
 

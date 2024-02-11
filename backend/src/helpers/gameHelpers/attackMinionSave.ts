@@ -7,6 +7,7 @@ const attackMinionSave = async ($game: Game, animations: Animations): Promise<vo
   const {$players, $games} = mongo;
   const {io} = server;
   const {playerA, playerB} = $game;
+
   const [$playerA, $playerB] = await Promise.all([
     $players.findOne({
       name: playerA.name
@@ -30,7 +31,7 @@ const attackMinionSave = async ($game: Game, animations: Animations): Promise<vo
     animations
   });
 
-  // await $games.replaceOne({id: $game.id}, $game);
+  await $games.replaceOne({id: $game.id}, $game);
 };
 
 export {attackMinionSave};

@@ -1,12 +1,22 @@
 import {PlayerStatus} from "@som/shared/enums";
 import {socketService} from "services";
-import {casualQueueJoinTime, playerStore} from "stores";
+import {intervalsStore, playerStore, queueStore} from "stores";
+import { get } from "svelte/store";
 
 const leaveQueue = (): void => {
   const {socket} = socketService;
 
   socket.on("leaveQueue", (): void => {
-    casualQueueJoinTime.set(0);
+    queueStore.update((store) => {
+      store.joinedAt = 0;
+      store.timeInQueue = "00:00";
+      document.title = "States of Matter";
+      // clearInterval(store.interval);
+
+      return store;
+    });
+
+    clearInterval(get(intervalsStore).queueTimer);
 
     playerStore.update((store) => {
       store.status = PlayerStatus.ONLINE;

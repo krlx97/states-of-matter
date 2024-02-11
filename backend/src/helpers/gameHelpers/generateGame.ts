@@ -50,8 +50,14 @@ const generateGame = (
       field: {
         hero: {
           ...playerAHero,
-          maxHealth: 20,
-          maxMana: 10,
+          health: {
+            current: 20,
+            default: 20
+          },
+          mana: {
+            current: 20,
+            default: 20
+          },
           buffs: [],
           debuffs: []
         },
@@ -71,8 +77,14 @@ const generateGame = (
       field: {
         hero: {
           ...playerBHero,
-          maxHealth: 20,
-          maxMana: 10,
+          health: {
+            current: 20,
+            default: 20
+          },
+          mana: {
+            current: 20,
+            default: 20
+          },
           buffs: [],
           debuffs: []
         },

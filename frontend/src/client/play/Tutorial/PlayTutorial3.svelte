@@ -1,7 +1,5 @@
-<div class="modal__title">Custom game</div>
-<div class="modal__info--tutorial">
-  Create your own versus or tournament lobbies and challenge your friends to an
-  epic battle. Settle scores, test your skills, and compete for the ultimate
-  prize. No rules, no limits – winner takes all. Are you ready to dominate the
-  competition? It's game time!
+<div class="modal__title" style="font-size: var(--xl)">Custom game</div>
+<div class="modal__info--tutorial" style="text-align: justify; line-height: 1.25">
+  Create your own versus lobbies and challenge your friends to a duel. Put down
+  some tokens to spice up the competition - winner gets it all!
 </div>

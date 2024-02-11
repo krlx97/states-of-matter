@@ -1,36 +1,45 @@
-import {CardType, EffectId} from "@som/shared/enums";
-import type {Field, GameMinionCard, GamePlayer, GameTrapCard} from "@som/shared/types/mongo";
-import { deductHealth } from "../deductHealth";
-import { insertBuff } from "../insertBuff";
-import { moveToGraveyard } from "../moveToGraveyard";
+import {EffectId} from "@som/shared/enums";
+import {deductHealth} from "../deductHealth";
+import {moveToGraveyard} from "../moveToGraveyard";
+import type {Animations} from "@som/shared/types/game";
+
+import type {
+  GameMinionCard,
+  GamePlayer,
+  MinionField
+} from "@som/shared/types/mongo";
 
 interface Fortitude {
   player: GamePlayer;
-  field: Field | undefined;
+  playerMinion: GameMinionCard;
+  playerMinionField: MinionField;
 }
 
-const fortitude = (params: Fortitude) => {
-  const {player, field} = params;
+const fortitude = (params: Fortitude): Animations => {
+  const {player, playerMinion, playerMinionField} = params;
+  const animations: Animations = [];
 
-  if (!field) {
-    return [false, "Field not specified."];
-  }
+  animations.push(...deductHealth(player, playerMinion, 1, playerMinionField));
 
-  const minion = player.field[field];
+  if (playerMinion.health.current > 0) {
+    playerMinion.buffs.push({
+      id: EffectId.TAUNT,
+      data: {}
+    });
 
-  if (!minion || minion.type === CardType.HERO) {
-    return [false, `No minion on the ${field} field.`];
-  }
-
-  deductHealth(player, minion, 1);
-
-  if (minion.health > 0) {
-    insertBuff(minion, EffectId.TAUNT);
+    animations.push({
+      type: "FLOATING_TEXT",
+      field: playerMinionField,
+      name: player.name,
+      text: `+ Taunt`
+    });
   } else {
-    moveToGraveyard(player, minion, field);
+    animations.push(
+      ...moveToGraveyard(player, playerMinion, playerMinionField)
+    );
   }
 
-  return [true, ""];
+  return animations;
 };
 
 export {fortitude};

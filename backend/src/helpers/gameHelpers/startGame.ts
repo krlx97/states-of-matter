@@ -9,9 +9,10 @@ const startGame = async (
   playerA: string,
   playerB: string
 ): Promise<void> => {
-  const {$accounts, $games, $players} = mongo;
+  const {$games, $players} = mongo;
   const {io} = server;
-  const [$playerA, $playerB, $accountA, $accountB] = await Promise.all([
+
+  const [$playerA, $playerB] = await Promise.all([
     $players.findOneAndUpdate({
       name: playerA
     }, {
@@ -33,38 +34,34 @@ const startGame = async (
         gamePopupId: 0,
         gameId: id
       }
-    }),
-    $accounts.findOne({
-      name: playerA
-    }),
-    $accounts.findOne({
-      name: playerB
     }),
   ]);
 
-  if (!$playerA || !$playerB || !$accountA || !$accountB) {
-    return;
-  }
+  if (!$playerA || !$playerB) { return; }
 
   const game = generateGame(id, type, $playerA, $playerB);
   const isInserted = await $games.insertOne(game);
 
-  if (!isInserted.insertedId) {
-    return;
-  }
+  if (!isInserted.insertedId) { return; }
 
   io.to($playerA.socketId).emit("startGame" as any, {
     playerA: {
       name: $playerA.name,
-      avatarId: $accountA.avatarId,
+      avatarId: $playerA.avatarId,
+      bannerId: $playerA.bannerId,
       level: $playerA.level,
-      elo: $playerA.elo
+      elo: $playerA.elo,
+      experience: $playerA.experience,
+      games: $playerA.games
     },
     playerB: {
       name: $playerB.name,
-      avatarId: $accountB.avatarId,
+      avatarId: $playerB.avatarId,
+      bannerId: $playerB.bannerId,
       level: $playerB.level,
-      elo: $playerB.elo
+      elo: $playerB.elo,
+      experience: $playerB.experience,
+      games: $playerB.games
     },
     game: generateGameView(game, $playerA.name)
   });
@@ -72,15 +69,21 @@ const startGame = async (
   io.to($playerB.socketId).emit("startGame" as any, {
     playerA: {
       name: $playerA.name,
-      avatarId: $accountA.avatarId,
+      avatarId: $playerA.avatarId,
+      bannerId: $playerA.bannerId,
       level: $playerA.level,
-      elo: $playerA.elo
+      elo: $playerA.elo,
+      experience: $playerA.experience,
+      games: $playerA.games
     },
     playerB: {
       name: $playerB.name,
-      avatarId: $accountB.avatarId,
+      avatarId: $playerB.avatarId,
+      bannerId: $playerB.bannerId,
       level: $playerB.level,
-      elo: $playerB.elo
+      elo: $playerB.elo,
+      experience: $playerB.experience,
+      games: $playerB.games
     },
     game: generateGameView(game, $playerB.name)
   });

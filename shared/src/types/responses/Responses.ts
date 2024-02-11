@@ -24,18 +24,23 @@ import type {AddFriend} from "./sidenav/AddFriend.js";
 import type {BlockFriendReceiver} from "./sidenav/BlockFriendReceiver.js";
 import type {BlockFriendSender} from "./sidenav/BlockFriendSender.js";
 import type {DeclineFriend} from "./sidenav/DeclineFriend.js";
+import type {ReadChatMessages} from "./sidenav/ReadChatMessages.js";
 import type {RemoveFriendReceiver} from "./sidenav/RemoveFriendReceiver.js";
 import type {RemoveFriendSender} from "./sidenav/RemoveFriendSender.js";
 import type {SendChatMessageReceiver} from "./sidenav/SendChatMessageReceiver.js";
 import type {SendChatMessageSender} from "./sidenav/SendChatMessageSender.js";
-import type {SetAvatarReceiver} from "./sidenav/SetAvatarReceiver.js";
-import type {SetAvatarSender} from "./sidenav/SetAvatarSender.js";
 import type {UnblockFriend} from "./sidenav/UnblockFriend.js";
 import type {UpdateFriend} from "./sidenav/UpdateFriend.js";
+import type {UpdatePlayer} from "./sidenav/UpdatePlayer.js";
+
+interface Notification {
+  color: "primary" | "success" | "warn";
+  message: string;
+}
 
 interface Responses {
   // Global
-  notification: (params: string) => void;
+  notification: (params: Notification) => void;
   // Auth
   getNonce: (params: GetNonce) => void;
   signin: (params: Signin) => void;
@@ -70,14 +75,14 @@ interface Responses {
   blockFriendReceiver: (params: BlockFriendReceiver) => void;
   blockFriendSender: (params: BlockFriendSender) => void;
   declineFriend: (params: DeclineFriend) => void;
+  readChatMessages: (params: ReadChatMessages) => void;
   removeFriendReceiver: (params: RemoveFriendReceiver) => void;
   removeFriendSender: (params: RemoveFriendSender) => void;
   sendChatMessageReceiver: (params: SendChatMessageReceiver) => void;
   sendChatMessageSender: (params: SendChatMessageSender) => void;
-  setAvatarReceiver: (params: SetAvatarReceiver) => void;
-  setAvatarSender: (params: SetAvatarSender) => void;
   unblockFriend: (params: UnblockFriend) => void;
   updateFriend: (params: UpdateFriend) => void;
+  updatePlayer: (params: UpdatePlayer) => void;
 }
 
 export type {Responses};

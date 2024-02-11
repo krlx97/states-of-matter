@@ -1,20 +1,37 @@
 import {EffectId} from "@som/shared/enums";
-import type {GameMinionCard} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
+
+import type {
+  GameMinionCard,
+  GamePlayer,
+  MinionField
+} from "@som/shared/types/mongo";
 
 interface Blaze {
-  minion: GameMinionCard;
+  player: GamePlayer;
+  playerMinion: GameMinionCard;
+  playerMinionField: MinionField;
 }
 
-const blaze = (params: Blaze) => {
-  const blazeBuff = params.minion.buffs.find((buff) => buff.id === EffectId.BLAZE);
+const blaze = (params: Blaze): Animations => {
+  const {player, playerMinion, playerMinionField} = params;
+
+  const blazeBuff = playerMinion.buffs.find(
+    (buff): boolean => buff.id === EffectId.BLAZE
+  );
 
   if (!blazeBuff) {
-    return [false, "Blaze buff not found."];
+    return [];
   }
 
   blazeBuff.data.hasAttackedTwice = false;
 
-  return [true, ""];
+  return [{
+    type: "FLOATING_TEXT",
+    field: playerMinionField,
+    text: "BLAZE",
+    name: player.name
+  }];
 };
 
 export {blaze};

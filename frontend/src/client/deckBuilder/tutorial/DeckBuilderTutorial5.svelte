@@ -1,8 +1,7 @@
-<div class="modal__title">Your deck</div>
-<div class="modal__info--tutorial">
-  This panel displays your selected hero and all the cards you have added to
-  your deck. When you have added 30 cards, you can save your deck and begin your
-  first duel. Click on the card to remove it from the deck. You can click the
-  arrows to switch between different deck slots, and the edit icon to change the
-  deck name.
+<div class="modal__title" style="font-size: var(--xl)">Your deck</div>
+<div class="modal__info--tutorial" style="text-align: justify; line-height: 1.25">
+  This panel displays your selected hero and all the cards in your deck, along
+  with their average attributes, and type and class composition. Clicking on a card removes it
+  from the deck. Once you've added 30 cards, you can save your deck and start
+  your first duel. You can build up to 4 decks at this time.
 </div>

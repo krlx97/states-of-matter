@@ -11,13 +11,13 @@
   .battle-logs {
     position: absolute;
     top: 50%;
-    left: var(--spacing-md);
-    width: calc(96px + 128px + (var(--spacing-sm) * 3));
+    left: var(--md);
+    width: calc(96px + 128px + (var(--sm) * 3));
     height: 80%;
-    /* padding-bottom: var(--spacing-md); */
+    /* padding-bottom: var(--md); */
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--md);
     /* background: linear-gradient(90deg, rgba(121,108,254,0.20) 0%, rgba(31,31,31,0) 100%); */
     /* backdrop-filter: blur(2px); */
     /* box-sizing: border-box; */
@@ -39,15 +39,15 @@
   } */
 
   .green {
-    color: rgb(var(--green));
+    color: rgb(var(--success));
   }
   .red {
-    color: rgb(var(--red));
+    color: rgb(var(--warn));
   }
   .battle-log {
     position: relative;
     width: 96px;
-    /* margin: var(--spacing-md); */
+    /* margin: var(--md); */
     margin-bottom: 0;
     display: flex;
     background-color: rgb(47, 47, 47);
@@ -76,15 +76,15 @@
     width: 128px;
     position: absolute;
     top: 0;
-    left: calc(100% + var(--spacing-sm));
+    left: calc(100% + var(--sm));
     background-color: rgb(31, 31, 31);
 border-radius: 8px;
 border: 1px solid rgb(127, 127, 127);
     /* transform: translateX(-50%); */
     visibility: hidden;
     font-size: var(--font-sm);
-    padding: var(--spacing-sm);
-line-height: 1.4;
+    padding: var(--sm);
+line-height: 1.25;
 box-sizing: border-box;
   }
 </style>
@@ -93,7 +93,7 @@ box-sizing: border-box;
   {#each $gameStore.gameLogs as log}
     {#if log.type === LogType.SUMMON}
       <div class="battle-log">
-        <img class="battle-log__img" src="assets/cards/sm/{log.minionId}.jpg" alt="Card"/>
+        <img class="battle-log__img" src="images/items/sm/10{log.minionId}00.png" alt="Card"/>
         <div class="battle-log__symbol">
           <i
             class="fa-solid fa-khanda fa-fw"
@@ -103,7 +103,9 @@ box-sizing: border-box;
           <!-- {log.playerAtk} -->
         </div>
         <div class="battle-log__tooltip">
-          {$playerStore.name === log.player ? "You" : "Opponent"} played minion card {cardsView.get(log.minionId).name} on the field {log.field}.
+          {$playerStore.name === log.player ? "You" : "Opponent"}
+          played minion card
+          {cardsView.find((card) => card.id === log.minionId).name} on the field {log.field}.
         </div>
         <!-- <div>
           ATTACKED
@@ -112,14 +114,14 @@ box-sizing: border-box;
         </div> -->
         <!-- <div class="battle-log__card"> -->
           <!-- {log.playerDef} -->
-          <!-- <img src="assets/cards/sm/{log.target}.jpg" alt="Card"/> -->
+          <!-- <img src="assets/cards/sm/{log.target}.png" alt="Card"/> -->
         <!-- </div> -->
       </div>
     {:else if log.type === LogType.MAGIC}
       <div class="battle-log">
         <img
           class="battle-log__img"
-          src="assets/cards/sm/{log.magicId}.jpg"
+          src="images/items/sm/10{log.magicId}00.png"
           alt="Card"
         />
         <div class="battle-log__symbol">
@@ -130,7 +132,7 @@ box-sizing: border-box;
           ></i>
         </div>
         <div class="battle-log__tooltip">
-          {$playerStore.name === log.player ? "You" : "Opponent"} played magic card {cardsView.get(log.magicId).name}.
+          {$playerStore.name === log.player ? "You" : "Opponent"} played magic card {cardsView.find((card) => card.id === log.magicId).name}.
         </div>
       </div>
     {/if}

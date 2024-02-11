@@ -1,4 +1,5 @@
 import {writable} from "svelte/store";
+import type { GameTrapCard } from "@som/shared/types/mongo";
 
 interface NodeStore {
   player: {
@@ -10,6 +11,8 @@ interface NodeStore {
     cDamage: HTMLElement,
     d: HTMLElement,
     dDamage: HTMLElement,
+    hero: HTMLElement,
+    heroDamage: HTMLElement,
     graveyard: HTMLElement
   },
   opponent: {
@@ -21,7 +24,23 @@ interface NodeStore {
     cDamage: HTMLElement,
     d: HTMLElement,
     dDamage: HTMLElement,
+    hero: HTMLElement,
+    heroDamage: HTMLElement,
     graveyard: HTMLElement
+  },
+  magic: {
+    trigger: boolean;
+    card: GameTrapCard;
+    name: string;
+  },
+  trap: {
+    trigger: boolean;
+    card: GameTrapCard;
+    name: string;
+  },
+  trapset: {
+    trigger: boolean;
+    name: string;
   },
 }
 
@@ -35,7 +54,9 @@ const nodeStore = writable<NodeStore>({
     cDamage: undefined,
     d: undefined,
     dDamage: undefined,
-    graveyard: undefined
+    graveyard: undefined,
+    hero: undefined,
+    heroDamage: undefined
   },
   opponent: {
     a: undefined,
@@ -46,7 +67,23 @@ const nodeStore = writable<NodeStore>({
     cDamage: undefined,
     d: undefined,
     dDamage: undefined,
-    graveyard: undefined
+    graveyard: undefined,
+    hero: undefined,
+    heroDamage: undefined
+  },
+  magic: {
+    trigger: false,
+    card: {} as GameTrapCard,
+    name: ""
+  },
+  trap: {
+    trigger: false,
+    card: {} as GameTrapCard,
+    name: ""
+  },
+  trapset: {
+    trigger: false,
+    name: ""
   },
 });
 

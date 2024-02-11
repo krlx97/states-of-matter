@@ -6,6 +6,9 @@ interface EthersStore {
   signer: JsonRpcSigner | undefined;
   chainId: bigint;
   contracts: {
+    ethericEssence: Contract;
+    ethericCrystals: Contract;
+    ethericEnergy: Contract;
     somTokens: Contract;
     somGame: Contract;
   };
@@ -17,6 +20,9 @@ const ethersStore = writable<EthersStore>({
   signer: undefined,
   chainId: 0n,
   contracts: {
+    ethericEssence: {} as Contract,
+    ethericCrystals: {} as Contract,
+    ethericEnergy: {} as Contract,
     somTokens: {} as Contract,
     somGame: {} as Contract
   },

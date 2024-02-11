@@ -1,73 +1,52 @@
 import {mongo, server} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
+import type {Player} from "@som/shared/types/mongo";
+import type {UpdateFilter} from "mongodb";
 
 const blockFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $chats, $players} = mongo;
+  const {$chats, $players} = mongo;
 
   socket.on("blockFriend", async (params) => {
     const {name} = params;
 
-    const [$playerSender, $playerReceiver] = await Promise.all([
-      $players.findOne({socketId}),
-      $players.findOne({name})
-    ]);
+    const $playerSenderUpdate = await $players.findOneAndUpdate({socketId}, {
+      $pull: {
+        "social.friends": name
+      },
+      $push: {
+        "social.blocked": name
+      }
+    } as UpdateFilter<Player> | Partial<Player>);
 
-    if (!$playerSender) {
-      return error("Player sender not found.");
+    if (!$playerSenderUpdate) {
+      return error("Sender not found.");
     }
 
-    if (!$playerReceiver) {
-      return error("Player receiver not found.");
+    const $playerReceiverUpdate = await $players.findOneAndUpdate({name}, {
+      $pull: {
+        "social.friends": $playerSenderUpdate.name
+      }
+    } as UpdateFilter<Player> | Partial<Player>);
+
+    if (!$playerReceiverUpdate) {
+      return error("Receiver not found.");
     }
 
-    const [
-      $accountSenderUpdate,
-      $accountReceiverUpdate,
-      $chatDelete
-    ] = await Promise.all([
-      $accounts.updateOne({
-        name: $playerSender.name
-      }, {
-        $pull: {
-          "social.friends": $playerReceiver.name
-        },
-        $push: {
-          "social.blocked": $playerReceiver.name
-        }
-      }),
-
-      $accounts.updateOne({
-        name: $playerReceiver.name
-      }, {
-        $pull: {
-          "social.friends": $playerSender.name
-        }
-      }),
-
-      $chats.deleteOne({
-        players: {
-          $all: [$playerReceiver.name, $playerSender.name]
-        }
-      })
-    ]);
-
-    if (!$accountSenderUpdate.modifiedCount) {
-      return error("Account sender not found.");
-    }
-
-    if (!$accountReceiverUpdate.modifiedCount) {
-      return error("Account receiver not found.");
-    }
+    const $chatDelete = await $chats.deleteOne({
+      players: {
+        $all: [$playerSenderUpdate.name, name]
+      }
+    });
 
     if (!$chatDelete.deletedCount) {
-      return error("Failed to delete chat.");
+      return error("Error deleting chat.");
     }
 
     socket.emit("blockFriendSender", {name});
 
-    server.io.to($playerReceiver.socketId).emit("blockFriendReceiver", {
-      name: $playerSender.username
+    server.io.to($playerReceiverUpdate.socketId).emit("blockFriendReceiver", {
+      name: $playerSenderUpdate.name
     });
   });
 };

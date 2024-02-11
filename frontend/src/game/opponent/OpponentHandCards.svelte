@@ -39,7 +39,7 @@
     <div
       class="player__hand__card"
       >
-      <img class="player__deck__img" src="assets/cards/card-back.png" alt="Hand Card"/>
+      <img class="player__deck__img" src="images/card/card-back.png" alt="Hand Card"/>
     </div>
   {/each}
 </div>

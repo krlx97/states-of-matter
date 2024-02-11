@@ -18,47 +18,25 @@ const shake = (animation: any): void => {
 
   elem.style.visibility = "visible";
   elem.innerText = `-${damageTaken}`;
+  let isReversed = false;
+  let px = 1;
 
   create_in_transition(elem, (node) => {
     return {
-      duration: 700,
+      duration: 800,
       css (t, u) {
-        let num, shadow
-        if (t < 0.1) {
-          num = 1;
-          shadow = 2;
-        } else if (t < 0.2) {
-          num = -2;
-          shadow = 4;
-        } else if (t < 0.3) {
-          num = 3;
-          shadow = 5;
-        } else if (t < 0.4) {
-          num = -4
-          shadow = 8;
-        } else if (t < 0.5) {
-          num = 5;
-          shadow = 10;
-        } else if (t < 0.6) {
-          num = -4
-          shadow = 8;
-        } else if (t < 0.7) {
-          num = 3
-          shadow = 6;
-        } else if (t < 0.8) {
-          num = -2
-          shadow = 4;
-        } else if (t < 0.9) {
-          num = 1
-          shadow = 2;
-        } else if (t <= 1) {
-          num = 0;
-          shadow = 0;
+        let d = Math.floor(t * 10);
+        isReversed = d % 2 === 0;
+
+        if (isReversed) {
+          px -= 3;
+        } else {
+          px += 3;
         }
 
+          // box-shadow: 0 0 ${shadow * 2}px ${shadow * 1}px rgb(var(--red));
         return `
-          box-shadow: 0 0 ${shadow * 2}px ${shadow * 1}px rgb(var(--red));
-          transform: translateX(${num * 1.5}px);
+          transform: translateX(${px}px);
         `;
       }
     };
@@ -67,7 +45,7 @@ const shake = (animation: any): void => {
   setTimeout(() => {
     elem.style.visibility = "hidden";
     elem.innerText = "";
-  }, 700);
+  }, 800);
 
   soundService.play("attack");
 };

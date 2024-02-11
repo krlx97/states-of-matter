@@ -1,6 +1,11 @@
 interface UpdateFriend {
   name: string;
-  status: number;
+  avatarId?: number;
+  bannerId?: number;
+  experience?: number;
+  level?: number;
+  elo?: number;
+  status?: number;
 }
 
 export type {UpdateFriend};

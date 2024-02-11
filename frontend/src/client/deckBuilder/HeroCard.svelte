@@ -1,24 +1,32 @@
 <script lang="ts">
-  import {modalService} from "services";
-  import {deckStore} from "stores";
-  import {CardComponent} from "ui";
+  import {modalService, soundService} from "services";
+  import {playerStore} from "stores";
+  import {ClientCardComponent} from "ui";
   import CardLoreComponent from "./modals/CardLore.svelte";
+  import type {ClientCard} from "@som/shared/types/game";
 
-  let card: any;
+  let card: ClientCard;
+  $: deckIndex = $playerStore.deckId;
+  $: isGlowing = $playerStore.decks[deckIndex].klass === card.klass;
 
-  const onSetDeckKlass = (): void => {
-    $deckStore.klass = card.klass;
+  const onSelectHero = (): void => {
+    $playerStore.decks[deckIndex].klass = card.klass;
+    soundService.play("card");
   };
 
-  const onViewLore = (): void => {
+  const onPreview = (): void => {
     modalService.open(CardLoreComponent, card);
+    soundService.play("click");
   };
 
   export {card};
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div on:click="{onSetDeckKlass}" on:contextmenu|preventDefault="{onViewLore}">
-  <CardComponent {card} health="{0}" mana="{0}"/>
-</div>
+{#key $playerStore}
+  <ClientCardComponent
+    {card}
+    {isGlowing}
+    on:click="{onSelectHero}"
+    on:contextmenu="{onPreview}"/>
+{/key}
+

@@ -19,8 +19,8 @@ const contaminatedAir = (params: ContaminatedAir) => {
       const hasElusiveBuff = minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
 
       if (!hasElusiveBuff) {
-        if (minion.damage > 0) {
-          minion.damage -= 1;
+        if (minion.damage.current > 0) {
+          minion.damage.current -= 1;
         }
 
         insertDebuff(minion, EffectId.CONTAMINATED_AIR);
@@ -35,8 +35,8 @@ const contaminatedAir = (params: ContaminatedAir) => {
       const hasElusiveBuff = minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
 
       if (!hasElusiveBuff) {
-        if (minion.damage > 0) {
-          minion.damage -= 1;
+        if (minion.damage.current > 0) {
+          minion.damage.current -= 1;
         }
 
         insertDebuff(minion, EffectId.CONTAMINATED_AIR);

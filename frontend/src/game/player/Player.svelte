@@ -19,7 +19,7 @@
 
   .game-player__fields {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--md);
   }
 </style>
 
@@ -27,11 +27,15 @@
   <PlayerTrapFieldComponent/>
   <div class="game-player__fields">
     <PlayerGraveyardComponent/>
+    <div></div>
+    <div></div>
     <PlayerMinionFieldComponent field="a"/>
     <PlayerMinionFieldComponent field="b"/>
     <PlayerHeroComponent/>
     <PlayerMinionFieldComponent field="c"/>
     <PlayerMinionFieldComponent field="d"/>
+    <div></div>
+    <div></div>
     <PlayerDeckComponent/>
   </div>
   <PlayerHandCardsComponent/>

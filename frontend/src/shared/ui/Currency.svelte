@@ -1,56 +1,62 @@
 <script lang="ts">
   import {formatUnits} from "ethers"
 
-  let name: "ese" | "ecr" | "wtlos" | "lpecr" | "tlos";
+  let name: "ees" | "ecr" | "enrg";
   let number: bigint;
   let isIconVisible = true;
+  let iconSize = "xs";
 
-  export {name, number, isIconVisible};
+  const fix = (val: any): any => {
+    const parts = `${formatUnits(val.toString())}`.split(".");
+    parts[1] = parts[1].slice(0, 3);
+    return parts.join(".");
+  }
+
+  export {name, number, isIconVisible, iconSize};
 </script>
 
 <style>
   .currency {
     position: relative;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .currency__full {
     position: absolute;
-    bottom: 100%;
+    top: calc(100% + var(--sm));
     left: 50%;
-    padding: var(--spacing-sm);
+    padding: var(--xs);
     display: none;
+    font-size: var(--sm);
     transform: translateX(-50%);
+    z-index: 40;
   }
 
   .currency:hover .currency__full {
-    display: initial;
+    display: flex;
     background-color: rgb(31, 31, 31);
     border: 1px solid rgb(127, 127, 127);
     border-radius: 8px;
   }
-
-  img {
-    margin-left: var(--spacing-xsm);
-    display: inline;
-    vertical-align: middle;
-  }
 </style>
 
-<div class="currency">
-  {#if name === "ese"}
+<div class="currency" style="{iconSize === "sm" ? "font-size: 20px" : ""}">
+  <!-- {#if name === "ees"}
     {number}
-  {:else}
-    {parseFloat(formatUnits(number.toString())).toFixed(3)}
-  {/if}
+  {:else} -->
+    {fix(number)}
+  <!-- {/if} -->
   {#if isIconVisible}
-    <img src="assets/currencies/xs/{name}.png" alt="{name}"/>
+    <img src="images/currencies/{iconSize}/{name}.png" alt="{name}"/>
   {/if}
   <div class="currency__full">
-    {#if name === "ese"}
+    <!-- {#if name === "ees"}
       {number}
-    {:else}
+    {:else} -->
       {formatUnits(number.toString())}
-    {/if}
+    <!-- {/if} -->
   </div>
 </div>

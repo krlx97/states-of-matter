@@ -1,6 +1,7 @@
 <script lang="ts">
   import {socketService, soundService} from "services";
   import {lobbyStore, playerStore} from "stores";
+  import {ButtonComponent, PlayerFrameComponent} from "ui";
 
   const {socket} = socketService;
 
@@ -27,32 +28,22 @@
     align-items: center;
     justify-content: center;
   }
+
+  .lobby__actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--md);
+  }
+
   .players {
-    margin: var(--spacing-md) 0;
+    margin: var(--md) 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .host, .challengee {
-    width: 256px;
-    padding: var(--spacing-sm);
-    display: flex;
-    align-items: center;
-    background-color: rgb(var(--light-grey));
-    border: 1px solid rgb(127, 127, 127);
-    border-radius: 8px;
-    box-sizing: border-box;
-    /* box-shadow: var(--elevation-sm); */
-  }
-  .challengee {
-    justify-content: flex-end;
-  }
-  .host__avatar, .challengee__avatar {border-radius: 50%}
-  .host__avatar {margin-right: var(--spacing-sm)}
-  .challengee__avatar {margin-left: var(--spacing-sm)}
 
   .vs {
-    margin: 0 var(--spacing-md);
+    margin: 0 var(--md);
   }
 </style>
 
@@ -65,51 +56,27 @@
 
   <div class="players">
 
-    <div class="host">
-      <img
-        class="host__avatar"
-        src="assets/avatars/{$lobbyStore.host.avatarId}.png"
-        alt="Host avatar"
-      />
+    <PlayerFrameComponent {...$lobbyStore.host}/>
 
-      <div>
-        <div>{$lobbyStore.host.name}</div>
-        <br/>
-        <div>Host</div>
-      </div>
-    </div>
+    <h1 class="vs">VS</h1>
 
-    <h1 class="vs">
-      VS
-    </h1>
-
-    <div class="challengee">
-      <div>
-        {$lobbyStore.challengee.name ? $lobbyStore.challengee.name : "Awaiting..."}
-        <br/>
-        <div>Challengee</div>
-      </div>
-
-      <img
-        class="challengee__avatar"
-        src="assets/avatars/{$lobbyStore.challengee.name ? $lobbyStore.challengee.avatarId : "unknown"}.png"
-        alt="Challengee avatar"
-      />
-    </div>
+    {#if $lobbyStore.challengee}
+      <PlayerFrameComponent {...$lobbyStore.challengee}/>
+    {:else}
+      <div>Awaiting opponent...</div>
+    {/if}
   </div>
 
-  <div>
+  <div class="lobby__actions">
     {#if $lobbyStore.host.name === $playerStore.name}
-      <button class="button" disabled={!$lobbyStore.challengee.name} on:click={onStartGame}>
+      <ButtonComponent
+        disabled="{!$lobbyStore.challengee}"
+        on:click="{onStartGame}">
         START GAME
-      </button>
-      <button class="button" on:click={onCloseLobby}>
-        CLOSE LOBBY
-      </button>
+      </ButtonComponent>
+      <ButtonComponent on:click="{onCloseLobby}">CLOSE LOBBY</ButtonComponent>
     {:else}
-      <button class="button" on:click={onLeaveLobby}>
-        LEAVE LOBBY
-      </button>
+      <ButtonComponent on:click="{onLeaveLobby}">LEAVE LOBBY</ButtonComponent>
     {/if}
   </div>
 

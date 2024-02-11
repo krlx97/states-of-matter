@@ -34,8 +34,8 @@ const cards = [{
     }, {
         id: CardId.SEAFARER,
         klass: CardKlass.NEUTRAL,
-        effect: EffectId.SHADOW_SURGE,
         type: CardType.MINION,
+        effect: EffectId.SHADOW_SURGE,
         health: 2,
         damage: 1,
         manaCost: 3
@@ -374,7 +374,7 @@ const cards = [{
         type: CardType.MINION,
         health: 1,
         damage: 1,
-        manaCost: 1,
+        manaCost: 1
     }, {
         id: CardId.PLASMA_2,
         klass: CardKlass.PLASMA,
@@ -382,7 +382,7 @@ const cards = [{
         type: CardType.MINION,
         health: 2,
         damage: 2,
-        manaCost: 2,
+        manaCost: 2
     }, {
         id: CardId.PLASMA_3,
         klass: CardKlass.PLASMA,
@@ -390,7 +390,7 @@ const cards = [{
         type: CardType.MINION,
         health: 3,
         damage: 3,
-        manaCost: 3,
+        manaCost: 3
     }, {
         id: CardId.PLASMA_4,
         klass: CardKlass.PLASMA,
@@ -398,7 +398,7 @@ const cards = [{
         type: CardType.MINION,
         health: 4,
         damage: 4,
-        manaCost: 4,
+        manaCost: 4
     }, {
         id: CardId.PLASMA_5,
         klass: CardKlass.PLASMA,
@@ -406,7 +406,7 @@ const cards = [{
         type: CardType.MINION,
         health: 5,
         damage: 5,
-        manaCost: 5,
+        manaCost: 5
     }, {
         id: CardId.PLASMA_6,
         klass: CardKlass.PLASMA,
@@ -414,7 +414,7 @@ const cards = [{
         type: CardType.MINION,
         health: 6,
         damage: 6,
-        manaCost: 6,
+        manaCost: 6
     }, {
         id: CardId.PLASMA_7,
         klass: CardKlass.PLASMA,

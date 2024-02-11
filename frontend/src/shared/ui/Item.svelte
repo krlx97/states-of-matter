@@ -1,9 +1,12 @@
 <script lang="ts">
   import {onMount} from "svelte";
+  import {TextComponent} from "ui";
+    import { inventoryStore } from "stores";
 
   let item: any;
   let shardElement: HTMLDivElement;
   let shardElementRect: DOMRect;
+  let invitem: any = {balance: 0n, supply: 0n};
 
   const onMousemove = (event: MouseEvent): void => {
     const {pageX, pageY} = event;
@@ -23,6 +26,7 @@
   };
 
   onMount((): void => {
+    invitem = $inventoryStore.items.find((i) => i.id === item.id);
     shardElementRect = shardElement.getBoundingClientRect();
   });
 
@@ -32,10 +36,10 @@
 <style>
   .item {
     /* height: 180px; */
-    width: 112px;
+    width: 110px;
     color: rgb(127, 127, 127);
     background-color: rgb(31, 31, 31);
-    border: 2px solid rgb(127, 127, 127);
+    border: 1px solid rgb(127, 127, 127);
     border-radius: 8px;
     box-sizing: border-box;
     cursor: pointer;
@@ -44,9 +48,13 @@
       border-color 250ms ease,
       color 250ms ease,
       transform 50ms linear;
+    overflow: hidden;
   }
 
   .item__img, video {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     height: 136px;
     width: 108px;
     border-top-right-radius: 8px;
@@ -54,13 +62,13 @@
   }
 
   .item__title {
-    /* padding: 6px; */
-    height: 32px;
-    text-align: center;
-    font-size: var(--font-xs);
+    height: 28px;
+    padding: 0 4px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    /* align-items: center; */
     justify-content: center;
+    font-size: var(--xs);
   }
 
   .none:hover {
@@ -68,41 +76,85 @@
     color: rgb(255, 255, 255);
   }
 
+  .common:hover {
+    border-color: rgb(var(--common));
+    color: rgb(var(--common));
+  }
+
   .uncommon:hover {
-    border-color: rgb(var(--gas));
-    color: rgb(var(--gas));
+    border-color: rgb(var(--uncommon));
+    color: rgb(var(--uncommon));
   }
 
   .rare:hover {
-    border-color: rgb(var(--liquid));
-    color: rgb(var(--liquid));
+    border-color: rgb(var(--rare));
+    color: rgb(var(--rare));
   }
 
   .epic:hover {
-    border-color: rgb(var(--plasma));
-    color: rgb(var(--plasma));
+    border-color: rgb(var(--epic));
+    color: rgb(var(--epic));
+  }
+
+  .legendary:hover {
+    border-color: rgb(var(--legendary));
+    color: rgb(var(--legendary));
+  }
+
+  .mythic:hover {
+    border-color: rgb(var(--mythic));
+    color: rgb(var(--mythic));
   }
 </style>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="item"
-  class:none={!item.rarity}
-  class:uncommon={item.rarity === 0}
-  class:rare={item.rarity === 1}
-  class:epic={item.rarity === 2}
+  class:common={item.rarity === 0}
+  class:uncommon={item.rarity === 1}
+  class:rare={item.rarity === 2}
+  class:epic={item.rarity === 3}
+  class:legendary={item.rarity === 4}
+  class:mythic={item.rarity === 5}
   bind:this={shardElement}
   on:mousemove={onMousemove}
-  on:mouseleave={onMouseleave}
->
-  {#if item.rarity === 0 || !item.rarity}
-    <img class="item__img" src="assets/items/{item.type === 1 ? item.id - 1 : item.id}.png" alt={item.name}>
+  on:mouseleave={onMouseleave}>
+
+  {#if item.rarity === 0 || item.rarity === 3}
+    <div class="item__img">
+      {#if item.type === 0}
+        <img src="images/items/{item.id}.png" alt="{item.name}" style:border-radius="50%">
+      {:else if item.type === 1}
+        <img src="images/items/{item.id}.png" alt="{item.name}" width="108">
+      {:else}
+        <img src="images/items/{item.id}.png" alt="{item.name}" height="136" width="108">
+      {/if}
+    </div>
   {:else}
-    <!-- <div class="item__img"> -->
+    <div class="item__img">
       <video autoplay loop muted>
-        <source src="assets/items/{item.type === 1 ? item.id - 1 : item.id}.webm" type="video/webm"/>
+        <source src="images/items/{item.id}.webm" type="video/webm"/>
         {item.name}
       </video>
-    <!-- </div> -->
+    </div>
   {/if}
-  <div class="item__title">{item.name}</div>
+
+  <div class="item__title">
+    <div style="text-align: center;">{item.name}</div>
+    <div>
+      {#if item.rarity === 0}
+        <div style="text-align: center;">
+        <TextComponent color="{invitem.balance > 0 ? "success" : "warn"}">
+          {invitem.balance > 0 ? "✔" : "×"}
+        </TextComponent>
+        </div>
+      {:else}
+        <div style="width: 100%; display: flex; justify-content: space-between;">
+          <div>{invitem.balance}</div>
+          <div>{invitem.supply}</div>
+        </div>
+      {/if}
+    </div>
+  </div>
+
 </div>

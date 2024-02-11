@@ -1,9 +1,9 @@
-import { EffectId } from "@som/shared/enums";
+import { CardType, EffectId } from "@som/shared/enums";
 import { randomInt } from "crypto";
 import { moveToGraveyard } from "../moveToGraveyard";
 import { deductHealth } from "../deductHealth";
 import type { Animations } from "@som/shared/types/game";
-import type {GameMinionCard, GamePlayer, GameTrapCard} from "@som/shared/types/mongo";
+import type {FieldKeys, GameMinionCard, GamePlayer, GameTrapCard, MinionField} from "@som/shared/types/mongo";
 
 interface Ricochet {
   player: GamePlayer;
@@ -16,53 +16,46 @@ const ricochet = (params: Ricochet): Animations => {
   const {player, playerMinion, opponent, opponentTrap} = params;
   const animations: Animations = [];
 
-  const possibleMinions: Array<{minion: GameMinionCard, key: keyof typeof player.field}> = [];
-  const minionKeys = Object.keys(player.field) as Array<keyof typeof player.field>;
+  const possibleMinions: Array<{minion: GameMinionCard, key: MinionField}> = [];
+  const fieldKeys = Object.keys(player.field) as FieldKeys;
 
-  minionKeys.forEach((key) => {
+  fieldKeys.forEach((key): void => {
+    if (key === "hero") { return; }
+
     const minion = player.field[key];
 
-    if (minion) {
-      const hasElusiveBuff = minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
+    if (!minion) { return; }
 
-      if (!hasElusiveBuff) {
-        possibleMinions.push({minion, key});
-      }
-    }
+    const hasElusiveBuff = minion.buffs.find(
+      ({id}): boolean => id === EffectId.ELUSIVE
+    );
+
+    if (hasElusiveBuff) { return; }
+
+    possibleMinions.push({minion, key});
   });
 
-  // animations.push({
-  //   type: "TRAP",
-  //   id: opponentTrap.id,
-  //   name: opponent.name
-  // });
+  animations.push({
+    type: "TRAP",
+    name: opponent.name,
+    card: opponentTrap
+  });
 
   if (possibleMinions.length) {
     let randomMinion = randomInt(possibleMinions.length);
     let {minion, key} = possibleMinions[randomMinion];
-
-    deductHealth(player, minion, playerMinion.damage);
 
     animations.push({
       type: "FLOATING_TEXT",
       field: key,
       name: player.name,
       text: "Ricochet"
-    }, {
-      type: "DAMAGE",
-      damageTaken: playerMinion.damage,
-      field: key,
-      name: player.name
     });
 
-    if (minion.health <= 0) {
-      moveToGraveyard(player, minion, key);
+    animations.push(...deductHealth(player, minion, playerMinion.damage.current, key));
 
-      animations.push({
-        type: "DEATH",
-        field: key,
-        name: player.name
-      });
+    if (minion.health.current <= 0) {
+      animations.push(...moveToGraveyard(player, minion, key));
     }
   }
 

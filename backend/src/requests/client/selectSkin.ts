@@ -1,44 +1,29 @@
-import {items} from "@som/shared/data";
 import {contracts, mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const selectSkin: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $players} = mongo;
+  const {$players} = mongo;
 
   socket.on("selectSkin", async (params) => {
-    const $player = await $players.findOne({socketId});
+    const {cardId, skinId} = params;
 
-    if (!$player) {
-      return error("Player not found.");
-    }
+    // if (!item || item.type !== 2) {
+    //   return error("Selected item isn't a skin.");
+    // }
 
-    const {name} = $player;
-    const $account = await $accounts.findOne({name});
+    // const balance = await contracts.skins.balanceOf($player.address, id);
 
-    if (!$account) {
-      return error("Account not found.");
-    }
-
-    const {id} = params;
-    const item = items.find((item) => item.id === id);
-
-    if (!item || item.type !== 2) { // 2 === skin, make ItemType enum?
-      return error("Selected item isn't a skin.");
-    }
-
-    const balance = await contracts.skins.balanceOf($account.publicKey, id);
-
-    if (balance.lte(0)) {
-      return error("You do not own the skin.");
-    }
+    // if (balance.lte(0)) {
+    //   return error("You do not own the skin.");
+    // }
 
     const $playerUpdate = await $players.updateOne({
       socketId,
-      "skins.cardId": item.cardId
+      "skins.cardId": cardId
     }, {
       $set: {
-        "skins.$": {cardId: item.cardId, skinId: id}
+        "skins.$": {cardId, skinId}
       }
     });
 
@@ -47,7 +32,7 @@ const selectSkin: SocketRequest = (socket, error): void => {
       // it instead.
       const $playerUpdate2 = await $players.updateOne({socketId}, {
         $addToSet: {
-          skins: {cardId: item.cardId, skinId: id}
+          skins: {cardId, skinId}
         }
       });
 
@@ -56,10 +41,7 @@ const selectSkin: SocketRequest = (socket, error): void => {
       }
     }
 
-    socket.emit("selectSkin", {
-      cardId: item.cardId,
-      skinId: id
-    });
+    socket.emit("selectSkin", {cardId, skinId});
   });
 };
 

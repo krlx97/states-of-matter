@@ -14,7 +14,9 @@
 </style>
 
 <div class="hand-cards">
-  {#each $gameStore.player.hand as card}
-    <PlayerHandCardComponent {card}/>
-  {/each}
+  {#key $gameStore.player.hand}
+    {#each $gameStore.player.hand as card}
+      <PlayerHandCardComponent {card}/>
+    {/each}
+  {/key}
 </div>

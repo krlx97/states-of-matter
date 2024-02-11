@@ -1,4 +1,5 @@
 // Auth
+import type {Authenticate} from "./auth/Authenticate.js";
 import type {GetNonce} from "./auth/GetNonce.js";
 import type {SigninMetamask} from "./auth/SigninMetamask.js";
 import type {SigninPassword} from "./auth/SigninPassword.js";
@@ -24,13 +25,16 @@ import type {AcceptFriend} from "./sidenav/AcceptFriend.js";
 import type {AddFriend} from "./sidenav/AddFriend.js";
 import type {BlockFriend} from "./sidenav/BlockFriend.js";
 import type {DeclineFriend} from "./sidenav/DeclineFriend.js";
+import type {ReadChatMessages} from "./sidenav/ReadChatMessages.js";
 import type {RemoveFriend} from "./sidenav/RemoveFriend.js";
 import type {SendChatMessage} from "./sidenav/SendChatMessage.js";
 import type {SetAvatar} from "./sidenav/SetAvatar.js";
+import type {SetBanner} from "./sidenav/SetBanner.js";
 import type {UnblockFriend} from "./sidenav/UnblockFriend.js";
 
 interface Requests {
   // Auth
+  authenticate: (params: Authenticate) => Promise<void>;
   getNonce: (params: GetNonce) => Promise<void>;
   signinMetamask: (params: SigninMetamask) => Promise<void>;
   signinPassword: (params: SigninPassword) => Promise<void>;
@@ -60,14 +64,16 @@ interface Requests {
   playMagic: (params: PlayMagic) => Promise<void>;
   playMinion: (params: PlayMinion) => Promise<void>;
   playTrap: (params: PlayTrap) => Promise<void>;
-  // Social
+  // Sidenav
   acceptFriend: (params: AcceptFriend) => Promise<void>;
   addFriend: (params: AddFriend) => Promise<void>;
   blockFriend: (params: BlockFriend) => Promise<void>;
   declineFriend: (params: DeclineFriend) => Promise<void>;
+  readChatMessages: (params: ReadChatMessages) => Promise<void>;
   removeFriend: (params: RemoveFriend) => Promise<void>;
   sendChatMessage: (params: SendChatMessage) => Promise<void>;
   setAvatar: (params: SetAvatar) => Promise<void>;
+  setBanner: (params: SetBanner) => Promise<void>;
   unblockFriend: (params: UnblockFriend) => Promise<void>;
   updateFriend: () => Promise<void>;
 }

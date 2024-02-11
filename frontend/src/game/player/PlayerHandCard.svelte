@@ -1,9 +1,10 @@
 <script lang="ts">
-  import {CardType} from "@som/shared/enums";
-  import {socketService} from "services";
+  import {CardId, CardType} from "@som/shared/enums";
+  import {modalService, socketService} from "services";
   import {gameStore, selectedCardStore, playerStore} from "stores";
   import {CardComponent} from "ui";
-  import type {GameMagicCard, GameMinionCard, GameTrapCard} from "@som/shared/types/backend/game";
+  import type {GameMagicCard, GameMinionCard, GameTrapCard} from "@som/shared/types/mongo";
+    import EffectSelect from "../modals/EffectSelect.svelte";
 
   const {socket} = socketService;
   let card: GameMagicCard | GameMinionCard | GameTrapCard;
@@ -12,11 +13,31 @@
   const onSelectCard = (): void => {
     const {gid, type} = card;
 
-    if ($gameStore.currentPlayer !== $playerStore.name) { return; }
-    if ($selectedCardStore.field !== undefined) { $selectedCardStore.field = undefined; }
+    if ($gameStore.currentPlayer !== $playerStore.name) {
+      return;
+    }
+
+    if ($selectedCardStore.field !== undefined) {
+      $selectedCardStore.field = undefined;
+    }
 
     if (type === CardType.MAGIC) {
-      socket.emit("playMagic", {gid});
+      if (card.id === CardId.GRAVECALL) {
+        $selectedCardStore.hand = card;
+        modalService.open(EffectSelect);
+      }
+
+      if (card.id === CardId.CROSS) {
+        $selectedCardStore.hand = card;
+      }
+
+      if (card.id === CardId.GAMBIT || card.id === CardId.ANVIL) {
+        socket.emit("playMagic", {gid});
+      }
+
+      if (card.id === CardId.QUICK_SAND) {
+        $selectedCardStore.hand = card;
+      }
     } else if (type === CardType.MINION) {
       if ($selectedCardStore.hand && $selectedCardStore.hand.gid === card.gid) {
         $selectedCardStore.hand = undefined;
@@ -41,11 +62,6 @@
   }
 </style>
 
-<div
-  class="hand-card"
-  class:isSelected
-  on:click={onSelectCard}
-  on:keypress={onSelectCard}
->
-  <CardComponent {card} isClient={false}/>
+<div class="hand-card">
+  <CardComponent {isSelected} {card} on:click="{onSelectCard}"/>
 </div>

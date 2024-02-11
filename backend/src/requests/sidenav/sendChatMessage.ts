@@ -3,15 +3,17 @@ import type {SocketRequest} from "@som/shared/types/backend";
 
 const sendChatMessage: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $players, $chats} = mongo;
-  const {io} = server;
+  const {$players, $chats} = mongo;
 
   socket.on("sendChatMessage", async (params) => {
     const {receiver, text} = params;
 
+    if (text.length > 256) {
+      return error("Message too long.");
+    }
+
     const [$playerSender, $playerReceiver] = await Promise.all([
       $players.findOne({socketId}),
-
       $players.findOne({
         name: receiver
       })
@@ -25,50 +27,57 @@ const sendChatMessage: SocketRequest = (socket, error): void => {
       return error("Player receiver not found, try relogging.");
     }
 
-    const $account = await $accounts.findOne({
-      name: $playerSender.name
-    });
-
-    if (!$account) {
-      return error("Account not found.");
-    }
-
-    if (!$account.social.friends.includes(receiver)) {
+    if (!$playerSender.social.friends.includes(receiver)) {
       return error("This user isn't your friend.");
     }
 
-    const date = new Date();
-
-    const $chatUpdate = await $chats.updateOne({
+    const $chat = await $chats.findOne({
       players: {
         $all: [$playerSender.name, receiver]
       }
-    }, {
-      $push: {
-        messages: {
-          name: $playerSender.name,
-          text,
-          date
-        }
-      } // pop first if length > 100!
     });
 
-    if (!$chatUpdate.modifiedCount) {
+    if (!$chat) {
+      return error("Chat not found.");
+    }
+
+    const date = Date.now();
+
+    if ($chat.lastSender === $playerSender.name) {
+      $chat.unseen += 1;
+    } else {
+      $chat.lastSender = $playerSender.name;
+      $chat.unseen = 1;
+    }
+
+    $chat.messages.push({
+      name: $playerSender.name,
+      text,
+      date
+    });
+
+    if ($chat.messages.length > 100) {
+      $chat.messages.shift();
+    }
+
+    const $chatReplace = await $chats.replaceOne({
+      players: {
+        $all: [$playerSender.name, receiver]
+      }
+    }, $chat);
+
+    if (!$chatReplace.modifiedCount) {
       return error("Error updating chat.");
     }
 
-    socket.emit("sendChatMessageSender", {
-      sender: $playerSender.name,
-      receiver,
-      text,
-      date
-    });
+    const sender = $playerSender.name;
 
-    io.to($playerReceiver.socketId).emit("sendChatMessageReceiver", {
-      sender: $playerSender.name,
-      text,
-      date
-    });
+    socket.emit("sendChatMessageSender", {sender, receiver, text, date});
+
+    server
+      .io
+      .to($playerReceiver.socketId)
+      .emit("sendChatMessageReceiver", {sender, text, date});
   });
 };
 

@@ -40,7 +40,7 @@ const closeLobby: SocketRequest = (socket, error): void => {
           status: PlayerStatus.ONLINE
         }
       }),
-      challengee.name && $players.findOneAndUpdate({
+      challengee && $players.findOneAndUpdate({
         name: challengee.name
       }, {
         $set: {
@@ -66,7 +66,7 @@ const closeLobby: SocketRequest = (socket, error): void => {
 
     socket.emit("closeLobby");
 
-    if (challengee.name) {
+    if (challengee) {
       const $challengee = await $players.findOneAndUpdate({
         name: challengee.name
       }, {

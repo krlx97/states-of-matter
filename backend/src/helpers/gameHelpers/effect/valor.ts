@@ -1,32 +1,52 @@
 import {EffectId} from "@som/shared/enums";
-import type {GameMinionCard, GamePlayer} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
+import type {GamePlayer, FieldKeys} from "@som/shared/types/mongo";
 
 interface Valor {
+  player: GamePlayer;
   opponent: GamePlayer;
 }
 
-const valor = (params: Valor) => {
-  const {opponent} = params;
+const valor = (params: Valor): Animations => {
+  const {player, opponent} = params;
+  const animations: Animations = [];
+  const fieldKeys = Object.keys(player.field) as FieldKeys;
 
-  const minionKeys = Object.keys(opponent.field) as Array<keyof typeof opponent.field>;
-  let totalDamage = 0;
+  const damage = fieldKeys.reduce((acc, fieldKey) => {
+    const card = player.field[fieldKey];
 
-  minionKeys.forEach((key) => {
-    const minion = opponent.field[key];
+    const shieldBuff = card
+      ?.buffs
+      .find(({id}): boolean => id === EffectId.SHIELD);
 
-    if (minion) {
-      const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
-
-      if (shieldBuff) {
-        totalDamage += shieldBuff.data.amount;
-        minion.buffs.splice(minion.buffs.indexOf(shieldBuff, 1));
-      }
+    if (!card || !shieldBuff) {
+      return acc;
     }
+
+    animations.push({
+      type: "FLOATING_TEXT",
+      field: fieldKey,
+      name: player.name,
+      text: `-${shieldBuff.data.amount} Shield`
+    });
+
+    acc += shieldBuff.data.amount;
+
+    card.buffs.splice(card.buffs.indexOf(shieldBuff, 1));
+
+    return acc;
+  }, 0);
+
+  opponent.field.hero.health.current -= damage;
+
+  animations.push({
+    type: "HEALTH",
+    field: "hero",
+    name: opponent.name,
+    increment: -damage
   });
 
-  opponent.field.hero.health -= totalDamage;
-
-  return [true, ""]
+  return animations;
 };
 
 export {valor};

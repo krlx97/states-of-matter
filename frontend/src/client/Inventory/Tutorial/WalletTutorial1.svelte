@@ -1,10 +1,5 @@
-<div class="modal__title">Wallet introduction</div>
-<div class="modal__info--tutorial">
+<div class="modal__title" style="font-size: var(--xl)">Inventory introduction</div>
+<div class="modal__info--tutorial" style="text-align: justify; line-height: 1.25">
 
-In States of Matter, there exists a wide range of currencies and items
-      that players may acquire and rightfully claim as their own. These assets
-      are securely stored in your metamask wallet, and it's worth noting that
-      you can access them even outside the game. You will earn these possessions
-      gradually as you advance through the game and level up, and have the
-      option to trade them with other players should you choose to do so.
+In States of Matter, players have access to a diverse array of currencies and items that they can obtain and possess. These assets are safely stored in your Metamask wallet, and it's important to mention that you can access them even when you're not in the game. You acquire these assets through gameplay or crafting and can trade them with other players if you wish.
 </div>      

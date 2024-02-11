@@ -1,11 +1,10 @@
 import {verifyMessage} from "ethers";
-import {cards} from "@som/shared/data";
-import {PlayerStatus, QueueId} from "@som/shared/enums";
 import {mongo} from "app";
+import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const signupMetamask: SocketRequest = (socket, error): void => {
-  const {$accounts, $players} = mongo;
+  const {$players} = mongo;
 
   socket.on("signupMetamask", async (params) => {
     const {name, address, signature} = params;
@@ -18,9 +17,9 @@ const signupMetamask: SocketRequest = (socket, error): void => {
       return error("Maximum 16 characters.");
     }
 
-    const $account = await $accounts.findOne({name});
+    const $player = await $players.findOne({name});
 
-    if ($account) {
+    if ($player) {
       return error("Name taken.");
     }
 
@@ -30,74 +29,18 @@ const signupMetamask: SocketRequest = (socket, error): void => {
       return error("Invalid signature.");
     }
 
-    const [insertAccount, insertPlayer] = await Promise.all([
-      $accounts.insertOne({
-        name,
-        passwordHash: "",
-        address,
-        nonce: 0,
-        avatarId: 0,
-        bannerId: 0,
-        social: {
-          friends: [],
-          requests: [],
-          blocked: []
-        }
-      }),
-      $players.insertOne({
-        socketId: "",
-        name,
-        experience: 0,
-        level: 1,
-        elo: 500,
-        joinedAt: Date.now(),
-        status: PlayerStatus.OFFLINE,
-        queueId: QueueId.NONE,
-        deckId: 0,
-        lobbyId: 0,
-        gameId: 0,
-        gamePopupId: 0,
-        games: {
-          casual: {won: 0, lost: 0},
-          ranked: {won: 0, lost: 0}
-        },
-        decks: [
-          {id: 0, klass: 1, name: "Deck 1", cards: []},
-          {id: 1, klass: 2, name: "Deck 2", cards: []},
-          {id: 2, klass: 3, name: "Deck 3", cards: []},
-          {id: 3, klass: 4, name: "Deck 4", cards: []}
-        ],
-        skins: cards.map((card) => ({cardId: card.id, skinId: 0})),
-        tutorial: {
-          deckBuilder: false,
-          game: false,
-          play: false,
-          inventory: false
-        }
-      })
-    ]);
+    const insertPlayer = await $players.insertOne(
+      playerHelpers.playerTemplate(name, "", address)
+    );
 
-    if (!insertAccount.insertedId) {
-      if (insertPlayer.insertedId) {
-        await $players.deleteOne({
-          _id: insertPlayer.insertedId
-        });
-      }
-
+    if (!insertPlayer.insertedId) {
       return error("Error creating account, please try again.");
     }
 
-    if (!insertPlayer.insertedId) {
-      if (insertAccount.insertedId) {
-        await $accounts.deleteOne({
-          _id: insertAccount.insertedId
-        });
-      }
-
-      return error("Error creating player, please try again.");
-    }
-
-    socket.emit("notification", "Account created successfully.");
+    socket.emit("notification", {
+      color: "success",
+      message: "Account created successfully."
+    });
   });
 };
 

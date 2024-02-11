@@ -1,13 +1,35 @@
 import {socketService} from "services";
-import {accountStore} from "stores";
+import {playerStore} from "stores";
 
 const acceptFriendReceiver = (): void => {
   socketService.socket.on("acceptFriendReceiver", (params): void => {
-    const {name, avatarId, status} = params;
-    const messages = [];
+    const {
+      name,
+      avatarId,
+      bannerId,
+      experience,
+      level,
+      elo,
+      status,
+      games
+    } = params;
 
-    accountStore.update((store) => {
-      store.social.friends.push({name, status, avatarId, messages});
+    playerStore.update((store) => {
+      store.social.friends.push({
+        name,
+        avatarId,
+        bannerId,
+        experience,
+        level,
+        elo,
+        status,
+        games,
+        chat: {
+          lastSender: name,
+          unseen: 0,
+          messages: []
+        }
+      });
       return store;
     });
   });

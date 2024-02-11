@@ -1,21 +1,23 @@
 <script lang="ts">
-  import {items} from "data";
-  import {ethersService, formService} from "services";
-  import {accountStore, modalStore, walletStore} from "stores";
-  import {FormFieldComponent, FormLoadingComponent} from "ui";
+  import {items} from "@som/shared/data";
+  import {ethersService, formService, socketService, soundService} from "services";
+  import {modalStore, playerStore, inventoryStore} from "stores";
+    import { onDestroy, onMount } from "svelte";
+  import {FormComponent, InputComponent, FormSubmitComponent, TableComponent, ModalComponent} from "ui";
 
   const {id} = $modalStore.data;
-  const item = items.find((item) => item.id === id);
-  const itemWallet = $walletStore.items.find((item) => item.id === id);
+  console.log({id});
+  const item = id !== 1 ? items.find((item) => item.id === id) : {name: "Chest", rarity: 0};
+  const itemWallet = id !== 1 ? $inventoryStore.items.find((item) => item.id === id).balance : $inventoryStore.chests;
 
   const formStore = formService.create({
-    address: ["", "address"],
-    amount: ["", "item", itemWallet.balance],
+    address: ["", "name"],
+    amount: ["", "item", itemWallet],
   });
 
   const receipt = {
-    owned: itemWallet.balance,
-    remaining: itemWallet.balance
+    owned: itemWallet,
+    remaining: itemWallet
   };
 
   const onInput = (): void => {
@@ -31,67 +33,71 @@
   const onSetMax = (): void => {
     $formStore.fields.amount.value = `${receipt.owned}`;
     onInput();
+    soundService.play("click");
   };
 
   const onTransfer = async (): Promise<void> => {
     $formStore.isLoading = true;
+    soundService.play("click");
 
-    const {somGame} = ethersService.keys;
-
-    if (!$walletStore.isApprovedForAll) {
-      const isConfirmed = await ethersService.transact("somTokens", "setApprovalForAll", [somGame, true]);
-
-      if (isConfirmed) {
-        const isConfirmed = await ethersService.transact(
-          "somTokens",
-          "safeTransferFrom",
-          [$accountStore.publicKey, $formStore.fields.address.value, id, $formStore.fields.amount.value, []]
-        );
-
-        if (!isConfirmed) {
-          await ethersService.reloadUser();
-          receipt.owned = $walletStore.items.find((item) => item.id === id).balance;
-          onInput();
-        }
-      }
-    }
-
-    $formStore.isLoading = false;
+    socketService.socket.emit("getAddress", {name: $formStore.fields.address.value});
   };
+
+  onMount((): void => {
+    socketService.socket.on("getAddress", async (params: any): Promise<void> => {
+      const {somGame} = ethersService.keys;
+
+      // if (!$inventoryStore.isApprovedForAll) {
+        const isConfirmed = await ethersService.transact("somTokens", "setApprovalForAll", [somGame, true]);
+
+        if (isConfirmed) {
+          const isConfirmed = await ethersService.transact(
+            "somTokens",
+            "safeTransferFrom",
+            [$playerStore.address, params.address, id, $formStore.fields.amount.value, "0x"]
+          );
+
+          if (!isConfirmed) {
+            await ethersService.reloadUser();
+            // receipt.owned = id !== 1 ? $inventoryStore.items.find((item) => item.id === id)?.balance : 1n;
+            receipt.owned = 1n;
+            onInput();
+          }
+        }
+      // }
+
+      $formStore.isLoading = false;
+    });
+  });
+
+  onDestroy((): void => {
+    socketService.socket.off("getAddress");
+  });
 </script>
 
-<div class="modal">
-  <div class="modal__info">
-    Transfer {item.name} to another Telos EVM address.
-  </div>
-
-  <form id="transfer" on:submit|preventDefault="{onTransfer}">
-    <FormFieldComponent
-      label="Address"
+<ModalComponent>
+  <svelte:fragment slot="title">Transfer</svelte:fragment>
+  <FormComponent on:submit="{onTransfer}">
+    <InputComponent
+      label="Name"
       error="{$formStore.fields.address.error}"
       bind:value="{$formStore.fields.address.value}"
       on:input="{onInput}"/>
 
-    <FormFieldComponent
+    <InputComponent
       label="Amount"
       error="{$formStore.fields.amount.error}"
       action="{["MAX", onSetMax]}"
       bind:value="{$formStore.fields.amount.value}"
       on:input="{onInput}"/>
-  </form>
 
-  <div class="modal__table">
-    <table>
-      <tr>
-        <td>OWNED</td>
-        <td>{receipt.owned}</td>
-      </tr>
-      <tr>
-        <td>REMAINING</td>
-        <td>{receipt.remaining}</td>
-      </tr>
-    </table>
-  </div>
+    <TableComponent items="{[
+      ["BALANCE", receipt.owned],
+      ["REMAINING", receipt.remaining]
+    ]}"/>
 
-  <FormLoadingComponent form="transfer" {formStore}/>
-</div>
+    <svelte:fragment slot="submit">
+      <FormSubmitComponent {formStore}>TRANSFER</FormSubmitComponent>
+    </svelte:fragment>
+  </FormComponent>
+</ModalComponent>

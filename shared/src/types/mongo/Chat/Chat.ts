@@ -1,9 +1,11 @@
 import type {Document} from "mongodb";
-import type {ChatMessage} from "./ChatMessage.js";
+import type {ChatMessages} from "./ChatMessages.js";
 
 interface Chat extends Document {
   players: [string, string];
-  messages: Array<ChatMessage>;
+  lastSender: string;
+  unseen: number;
+  messages: ChatMessages;
 }
 
 export type {Chat};

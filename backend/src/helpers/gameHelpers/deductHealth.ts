@@ -1,12 +1,13 @@
 import {EffectId} from "@som/shared/enums";
 import {heartOfSteel} from "./effect/heartOfSteel";
-import type {GameMinionCard, GamePlayer} from "@som/shared/types/mongo";
+import type {Field, GameMinionCard, GamePlayer} from "@som/shared/types/mongo";
 import type {Animations} from "@som/shared/types/game";
 
 const deductHealth = (
   player: GamePlayer,
   minion: GameMinionCard,
-  damage: number
+  damage: number,
+  field: Field
 ): Animations => {
   const shieldBuff = minion.buffs.find(
     (buff): boolean => buff.id === EffectId.SHIELD
@@ -21,13 +22,13 @@ const deductHealth = (
       shieldBuff.data.amount -= damage
       animations.push({
         type: "FLOATING_TEXT",
-        field: "a",
+        field: field,
         name: player.name,
         text: `-${damage} Shield`
       });
     } else if (amt <= damage) { // shield broken
       if (player.trap && player.trap.effect === EffectId.HEART_OF_STEEL) {
-        heartOfSteel({minion, player, trap: player.trap});
+        animations.push(...heartOfSteel({opponentMinion: minion, opponent: player, opponentTrap: player.trap, field}));
       }
 
       const remaining = shieldBuff.data.amount - damage;
@@ -40,8 +41,19 @@ const deductHealth = (
         }
       }
 
-      const index = minion.buffs.indexOf(shieldBuff);
-      minion.buffs.splice(index, 1);
+      animations.push({
+        type: "FLOATING_TEXT",
+        field: field,
+        name: player.name,
+        text: `-${shieldBuff.data.amount} Shield`
+      }, {
+        type: "HEALTH",
+        field: field,
+        name: player.name,
+        increment: -remaining
+      });
+
+      minion.buffs.splice(minion.buffs.indexOf(shieldBuff), 1);
     }
   } else { // no shield
     if (minion.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
@@ -49,6 +61,13 @@ const deductHealth = (
     } else {
       minion.health.current -= damage;
     }
+
+    animations.push({
+      type: "HEALTH",
+      field: field,
+      name: player.name,
+      increment: -damage
+    });
   }
 
   return animations;

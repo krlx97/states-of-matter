@@ -1,14 +1,6 @@
-<div class="modal__title">Items</div>
-<div class="modal__info--tutorial">
+<div class="modal__title" style="font-size: var(--xl)">Items</div>
+<div class="modal__info--tutorial" style="text-align: justify; line-height: 1.25">
 
-      There are three primary types of items in the game: Chests, Shards, and
-      Skins. Every ten levels, players are rewarded with a random chest and a
-      random shard of a skin from that chest. Unlocking a chest rewards you with
-      a random skin from its lists, while fusing three identical shards rewards
-      you with a desired skin, eliminating the randomness associated with
-      opening chests. Once you own a skin, you can select it in the deck builder
-      to modify the appearance of a card. It's worth noting that skins offer no
-      gameplay advantages and serve solely as a display of status. Moreover,
-      players can disenchant unwanted skins to receive Etheric Essence, which
-      can then be used to craft shards for the desired skin.
+      In the game, there are three types of items: Avatars, Banners, and Skins, categorized into six rarities:
+ Common, Uncommon, Rare, Epic, Legendary, and Mythic. Common items are readily accessible, though some may require a specific rank or level to unlock. Opening a chest rewards one entirely random item (excluding Common). Alternatively, players can craft individual items using Etheric Essence and Etheric Crystals at a higher cost, eliminating the RNG aspect from chest unlocks.
 </div>

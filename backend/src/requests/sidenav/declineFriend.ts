@@ -3,7 +3,7 @@ import type {SocketRequest} from "@som/shared/types/backend";
 
 const declineFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $players} = mongo;
+  const {$players} = mongo;
 
   socket.on("declineFriend", async (params) => {
     const {name} = params;
@@ -13,7 +13,7 @@ const declineFriend: SocketRequest = (socket, error): void => {
       return error("Player not found, try relogging.");
     }
 
-    const $accountUpdate = await $accounts.updateOne({
+    const $playerUpdate = await $players.updateOne({
       name: $player.name
     }, {
       $pull: {
@@ -21,7 +21,7 @@ const declineFriend: SocketRequest = (socket, error): void => {
       }
     });
 
-    if (!$accountUpdate.modifiedCount) {
+    if (!$playerUpdate.modifiedCount) {
       return error("Failed to update account.");
     }
 

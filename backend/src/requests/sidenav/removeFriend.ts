@@ -1,11 +1,11 @@
 import {mongo, server} from "app";
 import type {UpdateFilter} from "mongodb";
 import type {SocketRequest} from "@som/shared/types/backend";
-import type {Account} from "@som/shared/types/mongo";
+import type {Player} from "@som/shared/types/mongo";
 
 const removeFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $chats, $players} = mongo;
+  const {$chats, $players} = mongo;
 
   socket.on("removeFriend", async (params) => {
     const {name} = params;
@@ -24,24 +24,24 @@ const removeFriend: SocketRequest = (socket, error): void => {
     }
 
     const [
-      $accountSenderUpdate,
-      $accountReceiverUpdate,
+      $playerSenderUpdate,
+      $playerReceiverUpdate,
       $chatDelete
     ] = await Promise.all([
-      $accounts.findOneAndUpdate({
+      $players.findOneAndUpdate({
         name: $playerSender.name
       }, {
         $pull: {
           "social.friends": name
-        } as UpdateFilter<Account> | Partial<Account>
+        } as UpdateFilter<Player> | Partial<Player>
       }, {
         returnDocument: "after"
       }),
 
-      $accounts.findOneAndUpdate({name}, {
+      $players.findOneAndUpdate({name}, {
         $pull: {
           "social.friends": $playerSender.name
-        } as UpdateFilter<Account> | Partial<Account>
+        } as UpdateFilter<Player> | Partial<Player>
       }, {
         returnDocument: "after"
       }),
@@ -53,11 +53,11 @@ const removeFriend: SocketRequest = (socket, error): void => {
       })
     ]);
 
-    if (!$accountSenderUpdate) {
+    if (!$playerSenderUpdate) {
       return error("Account sender not found.");
     }
 
-    if (!$accountReceiverUpdate) {
+    if (!$playerReceiverUpdate) {
       return error("Account receiver not found.");
     }
 
@@ -68,7 +68,7 @@ const removeFriend: SocketRequest = (socket, error): void => {
     socket.emit("removeFriendSender", {name});
 
     server.io.to($playerReceiver.socketId).emit("removeFriendReceiver", {
-      name: $accountSenderUpdate.name
+      name: $playerSender.name
     });
   });
 };

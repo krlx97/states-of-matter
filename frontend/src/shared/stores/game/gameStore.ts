@@ -10,22 +10,24 @@ export const gameStore = writable<GameView>({
   gameLogs: [],
   player: {
     name: "",
-    hero: {
-      gid: 0,
-      id: 0,
-      type: 0,
-      name: "",
-      klass: 0,
-      health: 0,
-      maxHealth: 0,
-      mana: 0,
-      maxMana: 0,
-      ability: 0
-      ,effect: 0,
-      buffs: [],
-      debuffs: []
-    },
-    minion: {a: undefined, b: undefined, c: undefined, d: undefined},
+    field: {
+      hero: {
+        gid: 0,
+        id: 0,
+        type: 0,
+        name: "",
+        klass: 0,
+        health: 0,
+        maxHealth: 0,
+        mana: 0,
+        maxMana: 0,
+        ability: 0
+        ,effect: 0,
+        buffs: [],
+        debuffs: []
+      },
+
+      a: undefined, b: undefined, c: undefined, d: undefined},
     trap: undefined,
     deck: 0,
     hand: [],
@@ -38,22 +40,24 @@ export const gameStore = writable<GameView>({
   },
   opponent: {
     name: "",
-    hero: {
-      gid: 0,
-      id: 0,
-      type: 0,
-      name: "",
-      klass: 0,
-      health: 0,
-      maxHealth: 0,
-      mana: 0,
-      maxMana: 0,
-      ability: 0
-      ,effect: 0,
-      buffs: [],
-      debuffs: []
-    },
-    minion: {a: undefined, b: undefined, c: undefined, d: undefined},
+    field: {
+      hero: {
+        gid: 0,
+        id: 0,
+        type: 0,
+        name: "",
+        klass: 0,
+        health: 0,
+        maxHealth: 0,
+        mana: 0,
+        maxMana: 0,
+        ability: 0
+        ,effect: 0,
+        buffs: [],
+        debuffs: []
+      },
+
+      a: undefined, b: undefined, c: undefined, d: undefined},
     trap: false,
     deck: 0,
     hand: 0,

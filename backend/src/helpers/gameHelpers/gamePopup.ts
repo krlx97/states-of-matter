@@ -32,24 +32,20 @@ const gamePopup = async (type: GameType, playerA: string, playerB: string) => {
     return;
   }
 
-  const inserted = await $gamePopups.insertOne({
+  const gamePopupp = {
     id,
     type,
     playerA: {
       name: a.name,
-      avatarId: 1,
-      level: a.level,
-      elo: a.elo,
       hasAccepted: false
     },
     playerB: {
       name: b.name,
-      avatarId: 1,
-      level: b.level,
-      elo: b.elo,
       hasAccepted: false
     }
-  });
+  };
+
+  const inserted = await $gamePopups.insertOne(gamePopupp);
 
   if (!inserted.insertedId) {
     return;
@@ -59,7 +55,7 @@ const gamePopup = async (type: GameType, playerA: string, playerB: string) => {
     const $gamePopup = await $gamePopups.findOne({id});
     if (!$gamePopup) { return; }
     if (!$gamePopup.playerA.hasAccepted || !$gamePopup.playerB.hasAccepted) {
-      
+
       const pa = await $players.findOneAndUpdate({
         name: $gamePopup.playerA.name
       }, {
@@ -86,8 +82,8 @@ const gamePopup = async (type: GameType, playerA: string, playerB: string) => {
     }
   }, 10_000);
 
-  io.to(a.socketId).emit("gamePopup");
-  io.to(b.socketId).emit("gamePopup");
+  io.to(a.socketId).emit("gamePopup", {gamePopup: gamePopupp});
+  io.to(b.socketId).emit("gamePopup", {gamePopup: gamePopupp});
 };
 
 export {gamePopup};

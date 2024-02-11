@@ -2,17 +2,18 @@ import type {SocketRequest} from "@som/shared/types/backend";
 import { mongo } from "app";
 
 const getNonce: SocketRequest = (socket, error): void => {
-  const {$accounts} = mongo;
+  const {$players} = mongo;
 
   socket.on("getNonce", async (params) => {
     const {address} = params;
-    const $account = await $accounts.findOne({address});
+    const $player = await $players.findOne({address});
 
-    if (!$account) {
-      return error("Account not found.");
+    if (!$player) {
+      return error("Player not found.");
     }
 
-    const {nonce} = $account;
+    const {nonce} = $player;
+
     socket.emit("getNonce", {nonce});
   })
 };

@@ -1,20 +1,17 @@
-import type {GamePlayer} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
+import type {GameCard, GamePlayer} from "@som/shared/types/mongo";
 
 interface Reload {
   player: GamePlayer;
+  drawnCard: GameCard;
 }
 
-const reload = (params: Reload) => {
-  const {player} = params;
-  const drawnCard = player.deck.pop();
-
-  if (!drawnCard) {
-    return [false, "You have no cards remaining to draw."];
-  }
+const reload = (params: Reload): Animations => {
+  const {player, drawnCard} = params;
 
   player.hand.push(drawnCard);
 
-  return [true, ""];
+  return [];
 };
 
 export {reload};

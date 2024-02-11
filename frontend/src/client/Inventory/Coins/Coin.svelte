@@ -1,19 +1,15 @@
 <script lang="ts">
-  import {fly, type FlyParams} from "svelte/transition";
-  import {walletStore} from "stores";
-  import {CurrencyComponent} from "ui";
+  import {soundService} from "services";
+  import {inventoryStore} from "stores";
+  import {CurrencyComponent, MenuComponent} from "ui";
 
-  let coin;
+  let coin: any;
   let isMenuToggled = false;
-
-  const flyParams: FlyParams = {
-    y: -8,
-    duration: 225,
-    opacity: 0
-  };
+  const number = $inventoryStore[coin.ticker as "ecr" | "enrg"];
 
   const onToggleMenu = (): void => {
     isMenuToggled = !isMenuToggled;
+    soundService.play("click");
   };
 
   export {coin};
@@ -22,60 +18,36 @@
 <style>
   .coin {
     position: relative;
-    padding: var(--spacing-md) 0;
+    padding: var(--md) 0;
     width: 128px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-md);
-    /* border: 1px solid rgb(127, 127, 127); */
+    gap: var(--md);
+    border: 1px solid transparent;
     border-radius: 8px;
-    
-    /* background-color: rgb(31, 31, 31); */
-    transition: box-shadow 333ms ease, border-color 333ms ease, transform 333ms ease, background 333ms ease;
+    cursor: pointer;
+    transition: border-color 400ms ease, background-color 400ms ease;
   }
 
   .coin:hover {
-    border-color: rgb(255, 255, 255);
-    /* transform: translateY(-2px); */
-    cursor: pointer;
-background: linear-gradient(
-      180deg,
-      rgba(179, 105, 244, 0.1) 0%,
-      rgba(0, 0, 0, 0) 50%,
-      rgba(179, 105, 244, 0.1) 100%
-    );
-    /* background-color: rgb(31, 31, 31); */
-
+    border-color: rgb(var(--grey));
+    background-color: rgb(var(--dark-grey));
   }
 
   .coin__text {
     text-align: center;
   }
-
-  .coin__menu {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 100;
-  }
 </style>
 
-<div class="coin">
-  <img src="assets/currencies/{coin.ticker}.png" alt="{coin.name}"/>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="coin" on:click="{onToggleMenu}">
+  <img src="images/currencies/{coin.ticker}.png" alt="{coin.name}"/>
   <div class="coin__text">
-    <CurrencyComponent name="{coin.ticker}" number="{$walletStore[coin.ticker].balance}" isIconVisible="{false}"/>
+    <CurrencyComponent name="{coin.ticker}" {number} isIconVisible="{false}"/>
   </div>
-  <button class="button-icon coin__menu" on:click={onToggleMenu}>
-    <i class="fa-solid fa-bars"></i>
-  </button>
   {#if isMenuToggled}
-    <div class="menu" transition:fly={flyParams}>
-      {#each coin.menuItems as menuItem}
-        <button class="menu__link" on:click="{menuItem[1]}">
-          {menuItem[0]}
-        </button>
-      {/each}
-    </div>
+    <MenuComponent items="{coin.menuItems}"/>
   {/if}
 </div>

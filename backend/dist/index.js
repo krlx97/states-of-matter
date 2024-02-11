@@ -1,39 +1,53 @@
-import { Wallet, Contract, verifyMessage } from 'ethers';
-import SomGame from '@som/contracts/SomGame/artifacts/SomGame.json' assert { type: 'json' };
-import SomSkins from '@som/contracts/SomTokens/artifacts/SomTokens.json' assert { type: 'json' };
+import { JsonRpcProvider, Wallet, Contract, verifyMessage } from 'ethers';
+import EthericEssence from '@som/contracts/EthericEssence/artifacts/EthericEssence.json' assert { type: 'json' };
+import EthericCrystals from '@som/contracts/EthericCrystals/artifacts/EthericCrystals.json' assert { type: 'json' };
+import EthericEnergy from '@som/contracts/EthericEnergy/artifacts/EthericEnergy.json' assert { type: 'json' };
+import SomGame from '@som/contracts/Game/artifacts/Game.json' assert { type: 'json' };
+import SomTokens from '@som/contracts/Items/artifacts/Items.json' assert { type: 'json' };
 import { MongoClient } from 'mongodb';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { cards, cardsView, items } from '@som/shared/data';
+import jsonwebtoken from 'jsonwebtoken';
 import { EffectId, CardType, PlayerStatus, GameType, QueueId, CardKlass, LogType } from '@som/shared/enums';
 import { randomInt } from 'crypto';
-import jwt from 'jsonwebtoken';
+import { cards, cardsView } from '@som/shared/data';
 import { compare, hash } from 'bcrypt';
+import { schedule } from 'node-cron';
 
-// const provider = new JsonRpcProvider("https://testnet.telos.net", undefined, {
-//   batchMaxCount: 1
-// });
-const provider = undefined;
-const signer = new Wallet("0x36558f992d19662cdea021407513e14f83f47917ba0a28fd879ff148afd0edd2", provider);
-const gameKey = "0xA1584c8E3e572101D0D28A9ebb1784Af9f0fBCd4";
-const skinsKey = "0x759F6751A243cc8EacC959bd10A910831A670720";
-const game$1 = new Contract(gameKey, SomGame.abi, signer);
-const skins = new Contract(skinsKey, SomSkins.abi, signer);
-const contracts = { game: game$1, skins };
+const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
+const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
+const keys = {
+    ethericEssence: "0x98c9D1e1e9e6Ee021B8288902f4D24A693DeB986",
+    ethericCrystals: "0xdB5D0309028e06aFc743f1A83fC4653DB8DAA5B8",
+    ethericEnergy: "0x4Ca02e48bC26707b83F2c14D11D838cc64C04Ba6",
+    somTokens: "0x27Eb2894A475a533c8AAA3268b521aC47f99cbC7",
+    somGame: "0x20625c87228573EA374e02844782ec3a1a0497ce"
+};
+const ethericEssence = new Contract(keys.ethericEssence, EthericEssence.abi, signer);
+const ethericCrystals = new Contract(keys.ethericCrystals, EthericCrystals.abi, signer);
+const ethericEnergy = new Contract(keys.ethericEnergy, EthericEnergy.abi, signer);
+const somTokens = new Contract(keys.somTokens, SomTokens.abi, signer);
+const somGame = new Contract(keys.somGame, SomGame.abi, signer);
+const contracts = {
+    ethericEssence,
+    ethericCrystals,
+    ethericEnergy,
+    somTokens,
+    somGame
+};
 
-const mongoClient = await MongoClient.connect("mongodb://127.0.0.1:27017");
-const eternitas = mongoClient.db("eternitas");
-const som = mongoClient.db("som");
+const client$1 = await MongoClient.connect("mongodb://127.0.0.1:27017");
+const som = client$1.db("som");
 const mongo = {
-    $accounts: eternitas.collection("accounts"),
-    $chats: eternitas.collection("chats"),
+    $chats: som.collection("chats"),
     $casualQueuePlayers: som.collection("casualQueuePlayers"),
     $games: som.collection("games"),
     $gamePopups: som.collection("gamePopups"),
     $lobbies: som.collection("lobbies"),
-    $marketItems: som.collection("marketItems"),
     $players: som.collection("players"),
-    $rankedQueuePlayers: som.collection("rankedQueuePlayers")
+    $rankedQueuePlayers: som.collection("rankedQueuePlayers"),
+    $supplySnapshots: som.collection("supplySnapshots"),
+    $leaderboards: som.collection("leaderboards"),
 };
 
 const http = createServer();
@@ -48,12 +62,37 @@ const io = new Server(http, {
 const server = { http, io };
 
 const lastStand = (params) => {
-    const { minion, opponent, trap } = params;
-    minion.health = 1;
-    minion.buffs.push({ id: EffectId.TAUNT, data: {} });
-    opponent.graveyard.push(trap);
+    const { opponent, opponentMinion, opponentMinionField, opponentTrap } = params;
+    const animations = [];
+    opponentMinion.buffs.push({
+        id: EffectId.TAUNT,
+        data: {}
+    });
+    animations.push({
+        type: "TRAP",
+        name: opponent.name,
+        card: opponentTrap
+    });
+    animations.push({
+        type: "HEALTH",
+        field: opponentMinionField,
+        name: opponent.name,
+        increment: 1 - opponentMinion.health.current
+    }, {
+        type: "FLOATING_TEXT",
+        field: opponentMinionField,
+        name: opponent.name,
+        text: `Last stand`
+    }, {
+        type: "FLOATING_TEXT",
+        field: opponentMinionField,
+        name: opponent.name,
+        text: `+ Taunt`
+    });
+    opponentMinion.health.current = 1;
+    opponent.graveyard.push(opponentTrap);
     opponent.trap = undefined;
-    return [true, "Last stand triggered"];
+    return animations;
 };
 
 const selfDestruct = (params) => {
@@ -66,7 +105,7 @@ const revenge = (params) => {
     const handCard = player.hand.find((card) => card.effect === EffectId.REVENGE);
     const deckCard = player.deck.find((card) => card.effect === EffectId.REVENGE);
     if (!handCard && !deckCard) {
-        return [false, "No copy of the card found."];
+        return [];
     }
     if (handCard) {
         const index = player.hand.indexOf(handCard);
@@ -78,37 +117,36 @@ const revenge = (params) => {
         player.field[field] = deckCard;
         player.deck.splice(index, 1);
     }
-    return [true, ""];
+    return [{
+            type: "SUMMON",
+            name: player.name,
+            field,
+            minion: player.field[field]
+        }];
 };
 
+// remove this?
 const insertBuff = (card, id, data = {}) => {
-    // switch (id) {
-    //   case EffectId.BLAZE:
-    //     const hasAttackedTwice = true;
-    //     card.buffs.push({id, data: {hasAttackedTwice}});
-    //     break;
-    //   case EffectId.NECROMANCY:
-    //     card.health -= 2;
-    // }
     card.buffs.push({ id, data });
-    // card.buffs.push({id, data});
-    return [true, ``];
+    return [];
 };
 
 const unity = (params) => {
-    const { player } = params;
-    const handCard = player.hand.find((card) => card.effect === EffectId.UNITY);
-    const deckCard = player.deck.find((card) => card.effect === EffectId.UNITY);
-    if (!handCard && !deckCard) {
-        return [false, "No copy of the card found in hand or deck."];
-    }
+    const { player: { name, hand, deck } } = params;
+    const handCard = hand.find((card) => card.effect === EffectId.UNITY);
+    const deckCard = deck.find((card) => card.effect === EffectId.UNITY);
     if (handCard) {
         insertBuff(handCard, EffectId.TAUNT);
     }
     else if (deckCard) {
         insertBuff(deckCard, EffectId.TAUNT);
     }
-    return [true, ""];
+    return [{
+            type: "FLOATING_TEXT",
+            name: name,
+            field: "hero",
+            text: "UNITY"
+        }];
 };
 
 const moveToGraveyard = (player, minion, field) => {
@@ -136,13 +174,23 @@ const moveToGraveyard = (player, minion, field) => {
 };
 
 const heartOfSteel = (params) => {
-    params.minion.damage += 3;
-    params.player.graveyard.push(params.trap);
-    params.player.trap = undefined;
-    return [true, ""];
+    const { opponent, opponentMinion, opponentTrap, field } = params;
+    opponentMinion.damage.current += 3;
+    opponent.graveyard.push(opponentTrap);
+    opponent.trap = undefined;
+    return [{
+            type: "TRAP",
+            name: opponent.name,
+            card: opponentTrap
+        }, {
+            type: "DAMAGE",
+            field,
+            name: opponent.name,
+            increment: 3
+        }];
 };
 
-const deductHealth = (player, minion, damage) => {
+const deductHealth = (player, minion, damage, field) => {
     const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
     const animations = [];
     if (shieldBuff) { // has shield
@@ -151,14 +199,14 @@ const deductHealth = (player, minion, damage) => {
             shieldBuff.data.amount -= damage;
             animations.push({
                 type: "FLOATING_TEXT",
-                field: "a",
+                field: field,
                 name: player.name,
                 text: `-${damage} Shield`
             });
         }
         else if (amt <= damage) { // shield broken
             if (player.trap && player.trap.effect === EffectId.HEART_OF_STEEL) {
-                heartOfSteel({ minion, player, trap: player.trap });
+                animations.push(...heartOfSteel({ opponentMinion: minion, opponent: player, opponentTrap: player.trap, field }));
             }
             const remaining = shieldBuff.data.amount - damage;
             if (remaining < 0) {
@@ -169,8 +217,18 @@ const deductHealth = (player, minion, damage) => {
                     minion.health.current -= remaining;
                 }
             }
-            const index = minion.buffs.indexOf(shieldBuff);
-            minion.buffs.splice(index, 1);
+            animations.push({
+                type: "FLOATING_TEXT",
+                field: field,
+                name: player.name,
+                text: `-${shieldBuff.data.amount} Shield`
+            }, {
+                type: "HEALTH",
+                field: field,
+                name: player.name,
+                increment: -remaining
+            });
+            minion.buffs.splice(minion.buffs.indexOf(shieldBuff), 1);
         }
     }
     else { // no shield
@@ -180,6 +238,12 @@ const deductHealth = (player, minion, damage) => {
         else {
             minion.health.current -= damage;
         }
+        animations.push({
+            type: "HEALTH",
+            field: field,
+            name: player.name,
+            increment: -damage
+        });
     }
     return animations;
 };
@@ -194,15 +258,15 @@ const acidicDeath = (params) => {
         if (!minion || minion.type === CardType.HERO) {
             return;
         }
-        animations.push(...deductHealth(player, minion, 1));
+        animations.push(...deductHealth(player, minion, 1, key));
         if (minion.health.current <= 0) {
             const { trap } = player;
             if (trap && trap.effect === EffectId.LAST_STAND) {
-                lastStand({ minion, opponent: player, trap });
+                animations.push(...lastStand({ minion, opponent: player, trap }));
             }
             else {
                 const hasAcidicDeathBuff = minion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
-                moveToGraveyard(player, minion, key);
+                animations.push(...moveToGraveyard(player, minion, key));
                 if (hasAcidicDeathBuff) {
                     animations.push(...acidicDeath({ player, opponent }));
                 }
@@ -214,21 +278,22 @@ const acidicDeath = (params) => {
         if (!minion || minion.type === CardType.HERO) {
             return;
         }
-        animations.push(...deductHealth(opponent, minion, 1));
+        animations.push(...deductHealth(opponent, minion, 1, key));
         if (minion.health.current <= 0) {
             const { trap } = opponent;
             if (trap && trap.effect === EffectId.LAST_STAND) {
-                lastStand({ minion, opponent, trap });
+                animations.push(...lastStand({ minion, opponent, trap }));
             }
             else {
                 const hasAcidicDeathBuff = minion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
                 const hasSelfDescturctDebuff = minion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
-                moveToGraveyard(opponent, minion, key);
+                animations.push(...moveToGraveyard(opponent, minion, key));
                 if (hasSelfDescturctDebuff) {
-                    selfDestruct({ player }); // check for endgame? find a better way to call onDeath effects?
+                    // check for endgame? find a better way to call onDeath effects?
+                    animations.push(...selfDestruct({ player }));
                 }
                 if (hasAcidicDeathBuff) {
-                    acidicDeath({ player, opponent });
+                    animations.push(...acidicDeath({ player, opponent }));
                 }
             }
         }
@@ -237,45 +302,81 @@ const acidicDeath = (params) => {
 };
 
 const banish = (params) => {
-    const { player, opponent, minion, trap, field } = params;
-    player.field[field] = undefined;
-    player.hand.push(minion);
-    opponent.graveyard.push(trap);
+    const { player, opponent, playerMinion, opponentTrap, playerMinionField } = params;
+    player.field[playerMinionField] = undefined;
+    player.hand.push(playerMinion);
+    opponent.graveyard.push(opponentTrap);
     opponent.trap = undefined;
-    return [true, ""];
+    return [{
+            type: "TRAP",
+            name: opponent.name,
+            card: opponentTrap
+        }, {
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            name: player.name,
+            text: "BANISH"
+        }];
 };
 
-const shadowSurge = (params) => {
-    params.minion.canAttack = true;
-    return [true, ""];
+const shadowSurge = {
+    onNormalSummon(params) {
+        const { player, playerMinion, playerMinionField } = params;
+        playerMinion.canAttack = true;
+        return [{
+                type: "FLOATING_TEXT",
+                name: player.name,
+                field: playerMinionField,
+                text: "SHADOW SURGE"
+            }];
+    }
 };
 
 const diminish = (params) => {
-    const { opponent, field } = params;
-    if (!field) {
-        return [false, "Field for Effect not specified."];
-    }
-    const card = opponent.field[field];
-    if (!card) {
-        return [false, `Minion doesn't exist on the field ${field}.`];
-    }
-    if (card.buffs.find((buff) => buff.id === EffectId.ELUSIVE) !== undefined) {
-        return [false, "Diminish negated."];
-    }
-    if (card.damage > 2) {
-        card.damage -= 2;
+    const { opponent, opponentMinion, opponentMinionField } = params;
+    const animations = [];
+    if (opponentMinion.damage.current > 2) {
+        opponentMinion.damage.current -= 2;
+        opponentMinion.debuffs.push({
+            id: EffectId.DIMINISH,
+            data: {
+                damage: -2
+            }
+        });
+        animations.push({
+            type: "FLOATING_TEXT",
+            name: opponent.name,
+            field: opponentMinionField,
+            text: "DIMINISH"
+        }, {
+            type: "DAMAGE",
+            name: opponent.name,
+            field: opponentMinionField,
+            increment: (-2)
+        });
     }
     else {
-        card.damage = 0;
+        const val = opponentMinion.damage.current;
+        opponentMinion.damage.current = 0;
+        opponentMinion.debuffs.push({
+            id: EffectId.DIMINISH,
+            data: {
+                damage: -val
+            }
+        });
+        animations.push({
+            type: "FLOATING_TEXT",
+            name: opponent.name,
+            field: opponentMinionField,
+            text: "DIMINISH"
+        }, {
+            type: "DAMAGE",
+            name: opponent.name,
+            field: opponentMinionField,
+            increment: -val
+        });
     }
-    card.debuffs.push({
-        id: EffectId.DIMINISH,
-        data: { damage: -2 }
-    });
-    return [true, `
-    Player ${opponent.name} has played Diminish magic card, reducing your card on
-    the field ${field} Damage by 2.
-  `];
+    return animations;
 };
 
 const frostbite = (params) => {
@@ -292,12 +393,13 @@ const frostbite = (params) => {
 };
 
 const glory = (params) => {
-    const { opponent, minion } = params;
+    const { player, opponent, minion, playerMinionField } = params;
+    const animations = [];
     const possibleMinions = [];
-    const minionKeys = Object.keys(opponent.minion);
+    const minionKeys = Object.keys(opponent.field);
     minionKeys.forEach((key) => {
-        const Minion = opponent.minion[key];
-        if (Minion) {
+        const Minion = opponent.field[key];
+        if (Minion && Minion.type !== CardType.HERO && key !== "hero") {
             const hasElusiveBuff = Minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
             if (!hasElusiveBuff) {
                 possibleMinions.push({ Minion, key });
@@ -307,27 +409,45 @@ const glory = (params) => {
     if (possibleMinions.length) {
         let randomMinion = randomInt(possibleMinions.length);
         let { Minion, key } = possibleMinions[randomMinion];
-        deductHealth(opponent, Minion, 2);
-        if (minion.health <= 0) {
-            moveToGraveyard(opponent, Minion, key);
-            insertBuff(minion, EffectId.TAUNT); // refactor this, minion = player, Minion = opponent
+        animations.push({
+            type: "FLOATING_TEXT",
+            name: opponent.name,
+            field: key,
+            text: "GLORY"
+        });
+        animations.push(...deductHealth(opponent, Minion, 1, key));
+        if (Minion.health.current <= 0) {
+            animations.push(...moveToGraveyard(opponent, Minion, key));
+            minion.buffs.push({ id: EffectId.TAUNT, data: {} });
+            animations.push({
+                type: "FLOATING_TEXT",
+                name: player.name,
+                field: playerMinionField,
+                text: "TAUNT"
+            });
         }
     }
-    return [true, ""];
+    return animations;
 };
 
 const mirrorsEdge = (params) => {
     const { player, playerMinion, opponent, opponentTrap } = params;
-    player.field.hero.health -= playerMinion.damage;
+    player.field.hero.health.current -= playerMinion.damage.current;
     opponent.graveyard.push(opponentTrap);
     opponent.trap = undefined;
     return [{
             type: "TRAP",
-            id: opponentTrap.id
+            name: opponent.name,
+            card: opponentTrap
         }, {
-            type: "DAMAGE",
+            type: "FLOATING_TEXT",
+            name: player.name,
             field: "hero",
-            damageTaken: playerMinion.damage,
+            text: "MIRROR'S EDGE"
+        }, {
+            type: "HEALTH",
+            field: "hero",
+            increment: -playerMinion.damage.current,
             name: player.name
         }];
 };
@@ -340,12 +460,18 @@ const risingFury = (params) => {
 };
 
 const blaze = (params) => {
-    const blazeBuff = params.minion.buffs.find((buff) => buff.id === EffectId.BLAZE);
+    const { player, playerMinion, playerMinionField } = params;
+    const blazeBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.BLAZE);
     if (!blazeBuff) {
-        return [false, "Blaze buff not found."];
+        return [];
     }
     blazeBuff.data.hasAttackedTwice = false;
-    return [true, ""];
+    return [{
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            text: "BLAZE",
+            name: player.name
+        }];
 };
 
 const insertDebuff = (card, id, data = {}) => {
@@ -354,30 +480,64 @@ const insertDebuff = (card, id, data = {}) => {
 };
 
 const necromancy = (params) => {
-    const { minion, isPositive } = params;
+    const { player, playerMinion, playerMinionField, isPositive } = params;
+    const animations = [];
     if (isPositive) {
-        minion.health += 2;
-        minion.damage += 2;
-        insertBuff(minion, EffectId.NECROMANCY, {
+        playerMinion.health.current += 2;
+        playerMinion.damage.current += 2;
+        insertBuff(playerMinion, EffectId.NECROMANCY, {
             health: 2,
             damage: 2
         });
+        animations.push({
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            text: "NECROMANCY",
+            name: player.name
+        }, {
+            type: "DAMAGE",
+            name: player.name,
+            field: playerMinionField,
+            increment: 2
+        }, {
+            type: "HEALTH",
+            name: player.name,
+            field: playerMinionField,
+            increment: 2
+        });
     }
     else {
-        minion.health -= 2;
-        minion.damage -= 2;
-        insertDebuff(minion, EffectId.NECROMANCY, {
+        playerMinion.health.current -= 2;
+        playerMinion.damage.current -= 2;
+        insertDebuff(playerMinion, EffectId.NECROMANCY, {
             health: -2,
             damage: -2
         });
+        animations.push({
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            text: "NECROMANCY",
+            name: player.name
+        }, {
+            type: "DAMAGE",
+            name: player.name,
+            field: playerMinionField,
+            increment: -2
+        }, {
+            type: "HEALTH",
+            name: player.name,
+            field: playerMinionField,
+            increment: -2
+        });
     }
-    return [true, ""];
+    return animations;
 };
 
 const quickShot = (params) => {
     const { opponent } = params;
     const possibleMinions = [];
     const minionKeys = Object.keys(opponent.field);
+    const animations = [];
     minionKeys.forEach((key) => {
         const minion = opponent.field[key];
         if (minion && minion.type !== CardType.HERO) {
@@ -390,102 +550,123 @@ const quickShot = (params) => {
     if (possibleMinions.length) {
         let randomMinion = randomInt(possibleMinions.length);
         let { minion, key } = possibleMinions[randomMinion];
-        deductHealth(opponent, minion, 2);
-        if (minion.health <= 0) {
-            moveToGraveyard(opponent, minion, key);
+        animations.push({
+            type: "FLOATING_TEXT",
+            field: key,
+            name: opponent.name,
+            text: "QUICK SHOT"
+        });
+        animations.push(...deductHealth(opponent, minion, 2, key));
+        if (minion.health.current <= 0) {
+            animations.push(...moveToGraveyard(opponent, minion, key));
         }
     }
-    return [true, ""];
+    return animations;
 };
 
 const rebirth = (params) => {
-    const { player, target, field } = params;
-    if (!target) {
-        return [false, "Target for revival not specified."];
-    }
-    if (!field) {
-        return [false, "Field for Special Summon not specified."];
-    }
-    if (player.field[field]) {
-        return [false, `Minion already exists on the field ${field}.`];
-    }
-    const toRevive = player.graveyard.find((card) => card.gid === target);
-    if (!toRevive) {
-        return [false, "Card with the given ID not found in the graveyard."];
-    }
-    if (toRevive.type !== CardType.MINION) {
-        return [false, "Selected card for revival must be a Minion."];
-    }
-    if (toRevive.effect === EffectId.ELUSIVE) {
-        return [false, "Rebirth negated."];
-    }
-    if (toRevive.effect === EffectId.NECROMANCY) {
-        toRevive.damage += 2;
-        toRevive.health += 2;
-        toRevive.buffs.push({
+    const { player, minion, field } = params;
+    const animations = [];
+    animations.push({
+        type: "SUMMON",
+        name: player.name,
+        field,
+        minion,
+        necromancyFixPositive: true
+    }, {
+        type: "FLOATING_TEXT",
+        field,
+        text: "REBIRTH",
+        name: player.name
+    });
+    if (minion.effect === EffectId.NECROMANCY) {
+        minion.damage.current += 2;
+        minion.health.current += 2;
+        minion.buffs.push({
             id: EffectId.NECROMANCY,
             data: { damage: 2, health: 2 }
         });
+        animations.push({
+            type: "FLOATING_TEXT",
+            field,
+            text: "NECROMANCY",
+            name: player.name
+        }, {
+            type: "DAMAGE",
+            name: player.name,
+            field,
+            increment: 2
+        }, {
+            type: "HEALTH",
+            name: player.name,
+            field,
+            increment: 2
+        });
     }
-    if (toRevive.effect === EffectId.PROTECTOR) {
-        toRevive.buffs.push({ id: EffectId.SHIELD, data: { amount: 3 } });
+    if (minion.effect === EffectId.PROTECTOR) {
+        minion.buffs.push({
+            id: EffectId.SHIELD,
+            data: { amount: 3 }
+        });
+        animations.push({
+            type: "FLOATING_TEXT",
+            field,
+            text: "PROTECTOR",
+            name: player.name
+        }, {
+            type: "FLOATING_TEXT",
+            field,
+            text: "+3 Shield",
+            name: player.name
+        });
     }
-    player.field[field] = toRevive;
-    player.graveyard.splice(player.graveyard.indexOf(toRevive), 1);
-    return [true, "Successfully revived."];
+    player.field[field] = minion;
+    player.graveyard.splice(player.graveyard.indexOf(minion), 1);
+    return animations;
 };
 
 const reload = (params) => {
-    const { player } = params;
-    const drawnCard = player.deck.pop();
-    if (!drawnCard) {
-        return [false, "You have no cards remaining to draw."];
-    }
+    const { player, drawnCard } = params;
     player.hand.push(drawnCard);
-    return [true, ""];
+    return [];
 };
 
 const ricochet = (params) => {
     const { player, playerMinion, opponent, opponentTrap } = params;
     const animations = [];
     const possibleMinions = [];
-    const minionKeys = Object.keys(player.field);
-    minionKeys.forEach((key) => {
-        const minion = player.field[key];
-        if (minion) {
-            const hasElusiveBuff = minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
-            if (!hasElusiveBuff) {
-                possibleMinions.push({ minion, key });
-            }
+    const fieldKeys = Object.keys(player.field);
+    fieldKeys.forEach((key) => {
+        if (key === "hero") {
+            return;
         }
+        const minion = player.field[key];
+        if (!minion) {
+            return;
+        }
+        const hasElusiveBuff = minion.buffs.find(({ id }) => id === EffectId.ELUSIVE);
+        if (hasElusiveBuff) {
+            return;
+        }
+        possibleMinions.push({ minion, key });
     });
-    // animations.push({
-    //   type: "TRAP",
-    //   id: opponentTrap.id,
-    //   name: opponent.name
-    // });
+    animations.push({
+        type: "TRAP",
+        name: opponent.name,
+        card: opponentTrap
+    });
     if (possibleMinions.length) {
         let randomMinion = randomInt(possibleMinions.length);
         let { minion, key } = possibleMinions[randomMinion];
-        deductHealth(player, minion, playerMinion.damage);
         animations.push({
             type: "FLOATING_TEXT",
             field: key,
             name: player.name,
             text: "Ricochet"
-        }, {
-            type: "DAMAGE",
-            damageTaken: playerMinion.damage,
-            field: key,
-            name: player.name
         });
-        if (minion.health <= 0) {
-            moveToGraveyard(player, minion, key);
-            animations.push({
-                type: "DEATH",
-                field: key,
-                name: player.name
-            });
+        animations.push(...deductHealth(player, minion, playerMinion.damage.current, key));
+        if (minion.health.current <= 0) {
+            animations.push(...moveToGraveyard(player, minion, key));
         }
     }
     opponent.graveyard.push(opponentTrap);
@@ -495,21 +676,33 @@ const ricochet = (params) => {
 
 const shell = (params) => {
     const { player } = params;
-    const keys = Object.keys(player.field);
-    keys.forEach((field) => {
-        const minion = player.field[field];
-        if (minion) {
-            const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
-            const unbreakableBuff = minion.buffs.find((buff) => buff.id === EffectId.UNBREAKABLE);
-            const amount = unbreakableBuff ? 2 : 1;
-            if (shieldBuff) {
-                shieldBuff.data.amount += amount;
-            }
-            else {
-                insertBuff(minion, EffectId.SHIELD, { amount });
-            }
+    const animations = [];
+    const fieldKeys = Object.keys(player.field);
+    fieldKeys.forEach((fieldKey) => {
+        const card = player.field[fieldKey];
+        if (!card) {
+            return;
         }
+        const shieldBuff = card.buffs.find((buff) => buff.id === EffectId.SHIELD);
+        const unbreakableBuff = card.buffs.find((buff) => buff.id === EffectId.UNBREAKABLE);
+        const amount = unbreakableBuff ? 2 : 1;
+        if (shieldBuff) {
+            shieldBuff.data.amount += amount;
+        }
+        else {
+            card.buffs.push({
+                id: EffectId.SHIELD,
+                data: { amount }
+            });
+        }
+        animations.push({
+            type: "FLOATING_TEXT",
+            field: fieldKey,
+            name: player.name,
+            text: `+${amount} Shield`
+        });
     });
+    return animations;
 };
 
 const getAdjacentMinions = (field) => {
@@ -532,8 +725,15 @@ const getAdjacentMinions = (field) => {
 };
 
 const shieldwall = (params) => {
-    const { player, field } = params;
-    const fields = getAdjacentMinions(field);
+    const { player, playerMinionField } = params;
+    const animations = [];
+    const fields = getAdjacentMinions(playerMinionField);
+    animations.push({
+        type: "FLOATING_TEXT",
+        field: playerMinionField,
+        name: player.name,
+        text: `SHIELDWALL`
+    });
     fields.forEach((field) => {
         const minion = player.field[field];
         if (minion) {
@@ -544,37 +744,66 @@ const shieldwall = (params) => {
                 shieldBuff.data.amount += amount;
             }
             else {
-                insertBuff(minion, EffectId.SHIELD, { amount });
+                minion.buffs.push({
+                    id: EffectId.SHIELD,
+                    data: { amount }
+                });
             }
+            animations.push({
+                type: "FLOATING_TEXT",
+                field: field,
+                name: player.name,
+                text: `+${amount} Shield`
+            });
         }
     });
+    return animations;
 };
 
 const silence = (params) => {
     const { opponent, trap } = params;
     opponent.graveyard.push(trap);
     opponent.trap = undefined;
-    return [true, ""];
+    return [{
+            type: "TRAP",
+            name: opponent.name,
+            card: trap
+        }];
 };
 
 const smite = (params) => {
     const { player, opponent, minion, trap, field } = params;
-    moveToGraveyard(player, minion, field);
+    const animations = [];
+    animations.push({
+        type: "TRAP",
+        name: opponent.name,
+        card: trap
+    });
+    animations.push(...moveToGraveyard(player, minion, field));
     opponent.graveyard.push(trap);
     opponent.trap = undefined;
-    return [true, ""];
+    return animations;
 };
 
 const spellweave = (params) => {
-    const { player, minion } = params;
-    const amount = player.graveyard.reduce((sum, card) => {
-        if (card.type === CardType.MAGIC) {
-            return sum += 1;
-        }
-        return sum;
-    }, 0);
-    insertBuff(minion, EffectId.SHIELD, { amount });
-    return [true, ""];
+    const { player, playerMinion, playerMinionField } = params;
+    const { name, graveyard } = player;
+    const amount = graveyard.reduce((sum, { type }) => type === CardType.MAGIC ? sum += 1 : sum, 0);
+    playerMinion.buffs.push({
+        id: EffectId.SHIELD,
+        data: { amount }
+    });
+    return [{
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            name,
+            text: "SPELLWEAVE"
+        }, {
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            name,
+            text: `+${amount} Shield`
+        }];
 };
 
 const toxicSpray = (params) => {
@@ -593,9 +822,9 @@ const toxicSpray = (params) => {
     if (possibleMinions.length) {
         let randomMinion = randomInt(possibleMinions.length);
         let { minion, key } = possibleMinions[randomMinion];
-        deductHealth(opponent, minion, 1);
+        deductHealth(opponent, minion, 1, key);
         insertDebuff(minion, EffectId.NEUROTOXIN);
-        if (minion.health <= 0) {
+        if (minion.health.current <= 0) {
             moveToGraveyard(opponent, minion, key);
         }
     }
@@ -603,40 +832,57 @@ const toxicSpray = (params) => {
 };
 
 const valor = (params) => {
-    const { opponent } = params;
-    const minionKeys = Object.keys(opponent.field);
-    let totalDamage = 0;
-    minionKeys.forEach((key) => {
-        const minion = opponent.field[key];
-        if (minion) {
-            const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
-            if (shieldBuff) {
-                totalDamage += shieldBuff.data.amount;
-                minion.buffs.splice(minion.buffs.indexOf(shieldBuff, 1));
-            }
+    const { player, opponent } = params;
+    const animations = [];
+    const fieldKeys = Object.keys(player.field);
+    const damage = fieldKeys.reduce((acc, fieldKey) => {
+        const card = player.field[fieldKey];
+        const shieldBuff = card
+            ?.buffs
+            .find(({ id }) => id === EffectId.SHIELD);
+        if (!card || !shieldBuff) {
+            return acc;
         }
+        animations.push({
+            type: "FLOATING_TEXT",
+            field: fieldKey,
+            name: player.name,
+            text: `-${shieldBuff.data.amount} Shield`
+        });
+        acc += shieldBuff.data.amount;
+        card.buffs.splice(card.buffs.indexOf(shieldBuff, 1));
+        return acc;
+    }, 0);
+    opponent.field.hero.health.current -= damage;
+    animations.push({
+        type: "HEALTH",
+        field: "hero",
+        name: opponent.name,
+        increment: -damage
     });
-    opponent.field.hero.health -= totalDamage;
-    return [true, ""];
+    return animations;
 };
 
 const fortitude = (params) => {
-    const { player, field } = params;
-    if (!field) {
-        return [false, "Field not specified."];
-    }
-    const minion = player.field[field];
-    if (!minion || minion.type === CardType.HERO) {
-        return [false, `No minion on the ${field} field.`];
-    }
-    deductHealth(player, minion, 1);
-    if (minion.health > 0) {
-        insertBuff(minion, EffectId.TAUNT);
+    const { player, playerMinion, playerMinionField } = params;
+    const animations = [];
+    animations.push(...deductHealth(player, playerMinion, 1, playerMinionField));
+    if (playerMinion.health.current > 0) {
+        playerMinion.buffs.push({
+            id: EffectId.TAUNT,
+            data: {}
+        });
+        animations.push({
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            name: player.name,
+            text: `+ Taunt`
+        });
     }
     else {
-        moveToGraveyard(player, minion, field);
+        animations.push(...moveToGraveyard(player, playerMinion, playerMinionField));
     }
-    return [true, ""];
+    return animations;
 };
 
 const regeneration = (params) => {
@@ -693,14 +939,19 @@ const electroShock = (params) => {
 const cleanse = (params) => {
     const { player, field } = params;
     if (!field) {
-        return [false, "Field not specified."];
+        return [];
     }
     const minion = player.field[field];
     if (!minion) {
-        return [false, `No minion on the ${field} field.`];
+        return [];
     }
     minion.debuffs = [];
-    return [true, ""];
+    return [{
+            type: "FLOATING_TEXT",
+            field,
+            name: player.name,
+            text: "CLEANSE"
+        }];
 };
 
 const tidalWave = (params) => {
@@ -746,7 +997,7 @@ const corrosiveTouch = (params) => {
             }
         }
     });
-    opponent.field.hero.health -= damageToHero;
+    opponent.field.hero.health.current -= damageToHero;
     return [true, ""];
 };
 
@@ -812,8 +1063,8 @@ const contaminatedAir = (params) => {
         if (minion && minion.type !== CardType.HERO) {
             const hasElusiveBuff = minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
             if (!hasElusiveBuff) {
-                if (minion.damage > 0) {
-                    minion.damage -= 1;
+                if (minion.damage.current > 0) {
+                    minion.damage.current -= 1;
                 }
                 insertDebuff(minion, EffectId.CONTAMINATED_AIR);
             }
@@ -824,8 +1075,8 @@ const contaminatedAir = (params) => {
         if (minion && minion.type !== CardType.HERO) {
             const hasElusiveBuff = minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
             if (!hasElusiveBuff) {
-                if (minion.damage > 0) {
-                    minion.damage -= 1;
+                if (minion.damage.current > 0) {
+                    minion.damage.current -= 1;
                 }
                 insertDebuff(minion, EffectId.CONTAMINATED_AIR);
             }
@@ -851,19 +1102,14 @@ const noxiousFumes = (params) => {
             }
         }
     });
-    deductHealth(player, playerMinion, damage);
+    animations.push(...deductHealth(player, playerMinion, damage, playerMinionField));
     animations.push({
         type: "FLOATING_TEXT",
         field: playerMinionField,
         name: player.name,
         text: "Noxious Fumes"
-    }, {
-        type: "DAMAGE",
-        damageTaken: damage,
-        field: playerMinionField,
-        name: player.name
     });
-    if (playerMinion.health <= 0) {
+    if (playerMinion.health.current <= 0) {
         moveToGraveyard(player, playerMinion, playerMinionField);
         animations.push({
             type: "DEATH",
@@ -890,10 +1136,25 @@ const rampage = (params) => {
 };
 
 const backstab = (params) => {
-    const { opponent, minion } = params;
-    opponent.field.hero.mana -= 1;
-    minion.damage += 2;
-    return [true, ""];
+    const { player, opponent, playerMinion, playerMinionField } = params;
+    opponent.field.hero.mana.current -= 1;
+    playerMinion.damage.current += 2;
+    return [{
+            type: "FLOATING_TEXT",
+            field: "hero",
+            name: opponent.name,
+            text: "BACKSTAB"
+        }, {
+            type: "MANA",
+            increment: -1,
+            field: "hero",
+            name: opponent.name
+        }, {
+            type: "DAMAGE",
+            increment: 2,
+            field: playerMinionField,
+            name: player.name
+        }];
 };
 
 const overpower = (params) => {
@@ -937,8 +1198,8 @@ const corruption = (params) => {
     if (card.buffs.find((buff) => buff.id === EffectId.ELUSIVE)) {
         return [false, "Corruption negated."];
     }
-    card.health -= 2;
-    if (card.health <= 0) {
+    card.health.current -= 2;
+    if (card.health.current <= 0) {
         moveToGraveyard(player, card, field);
     }
     else {
@@ -997,21 +1258,35 @@ const reflection = (params) => {
 };
 
 const constriction = (params) => {
-    const { player, playerMinion, opponent, opponentTrap } = params;
+    const { player, playerMinion, opponent, opponentTrap, playerMinionField } = params;
     const fields = Object.keys(player.field);
     const sum = fields.reduce((amount, field) => {
         const minion = player.field[field];
         return minion && minion.buffs.find((buff) => buff.id === EffectId.OVERCHARGE) ? amount + 1 : amount;
     }, 0);
-    if (playerMinion.damage >= sum) {
-        playerMinion.damage -= sum;
+    if (playerMinion.damage.current >= sum) {
+        playerMinion.damage.current -= sum;
     }
     else {
-        playerMinion.damage = 0;
+        playerMinion.damage.current = 0;
     }
     opponent.graveyard.push(opponentTrap);
     opponent.trap = undefined;
-    return [true, "Last stand triggered"];
+    return [{
+            type: "TRAP",
+            name: opponent.name,
+            card: opponentTrap
+        }, {
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            name: player.name,
+            text: "CONSTRICTION"
+        }, {
+            type: "DAMAGE",
+            field: playerMinionField,
+            name: player.name,
+            increment: -sum
+        }];
 };
 
 const effect = {
@@ -1139,7 +1414,7 @@ const attackMinionSave = async ($game, animations) => {
         game: generateGameView($game, $playerB.name),
         animations
     });
-    // await $games.replaceOne({id: $game.id}, $game);
+    await $games.replaceOne({ id: $game.id }, $game);
 };
 
 const buildDeck = (deck) => {
@@ -1177,7 +1452,6 @@ const buildDeck = (deck) => {
                     current: manaCost,
                     default: manaCost
                 },
-                // maxHealth: health,
                 canAttack: false,
                 buffs: [],
                 debuffs: []
@@ -1206,7 +1480,7 @@ const buildDeck = (deck) => {
     return gameDeck;
 };
 
-const endGame = async (gameId, winnerName) => {
+const endGame = async (gameId, winnerName, animations) => {
     const { $games, $players } = mongo;
     const { io } = server;
     const $game = await $games.findOne({ id: gameId });
@@ -1228,22 +1502,94 @@ const endGame = async (gameId, winnerName) => {
         $playerA.gameId = 0;
         $playerB.status = PlayerStatus.ONLINE;
         $playerB.gameId = 0;
+        let playerAEcrReward = "0";
+        let playerBEcrReward = "0";
+        let playerAEesReward = "0";
+        let playerBEesReward = "0";
+        if (!$playerA.tasks.daily) {
+            $playerA.tasks.daily = true;
+            $playerA.tasks.dailyAlternative = 0;
+            $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 1n * 10n ** 18n}`;
+            playerAEcrReward = `${BigInt(playerAEcrReward) + (1n * 10n ** 18n)}`;
+            if ($playerA.tasks.weekly < 7) {
+                $playerA.tasks.weekly += 1;
+            }
+            else {
+                $playerA.tasks.weekly = 0;
+                $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 10n * 10n ** 18n}`;
+                playerAEcrReward = `${BigInt(playerAEcrReward) + (10n * 10n ** 18n)}`;
+            }
+        }
+        if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative < 3) {
+            $playerB.tasks.dailyAlternative += 1;
+        }
+        else if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative > 3) {
+            $playerB.tasks.daily = true;
+            $playerB.tasks.dailyAlternative = 0;
+            $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 1n * 10n ** 18n}`;
+            playerBEcrReward = `${BigInt(playerBEcrReward) + (1n * 10n ** 18n)}`;
+            if ($playerB.tasks.weekly < 7) {
+                $playerB.tasks.weekly += 1;
+            }
+            else {
+                $playerB.tasks.weekly = 0;
+                $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 10n * 10n ** 18n}`;
+                playerBEcrReward = `${BigInt(playerBEcrReward) + (10n * 10n ** 18n)}`;
+            }
+        }
         if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
             $playerA.experience += 110 + $game.currentTurn;
-            const aReq = 1000 + ($playerA.level % 10) * 100;
-            if ($playerA.experience >= aReq) {
-                const rem = $playerA.experience - aReq;
+            const XP_REQUIRED = 1000;
+            if ($playerA.experience >= XP_REQUIRED) {
+                const remaining = $playerA.experience - XP_REQUIRED;
                 $playerA.level += 1;
-                $playerA.experience = rem;
-                // call levelup on chain, and save returned values, emit with gameEnded
+                $playerA.experience = remaining;
+                playerAEesReward = `${BigInt(playerAEesReward) + 1n * 10n ** 18n}`;
+                if ($playerA.level % 2 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 2n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 4 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 4n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 8 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 8n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 16 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 16n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 32 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 32n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 64 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 64n * 10n ** 18n}`;
+                }
+                $playerA.rewards.ees = `${BigInt($playerA.rewards.ees) + playerAEesReward}`;
             }
             $playerB.experience += 90 + $game.currentTurn;
-            const bReq = 1000 + ($playerB.level % 10) * 100;
-            if ($playerB.experience >= bReq) {
-                const rem = $playerB.experience - bReq;
+            if ($playerB.experience >= XP_REQUIRED) {
+                const rem = $playerB.experience - XP_REQUIRED;
                 $playerB.level += 1;
                 $playerB.experience = rem;
-                // call levelup on chain, and save returned values, emit with gameEnded
+                playerBEesReward = `${BigInt(playerBEesReward) + 1n * 10n ** 18n}`;
+                if ($playerB.level % 2 === 0) {
+                    playerBEesReward = `${BigInt(playerBEesReward) + 2n * 10n ** 18n}`;
+                }
+                if ($playerB.level % 4 === 0) {
+                    playerBEesReward = `${BigInt(playerBEesReward) + 4n * 10n ** 18n}`;
+                }
+                if ($playerB.level % 8 === 0) {
+                    playerBEesReward = `${BigInt(playerBEesReward) + 8n * 10n ** 18n}`;
+                }
+                if ($playerB.level % 16 === 0) {
+                    playerBEesReward = `${BigInt(playerBEesReward) + 16n * 10n ** 18n}`;
+                }
+                if ($playerB.level % 32 === 0) {
+                    playerBEesReward = `${BigInt(playerBEesReward) + 32n * 10n ** 18n}`;
+                }
+                if ($playerB.level % 64 === 0) {
+                    playerBEesReward = `${BigInt(playerBEesReward) + 64n * 10n ** 18n}`;
+                }
+                $playerB.rewards.ees = `${BigInt($playerB.rewards.ees) + playerBEesReward}`;
             }
         }
         if ($game.type === GameType.CASUAL) {
@@ -1266,13 +1612,17 @@ const endGame = async (gameId, winnerName) => {
             isWinner: true,
             gameType: $game.type,
             experience: 110 + $game.currentTurn,
-            elo: $game.type === GameType.RANKED ? 20 : 0
+            elo: $game.type === GameType.RANKED ? 20 : 0,
+            ecrReward: playerAEcrReward,
+            eesReward: playerAEesReward, animations
         });
         io.to($playerB.socketId).emit("gameEnded", {
             isWinner: false,
             gameType: $game.type,
             experience: 90 + $game.currentTurn,
-            elo: $game.type === GameType.RANKED ? -20 : 0
+            elo: $game.type === GameType.RANKED ? -20 : 0,
+            ecrReward: playerBEcrReward,
+            eesReward: playerBEesReward, animations
         });
     }
     else if (winnerName === playerB.name) {
@@ -1289,22 +1639,98 @@ const endGame = async (gameId, winnerName) => {
         $playerB.gameId = 0;
         $playerA.status = PlayerStatus.ONLINE;
         $playerA.gameId = 0;
+        let playerAEcrReward = "0";
+        let playerBEcrReward = "0";
+        let playerAEesReward = "0";
+        let playerBEesReward = "0";
+        if (!$playerB.tasks.daily) {
+            $playerB.tasks.daily = true;
+            $playerB.tasks.dailyAlternative = 0;
+            $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 1n * 10n ** 18n}`;
+            playerBEcrReward = `${BigInt(playerBEcrReward) + (1n * 10n ** 18n)}`;
+            if ($playerB.tasks.weekly < 7) {
+                $playerB.tasks.weekly += 1;
+            }
+            else {
+                $playerB.tasks.weekly = 0;
+                $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 10n * 10n ** 18n}`;
+                playerBEcrReward = `${BigInt(playerBEcrReward) + (10n * 10n ** 18n)}`;
+            }
+        }
+        if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative < 3) {
+            $playerA.tasks.dailyAlternative += 1;
+        }
+        else if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative > 3) {
+            $playerA.tasks.daily = true;
+            $playerA.tasks.dailyAlternative = 0;
+            $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 1n * 10n ** 18n}`;
+            playerAEcrReward = `${BigInt(playerAEcrReward) + (1n * 10n ** 18n)}`;
+            if ($playerA.tasks.weekly < 7) {
+                $playerA.tasks.weekly += 1;
+            }
+            else {
+                $playerA.tasks.weekly = 0;
+                $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 10n * 10n ** 18n}`;
+                playerAEcrReward = `${BigInt(playerAEcrReward) + (10n * 10n ** 18n)}`;
+            }
+        }
         if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
             $playerB.experience += 110 + $game.currentTurn;
-            const bReq = 1000 + ($playerB.level % 10) * 100;
-            if ($playerB.experience >= bReq) {
-                const rem = $playerB.experience - bReq;
+            const XP_REQUIRED = 1000;
+            if ($playerB.experience >= XP_REQUIRED) {
+                const remaining = $playerB.experience - XP_REQUIRED;
                 $playerB.level += 1;
-                $playerB.experience = rem;
-                // call levelup on chain, and save returned values, emit with gameEnded
+                $playerB.experience = remaining;
+                if ($playerB.experience >= XP_REQUIRED) {
+                    const rem = $playerB.experience - XP_REQUIRED;
+                    $playerB.level += 1;
+                    $playerB.experience = rem;
+                    playerBEesReward = `${BigInt(playerBEesReward) + 1n * 10n ** 18n}`;
+                    if ($playerB.level % 2 === 0) {
+                        playerBEesReward = `${BigInt(playerBEesReward) + 2n * 10n ** 18n}`;
+                    }
+                    if ($playerB.level % 4 === 0) {
+                        playerBEesReward = `${BigInt(playerBEesReward) + 4n * 10n ** 18n}`;
+                    }
+                    if ($playerB.level % 8 === 0) {
+                        playerBEesReward = `${BigInt(playerBEesReward) + 8n * 10n ** 18n}`;
+                    }
+                    if ($playerB.level % 16 === 0) {
+                        playerBEesReward = `${BigInt(playerBEesReward) + 16n * 10n ** 18n}`;
+                    }
+                    if ($playerB.level % 32 === 0) {
+                        playerBEesReward = `${BigInt(playerBEesReward) + 32n * 10n ** 18n}`;
+                    }
+                    if ($playerB.level % 64 === 0) {
+                        playerBEesReward = `${BigInt(playerBEesReward) + 64n * 10n ** 18n}`;
+                    }
+                    $playerB.rewards.ees = `${BigInt($playerB.rewards.ees) + playerBEesReward}`;
+                }
             }
             $playerA.experience += 90 + $game.currentTurn;
-            const aReq = 1000 + ($playerA.level % 10) * 100;
-            if ($playerA.experience >= aReq) {
-                const rem = $playerA.experience - aReq;
+            if ($playerA.experience >= XP_REQUIRED) {
+                const rem = $playerA.experience - XP_REQUIRED;
                 $playerA.level += 1;
                 $playerA.experience = rem;
-                // call levelup on chain, and save returned values, emit with gameEnded
+                if ($playerA.level % 2 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 2n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 4 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 4n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 8 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 8n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 16 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 16n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 32 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 32n * 10n ** 18n}`;
+                }
+                if ($playerA.level % 64 === 0) {
+                    playerAEesReward = `${BigInt(playerAEesReward) + 64n * 10n ** 18n}`;
+                }
+                $playerA.rewards.ees = `${BigInt($playerA.rewards.ees) + playerAEesReward}`;
             }
         }
         if ($game.type === GameType.CASUAL) {
@@ -1327,13 +1753,17 @@ const endGame = async (gameId, winnerName) => {
             isWinner: true,
             gameType: $game.type,
             experience: 110 + $game.currentTurn,
-            elo: $game.type === GameType.RANKED ? 20 : 0
+            elo: $game.type === GameType.RANKED ? 20 : 0,
+            ecrReward: playerBEcrReward,
+            eesReward: playerBEesReward, animations
         });
         io.to($playerA.socketId).emit("gameEnded", {
             isWinner: false,
             gameType: $game.type,
             experience: 90 + $game.currentTurn,
-            elo: $game.type === GameType.RANKED ? -20 : 0
+            elo: $game.type === GameType.RANKED ? -20 : 0,
+            ecrReward: playerAEcrReward,
+            eesReward: playerAEesReward, animations
         });
     }
     const isDeletedGame = await $games.deleteOne({ id: gameId });
@@ -1369,24 +1799,19 @@ const gamePopup = async (type, playerA, playerB) => {
     if (!a || !b) {
         return;
     }
-    const inserted = await $gamePopups.insertOne({
+    const gamePopupp = {
         id,
         type,
         playerA: {
             name: a.name,
-            avatarId: 1,
-            level: a.level,
-            elo: a.elo,
             hasAccepted: false
         },
         playerB: {
             name: b.name,
-            avatarId: 1,
-            level: b.level,
-            elo: b.elo,
             hasAccepted: false
         }
-    });
+    };
+    const inserted = await $gamePopups.insertOne(gamePopupp);
     if (!inserted.insertedId) {
         return;
     }
@@ -1420,8 +1845,8 @@ const gamePopup = async (type, playerA, playerB) => {
             io.to(pb.socketId).emit("declineGame");
         }
     }, 10_000);
-    io.to(a.socketId).emit("gamePopup");
-    io.to(b.socketId).emit("gamePopup");
+    io.to(a.socketId).emit("gamePopup", { gamePopup: gamePopupp });
+    io.to(b.socketId).emit("gamePopup", { gamePopup: gamePopupp });
 };
 
 const generateGame = (id, type, playerA, playerB) => {
@@ -1457,8 +1882,14 @@ const generateGame = (id, type, playerA, playerB) => {
             field: {
                 hero: {
                     ...playerAHero,
-                    maxHealth: 20,
-                    maxMana: 10,
+                    health: {
+                        current: 20,
+                        default: 20
+                    },
+                    mana: {
+                        current: 20,
+                        default: 20
+                    },
                     buffs: [],
                     debuffs: []
                 },
@@ -1478,8 +1909,14 @@ const generateGame = (id, type, playerA, playerB) => {
             field: {
                 hero: {
                     ...playerBHero,
-                    maxHealth: 20,
-                    maxMana: 10,
+                    health: {
+                        current: 20,
+                        default: 20
+                    },
+                    mana: {
+                        current: 20,
+                        default: 20
+                    },
                     buffs: [],
                     debuffs: []
                 },
@@ -1530,19 +1967,19 @@ const getRandomMinion = (player) => {
     return list[randomInt(list.length)];
 };
 
-const isGameOver = async (game) => {
-    if (game.playerA.field.hero.health <= 0) {
-        await endGame(game.id, game.playerB.name);
+const isGameOver = async (game, animations) => {
+    if (game.playerA.field.hero.health.current <= 0) {
+        await endGame(game.id, game.playerB.name, animations);
         return true;
     }
-    else if (game.playerB.field.hero.health <= 0) {
-        await endGame(game.id, game.playerA.name);
+    else if (game.playerB.field.hero.health.current <= 0) {
+        await endGame(game.id, game.playerA.name, animations);
         return true;
     }
     return false;
 };
 
-const saveGame = async (game) => {
+const saveGame = async (game, animations) => {
     const { $games, $players } = mongo;
     const { io } = server;
     const { id, playerA, playerB } = game;
@@ -1559,17 +1996,19 @@ const saveGame = async (game) => {
         return;
     }
     io.to($playerA.socketId).emit("reloadGameState", {
-        game: generateGameView(game, $playerA.name)
+        game: generateGameView(game, $playerA.name),
+        animations
     });
     io.to($playerB.socketId).emit("reloadGameState", {
-        game: generateGameView(game, $playerB.name)
+        game: generateGameView(game, $playerB.name),
+        animations
     });
 };
 
 const startGame = async (id, type, playerA, playerB) => {
-    const { $accounts, $games, $players } = mongo;
+    const { $games, $players } = mongo;
     const { io } = server;
-    const [$playerA, $playerB, $accountA, $accountB] = await Promise.all([
+    const [$playerA, $playerB] = await Promise.all([
         $players.findOneAndUpdate({
             name: playerA
         }, {
@@ -1591,15 +2030,9 @@ const startGame = async (id, type, playerA, playerB) => {
                 gamePopupId: 0,
                 gameId: id
             }
-        }),
-        $accounts.findOne({
-            name: playerA
-        }),
-        $accounts.findOne({
-            name: playerB
         }),
     ]);
-    if (!$playerA || !$playerB || !$accountA || !$accountB) {
+    if (!$playerA || !$playerB) {
         return;
     }
     const game = generateGame(id, type, $playerA, $playerB);
@@ -1610,30 +2043,42 @@ const startGame = async (id, type, playerA, playerB) => {
     io.to($playerA.socketId).emit("startGame", {
         playerA: {
             name: $playerA.name,
-            avatarId: $accountA.avatarId,
+            avatarId: $playerA.avatarId,
+            bannerId: $playerA.bannerId,
             level: $playerA.level,
-            elo: $playerA.elo
+            elo: $playerA.elo,
+            experience: $playerA.experience,
+            games: $playerA.games
         },
         playerB: {
             name: $playerB.name,
-            avatarId: $accountB.avatarId,
+            avatarId: $playerB.avatarId,
+            bannerId: $playerB.bannerId,
             level: $playerB.level,
-            elo: $playerB.elo
+            elo: $playerB.elo,
+            experience: $playerB.experience,
+            games: $playerB.games
         },
         game: generateGameView(game, $playerA.name)
     });
     io.to($playerB.socketId).emit("startGame", {
         playerA: {
             name: $playerA.name,
-            avatarId: $accountA.avatarId,
+            avatarId: $playerA.avatarId,
+            bannerId: $playerA.bannerId,
             level: $playerA.level,
-            elo: $playerA.elo
+            elo: $playerA.elo,
+            experience: $playerA.experience,
+            games: $playerA.games
         },
         playerB: {
             name: $playerB.name,
-            avatarId: $accountB.avatarId,
+            avatarId: $playerB.avatarId,
+            bannerId: $playerB.bannerId,
             level: $playerB.level,
-            elo: $playerB.elo
+            elo: $playerB.elo,
+            experience: $playerB.experience,
+            games: $playerB.games
         },
         game: generateGameView(game, $playerB.name)
     });
@@ -1659,174 +2104,322 @@ const gameHelpers = {
     startGame,
 };
 
+const authenticate$1 = async (socketId, name) => {
+    const { $chats, $games, $lobbies, $players } = mongo;
+    const $player = await $players.findOneAndUpdate({ name }, [{
+            $set: {
+                socketId,
+                status: {
+                    $switch: {
+                        branches: [{
+                                case: {
+                                    $gt: ["$lobbyId", 0]
+                                },
+                                then: PlayerStatus.IN_LOBBY
+                            }, {
+                                case: {
+                                    $gt: ["$gameId", 0]
+                                },
+                                then: PlayerStatus.IN_GAME
+                            }],
+                        default: PlayerStatus.ONLINE
+                    }
+                }
+            }
+        }], {
+        returnDocument: "after"
+    });
+    if (!$player) {
+        return [undefined, "Error updating player."];
+    }
+    const { lobbyId, gameId } = $player;
+    let lobbyView;
+    let gameView;
+    if (lobbyId) {
+        const id = lobbyId;
+        const $lobby = await $lobbies.findOne({ id });
+        if (!$lobby) {
+            return [undefined, "You are currently in a lobby that cannot be found."];
+        }
+        const { host, challengee } = $lobby;
+        lobbyView = { id, host, challengee };
+    }
+    if (gameId) {
+        const id = gameId;
+        const $game = await $games.findOne({ id });
+        if (!$game) {
+            return [undefined, "You are currently in a game that cannot be found."];
+        }
+        gameView = gameHelpers.generateGameView($game, $player.name);
+    }
+    const friendsView = [];
+    for (const name of $player.social.friends) {
+        const [friend, chat] = await Promise.all([
+            $players.findOne({ name }),
+            $chats.findOne({
+                players: {
+                    $all: [$player.name, name]
+                }
+            })
+        ]);
+        if (friend && chat) {
+            const { avatarId, bannerId, experience, level, elo, status, games } = friend;
+            const { lastSender, unseen, messages } = chat;
+            friendsView.push({
+                name, avatarId, bannerId, experience, level, elo, status, games, chat: {
+                    lastSender,
+                    unseen,
+                    messages
+                }
+            });
+        }
+    }
+    const playerView = {
+        name: $player.name,
+        address: $player.address,
+        nonce: $player.nonce,
+        avatarId: $player.avatarId,
+        bannerId: $player.bannerId,
+        experience: $player.experience,
+        level: $player.level,
+        elo: $player.elo,
+        joinedAt: $player.joinedAt,
+        status: $player.status,
+        queueId: $player.queueId,
+        deckId: $player.deckId,
+        lobbyId: $player.lobbyId,
+        gameId: $player.gameId,
+        gamePopupId: $player.gamePopupId,
+        social: {
+            friends: friendsView,
+            requests: $player.social.requests,
+            blocked: $player.social.blocked
+        },
+        games: $player.games,
+        decks: $player.decks.map((deck) => ({
+            id: deck.id,
+            name: deck.name,
+            klass: deck.klass,
+            cardsInDeck: deck.cards.reduce((acc, { amount }) => acc += amount, 0),
+            average: {
+                health: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card ||
+                        card.type === CardType.HERO ||
+                        card.type === CardType.MAGIC ||
+                        card.type === CardType.TRAP) {
+                        return acc;
+                    }
+                    return acc += card.health * deckCard.amount;
+                }, 0) / deck.cards.reduce((acc, deckCard) => acc += deckCard.amount, 0) || 0,
+                damage: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card ||
+                        card.type === CardType.HERO ||
+                        card.type === CardType.MAGIC ||
+                        card.type === CardType.TRAP) {
+                        return acc;
+                    }
+                    return acc += card.damage * deckCard.amount;
+                }, 0) / deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.type !== CardType.MINION) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0) || 0,
+                manaCost: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.type === CardType.HERO) {
+                        return acc;
+                    }
+                    return acc += card.manaCost * deckCard.amount;
+                }, 0) / deck.cards.reduce((acc, deckCard) => acc += deckCard.amount, 0) || 0
+            },
+            attribute: {
+                minion: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.type !== CardType.MINION) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0),
+                magic: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.type !== CardType.MAGIC) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0),
+                trap: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.type !== CardType.TRAP) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0),
+                neutral: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.klass !== CardKlass.NEUTRAL) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0),
+                solid: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.klass !== CardKlass.SOLID) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0),
+                liquid: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.klass !== CardKlass.LIQUID) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0),
+                gas: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.klass !== CardKlass.GAS) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0),
+                plasma: deck.cards.reduce((acc, deckCard) => {
+                    const card = cards.find((card) => deckCard.id === card.id);
+                    if (!card || card.klass !== CardKlass.PLASMA) {
+                        return acc;
+                    }
+                    return acc += deckCard.amount;
+                }, 0),
+            },
+            cards: deck.cards.map((deckCard) => {
+                const { id, amount } = deckCard;
+                const card = cards.find((card) => card.id === id);
+                const cardView = cardsView.find((card) => card.id === id);
+                if (!card || !cardView || card.type === CardType.HERO) {
+                    return { id, name: "", type: 1, damage: 0, health: 0, manaCost: 0, amount: 1 };
+                }
+                const { klass, type, manaCost } = card;
+                const { name } = cardView;
+                if (card.type === CardType.MINION) {
+                    const { health, damage } = card;
+                    return { id, name, klass, type, health, damage, manaCost, amount };
+                }
+                else {
+                    return { id, name, klass, type, manaCost, amount };
+                }
+            })
+        })),
+        skins: $player.skins,
+        tutorial: $player.tutorial,
+        tasks: $player.tasks,
+        rewards: $player.rewards
+    };
+    const snapshots = await mongo.$supplySnapshots.find().toArray();
+    return [{ lobbyView, gameView, playerView, snapshots }, ""];
+};
+
 const getSocketIds = async (players) => {
     return await mongo
         .$players
-        .find({ name: { $in: players } })
-        .project({ _id: 0, socketId: 1 })
+        .find({
+        name: {
+            $in: players
+        }
+    })
+        .project({
+        _id: 0,
+        socketId: 1
+    })
         .map(({ socketId }) => socketId)
         .toArray();
 };
 
 const isDeckValid = (playerDeck) => {
-    const numberOfCards = playerDeck
+    // maybe check whether it includes a hero, since that is also invalid?
+    // or do this check in saveDeck, and remove this function altogether?
+    return playerDeck
         .cards
-        .reduce((value, { amount }) => value += amount, 0);
-    if (numberOfCards !== 30) {
-        return false;
-    }
-    return true;
+        .reduce((value, { amount }) => value += amount, 0) === 30;
 };
 
-const playerHelpers = { getSocketIds, isDeckValid };
+const playerTemplate = (name, passwordHash, address) => ({
+    socketId: "",
+    passwordHash,
+    address,
+    nonce: 0,
+    name,
+    joinedAt: Date.now(),
+    status: PlayerStatus.OFFLINE,
+    experience: 0,
+    level: 1,
+    elo: 500,
+    avatarId: 1000,
+    bannerId: 2000,
+    deckId: 0,
+    queueId: QueueId.NONE,
+    lobbyId: 0,
+    gameId: 0,
+    gamePopupId: 0,
+    games: {
+        casual: { won: 0, lost: 0 },
+        ranked: { won: 0, lost: 0 }
+    },
+    social: {
+        friends: [],
+        requests: [],
+        blocked: []
+    },
+    tasks: {
+        daily: false,
+        dailyAlternative: 0,
+        weekly: 0,
+    },
+    rewards: {
+        ecr: "0",
+        ees: "0"
+    },
+    tutorial: {
+        deckBuilder: false,
+        game: false,
+        play: false,
+        inventory: false
+    },
+    decks: [
+        { id: 0, klass: 1, name: "Deck 1", cards: [] },
+        { id: 1, klass: 2, name: "Deck 2", cards: [] },
+        { id: 2, klass: 3, name: "Deck 3", cards: [] },
+        { id: 3, klass: 4, name: "Deck 4", cards: [] }
+    ],
+    skins: cards.map((card) => ({
+        cardId: card.id,
+        skinId: parseInt(`1${card.id}00`)
+    }))
+});
+
+const playerHelpers = { authenticate: authenticate$1, getSocketIds, isDeckValid, playerTemplate };
 
 const authenticate = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $chats, $games, $lobbies, $players } = mongo;
     socket.on("authenticate", async (params) => {
-        const { token } = params;
-        const decoded = jwt.verify(token, "som");
+        const decoded = jsonwebtoken.verify(params.token, "som");
         const { name } = decoded;
-        const $account = await $accounts.findOne({ name });
-        if (!$account) {
-            return error("Account not found.");
+        const auth = await playerHelpers.authenticate(socketId, name);
+        const [data, errorMessage] = auth;
+        if (!data) {
+            return error(errorMessage);
         }
-        const $player = await $players.findOneAndUpdate({ name: $account.name }, [{
-                $set: {
-                    socketId,
-                    status: {
-                        $switch: {
-                            branches: [{
-                                    case: {
-                                        $gt: ["$lobbyId", 0]
-                                    },
-                                    then: PlayerStatus.IN_LOBBY
-                                }, {
-                                    case: {
-                                        $gt: ["$gameId", 0]
-                                    },
-                                    then: PlayerStatus.IN_GAME
-                                }],
-                            default: PlayerStatus.ONLINE
-                        }
-                    }
-                }
-            }], {
-            returnDocument: "after"
-        });
-        if (!$player) {
-            return error("Error updating player.");
-        }
-        const friendsView = [];
-        for (const friendname of $account.social.friends) {
-            const [friend, friendAcc, chat] = await Promise.all([
-                $players.findOne({
-                    name: friendname
-                }),
-                $accounts.findOne({
-                    name: friendname
-                }),
-                $chats.findOne({
-                    players: {
-                        $all: [$player.name, friendname]
-                    }
-                })
-            ]);
-            if (!friend || !friendAcc || !chat) {
-                return;
-            }
-            const { status } = friend;
-            const { messages } = chat;
-            friendsView.push({ name: friendname, status, avatarId: friendAcc?.avatarId, messages });
-        }
-        const { lobbyId, gameId } = $player;
-        let lobbyView;
-        let gameView;
-        if (lobbyId) {
-            const $lobby = await $lobbies.findOne({ id: lobbyId });
-            if (!$lobby) {
-                return error("You are currently in a lobby that cannot be found. (Contact dev)");
-            }
-            const { id, host, challengee } = $lobby;
-            lobbyView = { id, host, challengee };
-        }
-        else if (gameId) {
-            const $game = await $games.findOne({ id: gameId });
-            if (!$game) {
-                return error("You are currently in a game that cannot be found. (Contact dev)");
-            }
-            gameView = gameHelpers.generateGameView($game, $player.name);
-        }
-        const accountView = {
-            name: $account.name,
-            address: $account.address,
-            nonce: $account.nonce + 1,
-            avatarId: $account.avatarId,
-            bannerId: $account.bannerId,
-            social: {
-                friends: friendsView,
-                requests: $account.social.requests,
-                blocked: $account.social.blocked,
-                chat: {
-                    name: "",
-                    status: 0,
-                    avatarId: 0,
-                    messages: [],
-                    isOpen: false
-                }
-            }
-        };
-        const playerView = {
-            name: $player.name,
-            experience: $player.experience,
-            level: $player.level,
-            elo: $player.elo,
-            joinedAt: $player.joinedAt,
-            status: $player.status,
-            queueId: $player.queueId,
-            deckId: $player.deckId,
-            lobbyId: $player.lobbyId,
-            gameId: $player.gameId,
-            gamePopupId: $player.gamePopupId,
-            games: $player.games,
-            decks: $player.decks.map((deck) => ({
-                id: deck.id,
-                klass: deck.klass,
-                name: deck.name,
-                cardsInDeck: deck.cards.reduce((acc, { amount }) => acc += amount, 0),
-                cards: deck.cards.map((deckCard) => {
-                    const card = cards.find((card) => deckCard.id === card.id);
-                    if (!card || card.type === CardType.HERO) {
-                        console.log("Card not found, deck invalid, hero can't be in deck...?");
-                        // this should never happen though...
-                        return { id: 0, name: "", amount: 0, manaCost: 0 };
-                    }
-                    const cardView = cardsView.get(card.id);
-                    if (!cardView) {
-                        return { id: 0, name: "", amount: 0, manaCost: 0 };
-                    }
-                    const { id, amount } = deckCard;
-                    const { manaCost } = card;
-                    const { name } = cardView;
-                    return { id, name, amount, manaCost };
-                })
-            })),
-            skins: $player.skins,
-            tutorial: $player.tutorial
-        };
-        socket.emit("signin", {
-            accountView,
-            gameView,
-            lobbyView,
-            playerView
-        });
+        socket.emit("signin", { ...data, token: undefined });
     });
 };
 
 const disconnect = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("disconnect", async () => {
+        // console.log("DISCONNECT", socketId);
         const $playerUpdate = await $players.findOneAndUpdate({ socketId }, {
             $set: {
                 socketId: "",
@@ -1835,350 +2428,92 @@ const disconnect = (socket, error) => {
         }, {
             returnDocument: "after"
         });
+        console.log($playerUpdate?.status);
         if (!$playerUpdate) {
             return error("Error updating player.");
         }
-        const { name, status } = $playerUpdate;
-        const $account = await $accounts.findOne({ name });
-        if (!$account) {
-            return error("Account not found.");
-        }
-        const socketIds = await playerHelpers.getSocketIds($account.social.friends);
+        const { name, status, social } = $playerUpdate;
+        const socketIds = await playerHelpers.getSocketIds(social.friends);
+        // console.log(name, status);
         server.io.to(socketIds).emit("updateFriend", { name, status });
     });
 };
 
 const getNonce = (socket, error) => {
-    const { $accounts } = mongo;
+    const { $players } = mongo;
     socket.on("getNonce", async (params) => {
         const { address } = params;
-        const $account = await $accounts.findOne({ address });
-        if (!$account) {
-            return error("Account not found.");
+        const $player = await $players.findOne({ address });
+        if (!$player) {
+            return error("Player not found.");
         }
-        const { nonce } = $account;
+        const { nonce } = $player;
         socket.emit("getNonce", { nonce });
     });
 };
 
 const signinMetamask = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $chats, $games, $lobbies, $players } = mongo;
+    const { $players } = mongo;
     socket.on("signinMetamask", async (params) => {
         const { address, signature, rememberMe } = params;
-        const acc = await $accounts.findOne({ address });
-        if (!acc) {
+        const $player = await $players.findOne({ address });
+        if (!$player) {
             return error("Account not found.");
         }
-        const recoveredAddress = verifyMessage(`signin${acc.nonce}`, signature);
-        if (recoveredAddress !== acc.address) {
+        const recoveredAddress = verifyMessage(`signin${$player.nonce}`, signature);
+        if (recoveredAddress !== $player.address) {
             return error("Invalid signature.");
         }
-        const $accountUpdate = await $accounts.updateOne({ address }, {
+        const $playerUpdate = await $players.updateOne({ address }, {
             $set: {
-                nonce: acc.nonce + 1
+                nonce: $player.nonce + 1
             }
         });
-        if (!$accountUpdate.modifiedCount) {
+        if (!$playerUpdate.modifiedCount) {
             return error("Error updating account.");
         }
-        let token;
-        if (rememberMe) {
-            token = jwt.sign({ name: acc.name }, "som", {
-                expiresIn: "30d"
-            });
+        const expiresIn = rememberMe ? "30d" : "2h";
+        const { name } = $player;
+        const token = jsonwebtoken.sign({ name }, "som", { expiresIn });
+        const auth = await playerHelpers.authenticate(socketId, $player.name);
+        const [data, errorMessage] = auth;
+        if (!data) {
+            return error(errorMessage);
         }
-        const $player = await $players.findOneAndUpdate({ name: acc.name }, [{
-                $set: {
-                    socketId,
-                    status: {
-                        $switch: {
-                            branches: [{
-                                    case: {
-                                        $gt: ["$lobbyId", 0]
-                                    },
-                                    then: PlayerStatus.IN_LOBBY
-                                }, {
-                                    case: {
-                                        $gt: ["$gameId", 0]
-                                    },
-                                    then: PlayerStatus.IN_GAME
-                                }],
-                            default: PlayerStatus.ONLINE
-                        }
-                    }
-                }
-            }], {
-            returnDocument: "after"
-        });
-        if (!$player) {
-            return error("Error updating player.");
-        }
-        const friendsView = [];
-        for (const friendname of acc.social.friends) {
-            const [friend, friendAcc, chat] = await Promise.all([
-                $players.findOne({
-                    name: friendname
-                }),
-                $accounts.findOne({
-                    name: friendname
-                }),
-                $chats.findOne({
-                    players: {
-                        $all: [$player.name, friendname]
-                    }
-                })
-            ]);
-            if (!friend || !friendAcc || !chat) {
-                return;
-            }
-            const { status } = friend;
-            const { messages } = chat;
-            friendsView.push({ name: friendname, status, avatarId: friendAcc?.avatarId, messages });
-        }
-        const { lobbyId, gameId } = $player;
-        let lobbyView;
-        let gameView;
-        if (lobbyId) {
-            const $lobby = await $lobbies.findOne({ id: lobbyId });
-            if (!$lobby) {
-                return error("You are currently in a lobby that cannot be found. (Contact dev)");
-            }
-            const { id, host, challengee } = $lobby;
-            lobbyView = { id, host, challengee };
-        }
-        else if (gameId) {
-            const $game = await $games.findOne({ id: gameId });
-            if (!$game) {
-                return error("You are currently in a game that cannot be found. (Contact dev)");
-            }
-            gameView = gameHelpers.generateGameView($game, $player.name);
-        }
-        const accountView = {
-            name: acc.name,
-            address: acc.address,
-            nonce: acc.nonce + 1,
-            avatarId: acc.avatarId,
-            bannerId: acc.bannerId,
-            social: {
-                friends: friendsView,
-                requests: acc.social.requests,
-                blocked: acc.social.blocked,
-                chat: {
-                    name: "",
-                    status: 0,
-                    avatarId: 0,
-                    messages: [],
-                    isOpen: false
-                }
-            }
-        };
-        const playerView = {
-            name: $player.name,
-            experience: $player.experience,
-            level: $player.level,
-            elo: $player.elo,
-            joinedAt: $player.joinedAt,
-            status: $player.status,
-            queueId: $player.queueId,
-            deckId: $player.deckId,
-            lobbyId: $player.lobbyId,
-            gameId: $player.gameId,
-            gamePopupId: $player.gamePopupId,
-            games: $player.games,
-            decks: $player.decks.map((deck) => ({
-                id: deck.id,
-                klass: deck.klass,
-                name: deck.name,
-                cardsInDeck: deck.cards.reduce((acc, { amount }) => acc += amount, 0),
-                cards: deck.cards.map((deckCard) => {
-                    const card = cards.find((card) => deckCard.id === card.id);
-                    if (!card || card.type === CardType.HERO) {
-                        console.log("Card not found, deck invalid, hero can't be in deck...?");
-                        // this should never happen though...
-                        return { id: 0, name: "", amount: 0, manaCost: 0 };
-                    }
-                    const cardView = cardsView.get(card.id);
-                    if (!cardView) {
-                        return { id: 0, name: "", amount: 0, manaCost: 0 };
-                    }
-                    const { id, amount } = deckCard;
-                    const { manaCost } = card;
-                    const { name } = cardView;
-                    return { id, name, amount, manaCost };
-                })
-            })),
-            skins: $player.skins,
-            tutorial: $player.tutorial
-        };
-        socket.emit("signin", {
-            accountView,
-            gameView,
-            lobbyView,
-            playerView,
-            token
-        });
+        socket.emit("signin", { ...data, token });
     });
 };
 
 const signinPassword = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $chats, $games, $lobbies, $players } = mongo;
+    const { $players } = mongo;
     socket.on("signinPassword", async (params) => {
         const { name, password, rememberMe } = params;
-        let lobby, game;
-        const acc = await $accounts.findOne({ name });
-        if (!acc) {
-            return error(`Account ${name} not found.`);
+        const $player = await $players.findOne({ name });
+        if (!$player) {
+            return error("Account not found.");
         }
-        if (!acc.passwordHash) {
+        if (!$player.passwordHash && $player.address) {
             return error("Must login through metamask.");
         }
-        const isCorrectPassword = await compare(password, acc.passwordHash);
+        const isCorrectPassword = await compare(password, $player.passwordHash);
         if (!isCorrectPassword) {
             return error("Invalid password.");
         }
-        let token;
-        if (rememberMe) {
-            token = jwt.sign({ name }, "som", {
-                expiresIn: "30d"
-            });
+        const expiresIn = rememberMe ? "30d" : "2h";
+        const token = jsonwebtoken.sign({ name }, "som", { expiresIn });
+        const auth = await playerHelpers.authenticate(socketId, $player.name);
+        const [data, errorMessage] = auth;
+        if (!data) {
+            return error(errorMessage);
         }
-        const $player = await $players.findOneAndUpdate({ name }, [{
-                $set: {
-                    socketId,
-                    status: {
-                        $switch: {
-                            branches: [{
-                                    case: {
-                                        $gt: ["$lobbyId", 0]
-                                    },
-                                    then: PlayerStatus.IN_LOBBY
-                                }, {
-                                    case: {
-                                        $gt: ["$gameId", 0]
-                                    },
-                                    then: PlayerStatus.IN_GAME
-                                }],
-                            default: PlayerStatus.ONLINE
-                        }
-                    }
-                }
-            }], {
-            returnDocument: "after"
-        });
-        if (!$player) {
-            return error("Error updating player.");
-        }
-        const friendsView = [];
-        for (const friendname of acc.social.friends) {
-            const [friend, friendAcc, chat] = await Promise.all([
-                $players.findOne({
-                    name: friendname
-                }),
-                $accounts.findOne({
-                    name: friendname
-                }),
-                $chats.findOne({
-                    players: {
-                        $all: [$player.name, friendname]
-                    }
-                })
-            ]);
-            if (!friend || !friendAcc || !chat) {
-                return;
-            }
-            const { status } = friend;
-            const { messages } = chat;
-            friendsView.push({ name: friendname, status, avatarId: friendAcc?.avatarId, messages });
-        }
-        const social = {
-            friends: friendsView,
-            requests: acc.social.requests,
-            blocked: acc.social.blocked,
-            chat: {
-                name: "",
-                status: 0,
-                avatarId: 0,
-                messages: [],
-                isOpen: false
-            }
-        };
-        const { lobbyId, gameId } = $player;
-        let gameView;
-        let lobbyView;
-        if (lobbyId) {
-            lobby = await $lobbies.findOne({ id: lobbyId });
-            if (!lobby) {
-                return error("You are currently in a lobby that cannot be found. (Contact dev)");
-            }
-            lobbyView = lobby;
-        }
-        else if (gameId) {
-            game = await $games.findOne({ id: gameId });
-            if (!game) {
-                return error("You are currently in a game that cannot be found. (Contact dev)");
-            }
-            gameView = gameHelpers.generateGameView(game, $player.name);
-        }
-        const accountView = {
-            name,
-            address: acc.address,
-            nonce: acc.nonce,
-            avatarId: acc.avatarId,
-            bannerId: acc.bannerId,
-            social
-        };
-        const playerView = {
-            name: $player.name,
-            experience: $player.experience,
-            level: $player.level,
-            elo: $player.elo,
-            joinedAt: $player.joinedAt,
-            status: $player.status,
-            queueId: $player.queueId,
-            deckId: $player.deckId,
-            lobbyId: $player.lobbyId,
-            gameId: $player.gameId,
-            gamePopupId: $player.gamePopupId,
-            games: $player.games,
-            decks: $player.decks.map((deck) => ({
-                id: deck.id,
-                klass: deck.klass,
-                name: deck.name,
-                cardsInDeck: deck.cards.reduce((acc, { amount }) => acc += amount, 0),
-                cards: deck.cards.map((deckCard) => {
-                    const card = cards.find((card) => deckCard.id === card.id);
-                    if (!card || card.type === CardType.HERO) {
-                        console.log("Card not found, deck invalid, hero can't be in deck...?");
-                        // this should never happen though...
-                        return { id: 0, name: "", amount: 0, manaCost: 0 };
-                    }
-                    const cardView = cardsView.get(card.id);
-                    if (!cardView) {
-                        return { id: 0, name: "", amount: 0, manaCost: 0 };
-                    }
-                    const { id, amount } = deckCard;
-                    const { manaCost } = card;
-                    const { name } = cardView;
-                    return { id, name, amount, manaCost };
-                })
-            })),
-            skins: $player.skins,
-            tutorial: $player.tutorial
-        };
-        socket.emit("signin", {
-            accountView,
-            playerView,
-            lobbyView,
-            gameView,
-            token
-        });
+        socket.emit("signin", { ...data, token });
     });
 };
 
 const signupMetamask = (socket, error) => {
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("signupMetamask", async (params) => {
         const { name, address, signature } = params;
         if (name.length < 3) {
@@ -2187,82 +2522,27 @@ const signupMetamask = (socket, error) => {
         if (name.length > 16) {
             return error("Maximum 16 characters.");
         }
-        const $account = await $accounts.findOne({ name });
-        if ($account) {
+        const $player = await $players.findOne({ name });
+        if ($player) {
             return error("Name taken.");
         }
         const recoveredAddress = verifyMessage("signup", signature);
         if (recoveredAddress !== address) {
             return error("Invalid signature.");
         }
-        const [insertAccount, insertPlayer] = await Promise.all([
-            $accounts.insertOne({
-                name,
-                passwordHash: "",
-                address,
-                nonce: 0,
-                avatarId: 0,
-                bannerId: 0,
-                social: {
-                    friends: [],
-                    requests: [],
-                    blocked: []
-                }
-            }),
-            $players.insertOne({
-                socketId: "",
-                name,
-                experience: 0,
-                level: 1,
-                elo: 500,
-                joinedAt: Date.now(),
-                status: PlayerStatus.OFFLINE,
-                queueId: QueueId.NONE,
-                deckId: 0,
-                lobbyId: 0,
-                gameId: 0,
-                gamePopupId: 0,
-                games: {
-                    casual: { won: 0, lost: 0 },
-                    ranked: { won: 0, lost: 0 }
-                },
-                decks: [
-                    { id: 0, klass: 1, name: "Deck 1", cards: [] },
-                    { id: 1, klass: 2, name: "Deck 2", cards: [] },
-                    { id: 2, klass: 3, name: "Deck 3", cards: [] },
-                    { id: 3, klass: 4, name: "Deck 4", cards: [] }
-                ],
-                skins: cards.map((card) => ({ cardId: card.id, skinId: 0 })),
-                tutorial: {
-                    deckBuilder: false,
-                    game: false,
-                    play: false,
-                    inventory: false
-                }
-            })
-        ]);
-        if (!insertAccount.insertedId) {
-            if (insertPlayer.insertedId) {
-                await $players.deleteOne({
-                    _id: insertPlayer.insertedId
-                });
-            }
+        const insertPlayer = await $players.insertOne(playerHelpers.playerTemplate(name, "", address));
+        if (!insertPlayer.insertedId) {
             return error("Error creating account, please try again.");
         }
-        if (!insertPlayer.insertedId) {
-            if (insertAccount.insertedId) {
-                await $accounts.deleteOne({
-                    _id: insertAccount.insertedId
-                });
-            }
-            return error("Error creating player, please try again.");
-        }
-        socket.emit("notification", "Account created successfully.");
+        socket.emit("notification", {
+            color: "success",
+            message: "Account created successfully."
+        });
     });
 };
 
 const signupPassword = (socket, error) => {
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("signupPassword", async (params) => {
         const { name, password } = params;
         if (name.length < 3) {
@@ -2271,74 +2551,19 @@ const signupPassword = (socket, error) => {
         if (name.length > 16) {
             return error("Maximum 16 characters.");
         }
-        const $account = await $accounts.findOne({ name });
-        if ($account) {
+        const $player = await $players.findOne({ name });
+        if ($player) {
             return error("Name taken.");
         }
         const passwordHash = await hash(password, 12);
-        const [insertAccount, insertPlayer] = await Promise.all([
-            $accounts.insertOne({
-                name,
-                passwordHash,
-                address: "",
-                nonce: 0,
-                avatarId: 0,
-                bannerId: 0,
-                social: {
-                    friends: [],
-                    requests: [],
-                    blocked: []
-                }
-            }),
-            $players.insertOne({
-                socketId: "",
-                name,
-                experience: 0,
-                level: 1,
-                elo: 500,
-                joinedAt: Date.now(),
-                status: PlayerStatus.OFFLINE,
-                queueId: QueueId.NONE,
-                deckId: 0,
-                lobbyId: 0,
-                gameId: 0,
-                gamePopupId: 0,
-                games: {
-                    casual: { won: 0, lost: 0 },
-                    ranked: { won: 0, lost: 0 }
-                },
-                decks: [
-                    { id: 0, klass: 1, name: "Deck 1", cards: [] },
-                    { id: 1, klass: 2, name: "Deck 2", cards: [] },
-                    { id: 2, klass: 3, name: "Deck 3", cards: [] },
-                    { id: 3, klass: 4, name: "Deck 4", cards: [] }
-                ],
-                skins: cards.map((card) => ({ cardId: card.id, skinId: 0 })),
-                tutorial: {
-                    deckBuilder: false,
-                    game: false,
-                    play: false,
-                    inventory: false
-                }
-            })
-        ]);
-        if (!insertAccount.insertedId) {
-            if (insertPlayer.insertedId) {
-                await $players.deleteOne({
-                    _id: insertPlayer.insertedId
-                });
-            }
-            return error("Error creating account, please try again.");
-        }
+        const insertPlayer = await $players.insertOne(playerHelpers.playerTemplate(name, passwordHash, ""));
         if (!insertPlayer.insertedId) {
-            if (insertAccount.insertedId) {
-                await $accounts.deleteOne({
-                    _id: insertAccount.insertedId
-                });
-            }
             return error("Error creating player, please try again.");
         }
-        socket.emit("notification", "Account created successfully.");
+        socket.emit("notification", {
+            color: "success",
+            message: "Account created successfully."
+        });
     });
 };
 
@@ -2366,39 +2591,69 @@ const acceptGame = (socket, error) => {
             return error("Game popup not found.");
         }
         const { type, playerA, playerB } = $gamePopup;
-        if (playerA.hasAccepted || playerB.hasAccepted) {
-            const $gamePopupDelete = await $gamePopups.deleteOne({ id });
-            if (!$gamePopupDelete.deletedCount) {
-                return error("Error deleting game popup.");
+        if (playerA.name === $player.name) {
+            if (playerA.hasAccepted) {
+                return error("You already accepted this match.");
             }
-            await gameHelpers.startGame(id, type, playerA.name, playerB.name);
+            if (playerB.hasAccepted) {
+                const $gamePopupDelete = await $gamePopups.deleteOne({ id });
+                if (!$gamePopupDelete.deletedCount) {
+                    return error("Error deleting game popup.");
+                }
+                await gameHelpers.startGame(id, type, playerA.name, playerB.name);
+            }
+            else {
+                const [$gamePopupUpdate, $playerA, $playerB] = await Promise.all([
+                    $gamePopups.updateOne({ id }, {
+                        $set: {
+                            "playerA.hasAccepted": true
+                        }
+                    }),
+                    $players.findOne({
+                        name: playerA.name
+                    }),
+                    $players.findOne({
+                        name: playerB.name
+                    })
+                ]);
+                if (!$gamePopupUpdate.modifiedCount || !$playerA || !$playerB) {
+                    return error("Error fetching players in game popup.");
+                }
+                socket.emit("acceptGame", { who: "player" });
+                server.io.to($playerB.socketId).emit("acceptGame", { who: "opponent" });
+            }
         }
-        else {
-            if (playerA.name === $player.name) {
-                playerA.hasAccepted = true;
+        else if (playerB.name === $player.name) {
+            if (playerB.hasAccepted) {
+                return error("You already accepted this match.");
             }
-            else if (playerB.name === $player.name) {
-                playerB.hasAccepted = true;
+            if (playerA.hasAccepted) {
+                const $gamePopupDelete = await $gamePopups.deleteOne({ id });
+                if (!$gamePopupDelete.deletedCount) {
+                    return error("Error deleting game popup.");
+                }
+                await gameHelpers.startGame(id, type, playerB.name, playerA.name);
             }
-            const [$playerA, $playerB, $gamePopupReplace] = await Promise.all([
-                $players.findOne({
-                    name: playerA.name
-                }),
-                $players.findOne({
-                    name: playerB.name
-                }),
-                $gamePopups.replaceOne({ id }, $gamePopup)
-            ]);
-            if (!$playerA || !$playerB) {
-                return error("Player A in popup not found.");
+            else {
+                const [$gamePopupUpdate, $playerA, $playerB] = await Promise.all([
+                    $gamePopups.updateOne({ id }, {
+                        $set: {
+                            "playerB.hasAccepted": true
+                        }
+                    }),
+                    $players.findOne({
+                        name: playerA.name
+                    }),
+                    $players.findOne({
+                        name: playerB.name
+                    })
+                ]);
+                if (!$gamePopupUpdate.modifiedCount || !$playerA || !$playerB) {
+                    return error("Error fetching players in game popup.");
+                }
+                socket.emit("acceptGame", { who: "player" });
+                server.io.to($playerA.socketId).emit("acceptGame", { who: "opponent" });
             }
-            if (!$playerB) {
-                return error("Player B in popup not found.");
-            }
-            if (!$gamePopupReplace.modifiedCount) {
-                return error("Error replacing game popup.");
-            }
-            server.io.to([$playerA.socketId, $playerB.socketId]).emit("acceptGame");
         }
     });
 };
@@ -2432,7 +2687,7 @@ const closeLobby = (socket, error) => {
                     status: PlayerStatus.ONLINE
                 }
             }),
-            challengee.name && $players.findOneAndUpdate({
+            challengee && $players.findOneAndUpdate({
                 name: challengee.name
             }, {
                 $set: {
@@ -2453,7 +2708,7 @@ const closeLobby = (socket, error) => {
             return error("Error updating challengee.");
         }
         socket.emit("closeLobby");
-        if (challengee.name) {
+        if (challengee) {
             const $challengee = await $players.findOneAndUpdate({
                 name: challengee.name
             }, {
@@ -2474,7 +2729,7 @@ const closeLobby = (socket, error) => {
 
 const createLobby = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players, $lobbies } = mongo;
+    const { $players, $lobbies } = mongo;
     socket.on("createLobby", async () => {
         const $player = await $players.findOne({ socketId });
         if (!$player) {
@@ -2492,20 +2747,12 @@ const createLobby = (socket, error) => {
         if (!playerHelpers.isDeckValid($player.decks[$player.deckId])) {
             return error("Invalid deck.");
         }
-        const { name } = $player;
-        const $account = await $accounts.findOne({ name });
-        if (!$account) {
-            return error("Account not found, try relogging.");
-        }
-        const { avatarId } = $account;
+        const { name, experience, level, elo, avatarId, bannerId, games } = $player;
         const id = randomInt(1, 1000000001);
         const lobby = {
             id,
-            host: { name, avatarId },
-            challengee: {
-                name: "",
-                avatarId: 0
-            }
+            host: { name, experience, level, elo, avatarId, bannerId, games },
+            challengee: undefined
         };
         const [$lobbyInsert, $playerUpdate] = await Promise.all([
             $lobbies.insertOne(lobby),
@@ -2630,45 +2877,20 @@ const finishTutorial = (socket, error) => {
   * This event should then be removed.
 **/
 const getLeaderboards = (socket, error) => {
-    const { $accounts, $players } = mongo;
+    const { $leaderboards } = mongo;
     socket.on("getLeaderboards", async () => {
-        const byLevel = (await $players
-            .find()
-            .limit(100)
-            .sort({
-            level: -1
-        })
-            .toArray()).map(({ name, level }) => ({ name, level, avatarId: 1 }));
-        for (let i = 0; i < byLevel.length; i += 1) {
-            const $account = await $accounts.findOne({ name: byLevel[i].name });
-            if (!$account) {
-                return;
-            }
-            const { avatarId } = $account;
-            byLevel[i].avatarId = avatarId;
+        const $ = await $leaderboards.findOne({});
+        if (!$) {
+            return error("Error fetching leaderboards");
         }
-        const byElo = (await $players
-            .find()
-            .limit(100)
-            .sort({
-            elo: -1
-        })
-            .toArray()).map(({ name, elo }) => ({ name, elo, avatarId: 1 }));
-        for (let i = 0; i < byElo.length; i += 1) {
-            const $account = await $accounts.findOne({ name: byElo[i].name });
-            if (!$account) {
-                return;
-            }
-            const { avatarId } = $account;
-            byElo[i].avatarId = avatarId;
-        }
-        socket.emit("getLeaderboards", { byLevel, byElo });
+        const { level, elo } = $;
+        socket.emit("getLeaderboards", { byLevel: level, byElo: elo });
     });
 };
 
 const joinLobby = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $lobbies, $players } = mongo;
+    const { $lobbies, $players } = mongo;
     socket.on("joinLobby", async (params) => {
         const { id } = params;
         const [$player, $lobby] = await Promise.all([
@@ -2687,22 +2909,17 @@ const joinLobby = (socket, error) => {
         if ($player.gameId) {
             return error("You can't join a lobby while in game.");
         }
-        if ($lobby.challengee.name) {
+        if ($lobby.challengee) {
             return error("Lobby is full.");
         }
         if (!playerHelpers.isDeckValid($player.decks[$player.deckId])) {
             return error("Invalid deck.");
         }
-        const { name } = $player;
-        const $account = await $accounts.findOne({ name });
-        if (!$account) {
-            return error("Eternitas account not found for player.");
-        }
-        const { avatarId } = $account;
+        const { name, experience, level, elo, avatarId, bannerId, games } = $player;
         const [$lobbyUpdate, $playerUpdate, $playerHost] = await Promise.all([
             $lobbies.findOneAndUpdate({ id }, {
                 $set: {
-                    challengee: { name, avatarId }
+                    challengee: { name, experience, level, elo, avatarId, bannerId, games }
                 }
             }, {
                 returnDocument: "after"
@@ -2859,10 +3076,7 @@ const leaveLobby = (socket, error) => {
         const [$lobbyUpdate, $playerUpdate, $playerHost] = await Promise.all([
             $lobbies.updateOne({ id }, {
                 $set: {
-                    challengee: {
-                        name: "",
-                        avatarId: 0
-                    }
+                    challengee: undefined
                 }
             }),
             $players.updateOne({ socketId }, {
@@ -2975,7 +3189,10 @@ const saveDeck = (socket, error) => {
         if (!$playerUpdate.modifiedCount) {
             return error("Error saving deck (Most likely you made no changes to it).");
         }
-        socket.emit("notification", "Deck saved successfully.");
+        socket.emit("notification", {
+            color: "success",
+            message: "Deck saved successfully."
+        });
     });
 };
 
@@ -2999,32 +3216,22 @@ const selectDeck = (socket, error) => {
 
 const selectSkin = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("selectSkin", async (params) => {
-        const $player = await $players.findOne({ socketId });
-        if (!$player) {
-            return error("Player not found.");
-        }
-        const { name } = $player;
-        const $account = await $accounts.findOne({ name });
-        if (!$account) {
-            return error("Account not found.");
-        }
-        const { id } = params;
-        const item = items.find((item) => item.id === id);
-        if (!item || item.type !== 2) { // 2 === skin, make ItemType enum?
-            return error("Selected item isn't a skin.");
-        }
-        const balance = await contracts.skins.balanceOf($account.publicKey, id);
-        if (balance.lte(0)) {
-            return error("You do not own the skin.");
-        }
+        const { cardId, skinId } = params;
+        // if (!item || item.type !== 2) {
+        //   return error("Selected item isn't a skin.");
+        // }
+        // const balance = await contracts.skins.balanceOf($player.address, id);
+        // if (balance.lte(0)) {
+        //   return error("You do not own the skin.");
+        // }
         const $playerUpdate = await $players.updateOne({
             socketId,
-            "skins.cardId": item.cardId
+            "skins.cardId": cardId
         }, {
             $set: {
-                "skins.$": { cardId: item.cardId, skinId: id }
+                "skins.$": { cardId, skinId }
             }
         });
         if (!$playerUpdate.modifiedCount) {
@@ -3032,17 +3239,14 @@ const selectSkin = (socket, error) => {
             // it instead.
             const $playerUpdate2 = await $players.updateOne({ socketId }, {
                 $addToSet: {
-                    skins: { cardId: item.cardId, skinId: id }
+                    skins: { cardId, skinId }
                 }
             });
             if (!$playerUpdate2) {
                 return error("Failed to set the skin.");
             }
         }
-        socket.emit("selectSkin", {
-            cardId: item.cardId,
-            skinId: id
-        });
+        socket.emit("selectSkin", { cardId, skinId });
     });
 };
 
@@ -3102,16 +3306,35 @@ const attackHero = (socket, error) => {
         }
         const { attacker } = params;
         const { $game, player, opponent } = getGameData;
-        const playerMinion = player.minion[attacker];
-        const opponentHero = opponent.hero;
+        const playerMinion = player.field[attacker];
+        const opponentHero = opponent.field.hero;
         const animations = [];
         if (!playerMinion) {
             return;
         }
-        const multiStrikeBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.BLAZE);
+        if (playerMinion.type === CardType.HERO) {
+            return error("Heroes can't attack");
+        }
+        const fields = ["hero", "a", "b", "c", "d"];
+        const selected = fields.find((field) => field === "hero");
+        if (!selected) {
+            return error("Error");
+        }
+        fields.splice(fields.indexOf(selected), 1);
+        for (const field of fields) {
+            const fieldCard = opponent.field[field];
+            if (fieldCard) {
+                const taunt = fieldCard.buffs.find((buff) => buff.id === EffectId.TAUNT);
+                const marksmanship = playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
+                if (taunt && !marksmanship) {
+                    return error("Cannot attack this minion, other has taunt.");
+                }
+            }
+        }
         if (!playerMinion.canAttack) {
-            if (multiStrikeBuff && !multiStrikeBuff.data.hasAtacked) {
-                multiStrikeBuff.data.hasAttacked = true;
+            const blazeBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.BLAZE);
+            if (blazeBuff && !blazeBuff.data.hasAttackedTwice) {
+                blazeBuff.data.hasAttackedTwice = true;
             }
             else {
                 return error("This card can't attack anymore this turn.");
@@ -3120,25 +3343,29 @@ const attackHero = (socket, error) => {
         else {
             playerMinion.canAttack = false;
         }
+        let isAttackNegated = false;
         const { trap } = opponent;
-        if (trap && trap.effect === EffectId.MIRRORS_EDGE) {
+        const elusiveBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
+        if (trap && trap.effect === EffectId.MIRRORS_EDGE && !elusiveBuff) {
             animations.push(...effect.mirrorsEdge({
                 player,
                 playerMinion,
                 opponent,
                 opponentTrap: trap
             }));
-            if (await gameHelpers.isGameOver($game)) {
+            if (await gameHelpers.isGameOver($game, animations)) {
                 return;
             }
+            isAttackNegated = true;
         }
-        if (opponent.trap && opponent.trap.effect === EffectId.RICOCHET) {
+        if (opponent.trap && opponent.trap.effect === EffectId.RICOCHET && !elusiveBuff) {
             animations.push(...effect.ricochet({
                 player,
                 playerMinion,
                 opponent,
                 opponentTrap: opponent.trap
             }));
+            isAttackNegated = true;
         }
         if (trap && trap.effect === EffectId.RETRIBUTION) {
             gameHelpers.effect.retribution({ player, field: attacker });
@@ -3170,13 +3397,30 @@ const attackHero = (socket, error) => {
             effect.rampage({ minion: playerMinion });
         }
         if (playerMinion.health && playerMinion.buffs.find((buff) => buff.id === EffectId.BACKSTAB)) {
-            effect.backstab({ opponent, minion: playerMinion }); // only trigger, handle animation here
+            effect.backstab({ player, opponent, playerMinion, playerMinionField: attacker });
         }
-        opponentHero.health -= playerMinion.damage;
-        if (await gameHelpers.isGameOver($game)) {
+        if (!isAttackNegated) {
+            animations.push({
+                type: "SHAKE",
+                playerA: player.name,
+                playerANumber: 0,
+                playerAField: attacker,
+                playerB: opponent.name,
+                playerBNumber: playerMinion.damage.current,
+                playerBField: "hero"
+            });
+            opponentHero.health.current -= playerMinion.damage.current;
+            animations.push({
+                type: "HEALTH",
+                field: "hero",
+                name: opponent.name,
+                increment: -playerMinion.damage.current
+            });
+        }
+        if (await gameHelpers.isGameOver($game, animations)) {
             return;
         }
-        await gameHelpers.saveGame($game);
+        await gameHelpers.attackMinionSave($game, animations);
     });
 };
 
@@ -3203,30 +3447,40 @@ const attackMinion = (socket, error) => {
         if (!opponentMinion) {
             return error("Opponents minion not found.");
         }
+        // ---------------- TAUNT CHECK ----------------------
         const fields = ["hero", "a", "b", "c", "d"];
         const selected = fields.find((field) => field === attacked);
         if (!selected) {
             return error("Error");
         }
         fields.splice(fields.indexOf(selected), 1);
+        let tauntFields = [];
         for (const field of fields) {
             const fieldCard = opponent.field[field];
             if (fieldCard) {
                 const taunt = fieldCard.buffs.find((buff) => buff.id === EffectId.TAUNT);
-                const marksmanship = playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
-                if (taunt && !marksmanship) {
-                    return error("Cannot attack this minion, other has taunt.");
+                if (taunt) {
+                    tauntFields.push(field);
                 }
             }
         }
+        console.log(!tauntFields.includes(attacked));
+        // tauntFields = [a, c]
+        if (tauntFields.length) {
+            playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
+            if (tauntFields.includes(attacked)) {
+                return error("Cannot attack this minion, other has taunt.");
+            }
+        }
+        // -----------------------------------------------------
         if (opponentMinion.buffs.find((buff) => buff.id === EffectId.STEALTH) &&
             !playerMinion.buffs.find((buff) => buff.id === EffectId.SHADOWSTRIKE)) {
             return error("Can't attack minion with stealth.");
         }
-        const multiStrikeBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.BLAZE);
         if (!playerMinion.canAttack) {
-            if (multiStrikeBuff && !multiStrikeBuff.data.hasAtacked) {
-                multiStrikeBuff.data.hasAttacked = true;
+            const blazeBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.BLAZE);
+            if (blazeBuff && !blazeBuff.data.hasAttackedTwice) {
+                blazeBuff.data.hasAttackedTwice = true;
             }
             else {
                 return error("This card can't attack anymore this turn.");
@@ -3236,15 +3490,16 @@ const attackMinion = (socket, error) => {
             playerMinion.canAttack = false;
         }
         let isAttackNegated = false;
-        if (opponentTrap && opponentTrap.effect === EffectId.MIRRORS_EDGE) {
+        const elusiveBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
+        if (opponentTrap && opponentTrap.effect === EffectId.MIRRORS_EDGE && !elusiveBuff) {
             animations.push(...effect.mirrorsEdge({ player, playerMinion, opponent, opponentTrap }));
-            if (await gameHelpers.isGameOver($game)) {
+            if (await gameHelpers.isGameOver($game, animations)) {
                 return;
             }
             isAttackNegated = true;
         }
-        if (opponentTrap && opponentTrap.effect === EffectId.RICOCHET) {
-            animations.push(...effect.ricochet({ player, playerMinion, opponent, opponentTrap }));
+        if (opponentTrap && opponentTrap.effect === EffectId.RICOCHET && !elusiveBuff) {
+            animations.push(...effect.ricochet({ player, playerMinion, opponent, opponentMinionField: attacked, opponentTrap }));
             isAttackNegated = true;
         }
         if (opponentTrap && opponentTrap.effect === EffectId.FROSTBITE) {
@@ -3277,21 +3532,21 @@ const attackMinion = (socket, error) => {
             }));
         }
         if (opponentTrap && opponentTrap.effect === EffectId.CONSTRICTION) {
-            animations.push(...effect.constriction({ player, playerMinion, opponent, opponentTrap }));
+            animations.push(...effect.constriction({ player, playerMinion, opponent, opponentTrap, playerMinionField: attacker }));
         }
         if (playerMinion.buffs.find((buff) => buff.id === EffectId.POISONOUS_TOUCH)) {
             gameHelpers.insertDebuff(opponentMinion, EffectId.NEUROTOXIN);
         }
         if (playerMinion.buffs.find((buff) => buff.id === EffectId.CORROSIVE_TOUCH)) {
             gameHelpers.effect.corrosiveTouch({ opponent });
-            if (await gameHelpers.isGameOver($game)) {
+            if (await gameHelpers.isGameOver($game, animations)) {
                 return;
             }
         }
         if (playerMinion.buffs.find((buff) => buff.id === EffectId.OVERPOWER)) {
             if (playerMinion.damage > opponentMinion.health) {
-                gameHelpers.effect.overpower({ opponent, damage: playerMinion.damage - opponentMinion.health });
-                if (await gameHelpers.isGameOver($game)) {
+                gameHelpers.effect.overpower({ opponent, damage: playerMinion.damage.current - opponentMinion.health.current });
+                if (await gameHelpers.isGameOver($game, animations)) {
                     return;
                 }
             }
@@ -3301,61 +3556,52 @@ const attackMinion = (socket, error) => {
         }
         if (opponentMinion.buffs.find((buff) => buff.id === EffectId.CORROSIVE_TOUCH)) {
             gameHelpers.effect.corrosiveTouch({ opponent: player });
-            if (await gameHelpers.isGameOver($game)) {
+            if (await gameHelpers.isGameOver($game, animations)) {
                 return;
             }
         }
         if (opponentMinion.buffs.find((buff) => buff.id === EffectId.OVERPOWER)) {
             if (opponentMinion.damage > playerMinion.health) {
-                gameHelpers.effect.overpower({ opponent, damage: opponentMinion.damage - playerMinion.health });
-                if (await gameHelpers.isGameOver($game)) {
+                gameHelpers.effect.overpower({ opponent, damage: opponentMinion.damage.current - playerMinion.health.current });
+                if (await gameHelpers.isGameOver($game, animations)) {
                     return;
                 }
             }
         }
         if (!isAttackNegated) {
-            gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage);
+            // shake should play both animations simultaneously
             animations.push({
-                type: "DAMAGE",
-                field: attacker,
-                damageTaken: opponentMinion.damage,
-                name: player.name
+                type: "SHAKE",
+                playerA: player.name,
+                playerANumber: opponentMinion.damage.current,
+                playerAField: attacker,
+                playerB: opponent.name,
+                playerBNumber: playerMinion.damage.current,
+                playerBField: attacked
             });
-            gameHelpers.deductHealth(opponent, opponentMinion, playerMinion.damage);
-            animations.push({
-                type: "DAMAGE",
-                field: attacked,
-                damageTaken: playerMinion.damage,
-                name: opponent.name
-            });
+            animations.push(...gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage.current, attacker));
+            animations.push(...gameHelpers.deductHealth(opponent, opponentMinion, playerMinion.damage.current, attacked));
         }
-        if (playerMinion.health <= 0 || (playerMinion.health === 1 && opponentMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
-            if (player.trap && player.trap.effect === EffectId.LAST_STAND) {
-                gameHelpers.effect.lastStand({ minion: playerMinion, opponent: player, trap: player.trap });
-            }
+        if (playerMinion.health.current <= 0 || (playerMinion.health.current === 1 && opponentMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
+            if (player.trap && player.trap.effect === EffectId.LAST_STAND) ;
             else {
                 const hasAcidicDeathBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
                 const hasSelfDescturctDebuff = playerMinion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
                 if (player.trap && player.trap.effect === EffectId.REFLECTION) {
                     gameHelpers.effect.reflection({ player, opponent, trap: player.trap });
                 }
-                gameHelpers.moveToGraveyard(player, playerMinion, attacker);
-                animations.push({
-                    type: "DEATH",
-                    field: attacker,
-                    name: player.name
-                });
+                animations.push(...gameHelpers.moveToGraveyard(player, playerMinion, attacker));
                 if (hasSelfDescturctDebuff) {
                     gameHelpers.effect.selfDestruct({ player });
-                    if (await gameHelpers.isGameOver($game)) {
+                    if (await gameHelpers.isGameOver($game, animations)) {
                         return;
                     }
                 }
                 if (hasAcidicDeathBuff) {
                     effect.acidicDeath({ player, opponent });
                 }
-                Object.keys(player.minion).forEach((key) => {
-                    const minion = player.minion[key];
+                Object.keys(player.field).forEach((key) => {
+                    const minion = player.field[key];
                     if (!minion) {
                         return;
                     }
@@ -3368,7 +3614,7 @@ const attackMinion = (socket, error) => {
                             if (!minion) {
                                 return;
                             }
-                            minion.health += 3;
+                            minion.health.current += 3;
                         }
                     }
                 });
@@ -3379,9 +3625,14 @@ const attackMinion = (socket, error) => {
                 effect.rampage({ minion: playerMinion });
             }
         }
-        if (opponentMinion.health <= 0 || (opponentMinion.health === 1 && playerMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
+        if (opponentMinion.health.current <= 0 || (opponentMinion.health.current === 1 && playerMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
             if (opponent.trap && opponent.trap.effect === EffectId.LAST_STAND) {
-                gameHelpers.effect.lastStand({ minion: opponentMinion, opponent, trap: opponent.trap });
+                animations.push(...gameHelpers.effect.lastStand({
+                    opponent,
+                    opponentMinion,
+                    opponentMinionField: attacked,
+                    opponentTrap: opponent.trap
+                }));
             }
             else {
                 const hasAcidicDeathBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
@@ -3389,15 +3640,10 @@ const attackMinion = (socket, error) => {
                 if (opponent.trap && opponent.trap.effect === EffectId.REFLECTION) {
                     gameHelpers.effect.reflection({ player: opponent, opponent: player, trap: opponent.trap });
                 }
-                gameHelpers.moveToGraveyard(opponent, opponentMinion, attacked);
-                animations.push({
-                    type: "DEATH",
-                    field: attacked,
-                    name: opponent.name
-                });
+                animations.push(...gameHelpers.moveToGraveyard(opponent, opponentMinion, attacked));
                 if (hasSelfDescturctDebuff) {
                     gameHelpers.effect.selfDestruct({ player });
-                    if (await gameHelpers.isGameOver($game)) {
+                    if (await gameHelpers.isGameOver($game, animations)) {
                         return;
                     }
                 }
@@ -3405,8 +3651,8 @@ const attackMinion = (socket, error) => {
                     effect.acidicDeath({ player, opponent });
                 }
             }
-            Object.keys(opponent.minion).forEach((key) => {
-                const minion = opponent.minion[key];
+            Object.keys(opponent.field).forEach((key) => {
+                const minion = opponent.field[key];
                 if (!minion) {
                     return;
                 }
@@ -3419,7 +3665,7 @@ const attackMinion = (socket, error) => {
                         if (!minion) {
                             return;
                         }
-                        minion.health += 3;
+                        minion.health.current += 3;
                     }
                 }
             });
@@ -3438,6 +3684,7 @@ const endTurn = (socket, error) => {
     const socketId = socket.id;
     socket.on("endTurn", async () => {
         const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
+        const animations = [];
         if (!getGameData) {
             return error(getGameError);
         }
@@ -3447,22 +3694,29 @@ const endTurn = (socket, error) => {
             return await gameHelpers.endGame($game.id, player.name);
         }
         opponent.hand.push(card);
-        player.field.hero.mana = 10;
+        const manaDelta = 10 - opponent.field.hero.mana.current;
+        player.field.hero.mana.current = 10;
+        animations.push({
+            type: "MANA_CAPACITY",
+            field: "hero",
+            name: opponent.name,
+            increment: manaDelta
+        });
         const playerMinionFields = Object.keys(player.field);
         playerMinionFields.forEach((field) => {
             const minion = player.field[field];
-            if (!minion || minion.type === CardType.HERO) {
+            if (!minion || minion.type === CardType.HERO || field === "hero") {
                 return;
             }
             minion.canAttack = true;
-            gameHelpers.effect.blaze({ minion });
+            animations.push(...gameHelpers.effect.blaze({ player, playerMinion: minion, playerMinionField: field }));
             if (minion.buffs.find((buff) => buff.id === EffectId.REGENERATION)) {
                 gameHelpers.effect.regeneration({ player });
             }
         });
         $game.currentPlayer = opponent.name;
         $game.currentTurn += 1;
-        await gameHelpers.saveGame($game);
+        await gameHelpers.attackMinionSave($game, animations);
     });
 };
 
@@ -3471,14 +3725,15 @@ const playMagic = (socket, error) => {
     const { effect } = gameHelpers;
     socket.on("playMagic", async (params) => {
         const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
+        const animations = [];
         if (!getGameData) {
             return error(getGameError);
         }
         const { gid, field, target } = params;
         const { $game, player, opponent } = getGameData;
-        if (field && opponent.field[field]?.buffs.find((buff) => buff.id === EffectId.ELUSIVE)) {
-            return error("Selected card has Elusive buff.");
-        }
+        // if (field && opponent.field[field]?.buffs.find((buff) => buff.id === EffectId.ELUSIVE)) {
+        //   return error("Selected card has Elusive buff.");
+        // }
         const card = player.hand.find((card) => card.gid === gid);
         if (!card) {
             return error("Card not found in hand.");
@@ -3486,55 +3741,104 @@ const playMagic = (socket, error) => {
         if (card.type !== CardType.MAGIC) {
             return error("Selected card is not Magic.");
         }
-        if (card.manaCost > player.field.hero.mana) {
+        if (card.manaCost.current > player.field.hero.mana.current) {
             return error("Not enough mana.");
         }
-        player.field.hero.mana -= card.manaCost;
+        player.field.hero.mana.current -= card.manaCost.current;
         player.hand.splice(player.hand.indexOf(card), 1);
         player.graveyard.push(card);
+        animations.push({
+            type: "MAGIC",
+            name: player.name,
+            card: card
+        }, {
+            type: "MANA_CAPACITY",
+            field: "hero",
+            name: player.name,
+            increment: -card.manaCost.current
+        });
         const { trap } = opponent;
         if (trap && trap.effect === EffectId.SILENCE) {
-            effect.silence({ opponent, trap });
+            animations.push(...effect.silence({ opponent, trap }));
         }
         else {
             if (card.effect === EffectId.REBIRTH) {
-                const [success, message] = effect.rebirth({ player, target, field });
-                if (!success) {
-                    return error(message);
+                if (!target) {
+                    return error("Target for revival not specified.");
                 }
+                if (!field) {
+                    return error("Field for Special Summon not specified.");
+                }
+                if (field === "hero") {
+                    return error("Cannot Summon on this field.");
+                }
+                if (player.field[field]) {
+                    return error(`Minion already exists on the field ${field}.`);
+                }
+                const toRevive = player.graveyard.find((card) => card.gid === target);
+                if (!toRevive) {
+                    return error("Card with the given ID not found in the graveyard.");
+                }
+                if (toRevive.type !== CardType.MINION) {
+                    return error("Selected card for revival must be a Minion.");
+                }
+                if (toRevive.effect === EffectId.ELUSIVE) {
+                    return error("Rebirth negated.");
+                }
+                animations.push(...effect.rebirth({ player, minion: toRevive, field }));
             }
             if (card.effect === EffectId.DIMINISH) {
-                const [success, message] = effect.diminish({ opponent, field });
-                if (!success) {
-                    return error(message);
+                if (!field) {
+                    return error("Field for Effect not specified.");
                 }
+                if (field === "hero") {
+                    return error("Cannot Summon on this field.");
+                }
+                const card = opponent.field[field];
+                if (!card) {
+                    return error(`Minion doesn't exist on the field ${field}.`);
+                }
+                const elusive = card.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
+                if (elusive) {
+                    return error("Diminish negated.");
+                }
+                animations.push(...effect.diminish({
+                    opponent,
+                    opponentMinion: card,
+                    opponentMinionField: field
+                }));
             }
             if (card.effect === EffectId.RELOAD) {
-                effect.reload({ player });
+                const drawnCard = player.deck.pop();
+                if (!drawnCard) {
+                    return error("You have no cards remaining to draw.");
+                }
+                effect.reload({ player, drawnCard });
             }
             if (card.effect === EffectId.VALOR) {
-                const [success, message] = effect.valor({ opponent });
-                if (!success) {
-                    return error(message);
-                }
-                else {
-                    if (await gameHelpers.isGameOver($game)) {
-                        return;
-                    }
+                animations.push(...effect.valor({ player, opponent }));
+                if (await gameHelpers.isGameOver($game, animations)) {
+                    return;
                 }
             }
             if (card.effect === EffectId.SHELL) {
-                const [success, message] = effect.shell({ player });
-                if (!success) {
-                    return error(message);
-                }
+                animations.push(...effect.shell({ player }));
             }
             if (card.effect === EffectId.FORTITUDE) {
-                const [success, message] = effect.fortitude({ player, field });
-                if (!success) {
-                    return error(message);
+                if (!field) {
+                    return error("Field not specified.");
                 }
+                if (field === "hero") {
+                    return error("Hero not allowed.");
+                }
+                const playerMinion = player.field[field];
+                if (!playerMinion) {
+                    return error(`No minion on the ${field} field.`);
+                }
+                const playerMinionField = field;
+                animations.push(...effect.fortitude({ player, playerMinion, playerMinionField }));
             }
+            // IN DEVELOPMENT!
             if (card.effect === EffectId.ELECTRO_SHOCK) {
                 const [success, message] = effect.electroShock({ player, opponent });
                 if (!success) {
@@ -3595,7 +3899,7 @@ const playMagic = (socket, error) => {
             player: player.name,
             magicId: card.id
         });
-        await gameHelpers.saveGame($game);
+        await gameHelpers.attackMinionSave($game, animations);
     });
 };
 
@@ -3603,6 +3907,7 @@ const playMinion = (socket, error) => {
     const socketId = socket.id;
     const { effect } = gameHelpers;
     socket.on("playMinion", async (params) => {
+        const animations = [];
         const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
         if (!getGameData) {
             return error(getGameError);
@@ -3619,16 +3924,28 @@ const playMinion = (socket, error) => {
         if (card.type !== CardType.MINION) {
             return error("Selected card is not Minion.");
         }
-        if (card.manaCost > player.hero.mana) {
+        if (card.manaCost.current > player.field.hero.mana.current) {
             return error("Not enough mana.");
         }
-        player.field.hero.mana -= card.manaCost;
+        player.field.hero.mana.current -= card.manaCost.current;
         player.field[field] = card;
         const minion = player.field[field];
         if (!minion) {
             return error("Error summoning card.");
         }
         player.hand.splice(player.hand.indexOf(card), 1);
+        animations.push({
+            type: "SUMMON",
+            name: player.name,
+            field,
+            minion,
+            necromancyFixPositive: false
+        }, {
+            type: "MANA_CAPACITY",
+            increment: -minion.manaCost.current,
+            field: "hero",
+            name: player.name
+        });
         const { trap } = opponent;
         const isElusive = minion.effect === EffectId.ELUSIVE;
         // Step 1: Insert buffs / debuffs
@@ -3636,29 +3953,62 @@ const playMinion = (socket, error) => {
         // Step 3: Trigger on summon effects
         // [1] INSERT BUFFS / DEBUFFS
         switch (minion.effect) {
-            // Neutral
-            case EffectId.BLAZE:
+            case EffectId.BLAZE: // Neutral
                 const hasAttackedTwice = true;
                 gameHelpers.insertBuff(minion, EffectId.BLAZE, { hasAttackedTwice });
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    field,
+                    name: player.name,
+                    text: "BLAZE"
+                });
                 break;
             case EffectId.ELUSIVE:
                 gameHelpers.insertBuff(minion, EffectId.ELUSIVE);
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    field,
+                    name: player.name,
+                    text: "ELUSIVE"
+                });
                 break;
             case EffectId.REVENGE:
                 gameHelpers.insertBuff(minion, EffectId.REVENGE);
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    field,
+                    name: player.name,
+                    text: "REVENGE"
+                });
                 break;
-            // Solid
-            case EffectId.UNITY:
+            case EffectId.UNITY: // Solid
                 gameHelpers.insertBuff(minion, EffectId.UNITY);
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    field,
+                    name: player.name,
+                    text: "UNITY"
+                });
                 break;
             case EffectId.UNBREAKABLE:
                 gameHelpers.insertBuff(minion, EffectId.UNBREAKABLE);
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    field,
+                    name: player.name,
+                    text: "UNBREAKABLE"
+                });
                 break;
             case EffectId.PROTECTOR:
                 gameHelpers.insertBuff(minion, EffectId.TAUNT);
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    field,
+                    name: player.name,
+                    text: "TAUNT"
+                });
                 break;
-            // ---------- [ L I Q U I D ] ----------
-            case EffectId.RISING_FURY:
+            case EffectId.RISING_FURY: // Liquid
                 gameHelpers.insertBuff(minion, EffectId.RISING_FURY);
                 break;
             case EffectId.REGENERATION:
@@ -3713,10 +4063,16 @@ const playMinion = (socket, error) => {
         if (trap && !isElusive) {
             switch (trap.effect) {
                 case EffectId.SMITE:
-                    effect.smite({ player, opponent, minion, trap, field });
+                    animations.push(...effect.smite({ player, opponent, minion, trap, field }));
                     break;
                 case EffectId.BANISH:
-                    effect.banish({ player, opponent, minion, trap, field });
+                    effect.banish({
+                        player,
+                        opponent,
+                        playerMinion: minion,
+                        opponentTrap: trap,
+                        playerMinionField: field
+                    });
                     break;
                 case EffectId.POISONED_GROUND:
                     effect.poisonedGround({ player: opponent, minion, trap });
@@ -3726,25 +4082,44 @@ const playMinion = (socket, error) => {
         else {
             // [3] TRIGGER ON SUMMON EFFECTS
             switch (minion.effect) {
-                // ---------- [ N E U T R A L ] ----------
-                case EffectId.SHADOW_SURGE:
-                    effect.shadowSurge({ minion });
+                case EffectId.SHADOW_SURGE: // Neutral
+                    animations.push(...effect.shadowSurge.onNormalSummon({
+                        player,
+                        playerMinion: minion,
+                        playerMinionField: field
+                    }));
                     break;
                 case EffectId.QUICK_SHOT:
-                    effect.quickShot({ opponent });
+                    animations.push(...effect.quickShot({ opponent }));
                     break;
                 case EffectId.NECROMANCY:
-                    effect.necromancy({ minion, isPositive: false });
+                    animations.push(...effect.necromancy({
+                        player,
+                        playerMinion: minion,
+                        playerMinionField: field,
+                        isPositive: false
+                    }));
                     break;
-                // ---------- [ S O L I D ] ----------
-                case EffectId.GLORY:
-                    effect.glory({ opponent, minion });
+                case EffectId.GLORY: // Solid
+                    animations.push(...effect.glory({
+                        player,
+                        opponent,
+                        minion,
+                        playerMinionField: field,
+                    }));
                     break;
                 case EffectId.SPELLWEAVE:
-                    effect.spellweave({ player, minion });
+                    animations.push(...effect.spellweave({
+                        player,
+                        playerMinion: minion,
+                        playerMinionField: field
+                    }));
                     break;
                 case EffectId.SHIELDWALL:
-                    effect.shieldwall({ player, field });
+                    animations.push(...effect.shieldwall({
+                        player,
+                        playerMinionField: field
+                    }));
                     break;
                 // ---------- [ G A S ] ----------
                 case EffectId.TOXIC_SPRAY:
@@ -3753,8 +4128,6 @@ const playMinion = (socket, error) => {
                 case EffectId.TOXIC_GAS:
                     effect.toxicGas({ opponent });
                     break;
-                default:
-                    return error("Effect not found.");
             }
         }
         $game.gameLogs.push({
@@ -3763,7 +4136,8 @@ const playMinion = (socket, error) => {
             player: player.name,
             minionId: minion.id
         });
-        await gameHelpers.saveGame($game);
+        // await gameHelpers.saveGame($game, animations);
+        await gameHelpers.attackMinionSave($game, animations);
     });
 };
 
@@ -3771,6 +4145,7 @@ const playTrap = (socket, error) => {
     const socketId = socket.id;
     socket.on("playTrap", async (params) => {
         const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
+        const animations = [];
         if (!getGameData) {
             return error(getGameError);
         }
@@ -3787,14 +4162,18 @@ const playTrap = (socket, error) => {
         if (card.type !== CardType.TRAP) {
             return error("Selected card is not Trap.");
         }
-        if (card.manaCost > player.field.hero.mana) {
+        if (card.manaCost.current > player.field.hero.mana.current) {
             return error("Not enough mana.");
         }
-        player.field.hero.mana -= card.manaCost;
+        player.field.hero.mana.current -= card.manaCost.current;
         hand.splice(hand.indexOf(card), 1);
         player.trap = card;
-        socket.emit("playTrap", { name });
-        await gameHelpers.saveGame($game);
+        animations.push({
+            type: "TRAP_SET",
+            name
+        });
+        // socket.emit("playTrap", {name});
+        await gameHelpers.attackMinionSave($game, animations);
     });
 };
 
@@ -3809,69 +4188,68 @@ const game = [
 
 const acceptFriend = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $chats, $players } = mongo;
+    const { $chats, $players } = mongo;
     socket.on("acceptFriend", async (params) => {
         const { name } = params;
-        const [$playerSender, $playerReceiver] = await Promise.all([
-            $players.findOne({ socketId }),
-            $players.findOne({ name })
-        ]);
-        if (!$playerSender) {
-            return error("Player sender not found.");
+        const $playerSenderUpdate = await $players.findOneAndUpdate({ socketId }, {
+            $pull: {
+                "social.requests": name
+            },
+            $push: {
+                "social.friends": name
+            }
+        }, {
+            returnDocument: "after"
+        });
+        if (!$playerSenderUpdate) {
+            return error("Error updating sender.");
         }
-        if (!$playerReceiver) {
-            return error("Player receiver not found.");
+        const $playerReceiverUpdate = await $players.findOneAndUpdate({ name }, {
+            $push: {
+                "social.friends": $playerSenderUpdate.name
+            }
+        }, {
+            returnDocument: "after"
+        });
+        if (!$playerReceiverUpdate) {
+            return error("Error updating receiver.");
         }
-        const [$accountSender, $accountReceiver, $chatInsert] = await Promise.all([
-            $accounts.findOneAndUpdate({
-                name: $playerSender.name
-            }, {
-                $pull: {
-                    "social.requests": name
-                },
-                $push: {
-                    "social.friends": name
-                }
-            }, {
-                returnDocument: "after"
-            }),
-            $accounts.findOneAndUpdate({ name }, {
-                $push: {
-                    "social.friends": $playerSender.name
-                }
-            }, {
-                returnDocument: "after"
-            }),
-            $chats.insertOne({
-                players: [$playerSender.name, $playerReceiver.name],
-                messages: []
-            })
-        ]);
-        if (!$accountSender) {
-            return error("Account sender not found.");
-        }
-        if (!$accountReceiver) {
-            return error("Account receiver not found.");
-        }
+        const $chatInsert = await $chats.insertOne({
+            players: [$playerSenderUpdate.name, $playerReceiverUpdate.name],
+            lastSender: $playerSenderUpdate.name,
+            unseen: 0,
+            messages: []
+        });
         if (!$chatInsert.insertedId) {
-            return error("Failed to insert chat.");
+            return error("Error inserting chat.");
         }
         socket.emit("acceptFriendSender", {
-            name: $playerReceiver.name,
-            avatarId: $accountReceiver.avatarId,
-            status: $playerReceiver.status
+            name: $playerReceiverUpdate.name,
+            avatarId: $playerReceiverUpdate.avatarId,
+            bannerId: $playerReceiverUpdate.bannerId,
+            experience: $playerReceiverUpdate.experience,
+            level: $playerReceiverUpdate.level,
+            elo: $playerReceiverUpdate.elo,
+            status: $playerReceiverUpdate.status,
+            games: $playerReceiverUpdate.games,
+            lastSender: $playerSenderUpdate.name
         });
-        server.io.to($playerReceiver.socketId).emit("acceptFriendReceiver", {
-            name: $playerSender.name,
-            avatarId: $accountSender.avatarId,
-            status: $playerSender.status
+        server.io.to($playerReceiverUpdate.socketId).emit("acceptFriendReceiver", {
+            name: $playerSenderUpdate.name,
+            avatarId: $playerSenderUpdate.avatarId,
+            bannerId: $playerSenderUpdate.bannerId,
+            experience: $playerSenderUpdate.experience,
+            level: $playerSenderUpdate.level,
+            elo: $playerSenderUpdate.elo,
+            status: $playerSenderUpdate.status,
+            games: $playerSenderUpdate.games,
         });
     });
 };
 
 const addFriend = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("addFriend", async (params) => {
         const { name } = params;
         const [$playerSender, $playerReceiver] = await Promise.all([
@@ -3884,130 +4262,141 @@ const addFriend = (socket, error) => {
         if (!$playerReceiver) {
             return error("Player receiver not found.");
         }
-        const [$accountSender, $accountReceiver] = await Promise.all([
-            $accounts.findOne({ name: $playerSender.name }),
-            $accounts.findOne({ name: $playerReceiver.name })
-        ]);
-        if (!$accountSender) {
-            return error("Account sender not found.");
-        }
-        if (!$accountReceiver) {
-            return error("Account receiver not found.");
-        }
-        if ($accountSender.name === name) {
+        if ($playerSender.name === name) {
             return error("You can't add yourself as a friend.");
         }
-        if ($accountReceiver.social.blocked.includes($accountSender.name)) {
+        if ($playerReceiver.social.blocked.includes($playerSender.name)) {
             return error("This player has blocked you.");
         }
-        if ($accountSender.social.blocked.includes(name)) {
+        if ($playerSender.social.blocked.includes(name)) {
             return error("You have blocked this player.");
         }
-        if ($accountReceiver.social.requests.includes($accountSender.name)) {
+        if ($playerReceiver.social.requests.includes($playerSender.name)) {
             return error("You have already sent the request to this player.");
         }
-        if ($accountSender.social.requests.includes(name)) {
+        if ($playerSender.social.requests.includes(name)) {
             return error("This player has already sent you the request.");
         }
-        if ($accountSender.social.friends.includes(name)) {
+        if ($playerSender.social.friends.includes(name)) {
             return error("This player is already your friend.");
         }
-        const $playerUpdate = await $accounts.updateOne({ name }, {
+        const $playerUpdate = await $players.updateOne({ name }, {
             $push: {
-                "social.requests": $accountSender.name
+                "social.requests": $playerSender.name
             }
         });
         if (!$playerUpdate.modifiedCount) {
             return error("Error updating player.");
         }
-        socket.emit("notification", "Friend request sent.");
+        socket.emit("notification", {
+            color: "success",
+            message: "Friend request sent."
+        });
         server.io.to($playerReceiver.socketId).emit("addFriend", {
-            name: $accountSender.name
+            name: $playerSender.name
         });
     });
 };
 
 const blockFriend = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $chats, $players } = mongo;
+    const { $chats, $players } = mongo;
     socket.on("blockFriend", async (params) => {
         const { name } = params;
-        const [$playerSender, $playerReceiver] = await Promise.all([
-            $players.findOne({ socketId }),
-            $players.findOne({ name })
-        ]);
-        if (!$playerSender) {
-            return error("Player sender not found.");
+        const $playerSenderUpdate = await $players.findOneAndUpdate({ socketId }, {
+            $pull: {
+                "social.friends": name
+            },
+            $push: {
+                "social.blocked": name
+            }
+        });
+        if (!$playerSenderUpdate) {
+            return error("Sender not found.");
         }
-        if (!$playerReceiver) {
-            return error("Player receiver not found.");
+        const $playerReceiverUpdate = await $players.findOneAndUpdate({ name }, {
+            $pull: {
+                "social.friends": $playerSenderUpdate.name
+            }
+        });
+        if (!$playerReceiverUpdate) {
+            return error("Receiver not found.");
         }
-        const [$accountSenderUpdate, $accountReceiverUpdate, $chatDelete] = await Promise.all([
-            $accounts.updateOne({
-                name: $playerSender.name
-            }, {
-                $pull: {
-                    "social.friends": $playerReceiver.name
-                },
-                $push: {
-                    "social.blocked": $playerReceiver.name
-                }
-            }),
-            $accounts.updateOne({
-                name: $playerReceiver.name
-            }, {
-                $pull: {
-                    "social.friends": $playerSender.name
-                }
-            }),
-            $chats.deleteOne({
-                players: {
-                    $all: [$playerReceiver.name, $playerSender.name]
-                }
-            })
-        ]);
-        if (!$accountSenderUpdate.modifiedCount) {
-            return error("Account sender not found.");
-        }
-        if (!$accountReceiverUpdate.modifiedCount) {
-            return error("Account receiver not found.");
-        }
+        const $chatDelete = await $chats.deleteOne({
+            players: {
+                $all: [$playerSenderUpdate.name, name]
+            }
+        });
         if (!$chatDelete.deletedCount) {
-            return error("Failed to delete chat.");
+            return error("Error deleting chat.");
         }
         socket.emit("blockFriendSender", { name });
-        server.io.to($playerReceiver.socketId).emit("blockFriendReceiver", {
-            name: $playerSender.username
+        server.io.to($playerReceiverUpdate.socketId).emit("blockFriendReceiver", {
+            name: $playerSenderUpdate.name
         });
     });
 };
 
 const declineFriend = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("declineFriend", async (params) => {
         const { name } = params;
         const $player = await $players.findOne({ socketId });
         if (!$player) {
             return error("Player not found, try relogging.");
         }
-        const $accountUpdate = await $accounts.updateOne({
+        const $playerUpdate = await $players.updateOne({
             name: $player.name
         }, {
             $pull: {
                 "social.requests": name
             }
         });
-        if (!$accountUpdate.modifiedCount) {
+        if (!$playerUpdate.modifiedCount) {
             return error("Failed to update account.");
         }
         socket.emit("declineFriend", { name });
     });
 };
 
+const readChatMessages = (socket, error) => {
+    const socketId = socket.id;
+    const { $chats, $players } = mongo;
+    socket.on("readChatMessages", async (params) => {
+        const { name } = params;
+        const [$playerSender, $playerReceiver] = await Promise.all([
+            $players.findOne({ socketId }),
+            $players.findOne({ name })
+        ]);
+        if (!$playerSender) {
+            return error("Player not found.");
+        }
+        if (!$playerReceiver) {
+            return error("Receiver not found.");
+        }
+        const $chatUpdate = await $chats.updateOne({
+            players: {
+                $all: [$playerSender.name, name]
+            }
+        }, {
+            $set: {
+                unseen: 0
+            }
+        });
+        if (!$chatUpdate) {
+            return error("Error updating chat.");
+        }
+        socket.emit("readChatMessages", { name });
+        server.io.to($playerReceiver.socketId).emit("readChatMessages", {
+            name: $playerSender.name
+        });
+    });
+};
+
 const removeFriend = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $chats, $players } = mongo;
+    const { $chats, $players } = mongo;
     socket.on("removeFriend", async (params) => {
         const { name } = params;
         const [$playerSender, $playerReceiver] = await Promise.all([
@@ -4020,8 +4409,8 @@ const removeFriend = (socket, error) => {
         if (!$playerReceiver) {
             return error("Player receiver not found.");
         }
-        const [$accountSenderUpdate, $accountReceiverUpdate, $chatDelete] = await Promise.all([
-            $accounts.findOneAndUpdate({
+        const [$playerSenderUpdate, $playerReceiverUpdate, $chatDelete] = await Promise.all([
+            $players.findOneAndUpdate({
                 name: $playerSender.name
             }, {
                 $pull: {
@@ -4030,7 +4419,7 @@ const removeFriend = (socket, error) => {
             }, {
                 returnDocument: "after"
             }),
-            $accounts.findOneAndUpdate({ name }, {
+            $players.findOneAndUpdate({ name }, {
                 $pull: {
                     "social.friends": $playerSender.name
                 }
@@ -4043,10 +4432,10 @@ const removeFriend = (socket, error) => {
                 }
             })
         ]);
-        if (!$accountSenderUpdate) {
+        if (!$playerSenderUpdate) {
             return error("Account sender not found.");
         }
-        if (!$accountReceiverUpdate) {
+        if (!$playerReceiverUpdate) {
             return error("Account receiver not found.");
         }
         if (!$chatDelete.deletedCount) {
@@ -4054,17 +4443,19 @@ const removeFriend = (socket, error) => {
         }
         socket.emit("removeFriendSender", { name });
         server.io.to($playerReceiver.socketId).emit("removeFriendReceiver", {
-            name: $accountSenderUpdate.name
+            name: $playerSender.name
         });
     });
 };
 
 const sendChatMessage = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players, $chats } = mongo;
-    const { io } = server;
+    const { $players, $chats } = mongo;
     socket.on("sendChatMessage", async (params) => {
         const { receiver, text } = params;
+        if (text.length > 256) {
+            return error("Message too long.");
+        }
         const [$playerSender, $playerReceiver] = await Promise.all([
             $players.findOne({ socketId }),
             $players.findOne({
@@ -4077,112 +4468,139 @@ const sendChatMessage = (socket, error) => {
         if (!$playerReceiver) {
             return error("Player receiver not found, try relogging.");
         }
-        const $account = await $accounts.findOne({
-            name: $playerSender.name
-        });
-        if (!$account) {
-            return error("Account not found.");
-        }
-        if (!$account.social.friends.includes(receiver)) {
+        if (!$playerSender.social.friends.includes(receiver)) {
             return error("This user isn't your friend.");
         }
-        const date = new Date();
-        const $chatUpdate = await $chats.updateOne({
+        const $chat = await $chats.findOne({
             players: {
                 $all: [$playerSender.name, receiver]
             }
-        }, {
-            $push: {
-                messages: {
-                    name: $playerSender.name,
-                    text,
-                    date
-                }
-            } // pop first if length > 100!
         });
-        if (!$chatUpdate.modifiedCount) {
+        if (!$chat) {
+            return error("Chat not found.");
+        }
+        const date = Date.now();
+        if ($chat.lastSender === $playerSender.name) {
+            $chat.unseen += 1;
+        }
+        else {
+            $chat.lastSender = $playerSender.name;
+            $chat.unseen = 1;
+        }
+        $chat.messages.push({
+            name: $playerSender.name,
+            text,
+            date
+        });
+        if ($chat.messages.length > 100) {
+            $chat.messages.shift();
+        }
+        const $chatReplace = await $chats.replaceOne({
+            players: {
+                $all: [$playerSender.name, receiver]
+            }
+        }, $chat);
+        if (!$chatReplace.modifiedCount) {
             return error("Error updating chat.");
         }
-        socket.emit("sendChatMessageSender", {
-            sender: $playerSender.name,
-            receiver,
-            text,
-            date
-        });
-        io.to($playerReceiver.socketId).emit("sendChatMessageReceiver", {
-            sender: $playerSender.name,
-            text,
-            date
-        });
+        const sender = $playerSender.name;
+        socket.emit("sendChatMessageSender", { sender, receiver, text, date });
+        server
+            .io
+            .to($playerReceiver.socketId)
+            .emit("sendChatMessageReceiver", { sender, text, date });
     });
 };
 
 const setAvatar = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("setAvatar", async (params) => {
         const { avatarId } = params;
-        if (avatarId < 0 || avatarId > 4) {
+        if (avatarId < 1000 || avatarId > 1999) {
             return error("Invalid avatar.");
         }
         const $player = await $players.findOne({ socketId });
         if (!$player) {
-            return error("Player not found, try relogging.");
+            return error("Player not found.");
         }
-        const $accountUpdate = await $accounts.findOneAndUpdate({
-            name: $player.name
-        }, {
+        if (avatarId === 1001 && $player.elo < 250) {
+            return error("Can't select this avatar.");
+        }
+        if (avatarId === 1002 && $player.elo < 500) {
+            return error("Can't select this avatar.");
+        }
+        if (avatarId === 1003 && $player.elo < 750) {
+            return error("Can't select this avatar.");
+        }
+        const $playerUpdate = await $players.findOneAndUpdate({ socketId }, {
             $set: { avatarId }
         }, {
             returnDocument: "after"
         });
-        if (!$accountUpdate) {
-            return error("Failed to update account.");
+        if (!$playerUpdate) {
+            return error("Failed to update player.");
         }
-        const { name, social } = $accountUpdate;
+        const { name, social } = $playerUpdate;
         const socketIds = await playerHelpers.getSocketIds(social.friends);
-        socket.emit("setAvatarSender", { avatarId });
-        server.io.to(socketIds).emit("setAvatarReceiver", { name, avatarId });
+        socket.emit("updatePlayer", { avatarId });
+        server.io.to(socketIds).emit("updateFriend", { name, avatarId });
+    });
+};
+
+const setBanner = (socket, error) => {
+    const socketId = socket.id;
+    const { $players } = mongo;
+    socket.on("setBanner", async (params) => {
+        const { bannerId } = params;
+        if (bannerId < 2000 || bannerId > 2999) {
+            return error("Invalid banner.");
+        }
+        // check whether player owns the avatar here!
+        const $playerUpdate = await $players.findOneAndUpdate({ socketId }, {
+            $set: { bannerId }
+        }, {
+            returnDocument: "after"
+        });
+        if (!$playerUpdate) {
+            return error("Failed to update player.");
+        }
+        const { name, social } = $playerUpdate;
+        const socketIds = await playerHelpers.getSocketIds(social.friends);
+        socket.emit("updatePlayer", { bannerId });
+        server.io.to(socketIds).emit("updateFriend", { name, bannerId });
     });
 };
 
 const unblockFriend = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("unblockFriend", async (params) => {
         const { name } = params;
-        const $player = await $players.findOne({ socketId });
-        if (!$player) {
-            return error("Player not found, try relogging.");
-        }
-        const $accountUpdate = await $accounts.updateOne({ name: $player.name }, {
+        const $playerUpdate = await $players.updateOne({ socketId }, {
             $pull: {
                 "social.blocked": name
             }
         });
-        if (!$accountUpdate.modifiedCount) {
-            return error("Failed to update account.");
+        if (!$playerUpdate.modifiedCount) {
+            return error("Failed to update player.");
         }
         socket.emit("unblockFriend", { name });
     });
 };
 
-const updateStatus = (socket, error) => {
+const updateFriend = (socket, error) => {
     const socketId = socket.id;
-    const { $accounts, $players } = mongo;
+    const { $players } = mongo;
     socket.on("updateFriend", async () => {
         const $player = await $players.findOne({ socketId });
         if (!$player) {
             return error("Player not found.");
         }
-        const $account = await $accounts.findOne({ name: $player.name });
-        if (!$account) {
-            return error("Player account not found.");
-        }
-        const { name, status } = $player;
-        const socketIds = await playerHelpers.getSocketIds($account.social.friends);
-        if (socketIds.length) {
-            server.io.to(socketIds).emit("updateFriend", { name, status });
+        const { name, avatarId, bannerId, elo, level, experience, status, games } = $player;
+        const friends = await playerHelpers.getSocketIds($player.social.friends);
+        if (friends.length) {
+            server.io.to(friends).emit("updateFriend", { name, avatarId, bannerId, elo, level, experience, status, games });
         }
     });
 };
@@ -4192,11 +4610,13 @@ const sidenav = [
     addFriend,
     blockFriend,
     declineFriend,
+    readChatMessages,
     removeFriend,
     sendChatMessage,
     setAvatar,
+    setBanner,
     unblockFriend,
-    updateStatus
+    updateFriend
 ];
 
 const requests = [...auth, ...client, ...game, ...sidenav];
@@ -4207,79 +4627,142 @@ process.on("unhandledRejection", (reason, promise) => {
 process.on("uncaughtException", (error, origin) => {
     console.log(`Uncaught Exception: ${error}`);
 });
-// maybe remove all rankedQueuePlayers, casualQueuePlayers, and gamePopups
-// when restarting the server?
-// put these ethereum events in separate files?
-contracts.game.on("ListItem", async (seller, listingId, skinId, amount, price) => {
-    const $account = await mongo.$accounts.findOne({
-        publicKey: seller.toLowerCase()
-    });
-    if (!$account) {
-        console.log("Item seller account not found, listing anyway...");
-    }
-    await mongo.$marketItems.insertOne({
-        sellerName: $account ? $account.name : "Not a player",
-        sellerAddress: seller.toLowerCase(),
-        listingId: listingId.toString(),
-        skinId: skinId.toString(),
-        amount: amount.toString(),
-        price: price.toString()
-    });
-});
-contracts.game.on("CancelItem", async (listingId) => {
-    const $marketItemDelete = await mongo.$marketItems.deleteOne({
-        listingId: listingId.toString()
-    });
-    if (!$marketItemDelete) {
-        console.log(`Error deleting item ${listingId} from market`);
-    }
-});
-// contracts.game.on("stake", async () => {
-//   const accounts = await mongo.accounts.find().toArray();
-//   for (const account of accounts) {
-//     if (!account.publicKey) {
-//       return "Metamask account not binded, can't receive rewards.";
-//     }
-//     const total = await contracts.game.total();
-//     const playerChain = await contracts.game.players(account.publicKey);
-//     const rewardPerStaked = (total.rewards.pool * (10 ** 18)) / total.staked(1);
-//     const playerReward = (player.staked / (10 ** DECIMALS)) * rewardPerStaked;
-//     await contracts.game.distributeRewards(account.publicKey);
-//   }
-// });
-contracts.game.on("BuyItem", async (listingId, amount) => {
-    const $item = await mongo.$marketItems.findOne({
-        listingId: listingId.toString()
-    });
-    if (!$item) {
-        return;
-    }
-    // if (BigInt($item.amount) - amount < 0n) {
-    //   await mongo.marketItems.deleteOne({
-    //     listingId: listingId.toString()
-    //   });
-    // } else {
-    //   await mongo.marketItems.replaceOne({
-    //     listingId: listingId.toString()
-    //   }, {
-    //     ...$item,
-    //     amount: utils.formatUnits($item.amount.sub(amount), 0)
-    //   });
-    // }
-});
+const cleanup = async () => {
+    // remove all rankedQueuePlayers, casualQueuePlayers, and gamePopups when
+    // restarting the server?
+};
+await cleanup();
 server.io.on("connection", (socket) => {
     const error = (message) => {
-        socket.emit("notification", message);
+        socket.emit("notification", {
+            color: "warn",
+            message
+        });
         console.error(message);
     };
-    // put this in separate request file.
-    socket.on("getMarketItems", async () => {
-        const items = await mongo.$marketItems.find().limit(100).toArray();
-        socket.emit("getMarketItems", { items });
+    // for token transfers, wallets already implement sending to address,
+    // this allows players to send to "username"
+    socket.on("getAddress", async ({ name }) => {
+        const $player = await mongo.$players.findOne({ name });
+        if (!$player) {
+            return error("Player not found.");
+        }
+        if (!$player.address) {
+            return error("This player hasn't connected an address yet.");
+        }
+        socket.emit("getAddress", { address: $player.address });
+    });
+    socket.on("claimRewards", async () => {
+        const $player = await mongo.$players.findOne({ socketId: socket.id });
+        if (!$player) {
+            return error("Player not found.");
+        }
+        if (!$player.address) {
+            return error("Can't claim, address not set.");
+        }
+        if (BigInt($player.rewards.ecr) < 1 && BigInt($player.rewards.ees) < 1) {
+            return error("No rewards to claim");
+        }
+        const tx = await contracts.somGame.claimRewards($player.address, BigInt($player.rewards.ees), BigInt($player.rewards.ecr)).catch(console.log);
+        if (!tx) {
+            return error("Couldn't push tx");
+        }
+        const fin = await tx.wait();
+        if (!fin) {
+            return error("Error pushing tx");
+        }
+        await mongo.$players.updateOne({ socketId: socket.id }, {
+            $set: {
+                "rewards.ees": "0",
+                "rewards.ecr": "0"
+            }
+        });
+        socket.emit("notification", { color: "success", message: "Claimed rewards." });
     });
     requests.forEach((request) => {
         request(socket, error);
     });
 });
 server.http.listen(process.env.PORT || 4201);
+schedule("*/10 * * * *", async () => {
+    for await (let $player of mongo.$players.find()) {
+        if (!$player.tasks.daily && $player.tasks.dailyAlternative) {
+            $player.tasks.weekly = 0;
+        }
+        $player.tasks.daily = false;
+        $player.tasks.dailyAlternative = 0;
+        if ($player.elo > 250) {
+            $player.elo -= 1;
+        }
+        if ($player.elo > 249) { // silver
+            $player.rewards.ees = `${BigInt($player.rewards.ees) + 1n * 10n ** 18n}`;
+        }
+        if ($player.elo > 499) { // gold
+            $player.rewards.ees = `${BigInt($player.rewards.ees) + 3n * 10n ** 18n}`;
+        }
+        if ($player.elo > 749) { // master
+            $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
+        }
+        await mongo.$players.replaceOne({ name: $player.name }, $player);
+    }
+    const POW = 10n ** 18n;
+    let deployTimestamp = await contracts.somGame.deployTimestamp() * 1000n;
+    const REWARD_PER_MS = 1000000n;
+    const ees = await contracts.ethericEssence.totalSupply();
+    const ecr = await contracts.ethericCrystals.totalSupply();
+    const enrg = await contracts.ethericEnergy.totalSupply();
+    const liquid = ecr;
+    const staked = (enrg * (1n * POW + ((BigInt(Date.now()) - deployTimestamp) * REWARD_PER_MS))) / POW;
+    const supply = liquid + staked;
+    await mongo.$supplySnapshots.updateOne({ name: "ees" }, {
+        $push: {
+            "snapshots": { date: Date.now(), supply: `${ees}` }
+        }
+    });
+    await mongo.$supplySnapshots.updateOne({ name: "ecr" }, {
+        $push: {
+            "snapshots": { date: Date.now(), supply: `${supply}` }
+        }
+    });
+    await mongo.$supplySnapshots.updateOne({ name: "enrg" }, {
+        $push: {
+            "snapshots": { date: Date.now(), supply: `${enrg}` }
+        }
+    });
+    const byLevel = (await mongo.$players
+        .find()
+        .limit(100)
+        .sort({
+        level: -1
+    })
+        .toArray()).map(({ name, elo, level, experience, avatarId, bannerId, games }) => ({ name, level, elo, experience, avatarId, bannerId, games }));
+    const byElo = (await mongo.$players
+        .find()
+        .limit(100)
+        .sort({
+        elo: -1
+    })
+        .toArray()).map(({ name, elo, level, experience, avatarId, bannerId, games }) => ({ name, level, elo, experience, avatarId, bannerId, games }));
+    mongo.$leaderboards.updateOne({}, {
+        $set: { level: byLevel, elo: byElo }
+    });
+    for (let playa of byLevel) {
+        const $P = await mongo.$players.findOne({ name: playa.name });
+        if ($P) {
+            $P.rewards.ecr = `${BigInt($P.rewards.ecr) + 5n * 10n ** 18n}`;
+            await mongo.$players.replaceOne({ name: playa.name }, $P);
+        }
+    }
+    for (let playa of byElo) {
+        const $P = await mongo.$players.findOne({ name: playa.name });
+        if ($P) {
+            $P.rewards.ecr = `${BigInt($P.rewards.ecr) + 10n * 10n ** 18n}`;
+            await mongo.$players.replaceOne({ name: playa.name }, $P);
+        }
+    }
+    server.io.emit("notification", {
+        color: "success",
+        message: "Flush complete, refresh the page!"
+    });
+});
 //# sourceMappingURL=index.js.map

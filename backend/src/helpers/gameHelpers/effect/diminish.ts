@@ -1,45 +1,63 @@
 import {EffectId} from "@som/shared/enums";
-import type {Field, GamePlayer, MinionField} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
+import type {GameMinionCard, GamePlayer, MinionField} from "@som/shared/types/mongo";
 
 interface Diminish {
   opponent: GamePlayer;
-  field?: MinionField;
+  opponentMinion: GameMinionCard;
+  opponentMinionField: MinionField;
 }
 
-const diminish = (params: Diminish) => {
-  const {opponent, field} = params;
+const diminish = (params: Diminish): Animations => {
+  const {opponent, opponentMinion, opponentMinionField} = params;
+  const animations: Animations = [];
 
-  if (!field) {
-    return [false, "Field for Effect not specified."];
-  }
+  if (opponentMinion.damage.current > 2) {
+    opponentMinion.damage.current -= 2;
 
-  const card = opponent.field[field];
+    opponentMinion.debuffs.push({
+      id: EffectId.DIMINISH,
+      data: {
+        damage: -2
+      }
+    });
 
-  if (!card) {
-    return [false, `Minion doesn't exist on the field ${field}.`];
-  }
-
-
-
-  if (card.buffs.find((buff) => buff.id === EffectId.ELUSIVE) !== undefined) {
-    return [false, "Diminish negated."];
-  }
-
-  if (card.damage > 2) {
-    card.damage -= 2;
+    animations.push({
+      type: "FLOATING_TEXT",
+      name: opponent.name,
+      field: opponentMinionField,
+      text: "DIMINISH"
+    }, {
+      type: "DAMAGE",
+      name: opponent.name,
+      field: opponentMinionField,
+      increment: (-2)
+    });
   } else {
-    card.damage = 0;
+    const val = opponentMinion.damage.current;
+    opponentMinion.damage.current = 0;
+
+    opponentMinion.debuffs.push({
+      id: EffectId.DIMINISH,
+      data: {
+        damage: -val
+      }
+    });
+
+    animations.push({
+      type: "FLOATING_TEXT",
+      name: opponent.name,
+      field: opponentMinionField,
+      text: "DIMINISH"
+    }, {
+      type: "DAMAGE",
+      name: opponent.name,
+      field: opponentMinionField,
+      increment: -val
+    });
   }
 
-  card.debuffs.push({
-    id: EffectId.DIMINISH,
-    data: {damage: -2}
-  });
-
-  return [true, `
-    Player ${opponent.name} has played Diminish magic card, reducing your card on
-    the field ${field} Damage by 2.
-  `];
+  return animations;
 };
 
 export {diminish};

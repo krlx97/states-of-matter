@@ -9,13 +9,23 @@ const closeLobby = (): void => {
     lobbyStore.set({
       id: 0,
       host: {
-        name: "",
-        avatarId: 0
-      },
-      challengee: {
-        name: "",
-        avatarId: 0
-      }
+    name: "",
+    experience: 0,
+    level: 0,
+    elo: 0,
+    avatarId: 0,
+    bannerId: 0,
+    games: {casual: {won: 0, lost: 0}, ranked: {won: 0, lost: 0}}
+  },
+  challengee: {
+    name: "",
+    experience: 0,
+    level: 0,
+    elo: 0,
+    avatarId: 0,
+    bannerId: 0,
+    games: {casual: {won: 0, lost: 0}, ranked: {won: 0, lost: 0}}
+  }
     });
 
     playerStore.update((store) => {

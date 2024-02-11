@@ -1,7 +1,7 @@
-import type {Field} from "../../mongo/index.js";
+import type {MinionField} from "../../mongo/index.js";
 
 interface PlayMinion {
-  field: Field;
+  field: MinionField;
   gid: number;
 }
 

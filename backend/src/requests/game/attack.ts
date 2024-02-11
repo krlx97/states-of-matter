@@ -78,7 +78,7 @@ const attack: SocketRequest = (socket, error): void => {
         ...effect.mirrorsEdge({player, playerMinion, opponent, opponentTrap})
       );
 
-      if (await gameHelpers.isGameOver($game)) { return; }
+      if (await gameHelpers.isGameOver($game, animations)) { return; }
 
       isAttackNegated = true;
     }
@@ -126,7 +126,7 @@ const attack: SocketRequest = (socket, error): void => {
 
     if (opponentTrap && opponentTrap.effect === EffectId.CONSTRICTION) {
       animations.push(
-        ...effect.constriction({player, playerMinion, opponent, opponentTrap})
+        ...effect.constriction({player, playerMinion, opponent, opponentTrap, playerMinionField: attacker})
       );
     }
 
@@ -169,7 +169,7 @@ const attack: SocketRequest = (socket, error): void => {
 
 
     if (!isAttackNegated) {
-      gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage);
+      gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage.current, attacker);
       animations.push({
         type: "DAMAGE",
         field: attacker,

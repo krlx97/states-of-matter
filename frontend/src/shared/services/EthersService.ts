@@ -1,182 +1,35 @@
 import {get} from "svelte/store";
-import {JsonRpcProvider, Contract, BrowserProvider, getDefaultProvider, JsonRpcSigner} from "ethers";
+import {Contract, BrowserProvider, JsonRpcProvider} from "ethers";
+import {items} from "@som/shared/data";
+import {playerStore, ethersStore, inventoryStore} from "stores";
 
-import SomGame from "@som/contracts/SomGame/artifacts/SomGame.json" assert {
+import EthericEssence from "@som/contracts/EthericEssence/artifacts/EthericEssence.json" assert {
   type: "json"
 };
 
-import SomTokens from "@som/contracts/SomTokens/artifacts/SomTokens.json" assert {
+import EthericCrystals from "@som/contracts/EthericCrystals/artifacts/EthericCrystals.json" assert {
   type: "json"
 };
 
-import {items} from "data";
-import {accountStore, ethersStore, walletStore} from "stores";
+import EthericEnergy from "@som/contracts/EthericEnergy/artifacts/EthericEnergy.json" assert {
+  type: "json"
+};
 
-// class EthersService {
-//   private provider: BrowserProvider | undefined;
-//   private signer: JsonRpcSigner | undefined;
+import SomGame from "@som/contracts/Game/artifacts/Game.json" assert {
+  type: "json"
+};
 
-//   private readonly contracts: Contracts = {
-//     somTokens: undefined,
-//     somGame: undefined
-//   }
-
-//   public readonly keys = {
-//     somTokens: "0x67330dE5F081a6d92DCa4917579935991F3F8413",
-//     somGame: "0x33d5072eD42ce7c61019454DECCAe48D559a9204"
-//   }
-
-//   public async init (): Promise<void> {
-//     this.provider = new BrowserProvider(window.ethereum);
-//     this.signer = await this.provider.getSigner();
-//     this.contracts.somTokens = new Contract(keys.somTokens, SomTokens.abi, this.signer);
-//     this.contracts.somGame = new Contract(keys.somGame, SomGame.abi, this.signer);
-//   }
-
-//   public async transact (
-//     contract: keyof typeof this.contracts,
-//     action: string,
-//     params: any[]
-//   ): Promise<boolean> {
-//     if (!this.contracts[contract]) {
-//       console.error("Metamask not connected");
-//       return false;
-//     }
-//     const tx = await this.contracts[contract][action](...params).catch(console.log);
-//     if (!tx) { return false; }
-//     const fin = await tx.wait();
-//     if (!fin) { return false; }
-//     return true;
-//   }
-
-//   public async sign (): Promise<void> {
-//     if (!this.signer) {
-//       return console.log("Metamask not connected");
-//     }
-
-//     console.log(this.signer.address);
-//     const sig = await this.signer.signMessage("signup");
-//     const address = await this.signer.getAddress();
-//     console.log(sig, address);
-//   }
-
-//   public async reloadUser (): Promise<void> {
-//     const {somTokens, somGame} = contracts;
-//     const key = get(accountStore).publicKey;
-//     // const player = await somGame.players(key);
-//     // const total = await somGame.total();
-//     // console.log(player);
-//     const theItems = [];
-
-//     for (const item of items) {
-//       theItems.push({
-//         id: item.id,
-//         balance: 100n
-//       });
-//     }
-
-//     walletStore.set({
-//       ese: {
-//         balance: 100000n
-//         // balance: await somTokens.balanceOf(key, 0)
-//       },
-//       ecr: {
-//         balance: 1000000000000000000000n,
-//         staked: 1000000000000000000000n,
-//         unstaked: 1000000000000000000000n,
-//         vesting: 100,
-//         rewards: 1000000000000000000000n,
-//         airdrops: 100,
-//         starterPack: true
-//         // balance: await somTokens.balanceOf(key, 1),
-//         // staked: await player.staking(1).staked,
-//         // unstaked: await player.staking(1).unstaked,
-//         // vesting: await player.staking(1).vesting,
-//         // rewards: player.rewards,
-//         // airdrops: player.airdrops,
-//         // starterPack: player.hasClaimedStarterPack
-//       },
-//       wtlos: {
-//         balance: 10000000000000000000n
-//         // balance: await somTokens.balanceOf(key, 2)
-//       },
-//       lpecr: {
-//         balance: 10000000000000000000000n,
-//         staked: 100000000000000000000n,
-//         unstaked: 10000000000000000000n,
-//         vesting: 1000,
-//         // balance: await somTokens.balanceOf(key, 3),
-//         // staked: await player.staking(3).staked,
-//         // unstaked: await player.staking(3).unstaked,
-//         // vesting: await player.staking(3).vesting,
-//       },
-//       liquidity: {
-//         ecr: 10000000000000000000000n,
-//         wtlos: 1000000000000000000000n
-//       },
-//       crystalsGlobal: {
-//         totalSupply: 1000000000000000000000000000n,
-//         staked: 112300000000000000000000000n,
-//         unstaked: 151584720000000000000000000n,
-//         rewards: 100000000000000000000n,
-//         burned: 45126670000000000000000000n,
-//         firstDailyWins: 165,
-//         airdrops: 47654,
-//         // totalSupply: await somTokens.totalSupply(1),
-//         // staked: await total.staked(1),
-//         // unstaked: await total.unstaked(1),
-//         // rewards: total.rewards,
-//         // liquidity: total.liquidity,
-//         // burned: total.burned,
-//         // firstDailyWins: total.firstDailyWins,
-//         // airdrops: total.airdrops,
-//       },
-//       lpecrGlobal: {
-//         totalSupply: 100000n * 10n ** 18n,
-//         staked: 11230n * 10n ** 18n,
-//         unstaked: 15158n * 10n ** 18n,
-//       },
-//       isApprovedForAll: true,
-//       starterPack: false,
-//       // isApprovedForAll: await somTokens.isApprovedForAll(key, keys.somGame),
-//       items: theItems
-//     });
-//   }
-// }
-
-let provider: BrowserProvider | undefined;
-let signer: JsonRpcSigner | undefined;
-
-// const provider = window.ethereum ?
-//   new BrowserProvider(window.ethereum) :
-//   new JsonRpcProvider("https://testnet.telos.net");
-
-// const signer = await provider.getSigner();
+import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
+  type: "json"
+};
 
 const keys = {
-  somTokens: "0x67330dE5F081a6d92DCa4917579935991F3F8413",
-  somGame: "0x33d5072eD42ce7c61019454DECCAe48D559a9204"
+  ethericEssence: "0x98c9D1e1e9e6Ee021B8288902f4D24A693DeB986",
+  ethericCrystals: "0xdB5D0309028e06aFc743f1A83fC4653DB8DAA5B8",
+  ethericEnergy: "0x4Ca02e48bC26707b83F2c14D11D838cc64C04Ba6",
+  somTokens: "0x27Eb2894A475a533c8AAA3268b521aC47f99cbC7",
+  somGame: "0x20625c87228573EA374e02844782ec3a1a0497ce"
 };
-
-interface Contracts {
-  somTokens: Contract | undefined;
-  somGame: Contract | undefined;
-}
-
-const contracts: Contracts = {
-  somTokens: undefined,
-  somGame: undefined
-};
-
-// const contracts = {
-//   somTokens: new Contract(keys.somTokens, SomTokens.abi, provider), //ovde moze signer, i da se obrise sign objekat ispod
-//   somGame: new Contract(keys.somGame, SomGame.abi, provider)
-// };
-
-// const sign = {
-//   somTokens: contracts.somTokens.connect(signer),
-//   somGame: contracts.somGame.connect(signer)
-// };
 
 const init = async () => {
   if (window.ethereum) {
@@ -189,31 +42,49 @@ const init = async () => {
       store.signer = signer;
       store.chainId = network.chainId;
       store.contracts = {
+        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, signer),
+        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, signer),
+        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, signer),
         somTokens: new Contract(keys.somTokens, SomTokens.abi, signer),
         somGame: new Contract(keys.somGame, SomGame.abi, signer)
       };
       store.isValid =
         window.ethereum !== undefined
         && signer?.address !== undefined
-        && network.chainId === 41n;
+        && network.chainId === /*1337n*/41n;
       return store;
     });
-
-    console.log(get(ethersStore));
-
-    // provider = new BrowserProvider(window.ethereum);
-    // signer = await provider.getSigner();
-    contracts.somTokens = new Contract(keys.somTokens, SomTokens.abi, signer);
-    contracts.somGame = new Contract(keys.somGame, SomGame.abi, signer)
+  } else {
+    ethersStore.update((store) => {
+      store.provider = new JsonRpcProvider(
+        // "http://localhost:8545"
+        "https://testnet.telos.net/evm"
+      ) as any;
+      // store.signer = signer;
+      store.chainId = /*1337n*/41n;
+      store.contracts = {
+        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, store.provider),
+        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, store.provider),
+        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, store.provider),
+        somTokens: new Contract(keys.somTokens, SomTokens.abi, store.provider),
+        somGame: new Contract(keys.somGame, SomGame.abi, store.provider)
+      };
+      store.isValid =
+        window.ethereum !== undefined
+        && signer?.address !== undefined
+        && network.chainId === /*1337n*/41n;
+      return store;
+    });
   }
 };
 
 const transact = async (
-  contractName: keyof typeof contracts,
+  contractName: any,
   action: string,
   params: any[]
 ): Promise<boolean> => {
-  const contract = contracts[contractName];
+  const store = get(ethersStore);
+  const contract = store.contracts[contractName];
 
   if (!contract) {
     console.error("Metamask not connected.");
@@ -247,98 +118,107 @@ const sign = async (message: string): Promise<{signature: string, address: strin
   const address = await signer.getAddress();
 
   return {signature, address};
-}
+};
 
 const reloadUser = async (): Promise<void> => {
+  const store = get(ethersStore);
+  const player = get(playerStore);
+  const {contracts} = store;
+
   if (!contracts.somTokens || !contracts.somGame) {
     console.error("Metamask not connected");
     return;
   }
 
-  const {somTokens, somGame} = contracts;
-  const key = get(accountStore).publicKey;
-  // const player = await somGame.players(key);
-  // const total = await somGame.total();
-  // console.log(player);
+  const {ethericEssence, ethericCrystals, ethericEnergy, somTokens, somGame} = contracts;
+  const address = get(playerStore).address;
   const theItems = [];
 
   for (const item of items) {
-    theItems.push({
-      id: item.id,
-      balance: 100n
-    });
+    if (item.id === 1000 || item.id === 2000) { // bronze
+      theItems.push({
+        ...item,
+        balance: 1n,
+        supply: 0n
+      });
+    } else if (item.id === 1001 || item.id === 2001) { // silver
+      theItems.push({
+        ...item,
+        balance: player.elo >= 250 ? 1n : 0n,
+        supply: 0n
+      });
+    } else if (item.id === 1002 || item.id === 2002) { // gold
+      theItems.push({
+        ...item,
+        balance: player.elo >= 500 ? 1n : 0n,
+        supply: 0n
+      });
+    } else if (item.id === 1003 || item.id === 2003) { // master
+      theItems.push({
+        ...item,
+        balance: player.elo >= 750 ? 1n : 0n,
+        supply: 0n
+      });
+    } else {
+      if (item.rarity === 0) {
+        theItems.push({
+          ...item,
+          balance: 1n,
+          supply: 0n
+        });
+      } else {
+        theItems.push({
+          ...item,
+          balance: address ? await somTokens.balanceOf(address, item.id) : 0n,
+          supply: await somTokens["totalSupply(uint256)"](item.id)
+        });
+      }
+    }
   }
 
-  walletStore.set({
-    ese: {
-      balance: 100000n
-      // balance: await somTokens.balanceOf(key, 0)
-    },
-    ecr: {
-      balance: 1000000000000000000000n,
-      staked: 1000000000000000000000n,
-      unstaked: 1000000000000000000000n,
-      vesting: 100,
-      rewards: 1000000000000000000000n,
-      airdrops: 100,
-      starterPack: true
-      // balance: await somTokens.balanceOf(key, 1),
-      // staked: await player.staking(1).staked,
-      // unstaked: await player.staking(1).unstaked,
-      // vesting: await player.staking(1).vesting,
-      // rewards: player.rewards,
-      // airdrops: player.airdrops,
-      // starterPack: player.hasClaimedStarterPack
-    },
-    wtlos: {
-      balance: 10000000000000000000n
-      // balance: await somTokens.balanceOf(key, 2)
-    },
-    lpecr: {
-      balance: 10000000000000000000000n,
-      staked: 100000000000000000000n,
-      unstaked: 10000000000000000000n,
-      vesting: 1000,
-      // balance: await somTokens.balanceOf(key, 3),
-      // staked: await player.staking(3).staked,
-      // unstaked: await player.staking(3).unstaked,
-      // vesting: await player.staking(3).vesting,
-    },
-    liquidity: {
-      ecr: 10000000000000000000000n,
-      wtlos: 1000000000000000000000n
-    },
-    crystalsGlobal: {
-      totalSupply: 1000000000000000000000000000n,
-      staked: 112300000000000000000000000n,
-      unstaked: 151584720000000000000000000n,
-      rewards: 100000000000000000000n,
-      burned: 45126670000000000000000000n,
-      firstDailyWins: 165,
-      airdrops: 47654,
-      // totalSupply: await somTokens.totalSupply(1),
-      // staked: await total.staked(1),
-      // unstaked: await total.unstaked(1),
-      // rewards: total.rewards,
-      // liquidity: total.liquidity,
-      // burned: total.burned,
-      // firstDailyWins: total.firstDailyWins,
-      // airdrops: total.airdrops,
-    },
-    lpecrGlobal: {
-      totalSupply: 100000n * 10n ** 18n,
-      staked: 11230n * 10n ** 18n,
-      unstaked: 15158n * 10n ** 18n,
-    },
-    isApprovedForAll: true,
-    starterPack: false,
-    // isApprovedForAll: await somTokens.isApprovedForAll(key, keys.somGame),
-    items: theItems
-  });
-}
+  if (address) {
+    inventoryStore.set({
+      ees: await ethericEssence.balanceOf(address),
+      ecr: await ethericCrystals.balanceOf(address),
+      enrg: await ethericEnergy.balanceOf(address),
+      approvals: {
+        items: await somTokens.isApprovedForAll(address, keys.somGame),
+        ees: await ethericEssence.allowance(address, keys.somGame),
+        ecr: await ethericCrystals.allowance(address, keys.somGame),
+        enrg: await ethericEnergy.allowance(address, keys.somGame)
+      },
+      total: {
+        ees: await ethericEssence.totalSupply(),
+        ecr: await ethericCrystals.totalSupply(),
+        enrg: await ethericEnergy.totalSupply()
+      },
+      deployTimestamp: await somGame.deployTimestamp(),
+      chests: await somTokens.balanceOf(address, 1),
+      items: theItems
+    });
+  } else {
+    inventoryStore.set({
+      ees: 0n,
+      ecr: 0n,
+      enrg: 0n,
+      approvals: {
+        items: false,
+        ees: 0n,
+        ecr: 0n,
+        enrg: 0n
+      },
+      total: {
+        ees: await ethericEssence.totalSupply(),
+        ecr: await ethericCrystals.totalSupply(),
+        enrg: await ethericEnergy.totalSupply()
+      },
+      deployTimestamp: await somGame.deployTimestamp(),
+      chests: 0n,
+      items: theItems
+    });
+  }
+};
 
-const ethersService = {keys, contracts, init, transact, sign, reloadUser};
-
-// const ethersService = new EthersService();
+const ethersService = {keys, init, transact, sign, reloadUser};
 
 export {ethersService};

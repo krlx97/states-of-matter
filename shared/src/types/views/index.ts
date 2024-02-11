@@ -1,11 +1,4 @@
 export type {
-  AccountChatView,
-  AccountSocialFriendView,
-  AccountSocialView,
-  AccountView
-} from "./AccountView/index.js";
-
-export type {
   GameOpponentView,
   GamePlayerView,
   GameView
@@ -16,5 +9,8 @@ export type {LobbyView} from "./LobbyView/index.js";
 export type {
   PlayerDeckCardView,
   PlayerDeckView,
+  PlayerSocialFriendsView,
+  PlayerSocialFriendView,
+  PlayerSocialView,
   PlayerView
 } from "./PlayerView/index.js";

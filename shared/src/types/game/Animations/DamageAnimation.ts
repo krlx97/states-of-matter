@@ -2,7 +2,7 @@ import {Field} from "../../mongo/Game/Field.js";
 
 interface DamageAnimation {
   type: "DAMAGE";
-  damageTaken: number;
+  increment: number;
   field: Field;
   name: string;
 }

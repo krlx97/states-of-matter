@@ -1,3 +1,4 @@
+import { Animations } from "@som/shared/types/game";
 import type {Field, GamePlayer} from "@som/shared/types/mongo";
 
 interface Cleanse {
@@ -5,22 +6,27 @@ interface Cleanse {
   field: Field | undefined;
 }
 
-const cleanse = (params: Cleanse) => {
+const cleanse = (params: Cleanse): Animations => {
   const {player, field} = params;
 
   if (!field) {
-    return [false, "Field not specified."];
+    return [];
   }
 
   const minion = player.field[field];
 
   if (!minion) {
-    return [false, `No minion on the ${field} field.`];
+    return [];
   }
 
   minion.debuffs = [];
 
-  return [true, ""];
+  return [{
+    type: "FLOATING_TEXT",
+    field,
+    name: player.name,
+    text: "CLEANSE"
+  }];
 };
 
 export {cleanse};

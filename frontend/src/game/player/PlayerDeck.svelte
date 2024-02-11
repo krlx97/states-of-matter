@@ -14,7 +14,7 @@
     bottom: -48px;
     left: 50%;
     width: 75%;
-    padding: var(--spacing-sm);
+    padding: var(--sm);
     background-color: rgb(31, 31, 31);
     border-radius: 8px;
     box-sizing: border-box;
@@ -24,6 +24,6 @@
 </style>
 
 <div class="deck">
-  <img src="assets/cards/card-back.png" alt="Deck"/>
+  <img src="images/card/card-back.png" alt="Deck"/>
   <div class="deck__cards">{$gameStore.player.deck} / 30</div>
 </div>

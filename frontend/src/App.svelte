@@ -1,13 +1,13 @@
 <script lang="ts">
   import {onMount} from "svelte";
   import {responses} from "responses";
-  import {accountStore, ethersStore, playerStore} from "stores";
+  import {ethersStore, playerStore} from "stores";
   import ModalsComponent from "./Modals.svelte";
   import NotificationsComponent from "./Notifications.svelte";
   import AuthComponent from "./auth/Auth.svelte";
   import ClientComponent from "./client/Client.svelte";
   import GameComponent from "./game/Game.svelte";
-  import { ethersService } from "./shared/services/ethersService";
+  import { ethersService } from "services";
   import { get } from "svelte/store";
   import { socketService } from "services";
 
@@ -39,7 +39,7 @@
           store.isValid =
             window.ethereum !== undefined
             && store.signer?.address !== undefined
-            && store.chainId === 41n;
+            && store.chainId === /*1337n*/41n;
 
           return store;
         });
@@ -49,7 +49,7 @@
           store.isValid =
             window.ethereum !== undefined
             && store.signer?.address !== undefined
-            && store.chainId === 41n;
+            && store.chainId === /*1337n*/41n;
 
           return store;
         });
@@ -64,7 +64,7 @@
         store.isValid =
           window.ethereum !== undefined
           && store.signer?.address !== undefined
-          && store.chainId === 41n;
+          && store.chainId === /*1337n*/41n;
         return store;
       });
     });
@@ -72,7 +72,7 @@
 </script>
 
 <style>
-  .app {
+  .app-wrapper {
     height: 100vh;
     width: 100vw;
     display: flex;
@@ -81,22 +81,20 @@
     background-color: rgb(var(--dark-grey));
   }
 
-  .app--inner {
+  .app {
     position: relative;
     height: 900px;
     width: 1600px;
     background-color: rgb(var(--dark-grey));
-    /* border: 2px solid rgb(127, 127, 127); */
-    border-radius: 8px;
     overflow: hidden;
     /* 1 for 1080p, 1.33 for 2k, 2 for 4k */
     /* transform: scale(1); */
   }
 </style>
 
-<div class="app">
-  <div class="app--inner">
-    {#if !$accountStore.name}
+<div class="app-wrapper">
+  <div class="app">
+    {#if !$playerStore.name}
       <AuthComponent/>
     {:else if $playerStore.gameId > 0}
       <GameComponent/>

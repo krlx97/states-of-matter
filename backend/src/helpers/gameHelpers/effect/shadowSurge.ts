@@ -1,12 +1,30 @@
-import type {GameMinionCard} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
+
+import type {
+  GameMinionCard,
+  GamePlayer,
+  MinionField
+} from "@som/shared/types/mongo";
 
 interface ShadowSurge {
-  minion: GameMinionCard;
+  player: GamePlayer;
+  playerMinion: GameMinionCard;
+  playerMinionField: MinionField;
 }
 
-const shadowSurge = (params: ShadowSurge) => {
-  params.minion.canAttack = true;
-  return [true, ""];
+const shadowSurge = {
+  onNormalSummon (params: ShadowSurge): Animations {
+    const {player, playerMinion, playerMinionField} = params;
+
+    playerMinion.canAttack = true;
+
+    return [{
+      type: "FLOATING_TEXT",
+      name: player.name,
+      field: playerMinionField,
+      text: "SHADOW SURGE"
+    }];
+  }
 };
 
 export {shadowSurge};

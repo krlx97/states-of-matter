@@ -35,21 +35,16 @@ const noxiousFumes = (params: NoxiousFumes): Animations => {
     }
   });
 
-  deductHealth(player, playerMinion, damage);
+  animations.push(...deductHealth(player, playerMinion, damage, playerMinionField));
 
   animations.push({
     type: "FLOATING_TEXT",
     field: playerMinionField,
     name: player.name,
     text: "Noxious Fumes"
-  }, {
-    type: "DAMAGE",
-    damageTaken: damage,
-    field: playerMinionField,
-    name: player.name
   });
 
-  if (playerMinion.health <= 0) {
+  if (playerMinion.health.current <= 0) {
     moveToGraveyard(player, playerMinion, playerMinionField);
 
     animations.push({

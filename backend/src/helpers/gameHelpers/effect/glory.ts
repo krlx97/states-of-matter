@@ -1,24 +1,28 @@
 import {randomInt} from "crypto";
-import {EffectId} from "@som/shared/enums";
-import type {GameMinionCard, GamePlayer} from "@som/shared/types/mongo";
+import {CardType, EffectId} from "@som/shared/enums";
+import type {GameMinionCard, GamePlayer, MinionField} from "@som/shared/types/mongo";
 import { moveToGraveyard } from "../moveToGraveyard";
 import { deductHealth } from "../deductHealth";
 import { insertBuff } from "../insertBuff";
+import { Animations } from "@som/shared/types/game";
 
 interface Glory {
+  player: GamePlayer;
   opponent: GamePlayer;
   minion: GameMinionCard;
+  playerMinionField: MinionField;
 }
 
-const glory = (params: Glory) => {
-  const {opponent, minion} = params;
-  const possibleMinions: Array<{Minion: GameMinionCard, key: keyof typeof opponent.minion}> = [];
-  const minionKeys = Object.keys(opponent.minion) as Array<keyof typeof opponent.minion>;
+const glory = (params: Glory): Animations => {
+  const {player, opponent, minion, playerMinionField} = params;
+  const animations: Animations = [];
+  const possibleMinions: Array<{Minion: GameMinionCard, key: MinionField}> = [];
+  const minionKeys = Object.keys(opponent.field) as Array<keyof typeof opponent.field>;
 
   minionKeys.forEach((key) => {
-    const Minion = opponent.minion[key];
+    const Minion = opponent.field[key];
 
-    if (Minion) {
+    if (Minion && Minion.type !== CardType.HERO && key !== "hero") {
       const hasElusiveBuff = Minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
 
       if (!hasElusiveBuff) {
@@ -31,15 +35,27 @@ const glory = (params: Glory) => {
     let randomMinion = randomInt(possibleMinions.length);
     let {Minion, key} = possibleMinions[randomMinion];
 
-    deductHealth(opponent, Minion, 2);
+    animations.push({
+      type: "FLOATING_TEXT",
+      name: opponent.name,
+      field: key,
+      text: "GLORY"
+    });
+    animations.push(...deductHealth(opponent, Minion, 1, key));
 
-    if (minion.health <= 0) {
-      moveToGraveyard(opponent, Minion, key);
-      insertBuff(minion, EffectId.TAUNT); // refactor this, minion = player, Minion = opponent
+    if (Minion.health.current <= 0) {
+      animations.push(...moveToGraveyard(opponent, Minion, key));
+      minion.buffs.push({id: EffectId.TAUNT, data: {}})
+      animations.push({
+        type: "FLOATING_TEXT",
+        name: player.name,
+        field: playerMinionField,
+        text: "TAUNT"
+      });
     }
   }
 
-  return [true, ""];
+  return animations;
 };
 
 export {glory};

@@ -1,4 +1,4 @@
-import type {GameCard} from "./GameCard.js";
+import type {GameBaseCard} from "./GameBaseCard.js";
 import type {CardType, EffectId} from "../../../enums/index.js";
 
 interface Attribute {
@@ -6,15 +6,11 @@ interface Attribute {
   default: number;
 }
 
-interface GameMinionCard extends GameCard {
+interface GameMinionCard extends GameBaseCard {
   type: CardType.MINION;
   health: Attribute;
   damage: Attribute;
   manaCost: Attribute;
-  // health: number;
-  // damage: number;
-  // manaCost: number;
-  // maxHealth: number;
   canAttack: boolean;
   buffs: Array<{id: EffectId, data: any}>;
   debuffs: Array<{id: EffectId, data: any}>;

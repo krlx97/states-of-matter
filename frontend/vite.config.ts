@@ -6,7 +6,6 @@ const config = defineConfig({
   plugins: [svelte()],
   resolve: {
     alias: {
-      data: resolve("./src/shared/data"),
       responses: resolve("./src/shared/responses"),
       services: resolve("./src/shared/services"),
       stores: resolve("./src/shared/stores"),

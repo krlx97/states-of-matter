@@ -1,6 +1,7 @@
 interface SigninMetamask {
-  name: string;
+  address: string;
   signature: string;
+  rememberMe: boolean;
 }
 
 export type {SigninMetamask};

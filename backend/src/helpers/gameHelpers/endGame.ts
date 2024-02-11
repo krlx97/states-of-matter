@@ -1,9 +1,10 @@
 import {GameType, PlayerStatus} from "@som/shared/enums";
+import { Animations } from "@som/shared/types/game";
 import {mongo, server} from "app";
 
 const sleep = (waitTimeInMs: number) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
-const endGame = async (gameId: number, winnerName: string): Promise<void> => {
+const endGame = async (gameId: number, winnerName: string, animations: Animations): Promise<void> => {
   const {$games, $players} = mongo;
   const {io} = server;
   const $game = await $games.findOne({id: gameId});
@@ -13,6 +14,9 @@ const endGame = async (gameId: number, winnerName: string): Promise<void> => {
   const {playerA, playerB} = $game;
 
   if (winnerName === playerA.name) {
+
+
+
     const $playerA = await $players.findOne({
       name: playerA.name
     });
@@ -24,28 +28,110 @@ const endGame = async (gameId: number, winnerName: string): Promise<void> => {
 
     $playerA.status = PlayerStatus.ONLINE;
     $playerA.gameId = 0;
+
     $playerB.status = PlayerStatus.ONLINE;
     $playerB.gameId = 0;
+
+    let playerAEcrReward = "0";
+    let playerBEcrReward = "0";
+    let playerAEesReward = "0";
+    let playerBEesReward = "0";
+
+    if (!$playerA.tasks.daily) {
+      $playerA.tasks.daily = true;
+      $playerA.tasks.dailyAlternative = 0;
+      $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 1n * 10n ** 18n}`;
+      playerAEcrReward = `${BigInt(playerAEcrReward) + (1n * 10n ** 18n)}`;
+
+      if ($playerA.tasks.weekly < 7) {
+        $playerA.tasks.weekly += 1;
+      } else {
+        $playerA.tasks.weekly = 0;
+        $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 10n * 10n ** 18n}`;
+        playerAEcrReward = `${BigInt(playerAEcrReward) + (10n * 10n ** 18n)}`;
+      }
+    }
+
+    if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative < 3) {
+      $playerB.tasks.dailyAlternative += 1;
+    } else if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative > 3) {
+      $playerB.tasks.daily = true;
+      $playerB.tasks.dailyAlternative = 0;
+      $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 1n * 10n ** 18n}`;
+      playerBEcrReward = `${BigInt(playerBEcrReward) + (1n * 10n ** 18n)}`;
+
+      if ($playerB.tasks.weekly < 7) {
+        $playerB.tasks.weekly += 1;
+      } else {
+        $playerB.tasks.weekly = 0;
+        $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 10n * 10n ** 18n}`;
+        playerBEcrReward = `${BigInt(playerBEcrReward) + (10n * 10n ** 18n)}`;
+      }
+    }
 
     if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
       $playerA.experience += 110 + $game.currentTurn;
 
-      const aReq = 1000 + ($playerA.level % 10) * 100;
-      if ($playerA.experience >= aReq) {
-        const rem = $playerA.experience - aReq;
+      const XP_REQUIRED = 1000;
+
+      if ($playerA.experience >= XP_REQUIRED) {
+        const remaining = $playerA.experience - XP_REQUIRED;
         $playerA.level += 1;
-        $playerA.experience = rem;
-        // call levelup on chain, and save returned values, emit with gameEnded
+        $playerA.experience = remaining;
+
+        playerAEesReward = `${BigInt(playerAEesReward) + 1n  * 10n ** 18n}`;
+
+        if ($playerA.level % 2 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 2n  * 10n ** 18n}`;
+        }
+        if ($playerA.level % 4 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 4n  * 10n ** 18n}`;
+        }
+        if ($playerA.level % 8 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 8n  * 10n ** 18n}`;
+        }
+        if ($playerA.level % 16 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 16n  * 10n ** 18n}`;
+        }
+        if ($playerA.level % 32 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 32n  * 10n ** 18n}`;
+        }
+        if ($playerA.level % 64 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 64n  * 10n ** 18n}`;
+        }
+
+        $playerA.rewards.ees = `${BigInt($playerA.rewards.ees) + playerAEesReward}`;
       }
 
       $playerB.experience += 90 + $game.currentTurn;
 
-      const bReq = 1000 + ($playerB.level % 10) * 100;
-      if ($playerB.experience >= bReq) {
-        const rem = $playerB.experience - bReq;
+      if ($playerB.experience >= XP_REQUIRED) {
+        const rem = $playerB.experience - XP_REQUIRED;
         $playerB.level += 1;
         $playerB.experience = rem;
-        // call levelup on chain, and save returned values, emit with gameEnded
+
+        playerBEesReward = `${BigInt(playerBEesReward) + 1n * 10n ** 18n}`;
+
+        if ($playerB.level % 2 === 0) {
+          playerBEesReward = `${BigInt(playerBEesReward) + 2n * 10n ** 18n}`;
+        }
+        if ($playerB.level % 4 === 0) {
+          playerBEesReward = `${BigInt(playerBEesReward) + 4n * 10n ** 18n}`;
+        }
+        if ($playerB.level % 8 === 0) {
+          playerBEesReward = `${BigInt(playerBEesReward) + 8n * 10n ** 18n}`;
+        }
+        if ($playerB.level % 16 === 0) {
+          playerBEesReward = `${BigInt(playerBEesReward) + 16n * 10n ** 18n}`;
+        }
+        if ($playerB.level % 32 === 0) {
+          playerBEesReward = `${BigInt(playerBEesReward) + 32n * 10n ** 18n}`;
+        }
+        if ($playerB.level % 64 === 0) {
+          playerBEesReward = `${BigInt(playerBEesReward) + 64n * 10n ** 18n}`;
+        }
+
+        $playerB.rewards.ees = `${BigInt($playerB.rewards.ees) + playerBEesReward}`;
       }
     }
 
@@ -73,14 +159,18 @@ const endGame = async (gameId: number, winnerName: string): Promise<void> => {
       isWinner: true,
       gameType: $game.type,
       experience: 110 + $game.currentTurn,
-      elo: $game.type === GameType.RANKED ? 20 : 0
+      elo: $game.type === GameType.RANKED ? 20 : 0,
+      ecrReward: playerAEcrReward,
+      eesReward: playerAEesReward, animations
     });
 
     io.to($playerB.socketId).emit("gameEnded" as any, {
       isWinner: false,
       gameType: $game.type,
       experience: 90 + $game.currentTurn,
-      elo: $game.type === GameType.RANKED ? -20 : 0
+      elo: $game.type === GameType.RANKED ? -20 : 0,
+      ecrReward: playerBEcrReward,
+      eesReward: playerBEesReward, animations
     });
 
 
@@ -103,25 +193,110 @@ const endGame = async (gameId: number, winnerName: string): Promise<void> => {
     $playerA.status = PlayerStatus.ONLINE;
     $playerA.gameId = 0;
 
+    let playerAEcrReward = "0";
+    let playerBEcrReward = "0";
+    let playerAEesReward = "0";
+    let playerBEesReward = "0";
+
+    if (!$playerB.tasks.daily) {
+      $playerB.tasks.daily = true;
+      $playerB.tasks.dailyAlternative = 0;
+      $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 1n * 10n ** 18n}`;
+      playerBEcrReward = `${BigInt(playerBEcrReward) + (1n * 10n ** 18n)}`;
+
+      if ($playerB.tasks.weekly < 7) {
+        $playerB.tasks.weekly += 1;
+      } else {
+        $playerB.tasks.weekly = 0;
+        $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 10n * 10n ** 18n}`;
+        playerBEcrReward = `${BigInt(playerBEcrReward) + (10n * 10n ** 18n)}`;
+      }
+    }
+
+    if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative < 3) {
+      $playerA.tasks.dailyAlternative += 1;
+    } else if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative > 3) {
+      $playerA.tasks.daily = true;
+      $playerA.tasks.dailyAlternative = 0;
+      $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 1n * 10n ** 18n}`;
+      playerAEcrReward = `${BigInt(playerAEcrReward) + (1n * 10n ** 18n)}`;
+
+      if ($playerA.tasks.weekly < 7) {
+        $playerA.tasks.weekly += 1;
+      } else {
+        $playerA.tasks.weekly = 0;
+        $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 10n * 10n ** 18n}`;
+        playerAEcrReward = `${BigInt(playerAEcrReward) + (10n * 10n ** 18n)}`;
+      }
+    }
+
     if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
       $playerB.experience += 110 + $game.currentTurn;
 
-      const bReq = 1000 + ($playerB.level % 10) * 100;
-      if ($playerB.experience >= bReq) {
-        const rem = $playerB.experience - bReq;
+      const XP_REQUIRED = 1000;
+
+      if ($playerB.experience >= XP_REQUIRED) {
+        const remaining = $playerB.experience - XP_REQUIRED;
         $playerB.level += 1;
-        $playerB.experience = rem;
-        // call levelup on chain, and save returned values, emit with gameEnded
+        $playerB.experience = remaining;
+
+        if ($playerB.experience >= XP_REQUIRED) {
+          const rem = $playerB.experience - XP_REQUIRED;
+          $playerB.level += 1;
+          $playerB.experience = rem;
+
+          playerBEesReward = `${BigInt(playerBEesReward) + 1n * 10n ** 18n}`;
+
+          if ($playerB.level % 2 === 0) {
+            playerBEesReward = `${BigInt(playerBEesReward) + 2n * 10n ** 18n}`;
+          }
+          if ($playerB.level % 4 === 0) {
+            playerBEesReward = `${BigInt(playerBEesReward) + 4n * 10n ** 18n}`;
+          }
+          if ($playerB.level % 8 === 0) {
+            playerBEesReward = `${BigInt(playerBEesReward) + 8n * 10n ** 18n}`;
+          }
+          if ($playerB.level % 16 === 0) {
+            playerBEesReward = `${BigInt(playerBEesReward) + 16n * 10n ** 18n}`;
+          }
+          if ($playerB.level % 32 === 0) {
+            playerBEesReward = `${BigInt(playerBEesReward) + 32n * 10n ** 18n}`;
+          }
+          if ($playerB.level % 64 === 0) {
+            playerBEesReward = `${BigInt(playerBEesReward) + 64n * 10n ** 18n}`;
+          }
+
+          $playerB.rewards.ees = `${BigInt($playerB.rewards.ees) + playerBEesReward}`;
+        }
       }
 
       $playerA.experience += 90 + $game.currentTurn;
 
-      const aReq = 1000 + ($playerA.level % 10) * 100;
-      if ($playerA.experience >= aReq) {
-        const rem = $playerA.experience - aReq;
+      if ($playerA.experience >= XP_REQUIRED) {
+        const rem = $playerA.experience - XP_REQUIRED;
         $playerA.level += 1;
         $playerA.experience = rem;
-        // call levelup on chain, and save returned values, emit with gameEnded
+
+        if ($playerA.level % 2 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 2n * 10n ** 18n}`;
+        }
+        if ($playerA.level % 4 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 4n * 10n ** 18n}`;
+        }
+        if ($playerA.level % 8 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 8n * 10n ** 18n}`;
+        }
+        if ($playerA.level % 16 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 16n * 10n ** 18n}`;
+        }
+        if ($playerA.level % 32 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 32n * 10n ** 18n}`;
+        }
+        if ($playerA.level % 64 === 0) {
+          playerAEesReward = `${BigInt(playerAEesReward) + 64n * 10n ** 18n}`;
+        }
+
+        $playerA.rewards.ees = `${BigInt($playerA.rewards.ees) + playerAEesReward}`;
       }
     }
 
@@ -149,14 +324,18 @@ const endGame = async (gameId: number, winnerName: string): Promise<void> => {
       isWinner: true,
       gameType: $game.type,
       experience: 110 + $game.currentTurn,
-      elo: $game.type === GameType.RANKED ? 20 : 0
+      elo: $game.type === GameType.RANKED ? 20 : 0,
+      ecrReward: playerBEcrReward,
+      eesReward: playerBEesReward, animations
     });
 
     io.to($playerA.socketId).emit("gameEnded" as any, {
       isWinner: false,
       gameType: $game.type,
       experience: 90 + $game.currentTurn,
-      elo: $game.type === GameType.RANKED ? -20 : 0
+      elo: $game.type === GameType.RANKED ? -20 : 0,
+      ecrReward: playerAEcrReward,
+      eesReward: playerAEesReward, animations
     });
   }
 

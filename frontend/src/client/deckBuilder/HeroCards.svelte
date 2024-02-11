@@ -10,8 +10,18 @@ import {tutorialStore} from "stores";
 <style>
   .heroes {
     position: relative;
+    padding: var(--md);
+    padding-top: 0;
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--md);
+    /* border: 0 solid;
+    border-bottom-width: 1px;
+    border-image: linear-gradient(
+      90deg,
+      rgb(var(--dark-grey), 1) 0%,
+      rgb(var(--grey), 1) 50%,
+      rgb(var(--dark-grey), 1) 100%
+    ) 1; */
   }
 
   .isTutorial {

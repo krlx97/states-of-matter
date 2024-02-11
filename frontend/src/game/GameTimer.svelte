@@ -1,6 +1,7 @@
 <script lang="ts">
   import {socketService, soundService} from "services";
   import {gameStore, playerStore} from "stores";
+    import { ButtonComponent } from "ui";
 
   const onEndTurn = (): void => {
     soundService.play("endTurn");
@@ -10,19 +11,20 @@
 
 <style>
   .game-timer {
-    position: absolute;
+    /* position: absolute;
     top: 0;
-    right: 0;
+    right: 0; */
     height: 100%;
-    width: 160px;
+    /* width: 160px; */
     display: flex;
     align-items: center;
+    margin-right: var(--md);
   }
 
   .bar {
     height: 90%;
     width: 12px;
-    /* margin: var(--spacing-md) 0 var(--spacing-md) 0; */
+    /* margin: var(--md) 0 var(--md) 0; */
     /* box-sizing: border-box; */
     margin-left: 8px;
     background-color: rgb(31, 31, 31);
@@ -32,7 +34,7 @@
     width: 8px;
     margin: 2px;
     /* box-sizing: border-box; */
-    background-color: rgb(var(--purple));
+    background-color: rgb(var(--primary));
   }
 
 .info {
@@ -45,13 +47,14 @@
 
   .glow {
     animation: glow4 1s ease-in-out infinite alternate;
+    color: rgb(var(--primary));
   }
 
   @keyframes glow4 {
     from {
-      text-shadow: 0 0 0 rgb(var(--purple));
+      text-shadow: 0 0 0 rgb(var(--primary));
     } to {
-      text-shadow: 2px 2px 16px rgb(var(--purple));
+      text-shadow: 2px 2px 32px rgb(var(--primary));
     }
   }
 
@@ -59,7 +62,7 @@
   .bgd {
     /* width: 75%; */
     /* text-align: center; */
-    padding: var(--spacing-sm) var(--spacing-lg);
+    padding: var(--sm) var(--lg);
     background-color: rgb(var(--dark-grey));
     border-radius: 8px;
     box-sizing: border-box;
@@ -69,7 +72,7 @@
 <div class="game-timer">
   <div class="info">
     <div class="bgd" class:glow={$gameStore.opponent.name === $gameStore.currentPlayer}>{$gameStore.opponent.name}</div>
-    <button class="button" style="white-space: nowrap;" on:click={onEndTurn}>END TURN</button>
+    <ButtonComponent on:click={onEndTurn}>END</ButtonComponent>
     <div class="bgd" class:glow={$playerStore.name === $gameStore.currentPlayer}>{$gameStore.player.name}</div>
   </div>
   <div class="bar">

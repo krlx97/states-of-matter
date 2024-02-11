@@ -3,7 +3,7 @@ import type {SocketRequest} from "@som/shared/types/backend";
 
 const addFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $players} = mongo;
+  const {$players} = mongo;
 
   socket.on("addFriend", async (params) => {
     const {name} = params;
@@ -21,46 +21,33 @@ const addFriend: SocketRequest = (socket, error): void => {
       return error("Player receiver not found.");
     }
 
-    const [$accountSender, $accountReceiver] = await Promise.all([
-      $accounts.findOne({name: $playerSender.name}),
-      $accounts.findOne({name: $playerReceiver.name})
-    ]);
-
-    if (!$accountSender) {
-      return error("Account sender not found.");
-    }
-
-    if (!$accountReceiver) {
-      return error("Account receiver not found.");
-    }
-
-    if ($accountSender.name === name) {
+    if ($playerSender.name === name) {
       return error("You can't add yourself as a friend.");
     }
 
-    if ($accountReceiver.social.blocked.includes($accountSender.name)) {
+    if ($playerReceiver.social.blocked.includes($playerSender.name)) {
       return error("This player has blocked you.");
     }
 
-    if ($accountSender.social.blocked.includes(name)) {
+    if ($playerSender.social.blocked.includes(name)) {
       return error("You have blocked this player.");
     }
 
-    if ($accountReceiver.social.requests.includes($accountSender.name)) {
+    if ($playerReceiver.social.requests.includes($playerSender.name)) {
       return error("You have already sent the request to this player.");
     }
 
-    if ($accountSender.social.requests.includes(name)) {
+    if ($playerSender.social.requests.includes(name)) {
       return error("This player has already sent you the request.");
     }
 
-    if ($accountSender.social.friends.includes(name)) {
+    if ($playerSender.social.friends.includes(name)) {
       return error("This player is already your friend.");
     }
 
-    const $playerUpdate = await $accounts.updateOne({name}, {
+    const $playerUpdate = await $players.updateOne({name}, {
       $push: {
-        "social.requests": $accountSender.name
+        "social.requests": $playerSender.name
       }
     });
 
@@ -68,10 +55,13 @@ const addFriend: SocketRequest = (socket, error): void => {
       return error("Error updating player.");
     }
 
-    socket.emit("notification", "Friend request sent.");
+    socket.emit("notification", {
+      color: "success",
+      message: "Friend request sent."
+    });
 
     server.io.to($playerReceiver.socketId).emit("addFriend", {
-      name: $accountSender.name
+      name: $playerSender.name
     });
   });
 };

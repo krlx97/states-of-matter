@@ -1,23 +1,21 @@
 <script lang="ts">
-  import {cardsView} from "@som/shared/data";
+  import {onMount} from "svelte";
+  import {cardEffectNames, cards, cardsView, items} from "@som/shared/data";
   import {CardType, CardKlass} from "@som/shared/enums";
   import {gameStore, playerStore} from "stores";
-  import type {Card} from "@som/shared/types/game";
-  import { create_in_transition } from "svelte/internal";
-  import { fly } from "svelte/transition";
-  import { elasticOut, expoInOut } from "svelte/easing";
-  import { items } from "data";
+  import type {GameCard} from "@som/shared/types/mongo";
+    import { TextComponent } from "ui";
 
-  let card: Card;
-  let health = 0;
-  let damage = 0;
-  let mana = 0;
-  let isClient = true;
+  let card: GameCard;
   let isOpponent = false;
-  const cardView = cardsView.get(card.id);
-  let selektedSkin;
-  let klassTooltip;
+  let cardView = cardsView.find(({id}): boolean => card.id === id);
+  let selectedSkin: any;
+  let klassTooltip: any;
   let isToggled = false;
+  let isSelected = false;
+  let isAttackable = false;
+  let isTargetable = false;
+  let item = items[0];
 
   const onToggleKlassTooltip = (): void => {
     isToggled = !isToggled;
@@ -25,11 +23,9 @@
     klassTooltip.style.opacity = isToggled ? "1" : "0";
   };
 
-  export {card, health, damage, mana, isClient, isOpponent};
+  export {card, isOpponent, isSelected, isAttackable, isTargetable};
 
-  let x: any;
-
-  const spin = (node, {duration}) => ({
+  const spin = (node: any, {duration}: any) => ({
     duration,
     css(t: number) {
       const scale = (t + 0.2) / t;
@@ -38,16 +34,24 @@
     }
   });
 
+  onMount(() => {
+    if (isOpponent) {
+      selectedSkin = $gameStore.opponent.skins ? $gameStore.opponent.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
+    } else {
+      selectedSkin = $gameStore.player.skins ? $gameStore.player.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
+    }
+    cardView = cardsView.find(({id}): boolean => card.id === id);
+    // selectedSkin = $playerStore.skins.find(({cardId}): boolean => card.id === cardId);
+    item = items.find(({id}): boolean => selectedSkin.skinId === id) || items[0];
+
+  });
+
   // check which skin is selected
   $: {
-    if (isClient) {
-      selektedSkin = $playerStore.skins.find((skin) => skin.cardId === card.id);
+    if (isOpponent) {
+      selectedSkin = $gameStore.opponent.skins ? $gameStore.opponent.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
     } else {
-      if (isOpponent) {
-        selektedSkin = $gameStore.opponent.skins ? $gameStore.opponent.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
-      } else {
-        selektedSkin = $gameStore.player.skins ? $gameStore.player.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
-      }
+      selectedSkin = $gameStore.player.skins ? $gameStore.player.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
     }
   }
 </script>
@@ -59,10 +63,10 @@
     /* overflow: hidden; */
     height: var(--card-height);
     width: var(--card-width);
-    border: 2px solid rgb(127, 127, 127);
+    border: 1px solid rgb(127, 127, 127);
     border-radius: 8px;
     /* box-sizing: border-box; */
-    overflow: hidden;
+    /* overflow: hidden; */
   }
 
   .card:hover {
@@ -82,7 +86,7 @@
     left: 0;
     /* height: 135px;
     width: 108px; */
-    padding: var(--spacing-xsm);
+    padding: var(--xsm);
     display: none;
     background-color: rgba(32, 32, 32, 0.95);
     box-sizing: border-box;
@@ -104,30 +108,36 @@
     position: absolute;
     top: 0;
     left: 0;
-    /* top: 100%;
-    right: 15px; */
     height: var(--card-height);
     width: var(--card-width);
-    /* height: 136px;
-    width: 108px; */
-    padding: var(--spacing-xs);
+    padding: var(--xs);
     opacity: 0;
-    /* background-color: rgba(32, 32, 32, 0.95); */
-    /* backdrop-filter: blur(32px); */
-    background-color: rgba(32, 32, 32, 0.95);
+    backdrop-filter: blur(8px);
+    background-color: rgba(var(--dark-grey), 0.9);
     box-sizing: border-box;
-    /* border: 1px solid rgb(102, 102, 102); */
     border-radius: 8px;
-    /* text-align: justify; */
     z-index: -1;
-    line-height: 1.5;
-    font-size: var(--font-sm);
-    transition: opacity 250ms cubic-bezier(var(--ease-in-out-quad));
+    /* line-height: 1.25; */
+    font-size: var(--sm);
+    transition: opacity 400ms cubic-bezier(var(--ease-in-out-quad));
   }
 
-  /* .card__klass:hover .card__klass__tooltip {
-    display: initial;
-  } */
+  .tooltip__name {
+    margin-bottom: var(--xs);
+    /* padding-bottom: var(--xs); */
+    border: 0 solid;
+    border-bottom-width: 1px;
+    border-image: linear-gradient(
+      90deg,
+      rgb(var(--dark-grey), 1) 0%,
+      rgb(var(--grey), 1) 50%,
+      rgb(var(--dark-grey), 1) 100%
+    ) 1;
+  }
+
+  .tooltip__text {
+    line-height: 1.25;
+  }
 
   .card__name {
     position: absolute;
@@ -143,7 +153,8 @@
   .card__mana {
     position: absolute;
     bottom: 6px;
-    right: 6px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 2;
   }
 
@@ -157,7 +168,7 @@
   .card__health {
     position: absolute;
     bottom: 6px;
-    left: 6px;
+    right: 6px;
     z-index: 2;
   }
 
@@ -171,17 +182,17 @@
 
   .card__damage {
     position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 6px;
+    left: 6px;
+    /* transform: translateX(-50%); */
     z-index: 2;
   }
 
   .card__ability {
     position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 6px;
+    left: 6px;
+    /* transform: translateX(-50%); */
     z-index: 2;
   }
 
@@ -195,7 +206,7 @@
     left: 50%;
     height: 136px;
     width: 108px;
-    padding: var(--spacing-xs);
+    padding: var(--xs);
     display: none;
     background-color: rgba(32, 32, 32, 0.95);
     box-sizing: border-box;
@@ -213,19 +224,120 @@
   .card__front {
     z-index: 1;
   }
+
+  .isSelected {
+    animation: isSelectedBorder 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+  }
+
+  .isSelected::after {
+    content: "";
+    position: absolute;
+    border-radius: 8px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    box-shadow: 0 0 8px 4px rgb(var(--white));
+    animation: glow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+  }
+
+  @keyframes glow {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+
+ .isAttackable, .isTargetable {
+    animation: isAttackableBorder 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+  }
+
+ .isAttackable::after, .isTargetable::after {
+    content: "";
+    position: absolute;
+    border-radius: 8px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    box-shadow: 0 0 8px 4px rgb(var(--damage));
+    animation: glow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+  }
+
+  @keyframes isSelectedBorder {
+    from {border-color: rgb(127, 127, 127);}
+    to {border-color: rgb(255, 255, 255);}
+  }
+
+  @keyframes isAttackableBorder {
+    from {border-color: rgb(127, 127, 127);}
+    to {border-color: rgb(var(--damage));}
+  }
+
+  .buffs {
+    position: absolute;
+    bottom: calc(100% + 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 144px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(47, 47, 47);
+    border-radius: 8px;
+    line-height: 1.25;
+  }
+
+  /* .buff {color: rgb(var(--green));}
+  .debuff {color: rgb(var(--red));} */
+  .canAttack {
+    position: absolute;
+    bottom: calc(100%);
+    left: -5%;
+    animation: pop 1s linear infinite alternate;
+  }
+
+  @keyframes pop {
+    from {transform: scale(1)}
+    to {transform: scale(1.5);}
+  }
 </style>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="card">
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="card" class:isSelected class:isAttackable class:isTargetable on:click>
+  {#if card.type === CardType.MINION && !card.canAttack}
+    <div class="canAttack">💤</div>
+  {/if}
+  {#if card.type === CardType.MINION || card.type === CardType.HERO}
+    <div class="buffs">
+      {#each card.buffs as buff}
+        <TextComponent color="success">
+          {cardEffectNames.get(buff.id)}
+          {#if buff.data}
+            ({Object.values(buff.data)})
+          {/if}
+        </TextComponent>
+          <!-- cardsView.find((cardView) => cardView.id === cards.find(({effect}) => effect === buff.id)?.id)?.effect.name -->
+        <!-- <div class="buff"></div> -->
+      {/each}
+      {#each card.debuffs as debuff}
+        <TextComponent color="warn">{cardEffectNames.get(debuff.id)}</TextComponent>
+          <!-- cardsView.find((cardView) => cardView.id === cards.find(({effect}) => effect === debuff.id)?.id)?.effect.name -->
+        <!-- <div class="debuff"></div> -->
+      {/each}
+    </div>
+  {/if}
+
   <div class="card__type">
     {#if card.type === CardType.HERO}
-      <img src="assets/attrs/hero.png" alt="Hero"/>
+      <img src="images/card/hero.png" alt="Hero"/>
     {:else if card.type === CardType.MINION}
-      <img src="assets/attrs/minion.png" alt="Minion"/>
+      <img src="images/card/minion.png" alt="Minion"/>
     {:else if card.type === CardType.MAGIC}
-      <img src="assets/attrs/magic.png" alt="Magic"/>
+      <img src="images/card/magic.png" alt="Magic"/>
     {:else}
-      <img src="assets/attrs/trap.png" alt="Trap"/>
+      <img src="images/card/trap.png" alt="Trap"/>
     {/if}
     <div class="card__type__tooltip">
       {#if card.type === CardType.HERO}
@@ -240,100 +352,92 @@
     </div>
   </div>
 
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="card__klass" on:click={onToggleKlassTooltip}>
+  <div class="card__klass" on:click|stopPropagation={onToggleKlassTooltip}>
     {#if card.klass === CardKlass.SOLID}
-      <img src="assets/classes/24/{CardKlass.SOLID}.png" alt="Solid"/>
+      <img src="images/card/{CardKlass.SOLID}.png" alt="Solid"/>
     {:else if card.klass === CardKlass.LIQUID}
-      <img src="assets/classes/24/{CardKlass.LIQUID}.png" alt="Liquid"/>
+      <img src="images/card/{CardKlass.LIQUID}.png" alt="Liquid"/>
     {:else if card.klass === CardKlass.GAS}
-      <img src="assets/classes/24/{CardKlass.GAS}.png" alt="Gas"/>
+      <img src="images/card/{CardKlass.GAS}.png" alt="Gas"/>
     {:else if card.klass === CardKlass.PLASMA}
-      <img src="assets/classes/24/{CardKlass.PLASMA}.png" alt="Plasma"/>
+      <img src="images/card/{CardKlass.PLASMA}.png" alt="Plasma"/>
     {:else}
-      <img src="assets/classes/24/{CardKlass.NEUTRAL}.png" alt="Neutral"/>
+      <img src="images/card/{CardKlass.NEUTRAL}.png" alt="Neutral"/>
     {/if}
   </div>
-    <div class="card__klass__tooltip" bind:this={klassTooltip}>
-      {cardView ? cardView.effect.name : "nema"}
-      <hr/>
-      {@html cardView.effect.description || ""}
-    </div>
+
+  <div class="card__klass__tooltip" bind:this={klassTooltip}>
+    {#if cardView}
+      <div class="tooltip__name">{cardView.effect.name}</div>
+      <div class="tooltip__text">
+        {#each cardView.effect.description as chunk}
+          {#if typeof chunk === "string"}
+            {chunk}
+          {:else}
+            <TextComponent color="{chunk[0]}">{chunk[1]}</TextComponent>
+          {/if}
+        {/each}
+      </div>
+    {/if}
+  </div>
 
   <div class="card__name">{cardView ? cardView.name : "nema"}</div>
-  <img class="card__front" src="assets/cards/card-front.png" alt="Card Border"/>
+  <img class="card__front" src="images/card/card-front.png" alt="Card Border"/>
 
-  {#if selektedSkin && selektedSkin.skinId !== 0}
-    {#if !items.find((item) => item.id === selektedSkin.skinId).rarity || items.find((item) => item.id === selektedSkin.skinId).rarity === 0}
-      <img class="card__avatar" src="assets/items/{selektedSkin.skinId}.png" alt={selektedSkin.skinId}/>
-    {:else}
-      <video class="card__avatar" autoplay loop muted>
-        <source src="assets/items/{selektedSkin.skinId}.webm" type="video/webm"/> {selektedSkin.skinId}
-      </video>
-    {/if}
+  {#if item.rarity === 0 || item.rarity === 3}
+    <img class="card__avatar" src="images/items/{selectedSkin.skinId}.png" height=136 width=108 alt="Card skin"/>
   {:else}
-    <img class="card__avatar" src="assets/cards/{card.id}.jpg" height=136 width=108/>
+    <video class="card__avatar" autoplay loop muted>
+      <source src="images/items/{selectedSkin.skinId}.webm" type="video/webm"/> {selectedSkin.skinId}
+    </video>
   {/if}
 
-<!-- 
-  {#if isClient}
-    {#if $playerStore.selectedSkins.get(card.id) > 0}
-      <img class="card__avatar" src="assets/cards/{card.id}/{x.skinId}{x.extension}" alt={card.name} height=136 width=108/>
-    {:else}
-      <img class="card__avatar" src="assets/cards/{card.id}.jpg" alt={card.name} height=136 width=108/>
-    {/if}
-  {:else}
-    {#if isOpponent}
-      {#if $gameStore.selectedSkins.opponent.find(({key}) => key === card.id).value > 0}
-        <img class="card__avatar" src="assets/cards/{card.id}/{x.skinId}{x.extension}" alt={card.name} height=136 width=108/>
-      {:else}
-        <img class="card__avatar" src="assets/cards/{card.id}.jpg" alt={card.name} height=136 width=108/>
-      {/if}
-    {:else}
-      {#if $gameStore.selectedSkins.player.find(({key}) => key === card.id).value > 0}
-        <img class="card__avatar" src="assets/cards/{card.id}/{x.skinId}{x.extension}" alt={card.name} height=136 width=108/>
-      {:else}
-        <img class="card__avatar" src="assets/cards/{card.id}.jpg" alt={card.name} height=136 width=108/>
-      {/if}
-    {/if}
-  {/if} -->
-
   {#if card.type === CardType.HERO}
-    <div class="card__health">
-      <img src="assets/attrs/health.png" alt="Health"/>
-      <div class="card__health__num">{health || card.health}</div>
-    </div>
     <div class="card__ability">
-      <img src="assets/abilities/{card.ability}.png" alt="Neurotoxin"/>
+      <img src="images/card/{card.ability}.png" alt="Neurotoxin"/>
       <div class="card__ability__tooltip">
-        {cardView.ability.name}
-        <hr/>
-        {cardView.ability.description}
+        {#if cardView}
+          {cardView.ability?.name || ""}
+          <hr/>
+          {cardView.ability?.description || ""}
+        {/if}
       </div>
     </div>
-    <div class="card__mana">
-      <img src="assets/attrs/mana.png" alt="Mana"/>
-      <div class="card__health__num">{mana || card.mana}</div>
+    <div class="card__mana card__mana--center">
+      <img src="images/card/mana.png" alt="Mana"/>
+      {#key card.mana.current}
+        <div class="card__health__num" in:spin={{duration: 800}}>{card.mana.current}</div>
+      {/key}
+    </div>
+    <div class="card__health">
+      <img src="images/card/health.png" alt="Health"/>
+        {#key card.health.current}
+          <div class="card__health__num" in:spin={{duration: 800}}>{card.health.current}</div>
+        {/key}
     </div>
   {:else if card.type === CardType.MINION}
     <div class="card__health">
-      <img src="assets/attrs/health.png" alt="Health"/>
-      {#key card.health}
-        <div class="card__health__num" in:spin={{duration: 1000}}>{card.health}</div>
+      <img src="images/card/health.png" alt="Health"/>
+      {#key card.health.current}
+        <div class="card__health__num" in:spin={{duration: 800}}>{card.health.current}</div>
       {/key}
     </div>
     <div class="card__damage">
-      <img src="assets/attrs/damage.png" alt="Damage"/>
-      <div class="card__health__num">{damage || card.damage}</div>
+      <img src="images/card/damage.png" alt="Damage"/>
+      {#key card.damage.current}
+        <div class="card__health__num" in:spin={{duration: 800}}>{card.damage.current}</div>
+      {/key}
     </div>
     <div class="card__mana">
-      <img src="assets/attrs/manacost.png" alt="Mana cost"/>
-      <div class="card__health__num">{card.manaCost}</div>
+      <img src="images/card/manacost.png" alt="Mana cost"/>
+      {#key card.manaCost.current}
+        <div class="card__health__num" in:spin={{duration: 800}}>{card.manaCost.current}</div>
+      {/key}
     </div>
   {:else}
     <div class="card__mana card__mana--center">
-      <img src="assets/attrs/manacost.png" alt="Mana cost"/>
-      <div class="card__health__num">{card.manaCost}</div>
+      <img src="images/card/manacost.png" alt="Mana cost"/>
+      <div class="card__health__num">{card.manaCost.current}</div>
     </div>
   {/if}
 </div>

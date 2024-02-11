@@ -16,17 +16,23 @@ interface MirrorsEdge {
 const mirrorsEdge = (params: MirrorsEdge): Animations => {
   const {player, playerMinion, opponent, opponentTrap} = params;
 
-  player.field.hero.health -= playerMinion.damage;
+  player.field.hero.health.current -= playerMinion.damage.current;
   opponent.graveyard.push(opponentTrap);
   opponent.trap = undefined;
 
   return [{
     type: "TRAP",
-    id: opponentTrap.id
+    name: opponent.name,
+    card: opponentTrap
   }, {
-    type: "DAMAGE",
-    field: ("hero" as any),
-    damageTaken: playerMinion.damage,
+    type: "FLOATING_TEXT",
+    name: player.name,
+    field: "hero",
+    text: "MIRROR'S EDGE"
+  }, {
+    type: "HEALTH",
+    field: "hero",
+    increment: -playerMinion.damage.current,
     name: player.name
   }];
 };

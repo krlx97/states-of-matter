@@ -1,9 +1,9 @@
 import {socketService} from "services";
-import {accountStore} from "stores";
+import {playerStore} from "stores";
 
 const declineFriend = (): void => {
   socketService.socket.on("declineFriend", (params): void => {
-    accountStore.update((store) => {
+    playerStore.update((store) => {
       const {requests} = store.social;
       const i = requests.indexOf(params.name);
 

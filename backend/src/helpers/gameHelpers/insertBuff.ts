@@ -1,21 +1,15 @@
 import {EffectId} from "@som/shared/enums";
+import type {Animations} from "@som/shared/types/game";
 import type {GameMinionCard, GameHeroCard} from "@som/shared/types/mongo";
 
-const insertBuff = (card: GameMinionCard | GameHeroCard, id: EffectId, data: any = {}) => {
-  // switch (id) {
-  //   case EffectId.BLAZE:
-  //     const hasAttackedTwice = true;
-  //     card.buffs.push({id, data: {hasAttackedTwice}});
-  //     break;
-  //   case EffectId.NECROMANCY:
-  //     card.health -= 2;
-  // }
-
+// remove this?
+const insertBuff = (
+  card: GameMinionCard | GameHeroCard,
+  id: EffectId,
+  data: any = {}
+): Animations => {
   card.buffs.push({id, data});
-
-
-  // card.buffs.push({id, data});
-  return [true, ``];
+  return [];
 };
 
 export {insertBuff};

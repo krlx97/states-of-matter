@@ -1,21 +1,52 @@
 import {EffectId} from "@som/shared/enums";
-import type {GameMinionCard, GamePlayer, GameTrapCard} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
+import type {GameMinionCard, GamePlayer, GameTrapCard, MinionField} from "@som/shared/types/mongo";
 
 interface LastStand {
-  minion: GameMinionCard;
   opponent: GamePlayer;
-  trap: GameTrapCard;
+  opponentMinion: GameMinionCard;
+  opponentMinionField: MinionField;
+  opponentTrap: GameTrapCard;
 }
 
-const lastStand = (params: LastStand) => {
-  const {minion, opponent, trap} = params;
+const lastStand = (params: LastStand): Animations => {
+  const {opponent, opponentMinion, opponentMinionField, opponentTrap} = params;
+  const animations: Animations = [];
 
-  minion.health = 1;
-  minion.buffs.push({id: EffectId.TAUNT, data: {}});
-  opponent.graveyard.push(trap);
+  opponentMinion.buffs.push({
+    id: EffectId.TAUNT,
+    data: {}
+  });
+
+  animations.push({
+    type: "TRAP",
+    name: opponent.name,
+    card: opponentTrap
+  });
+
+  animations.push({
+    type: "HEALTH",
+    field: opponentMinionField,
+    name: opponent.name,
+    increment: 1 - opponentMinion.health.current
+  }, {
+    type: "FLOATING_TEXT",
+    field: opponentMinionField,
+    name: opponent.name,
+    text: `Last stand`
+  }, {
+    type: "FLOATING_TEXT",
+    field: opponentMinionField,
+    name: opponent.name,
+    text: `+ Taunt`
+  });
+
+  opponentMinion.health.current = 1;
+
+  opponent.graveyard.push(opponentTrap);
   opponent.trap = undefined;
 
-  return [true, "Last stand triggered"];
+  return animations;
 };
 
 export {lastStand};

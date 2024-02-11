@@ -5,8 +5,8 @@
 
 <style>
   .cards {
-    width: calc(144px * 4 + var(--spacing-sm) * 4);
-    padding: var(--spacing-sm);
+    width: calc(144px * 4 + var(--sm) * 4);
+    padding: var(--sm);
     overflow: scroll hidden;
     display: flex;
   }
@@ -24,7 +24,7 @@
   }
 
   .card {
-    margin-right: var(--spacing-sm);
+    margin-right: var(--sm);
   }
   .card:last-child {
     margin-right: 0;
@@ -35,7 +35,7 @@
   <div class="cards">
     {#each $modalStore.data as card}
       <div class="card">
-        <CardComponent {card} health={1} damage={1}/>
+        <CardComponent {card}/>
       </div>
     {/each}
   </div>

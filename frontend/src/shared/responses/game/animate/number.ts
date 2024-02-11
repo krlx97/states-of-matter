@@ -1,11 +1,11 @@
 import {get} from "svelte/store";
 import {soundService} from "services";
 import {gameStore, nodeStore, playerStore} from "stores";
-import type {GameMinionCard} from "@som/shared/types/backend/game";
+import type {GameMinionCard} from "@som/shared/types/mongo";
 import {create_in_transition} from "svelte/internal";
 
 const number = (animation: any): void => {
-  const duration = 700;
+  const duration = 800;
   let startTimestamp: number;
   let start: number | undefined;
   let end: number | undefined;
@@ -30,7 +30,7 @@ const number = (animation: any): void => {
 
   create_in_transition(elem, (node) => {
     return {
-      duration: 700,
+      duration: 400,
       css (t, u) {
         let num, shadow
         if (t < 0.1) {
@@ -76,28 +76,33 @@ const number = (animation: any): void => {
   setTimeout(() => {
     elem.style.visibility = "hidden";
     elem.innerText = "";
+
     const step = (timestamp: number): void => {
       if (!startTimestamp) {
         startTimestamp = timestamp;
       }
 
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const progress = Math.min((timestamp - startTimestamp) / 400, 1);
 
       gameStore.update((store) => {
         let minion: GameMinionCard;
 
         if (name === player.name) {
-          minion = store.player.minion[field];
+          minion = store.player.field[field];
         } else {
-          minion = store.opponent.minion[field];
+          minion = store.opponent.field[field];
         }
 
         if (start === undefined && end === undefined) { // can be 0, so check for === undefined
-          start = minion.health;
-          end = minion.health - damageTaken;
+          start = minion.health.current;
+          end = minion.health.current - damageTaken;
         }
 
-        minion.health = Math.floor(progress * (end - start) + start);
+        const newCurrentHealth = Math.floor(progress * (end - start) + start);
+
+        if (minion.health.current !== newCurrentHealth) {
+          minion.health.current = newCurrentHealth;
+        }
 
         return store;
       });
@@ -109,7 +114,7 @@ const number = (animation: any): void => {
 
     requestAnimationFrame(step);
     soundService.play("lifeDeduct");
-  }, 700);
+  }, 400);
 
   soundService.play("attack");
 };

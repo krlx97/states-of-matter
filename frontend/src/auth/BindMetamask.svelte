@@ -3,6 +3,7 @@
   import {ethersService, socketService} from "services";
   import {ethersStore} from "stores";
   import type { Unsubscriber } from "svelte/store";
+  import {ButtonComponent, TextComponent} from "ui";
 
   const {ethereum} = window;
 
@@ -57,12 +58,13 @@
     unsub = ethersStore.subscribe((store): void => {
       stepValid.one = window.ethereum !== undefined;
       stepValid.two = store.signer?.address !== undefined;
-      stepValid.three = store.chainId === 41n;
+      stepValid.three = store.chainId === /*1337n*/41n;
     });
 
     stepValid.one = window.ethereum !== undefined;
-    stepValid.two = $ethersStore.signer?.address !== undefined;
-    stepValid.three = $ethersStore.chainId === 41n;
+    stepValid.two = true;
+    // stepValid.two = $ethersStore.signer?.address !== undefined;
+    stepValid.three = $ethersStore.chainId === /*1337n*/41n;
   });
 
   onDestroy((): void => {
@@ -75,15 +77,15 @@
     margin: 1em 0;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--md);
     /* text-align: justify; */
   }
 
   .signin__step {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
-    /* padding: var(--spacing-md) 0; */
+    gap: var(--md);
+    /* padding: var(--md) 0; */
 /* border: 0 solid;
     border-bottom-width: 1px;
     border-image: linear-gradient(
@@ -96,11 +98,11 @@
 
   .signin__step__title {
     font-size: var(--font-lg);
-    /* margin-bottom: var(--spacing-md); */
+    /* margin-bottom: var(--md); */
   }
 
   .signin__step__info {
-    line-height: 1.4;
+    line-height: 1.25;
     text-align: justify;
   }
 
@@ -113,17 +115,16 @@
 <div class="signin__steps">
 
   <div class="signin__step">
-    <div
-      class="signin__step__title"
-      class:green="{stepValid.one}"
-      class:lt-red="{!stepValid.one}">
-      Install metamask <b>{stepValid.one ? "✔" : "X"}</b>
+    <div class="signin__step__title">
+      <TextComponent color="{stepValid.one ? "success" : "warn"}">
+        Install metamask <b>{stepValid.one ? "✔" : "X"}</b>
+      </TextComponent>
     </div>
     {#if !stepValid.one}
       <a class="a" href="https://metamask.io/" target="_blank">
-        <button class="button">
-          <img src="assets/icons/metamask.png" alt="Metamask"/> METAMASK.IO
-        </button>
+        <ButtonComponent>
+          <img src="images/metamask.png" alt="Metamask" height="32" width="32"/> METAMASK.IO
+        </ButtonComponent>
       </a>
       Refresh this page after installation.
     {/if}
@@ -137,9 +138,9 @@
     </div>
     {#if stepValid.one && !stepValid.two}
       <div>
-        <button class="button" on:click={onConnectMetamask}>
+        <ButtonComponent on:click={onConnectMetamask}>
           CONNECT
-        </button>
+        </ButtonComponent>
       </div>
     {/if}
   </div>
@@ -152,9 +153,9 @@
     </div>
     {#if stepValid.one && stepValid.two && !stepValid.three}
       <div>
-        <button class="button" on:click={onSelectNetwork}>
-          <img src="assets/icons/telosevm.png" alt="Telos EVM"/>TELOS EVM
-        </button>
+        <ButtonComponent on:click={onSelectNetwork}>
+          <img src="images/telosevm.png" alt="Telos EVM" height="32" width="32"/>TELOS EVM
+        </ButtonComponent>
       </div>
     {/if}
   </div>

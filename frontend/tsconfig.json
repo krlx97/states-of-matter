@@ -10,7 +10,6 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "data": ["src/shared/data"],
       "responses": ["src/shared/responses"],
       "services": ["src/shared/services"],
       "stores": ["src/shared/stores"],

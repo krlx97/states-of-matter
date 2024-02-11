@@ -30,10 +30,10 @@ const toxicSpray = (params: ToxicSpray) => {
     let randomMinion = randomInt(possibleMinions.length);
     let {minion, key} = possibleMinions[randomMinion];
 
-    deductHealth(opponent, minion, 1);
+    deductHealth(opponent, minion, 1, key);
     insertDebuff(minion, EffectId.NEUROTOXIN);
 
-    if (minion.health <= 0) {
+    if (minion.health.current <= 0) {
       moveToGraveyard(opponent, minion, key);
     }
   }

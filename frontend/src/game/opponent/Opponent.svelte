@@ -20,7 +20,7 @@
 
   .game-opponent__fields {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--md);
   }
 </style>
 
@@ -30,11 +30,15 @@
   <div style="position: relative;">
     <div class="game-opponent__fields">
       <OpponentDeckComponent/>
+<div></div>
+    <div></div>
       <OpponentMinionFieldComponent field="d"/>
       <OpponentMinionFieldComponent field="c"/>
       <OpponentHeroComponent/>
       <OpponentMinionFieldComponent field="b"/>
       <OpponentMinionFieldComponent field="a"/>
+<div></div>
+    <div></div>
       <OpponentGraveyardComponent/>
     </div>
     <OpponentHandCardsComponent/>

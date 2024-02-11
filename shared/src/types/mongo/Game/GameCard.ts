@@ -1,10 +1,8 @@
-import type {CardId, CardKlass, EffectId} from "../../../enums/index.js";
+import type {GameHeroCard} from "./GameHeroCard.js";
+import type {GameMagicCard} from "./GameMagicCard.js";
+import type {GameMinionCard} from "./GameMinionCard.js";
+import type {GameTrapCard} from "./GameTrapCard.js";
 
-interface GameCard {
-  id: CardId;
-  gid: number;
-  klass: CardKlass;
-  effect: EffectId;
-}
+type GameCard = GameHeroCard | GameMagicCard | GameMinionCard | GameTrapCard;
 
 export type {GameCard};

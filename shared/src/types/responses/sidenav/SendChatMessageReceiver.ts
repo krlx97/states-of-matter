@@ -1,7 +1,7 @@
 interface SendChatMessageReceiver {
   sender: string;
   text: string;
-  date: Date;
+  date: number;
 }
 
 export type {SendChatMessageReceiver};

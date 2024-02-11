@@ -1,10 +1,14 @@
 import type {
-  GameCards,
   GameHeroCard,
+  GameMagicCard,
   GameMinionCard,
   GameTrapCard,
   PlayerSkin
 } from "../../mongo/index.js";
+
+type CardList = Array<GameMagicCard|
+GameMinionCard|
+GameTrapCard>;
 
 interface GamePlayerView {
   name: string;
@@ -16,9 +20,9 @@ interface GamePlayerView {
     d: GameMinionCard | undefined;
   };
   trap: GameTrapCard | undefined;
-  hand: GameCards;
+  hand: CardList;
   deck: number;
-  graveyard: GameCards;
+  graveyard: CardList;
   skins: Array<PlayerSkin>;
 }
 

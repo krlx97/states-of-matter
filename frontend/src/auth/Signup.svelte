@@ -1,9 +1,9 @@
 <script lang="ts">
   import {onMount} from "svelte";
   import {ethersService, formService, socketService} from "services";
-  import {FormFieldComponent} from "ui";
+  import {ButtonComponent, InputComponent, FormComponent, FormSubmitComponent} from "ui";
   import BindMetamask from "./BindMetamask.svelte";
-    import { ethersStore } from "stores";
+  import { ethersStore } from "stores";
 
   const formStore = formService.create({
     name: ["", "name"],
@@ -38,7 +38,6 @@
 
   const onSignup = async (): Promise<void> => {
     if (accountType === "metamask") {
-      // await ethersService.init();
       const data = await ethersService.sign("signup");
 
       if (!data) { return; }
@@ -73,7 +72,7 @@
 
 <style>
   .signup {
-    padding: var(--spacing-md);
+    padding: var(--md);
     height: 512px;
     box-sizing: border-box;
   }
@@ -81,23 +80,23 @@
   .account-types {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--md);
   }
 </style>
 
 <div class="signup">
 
-  <form on:submit|preventDefault="{onSignup}">
+  <FormComponent on:submit="{onSignup}">
     {#if step === 1}
       <div>Step 1: Choose account type</div>
 
       <div class="account-types">
-        <FormFieldComponent
+        <InputComponent
           label="Password"
           type="radio"
           value="password"
           bind:group="{accountType}"/>
-        <FormFieldComponent
+        <InputComponent
           label="Metamask"
           type="radio"
           value="metamask"
@@ -105,20 +104,20 @@
       </div>
 
       <div class="form__submit">
-        <button class="button" type="button" on:click="{onNextStep}">
+        <ButtonComponent type="button" on:click="{onNextStep}">
           NEXT
-        </button>
+        </ButtonComponent>
       </div>
     {:else if step === 2}
       <div>Step 2: Signup</div>
 
-      <FormFieldComponent
+      <InputComponent
         label="Name"
         error="{$formStore.fields.name.error}"
         bind:value="{$formStore.fields.name.value}"
         on:input="{onInput}"/>
       {#if accountType === "password"}
-        <FormFieldComponent
+        <InputComponent
           label="Password"
           type="{isPasswordVisible ? "text" : "password"}"
           error="{$formStore.fields.password.error}"
@@ -130,7 +129,7 @@
           on:input="{onInput}"/>
       {:else}
         {#if $ethersStore.isValid}
-          <FormFieldComponent
+          <InputComponent
             label="Address"
             value="{$ethersStore.signer?.address}"
             disabled/>
@@ -140,15 +139,13 @@
       {/if}
 
       <div style="display: flex; justify-content: space-between">
-        <button class="button" type="button" on:click="{onPreviousStep}">
+        <ButtonComponent type="button" on:click="{onPreviousStep}">
           PREVIOUS
-        </button>
-        <button class="button" on:click="{onSignup}">
-          SIGNUP
-        </button>
+        </ButtonComponent>
+        <ButtonComponent>SIGNUP</ButtonComponent>
       </div>
     {/if}
 
-  </form>
+  </FormComponent>
 
 </div>

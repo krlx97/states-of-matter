@@ -6,37 +6,37 @@ import type {
   EffectId
 } from "../../enums/index.js";
 
-interface BaseCard {
+interface ClientBaseCard {
   id: CardId;
   klass: CardKlass;
   effect: EffectId;
 }
 
-interface Hero extends BaseCard {
+interface ClientHero extends ClientBaseCard {
   type: CardType.HERO;
   health: number;
   mana: number;
   ability: Ability;
 }
 
-interface Minion extends BaseCard {
+interface ClientMinion extends ClientBaseCard {
   type: CardType.MINION;
   health: number;
   damage: number;
   manaCost: number;
 }
 
-interface Magic extends BaseCard {
+interface ClientMagic extends ClientBaseCard {
   type: CardType.MAGIC;
   manaCost: number;
 }
 
-interface Trap extends BaseCard {
+interface ClientTrap extends ClientBaseCard {
   type: CardType.TRAP;
   manaCost: number;
 }
 
-type Card = Hero | Minion | Magic | Trap;
-type Cards = Array<Card>;
+type ClientCard = ClientHero | ClientMinion | ClientMagic | ClientTrap;
+type ClientCards = Array<ClientCard>;
 
-export type {BaseCard, Hero, Card, Cards};
+export type {ClientCard, ClientCards};

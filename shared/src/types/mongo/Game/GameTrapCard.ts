@@ -1,4 +1,4 @@
-import type {GameCard} from "./GameCard.js";
+import type {GameBaseCard} from "./GameBaseCard.js";
 import type {CardType} from "../../../enums/index.js";
 
 interface Attribute {
@@ -6,7 +6,7 @@ interface Attribute {
   default: number;
 }
 
-interface GameTrapCard extends GameCard {
+interface GameTrapCard extends GameBaseCard {
   type: CardType.TRAP;
   manaCost: Attribute;
 }

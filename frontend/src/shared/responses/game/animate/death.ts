@@ -26,7 +26,7 @@ const death = (animation: any): void => {
 
   create_in_transition(elem, () => {
     return {
-      duration: 700,
+      duration: 800,
       css (t, u) {
         if (isPlayer) {
           return `

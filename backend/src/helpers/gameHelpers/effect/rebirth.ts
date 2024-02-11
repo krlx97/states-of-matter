@@ -1,58 +1,79 @@
 import {CardType, EffectId} from "@som/shared/enums";
-import type {GamePlayer, MinionField} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
+import type {GameMinionCard, GamePlayer, MinionField} from "@som/shared/types/mongo";
 
 interface Rebirth {
   player: GamePlayer;
-  target?: number;
-  field?: MinionField;
+  minion: GameMinionCard;
+  field: MinionField;
 }
 
-const rebirth = (params: Rebirth) => {
-  const {player, target, field} = params;
+const rebirth = (params: Rebirth): Animations => {
+  const {player, minion, field} = params;
+  const animations: Animations = [];
 
-  if (!target) {
-    return [false, "Target for revival not specified."];
-  }
+  animations.push({
+    type: "SUMMON",
+    name: player.name,
+    field,
+    minion,
+    necromancyFixPositive: true
+  }, {
+    type: "FLOATING_TEXT",
+    field,
+    text: "REBIRTH",
+    name: player.name
+  });
 
-  if (!field) {
-    return [false, "Field for Special Summon not specified."];
-  }
-
-  if (player.field[field]) {
-    return [false, `Minion already exists on the field ${field}.`];
-  }
-
-  const toRevive = player.graveyard.find((card) => card.gid === target);
-
-  if (!toRevive) {
-    return [false, "Card with the given ID not found in the graveyard."];
-  }
-
-  if (toRevive.type !== CardType.MINION) {
-    return [false, "Selected card for revival must be a Minion."];
-  }
-
-  if (toRevive.effect === EffectId.ELUSIVE) {
-    return [false, "Rebirth negated."];
-  }
-
-  if (toRevive.effect === EffectId.NECROMANCY) {
-    toRevive.damage += 2;
-    toRevive.health += 2;
-    toRevive.buffs.push({
+  if (minion.effect === EffectId.NECROMANCY) {
+    minion.damage.current += 2;
+    minion.health.current += 2;
+    minion.buffs.push({
       id: EffectId.NECROMANCY,
       data: {damage: 2, health: 2}
     });
+
+    animations.push({
+      type: "FLOATING_TEXT",
+      field,
+      text: "NECROMANCY",
+      name: player.name
+    }, {
+      type: "DAMAGE",
+      name: player.name,
+      field,
+      increment: 2
+    }, {
+      type: "HEALTH",
+      name: player.name,
+      field,
+      increment: 2
+    });
   }
 
-  if (toRevive.effect === EffectId.PROTECTOR) {
-    toRevive.buffs.push({id: EffectId.SHIELD, data: {amount: 3}});
+  if (minion.effect === EffectId.PROTECTOR) {
+    minion.buffs.push({
+      id: EffectId.SHIELD,
+      data: {amount: 3}
+    });
+
+    animations.push({
+      type: "FLOATING_TEXT",
+      field,
+      text: "PROTECTOR",
+      name: player.name
+    }, {
+     type: "FLOATING_TEXT",
+      field,
+      text: "+3 Shield",
+      name: player.name
+    });
   }
 
-  player.field[field] = toRevive;
-  player.graveyard.splice(player.graveyard.indexOf(toRevive), 1);
+  player.field[field] = minion;
+  player.graveyard.splice(player.graveyard.indexOf(minion), 1);
 
-  return [true, "Successfully revived."];
+  return animations;
 };
 
 export {rebirth};

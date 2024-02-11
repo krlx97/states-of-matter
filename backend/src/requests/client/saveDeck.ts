@@ -58,7 +58,10 @@ const saveDeck: SocketRequest = (socket, error): void => {
       return error("Error saving deck (Most likely you made no changes to it).");
     }
 
-    socket.emit("notification", "Deck saved successfully.");
+    socket.emit("notification", {
+      color: "success",
+      message: "Deck saved successfully."
+    });
   });
 };
 

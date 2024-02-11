@@ -6,7 +6,7 @@ import type {LobbyView} from "@som/shared/types/views";
 
 const joinLobby: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $lobbies, $players} = mongo;
+  const {$lobbies, $players} = mongo;
 
   socket.on("joinLobby", async (params) => {
     const {id} = params;
@@ -31,7 +31,7 @@ const joinLobby: SocketRequest = (socket, error): void => {
       return error("You can't join a lobby while in game.");
     }
 
-    if ($lobby.challengee.name) {
+    if ($lobby.challengee) {
       return error("Lobby is full.");
     }
 
@@ -39,19 +39,12 @@ const joinLobby: SocketRequest = (socket, error): void => {
       return error("Invalid deck.");
     }
 
-    const {name} = $player;
-    const $account = await $accounts.findOne({name});
-
-    if (!$account) {
-      return error("Eternitas account not found for player.");
-    }
-
-    const {avatarId} = $account;
+    const {name, experience, level, elo, avatarId, bannerId, games} = $player;
 
     const [$lobbyUpdate, $playerUpdate, $playerHost] = await Promise.all([
       $lobbies.findOneAndUpdate({id}, {
         $set: {
-          challengee: {name, avatarId}
+          challengee: {name, experience, level, elo, avatarId, bannerId, games}
         }
       }, {
         returnDocument: "after"

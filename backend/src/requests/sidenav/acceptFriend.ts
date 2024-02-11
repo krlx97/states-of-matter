@@ -1,78 +1,74 @@
 import {mongo, server} from "app";
 import type {UpdateFilter} from "mongodb";
 import type {SocketRequest} from "@som/shared/types/backend";
-import type {Account} from "@som/shared/types/mongo";
+import type {Player} from "@som/shared/types/mongo";
 
 const acceptFriend: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$accounts, $chats, $players} = mongo;
+  const {$chats, $players} = mongo;
 
   socket.on("acceptFriend", async (params) => {
     const {name} = params;
 
-    const [$playerSender, $playerReceiver] = await Promise.all([
-      $players.findOne({socketId}),
-      $players.findOne({name})
-    ]);
+    const $playerSenderUpdate = await $players.findOneAndUpdate({socketId}, {
+      $pull: {
+        "social.requests": name
+      },
+      $push: {
+        "social.friends": name
+      }
+    } as UpdateFilter<Player> | Partial<Player>, { // bug: https://github.com/Automattic/mongoose/issues/10075
+      returnDocument: "after"
+    });
 
-    if (!$playerSender) {
-      return error("Player sender not found.");
+    if (!$playerSenderUpdate) {
+      return error("Error updating sender.");
     }
 
-    if (!$playerReceiver) {
-      return error("Player receiver not found.");
+    const $playerReceiverUpdate = await $players.findOneAndUpdate({name}, {
+      $push: {
+        "social.friends": $playerSenderUpdate.name
+      }
+    } as UpdateFilter<Player> | Partial<Player>, { // bug: https://github.com/Automattic/mongoose/issues/10075
+      returnDocument: "after"
+    });
+
+    if (!$playerReceiverUpdate) {
+      return error("Error updating receiver.");
     }
 
-    const [$accountSender, $accountReceiver, $chatInsert] = await Promise.all([
-      $accounts.findOneAndUpdate({
-        name: $playerSender.name
-      }, {
-        $pull: {
-          "social.requests": name
-        },
-        $push: {
-          "social.friends": name
-        }
-      } as UpdateFilter<Account> | Partial<Account>, { // bug: https://github.com/Automattic/mongoose/issues/10075
-        returnDocument: "after"
-      }),
-
-      $accounts.findOneAndUpdate({name}, {
-        $push: {
-          "social.friends": $playerSender.name
-        }
-      } as UpdateFilter<Account> | Partial<Account>, { // bug: https://github.com/Automattic/mongoose/issues/10075
-        returnDocument: "after"
-      }),
-
-      $chats.insertOne({
-        players: [$playerSender.name, $playerReceiver.name],
-        messages: []
-      })
-    ]);
-
-    if (!$accountSender) {
-      return error("Account sender not found.");
-    }
-
-    if (!$accountReceiver) {
-      return error("Account receiver not found.");
-    }
+    const $chatInsert = await $chats.insertOne({
+      players: [$playerSenderUpdate.name, $playerReceiverUpdate.name],
+      lastSender: $playerSenderUpdate.name,
+      unseen: 0,
+      messages: []
+    });
 
     if (!$chatInsert.insertedId) {
-      return error("Failed to insert chat.");
+      return error("Error inserting chat.");
     }
 
     socket.emit("acceptFriendSender", {
-      name: $playerReceiver.name,
-      avatarId: $accountReceiver.avatarId,
-      status: $playerReceiver.status
+      name: $playerReceiverUpdate.name,
+      avatarId: $playerReceiverUpdate.avatarId,
+      bannerId: $playerReceiverUpdate.bannerId,
+      experience: $playerReceiverUpdate.experience,
+      level: $playerReceiverUpdate.level,
+      elo: $playerReceiverUpdate.elo,
+      status: $playerReceiverUpdate.status,
+      games: $playerReceiverUpdate.games,
+      lastSender: $playerSenderUpdate.name
     });
 
-    server.io.to($playerReceiver.socketId).emit("acceptFriendReceiver", {
-      name: $playerSender.name,
-      avatarId: $accountSender.avatarId,
-      status: $playerSender.status
+    server.io.to($playerReceiverUpdate.socketId).emit("acceptFriendReceiver", {
+      name: $playerSenderUpdate.name,
+      avatarId: $playerSenderUpdate.avatarId,
+      bannerId: $playerSenderUpdate.bannerId,
+      experience: $playerSenderUpdate.experience,
+      level: $playerSenderUpdate.level,
+      elo: $playerSenderUpdate.elo,
+      status: $playerSenderUpdate.status,
+      games: $playerSenderUpdate.games,
     });
   });
 };

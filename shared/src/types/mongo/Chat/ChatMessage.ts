@@ -1,6 +1,6 @@
 interface ChatMessage {
   name: string;
-  date: Date;
+  date: number;
   text: string;
 }
 

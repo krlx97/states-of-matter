@@ -26,7 +26,7 @@ const corrosiveTouch = (params: CorrosiveTouch) => {
     }
   });
 
-  opponent.field.hero.health -= damageToHero;
+  opponent.field.hero.health.current -= damageToHero;
 
   return [true, ""];
 };

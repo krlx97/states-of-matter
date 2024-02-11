@@ -35,6 +35,7 @@ const attackMinion: SocketRequest = (socket, error): void => {
       return error("Opponents minion not found.");
     }
 
+    // ---------------- TAUNT CHECK ----------------------
     const fields: ["hero", "a", "b", "c", "d"] = ["hero", "a", "b", "c", "d"];
     const selected = fields.find((field) => field === attacked);
 
@@ -44,18 +45,29 @@ const attackMinion: SocketRequest = (socket, error): void => {
 
     fields.splice(fields.indexOf(selected), 1);
 
+    let tauntFields = [];
     for (const field of fields) {
       const fieldCard = opponent.field[field];
 
       if (fieldCard) {
         const taunt = fieldCard.buffs.find((buff) => buff.id === EffectId.TAUNT);
-        const marksmanship = playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
 
-        if (taunt && !marksmanship) {
-          return error("Cannot attack this minion, other has taunt.");
+        if (taunt) {
+          tauntFields.push(field);
         }
       }
     }
+
+    console.log(!tauntFields.includes(attacked));
+    // tauntFields = [a, c]
+    if (tauntFields.length) {
+      const marksmanship = playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
+
+      if (tauntFields.includes(attacked)) {
+        return error("Cannot attack this minion, other has taunt.");
+      }
+    }
+    // -----------------------------------------------------
 
     if (
       opponentMinion.buffs.find((buff) => buff.id === EffectId.STEALTH) &&
@@ -64,11 +76,14 @@ const attackMinion: SocketRequest = (socket, error): void => {
       return error("Can't attack minion with stealth.");
     }
 
-    const multiStrikeBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.BLAZE);
 
     if (!playerMinion.canAttack) {
-      if (multiStrikeBuff && !multiStrikeBuff.data.hasAtacked) {
-        multiStrikeBuff.data.hasAttacked = true;
+      const blazeBuff = playerMinion.buffs.find(
+        (buff): boolean => buff.id === EffectId.BLAZE
+      );
+
+      if (blazeBuff && !blazeBuff.data.hasAttackedTwice) {
+        blazeBuff.data.hasAttackedTwice = true;
       } else {
         return error("This card can't attack anymore this turn.");
       }
@@ -79,19 +94,21 @@ const attackMinion: SocketRequest = (socket, error): void => {
 
     let isAttackNegated = false;
 
-    if (opponentTrap && opponentTrap.effect === EffectId.MIRRORS_EDGE) {
+    const elusiveBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
+
+    if (opponentTrap && opponentTrap.effect === EffectId.MIRRORS_EDGE && !elusiveBuff) {
       animations.push(
         ...effect.mirrorsEdge({player, playerMinion, opponent, opponentTrap})
       );
 
-      if (await gameHelpers.isGameOver($game)) { return; }
+      if (await gameHelpers.isGameOver($game, animations)) { return; }
 
       isAttackNegated = true;
     }
 
-    if (opponentTrap && opponentTrap.effect === EffectId.RICOCHET) {
+    if (opponentTrap && opponentTrap.effect === EffectId.RICOCHET && !elusiveBuff) {
       animations.push(
-        ...effect.ricochet({player, playerMinion, opponent, opponentTrap})
+        ...effect.ricochet({player, playerMinion, opponent, opponentMinionField: attacked, opponentTrap})
       );
 
       isAttackNegated = true;
@@ -132,7 +149,7 @@ const attackMinion: SocketRequest = (socket, error): void => {
 
     if (opponentTrap && opponentTrap.effect === EffectId.CONSTRICTION) {
       animations.push(
-        ...effect.constriction({player, playerMinion, opponent, opponentTrap})
+        ...effect.constriction({player, playerMinion, opponent, opponentTrap, playerMinionField: attacker})
       );
     }
 
@@ -142,14 +159,14 @@ const attackMinion: SocketRequest = (socket, error): void => {
     }
     if (playerMinion.buffs.find((buff) => buff.id === EffectId.CORROSIVE_TOUCH)) {
       gameHelpers.effect.corrosiveTouch({opponent});
-      if (await gameHelpers.isGameOver($game)) {
+      if (await gameHelpers.isGameOver($game, animations)) {
         return;
       }
     }
     if (playerMinion.buffs.find((buff) => buff.id === EffectId.OVERPOWER)) {
       if (playerMinion.damage > opponentMinion.health) {
-        gameHelpers.effect.overpower({opponent, damage: playerMinion.damage - opponentMinion.health});
-        if (await gameHelpers.isGameOver($game)) {
+        gameHelpers.effect.overpower({opponent, damage: playerMinion.damage.current - opponentMinion.health.current});
+        if (await gameHelpers.isGameOver($game, animations)) {
           return;
         }
       }
@@ -160,41 +177,38 @@ const attackMinion: SocketRequest = (socket, error): void => {
     }
     if (opponentMinion.buffs.find((buff) => buff.id === EffectId.CORROSIVE_TOUCH)) {
       gameHelpers.effect.corrosiveTouch({opponent: player});
-      if (await gameHelpers.isGameOver($game)) {
+      if (await gameHelpers.isGameOver($game, animations)) {
         return;
       }
     }
     if (opponentMinion.buffs.find((buff) => buff.id === EffectId.OVERPOWER)) {
       if (opponentMinion.damage > playerMinion.health) {
-        gameHelpers.effect.overpower({opponent, damage: opponentMinion.damage - playerMinion.health});
-        if (await gameHelpers.isGameOver($game)) {
+        gameHelpers.effect.overpower({opponent, damage: opponentMinion.damage.current - playerMinion.health.current});
+        if (await gameHelpers.isGameOver($game, animations)) {
           return;
         }
       }
     }
 
-
     if (!isAttackNegated) {
-      gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage);
+      // shake should play both animations simultaneously
       animations.push({
-        type: "DAMAGE",
-        field: attacker,
-        damageTaken: opponentMinion.damage,
-        name: player.name
+        type: "SHAKE",
+        playerA: player.name,
+        playerANumber: opponentMinion.damage.current,
+        playerAField: attacker,
+        playerB: opponent.name,
+        playerBNumber: playerMinion.damage.current,
+        playerBField: attacked
       });
 
-      gameHelpers.deductHealth(opponent, opponentMinion, playerMinion.damage);
-      animations.push({
-        type: "DAMAGE",
-        field: attacked,
-        damageTaken: playerMinion.damage,
-        name: opponent.name
-      });
+      animations.push(...gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage.current, attacker));
+      animations.push(...gameHelpers.deductHealth(opponent, opponentMinion, playerMinion.damage.current, attacked));
     }
 
-    if (playerMinion.health <= 0 || (playerMinion.health === 1 && opponentMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
+    if (playerMinion.health.current <= 0 || (playerMinion.health.current === 1 && opponentMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
       if (player.trap && player.trap.effect === EffectId.LAST_STAND) {
-        gameHelpers.effect.lastStand({minion: playerMinion, opponent: player, trap: player.trap})
+        // gameHelpers.effect.lastStand({minion: playerMinion, opponent: player, trap: player.trap})
       } else {
         const hasAcidicDeathBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
         const hasSelfDescturctDebuff = playerMinion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
@@ -202,15 +216,11 @@ const attackMinion: SocketRequest = (socket, error): void => {
           gameHelpers.effect.reflection({player, opponent, trap: player.trap});
         }
 
-        gameHelpers.moveToGraveyard(player, playerMinion, attacker);
-        animations.push({
-          type: "DEATH",
-          field: attacker,
-          name: player.name
-        });
+        animations.push(...gameHelpers.moveToGraveyard(player, playerMinion, attacker));
+
         if (hasSelfDescturctDebuff) {
           gameHelpers.effect.selfDestruct({player});
-          if (await gameHelpers.isGameOver($game)) {
+          if (await gameHelpers.isGameOver($game, animations)) {
             return;
           }
         }
@@ -219,8 +229,8 @@ const attackMinion: SocketRequest = (socket, error): void => {
           effect.acidicDeath({player, opponent});
         }
 
-        (Object.keys(player.minion) as Array<keyof typeof player.minion>).forEach((key) => {
-          const minion = player.minion[key];
+        (Object.keys(player.field) as Array<keyof typeof player.field>).forEach((key) => {
+          const minion = player.field[key];
           if (!minion) { return; }
           if (minion.buffs.find((buff) => buff.id === EffectId.RISING_FURY)) {
             gameHelpers.effect.risingFury({minionCard: minion});
@@ -229,7 +239,7 @@ const attackMinion: SocketRequest = (socket, error): void => {
             if (playerMinion.klass === CardKlass.LIQUID) {
               const minion = gameHelpers.getRandomMinion(player);
               if (!minion) {return; }
-              minion.health += 3;
+              minion.health.current += 3;
             }
           }
         });
@@ -240,24 +250,28 @@ const attackMinion: SocketRequest = (socket, error): void => {
       }
     }
 
-    if (opponentMinion.health <= 0 || (opponentMinion.health === 1 && playerMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
+    if (opponentMinion.health.current <= 0 || (opponentMinion.health.current === 1 && playerMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
       if (opponent.trap && opponent.trap.effect === EffectId.LAST_STAND) {
-        gameHelpers.effect.lastStand({minion: opponentMinion, opponent, trap: opponent.trap})
+        animations.push(
+          ...gameHelpers.effect.lastStand({
+            opponent,
+            opponentMinion,
+            opponentMinionField: attacked,
+            opponentTrap: opponent.trap
+          })
+        );
       } else {
         const hasAcidicDeathBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
         const hasSelfDescturctDebuff = playerMinion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
         if (opponent.trap && opponent.trap.effect === EffectId.REFLECTION) {
           gameHelpers.effect.reflection({player: opponent, opponent: player, trap: opponent.trap});
         }
-        gameHelpers.moveToGraveyard(opponent, opponentMinion, attacked);
-        animations.push({
-          type: "DEATH",
-          field: attacked,
-          name: opponent.name
-        });
+
+        animations.push(...gameHelpers.moveToGraveyard(opponent, opponentMinion, attacked));
+
         if (hasSelfDescturctDebuff) {
           gameHelpers.effect.selfDestruct({player});
-          if (await gameHelpers.isGameOver($game)) {
+          if (await gameHelpers.isGameOver($game, animations)) {
             return;
           }
         }
@@ -267,8 +281,8 @@ const attackMinion: SocketRequest = (socket, error): void => {
         }
       }
 
-      (Object.keys(opponent.minion) as Array<keyof typeof opponent.minion>).forEach((key) => {
-        const minion = opponent.minion[key];
+      (Object.keys(opponent.field) as Array<keyof typeof opponent.field>).forEach((key) => {
+        const minion = opponent.field[key];
         if (!minion) { return; }
         if (minion.buffs.find((buff) => buff.id === EffectId.RISING_FURY)) {
           gameHelpers.effect.risingFury({minionCard: minion});
@@ -277,7 +291,7 @@ const attackMinion: SocketRequest = (socket, error): void => {
           if (opponentMinion.klass === CardKlass.LIQUID) {
             const minion = gameHelpers.getRandomMinion(opponent);
             if (!minion) {return; }
-            minion.health += 3;
+            minion.health.current += 3;
           }
         }
       });

@@ -1,6 +1,7 @@
 <script lang="ts">
   import SigninComponent from "./Signin.svelte";
   import SignupComponent from "./Signup.svelte";
+  import {LinkComponent} from "ui";
 
   const views = [{
     name: "Signin",
@@ -17,18 +18,23 @@
   .auth {
     height: 100%;
     width: 100%;
-    background-image: url("assets/authbg.png");
+    background-image: url("images/authbg.png");
+  }
+
+  .nav {
+    display: flex;
+    justify-content: space-evenly;
   }
 
   .auth__sidenav {
     height: 100%;
     width: 384px;
-    padding: var(--spacing-md);
+    padding: var(--md);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    backdrop-filter: blur(4px);
-    background-color: rgba(31, 31, 31, 0.8);
+    backdrop-filter: blur(8px);
+    background-color: rgba(31, 31, 31, 0.9);
     border: 0 solid;
     border-right-width: 1px;
     border-image: linear-gradient(
@@ -41,7 +47,7 @@
   }
 
   .auth__notification {
-    line-height: 1.5;
+    line-height: 1.25;
     text-align: justify;
   }
 </style>
@@ -50,13 +56,11 @@
   <div class="auth__sidenav">
     <div class="nav">
       {#each views as view}
-        <button
-          class="nav__link"
-          class:linkActive="{view.name === currentView.name}"
-          on:click="{() => currentView = view}"
-          on:keypress="{() => currentView = view}">
+        <LinkComponent
+          isActive="{view.name === currentView.name}"
+          on:click="{() => currentView = view}">
           {view.name}
-        </button>
+        </LinkComponent>
       {/each}
     </div>
 

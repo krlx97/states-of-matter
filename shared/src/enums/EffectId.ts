@@ -13,7 +13,7 @@ enum EffectId {
   // ----- MINION -----
   SHADOW_SURGE,     // ⚡ On Normal Summon & Special Summon
   QUICK_SHOT,       // ⚡ On Normal Summon
-  BLAZE,            // ♾️ On Normal Summon
+  BLAZE,            // ♾️ On Normal Summon, On End Turn
   NECROMANCY,       // ♾️ On Normal Summon & Special Summon
   ELUSIVE,          // ♾️ On Normal Summon
   REVENGE,          // ♾️ On Self Death

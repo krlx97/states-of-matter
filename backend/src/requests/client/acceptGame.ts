@@ -22,44 +22,76 @@ const acceptGame: SocketRequest = (socket, error): void => {
 
     const {type, playerA, playerB} = $gamePopup;
 
-    if (playerA.hasAccepted || playerB.hasAccepted) {
-      const $gamePopupDelete = await $gamePopups.deleteOne({id});
-
-      if (!$gamePopupDelete.deletedCount) {
-        return error("Error deleting game popup.");
+    if (playerA.name === $player.name) {
+      if (playerA.hasAccepted) {
+        return error("You already accepted this match.");
       }
 
-      await gameHelpers.startGame(id, type, playerA.name, playerB.name);
-    } else {
-      if (playerA.name === $player.name) {
-        playerA.hasAccepted = true;
-      } else if (playerB.name === $player.name) {
-        playerB.hasAccepted = true;
+      if (playerB.hasAccepted) {
+        const $gamePopupDelete = await $gamePopups.deleteOne({id});
+
+        if (!$gamePopupDelete.deletedCount) {
+          return error("Error deleting game popup.");
+        }
+
+        await gameHelpers.startGame(id, type, playerA.name, playerB.name);
+      } else {
+        const [$gamePopupUpdate, $playerA, $playerB] = await Promise.all([
+          $gamePopups.updateOne({id}, {
+            $set: {
+              "playerA.hasAccepted": true
+            }
+          }),
+          $players.findOne({
+            name: playerA.name
+          }),
+          $players.findOne({
+            name: playerB.name
+          })
+        ]);
+
+        if (!$gamePopupUpdate.modifiedCount || !$playerA || !$playerB) {
+          return error("Error fetching players in game popup.");
+        }
+
+        socket.emit("acceptGame", {who: "player"});
+        server.io.to($playerB.socketId).emit("acceptGame", {who: "opponent"});
+      }
+    } else if (playerB.name === $player.name) {
+      if (playerB.hasAccepted) {
+        return error("You already accepted this match.");
       }
 
-      const [$playerA, $playerB, $gamePopupReplace] = await Promise.all([
-        $players.findOne({
-          name: playerA.name
-        }),
-        $players.findOne({
-          name: playerB.name
-        }),
-        $gamePopups.replaceOne({id}, $gamePopup)
-      ]);
+      if (playerA.hasAccepted) {
+        const $gamePopupDelete = await $gamePopups.deleteOne({id});
 
-      if (!$playerA || !$playerB) {
-        return error("Player A in popup not found.");
+        if (!$gamePopupDelete.deletedCount) {
+          return error("Error deleting game popup.");
+        }
+
+        await gameHelpers.startGame(id, type, playerB.name, playerA.name);
+      } else {
+        const [$gamePopupUpdate, $playerA, $playerB] = await Promise.all([
+          $gamePopups.updateOne({id}, {
+            $set: {
+              "playerB.hasAccepted": true
+            }
+          }),
+          $players.findOne({
+            name: playerA.name
+          }),
+          $players.findOne({
+            name: playerB.name
+          })
+        ]);
+
+        if (!$gamePopupUpdate.modifiedCount || !$playerA || !$playerB) {
+          return error("Error fetching players in game popup.");
+        }
+
+        socket.emit("acceptGame", {who: "player"});
+        server.io.to($playerA.socketId).emit("acceptGame", {who: "opponent"});
       }
-
-      if (!$playerB) {
-        return error("Player B in popup not found.");
-      }
-
-      if (!$gamePopupReplace.modifiedCount) {
-        return error("Error replacing game popup.");
-      }
-
-      server.io.to([$playerA.socketId, $playerB.socketId]).emit("acceptGame");
     }
   });
 };

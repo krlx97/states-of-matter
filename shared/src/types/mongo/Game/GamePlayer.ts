@@ -1,8 +1,10 @@
-import type {GameCards} from "./GameCards.js";
 import type {GameHeroCard} from "./GameHeroCard.js";
 import type {GameMinionCard} from "./GameMinionCard.js";
 import type {GameTrapCard} from "./GameTrapCard.js";
 import type {PlayerSkin} from "../Player/index.js";
+import type {GameMagicCard} from "./GameMagicCard.js";
+
+type CardList = Array<GameMagicCard | GameMinionCard | GameTrapCard>;
 
 interface GamePlayer {
   name: string;
@@ -14,9 +16,9 @@ interface GamePlayer {
     d: GameMinionCard | undefined;
   };
   trap: GameTrapCard | undefined;
-  hand: GameCards;
-  deck: GameCards;
-  graveyard: GameCards;
+  hand: CardList;
+  deck: CardList;
+  graveyard: CardList;
   skins: Array<PlayerSkin>;
 }
 

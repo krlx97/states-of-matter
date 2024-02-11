@@ -1,60 +1,175 @@
 <script lang="ts">
   import {cards} from "@som/shared/data";
-  import {CardType} from "@som/shared/enums";
+  import {CardKlass, CardType} from "@som/shared/enums";
   import {tutorialStore} from "stores";
+  import {LinkComponent, SelectComponent} from "ui";
   import KlassCardComponent from "./KlassCard.svelte";
+    import { soundService } from "services";
 
-  let selectedKlass = 0;
-  const klasses = [0, 1, 2, 3, 4];
-  $: isTutorial = $tutorialStore.name === "deckBuilder" && $tutorialStore.currentStep === 3;
+  let selectedKlass = "All";
+  let selectedType = "All";
+  let currentSort = "Initial";
+  let sortAscending = true;
+  let filteredCards = cards.filter((card): boolean => card.type !== CardType.HERO);
+
+  $: isTutorial =
+    $tutorialStore.name === "deckBuilder" &&
+    $tutorialStore.currentStep === 3;
+
+  const onFilterCards = (): void => {
+    filteredCards = cards
+      .filter((card): boolean => card.type !== CardType.HERO)
+      .filter((card) => {
+        if (selectedKlass === "All") {
+          return true;
+        } else {
+          if (selectedKlass === "Neutral" && card.klass === CardKlass.NEUTRAL) {
+            return true;
+          } else if (selectedKlass === "Solid" && card.klass === CardKlass.SOLID) {
+            return true;
+          } else if (selectedKlass === "Liquid" && card.klass === CardKlass.LIQUID) {
+            return true;
+          } else if (selectedKlass === "Gas" && card.klass === CardKlass.GAS) {
+            return true;
+          } else if (selectedKlass === "Plasma" && card.klass === CardKlass.PLASMA) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      })
+      .filter((card) => {
+        if (selectedType === "All") {
+          return true;
+        } else {
+          if (selectedType === "Magic" && card.type === CardType.MAGIC) {
+            return true;
+          } else if (selectedType === "Minion" && card.type === CardType.MINION) {
+            return true;
+          } else if (selectedType === "Trap" && card.type === CardType.TRAP) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+    });
+  };
+
+  const onSortInitial = (): void => {
+    currentSort = "Initial";
+    sortAscending = true;
+    filteredCards = filteredCards.sort((a, b) => a.id - b.id);
+
+    soundService.play("click");
+  };
+
+  const onSortDamage = (): void => {
+    if (currentSort === "Damage") {
+      sortAscending = !sortAscending;
+    } else {
+      sortAscending = true;
+      currentSort = "Damage";
+    }
+
+    filteredCards = filteredCards.sort((a, b) => {
+      if (a.type === CardType.MINION && b.type === CardType.MINION) {
+        return sortAscending ? a.damage - b.damage : b.damage - a.damage;
+      } else if (a.type === CardType.MINION && b.type !== CardType.MINION) {
+        return 1;
+      } else if (a.type !== CardType.MINION && b.type === CardType.MINION) {
+        return -1
+      } else {
+        return 0;
+      }
+    });
+
+    soundService.play("click");
+  };
+
+  const onSortManaCost = (): void => {
+    if (currentSort === "Mana Cost") {
+      sortAscending = !sortAscending;
+    } else {
+      sortAscending = true;
+      currentSort = "Mana Cost";
+    }
+
+    filteredCards = filteredCards.sort((a, b) => {
+      if (a.type !== CardType.HERO && b.type !== CardType.HERO) {
+        return sortAscending ? a.manaCost - b.manaCost : b.manaCost - a.manaCost;
+      } else {
+        return 0;
+      }
+    });
+
+    soundService.play("click");
+  };
+
+  const onSortHealth = (): void => {
+    if (currentSort === "Health") {
+      sortAscending = !sortAscending;
+    } else {
+      sortAscending = true;
+      currentSort = "Health";
+    }
+
+    filteredCards = filteredCards.sort((a, b) => {
+      if (a.type === CardType.MINION && b.type === CardType.MINION) {
+        return sortAscending ? a.health - b.health : b.health - a.health;
+      } else if (a.type === CardType.MINION && b.type !== CardType.MINION) {
+        return 1;
+      } else if (a.type !== CardType.MINION && b.type === CardType.MINION) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+
+    soundService.play("click");
+  };
 </script>
 
 <style>
-  .cards__klasses {
+  .klass-cards {
+    /* padding: var(--md) 0; */
     display: flex;
-    justify-content: space-evenly;
-    margin: var(--spacing-xl) 0 var(--spacing-sm) 0;
+    flex-direction: column;
+    gap: var(--md);
   }
 
-  .cards__klasses__klass {
-    opacity: 0.6;
-    cursor: pointer;
-    transition: filter 250ms ease;
-    border-radius: 50%;
+  .cards__actions {
+    display: flex;
+    justify-content: space-between;
+    /* margin: var(--xl) 0 var(--sm) 0; */
   }
 
-  .cards__klasses__klass:hover {
-    opacity: 0.8;
-    box-shadow: 0 0 8px 2px white;
-  }
-
-  .cards__klasses__klass-selected {
-    opacity: 1;
-    box-shadow: 0 0 16px 2px white;
+  .cards__action {
+    display: flex;
+    gap: var(--md);
   }
 
   .cards__list {
-    height: calc(216px * 2 + var(--spacing-md) * 1);
-    padding-right: var(--spacing-md);
+    height: calc(218px * 2 + var(--md));
+    padding: 0 var(--md);
+    padding-right: calc(var(--md) - 4px);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    gap: var(--spacing-md);
+    gap: var(--md);
     box-sizing: border-box;
     overflow-y: scroll;
   }
 
   .cards__list::-webkit-scrollbar {
-    width: 8px;
+    width: 4px;
   }
 
   .cards__list::-webkit-scrollbar-track {
-    background-color: rgb(63, 63, 63);
     border-radius: 8px;
   }
 
   .cards__list::-webkit-scrollbar-thumb {
-    background-color: rgb(127, 127, 127);
+    background-color: rgb(var(--grey));
     border-radius: 8px;
   }
 
@@ -62,26 +177,67 @@
     position: relative;
     z-index: 101;
   }
+
+  .arrow {
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+    transform: rotate(45deg);
+  }
 </style>
 
-<div class:isTutorial>
-<div class="cards__klasses">
-  {#each klasses as klass}
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div
-      class="cards__klasses__klass"
-      class:cards__klasses__klass-selected="{klass === selectedKlass}"
-      on:click="{() => selectedKlass = klass}">
-      <img src="assets/classes/48/{klass}.png" alt="Klass {klass}"/>
+<div class="klass-cards" class:isTutorial>
+  <div class="cards__actions">
+    <div class="cards__action">
+      <SelectComponent
+        values="{[
+          "All",
+          "Neutral",
+          "Solid",
+          "Liquid",
+          "Gas",
+          "Plasma"
+        ]}"
+        label="Class"
+        bind:selected="{selectedKlass}"
+        on:change="{onFilterCards}"/>
+
+      <SelectComponent
+        values="{["All", "Magic", "Minion", "Trap"]}"
+        label="Type"
+        bind:selected="{selectedType}"
+        on:change="{onFilterCards}"/>
     </div>
-  {/each}
-</div>
-<div class="cards__list">
-  {#each cards as card}
-    {#if card.klass === selectedKlass && card.type !== CardType.HERO}
-      <KlassCardComponent {card}/>
-    {/if}
-  {/each}
-</div>
+    <div class="cards__action">
+      <LinkComponent on:click="{onSortInitial}">Initial</LinkComponent>
+      <LinkComponent on:click="{onSortDamage}">
+        Damage
+        {#if currentSort === "Damage"}
+          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+        {/if}
+      </LinkComponent>
+      <LinkComponent on:click="{onSortManaCost}">
+        Mana Cost
+        {#if currentSort === "Mana Cost"}
+          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+        {/if}
+      </LinkComponent>
+      <LinkComponent on:click="{onSortHealth}">
+        Health
+        {#if currentSort === "Health"}
+          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+        {/if}
+      </LinkComponent>
+    </div>
+  </div>
+
+  <div class="cards__list">
+    {#key filteredCards}
+      {#each filteredCards as card}
+        <KlassCardComponent {card}/>
+      {/each}
+    {/key}
+  </div>
+
 </div>

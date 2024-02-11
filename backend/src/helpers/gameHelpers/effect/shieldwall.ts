@@ -1,32 +1,58 @@
 import {EffectId} from "@som/shared/enums";
 import {getAdjacentMinions} from "../getAdjacentMinions";
-import {insertBuff} from "../insertBuff";
+import type {Animations} from "@som/shared/types/game";
 import type {GamePlayer, MinionField} from "@som/shared/types/mongo";
 
 interface Shieldwall {
   player: GamePlayer;
-  field: MinionField;
+  playerMinionField: MinionField;
 }
 
-const shieldwall = (params: Shieldwall): void => {
-  const {player, field} = params;
-  const fields = getAdjacentMinions(field);
+const shieldwall = (params: Shieldwall): Animations => {
+  const {player, playerMinionField} = params;
+  const animations: Animations = [];
+  const fields = getAdjacentMinions(playerMinionField);
 
-  fields.forEach((field) => {
+  animations.push({
+    type: "FLOATING_TEXT",
+    field: playerMinionField,
+    name: player.name,
+    text: `SHIELDWALL`
+  });
+
+  fields.forEach((field): void => {
     const minion = player.field[field as keyof typeof player.field];
 
     if (minion) {
-      const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
-      const unbreakableBuff = minion.buffs.find((buff) => buff.id === EffectId.UNBREAKABLE);
+      const shieldBuff = minion.buffs.find(
+        (buff): boolean => buff.id === EffectId.SHIELD
+      );
+
+      const unbreakableBuff = minion.buffs.find(
+        (buff): boolean => buff.id === EffectId.UNBREAKABLE
+      );
+
       const amount = unbreakableBuff ? 2 : 1;
 
       if (shieldBuff) {
         shieldBuff.data.amount += amount;
       } else {
-        insertBuff(minion, EffectId.SHIELD, {amount});
+        minion.buffs.push({
+          id: EffectId.SHIELD,
+          data: {amount}
+        });
       }
+
+      animations.push({
+        type: "FLOATING_TEXT",
+        field: field as keyof typeof player.field,
+        name: player.name,
+        text: `+${amount} Shield`
+      });
     }
   });
+
+  return animations;
 };
 
 export {shieldwall};

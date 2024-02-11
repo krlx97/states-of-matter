@@ -1,16 +1,26 @@
 <script lang="ts">
   import {formatUnits, parseUnits} from "ethers";
-  import {ethersService, formService} from "services";
-  import {accountStore, modalStore, walletStore} from "stores";
-  import {CurrencyComponent, FormFieldComponent, ModalComponent, FormLoadingComponent} from "ui";
+  import {ethersService, formService, socketService, soundService} from "services";
+  import {modalStore, playerStore, inventoryStore} from "stores";
+    import { onDestroy, onMount } from "svelte";
+
+  import {
+    InputComponent,
+    ModalComponent,
+    FormSubmitComponent,
+    FormComponent,
+    TableComponent
+  } from "ui";
 
   const {id} = $modalStore.data;
-  const name = id === 1n ? "Etheric Crystals" : id === 2n ? "Wrapped Telos" : "Liquidity Provided Etheric Crystals";
-  const icon = id === 1n ? "ecr" : id === 2n ? "wtlos" : "lpecr";
-  const balance = id === 1n ? $walletStore.ecr.balance : id === 2n ? $walletStore.wtlos.balance : $walletStore.lpecr.balance;
+  const name = id === 1n ? "Etheric Crystals" : "Etheric Energy";
+  const icon = id === 1n ? "ecr" : "enrg";
+  let balance = id === 1n ? $inventoryStore.ecr : $inventoryStore.enrg;
+
+  console.log(balance);
 
   const formStore = formService.create({
-    address: ["", "address"],
+    name: ["", "name"],
     amount: ["", "currency", balance]
   });
 
@@ -32,60 +42,77 @@
   const onSetMax = (): void => {
     $formStore.fields.amount.value = formatUnits(balance);
     onInput();
+    soundService.play("click");
   };
 
   const onSubmit = async (): Promise<void> => {
-    $formStore.isLoading = true;
+    soundService.play("click");
 
-    const isConfirmed = await ethersService.transact(
-      "somTokens",
-      "safeTransferFrom",
-      [$accountStore.publicKey, $formStore.fields.address.value, id, parseUnits($formStore.fields.amount.value), ""]
-    );
-
-    if (!isConfirmed) {
-      await ethersService.reloadUser();
-      onInput();
-    }
-
-    $formStore.isLoading = false;
+    socketService.socket.emit("getAddress", {name: $formStore.fields.name.value});
   };
+
+  onMount((): void => {
+    socketService.socket.on("getAddress", async (params: any): Promise<void> => {
+      $formStore.isLoading = true;
+
+      console.log(params.address, parseUnits($formStore.fields.amount.value));
+
+      const isConfirmed = await ethersService.transact(
+        id === 1n ? "ethericCrystals" : "ethericEnergy",
+        "transfer",
+        [params.address, parseUnits($formStore.fields.amount.value)]
+      );
+
+      if (isConfirmed) {
+        await ethersService.reloadUser();
+
+        balance = id === 1n ? $inventoryStore.ecr : $inventoryStore.enrg;
+        receipt.balance = balance;
+
+        onInput();
+      }
+
+      $formStore.isLoading = false;
+    });
+  });
+
+  onDestroy((): void => {
+    socketService.socket.off("getAddress");
+  });
 </script>
 
 <ModalComponent>
-  <div class="modal">
-    <div class="modal__title">Transfer</div>
-    <div class="modal__info">Transfer {name} to another Telos EVM address.</div>
 
-    <form id="transfer" on:submit|preventDefault="{onSubmit}">
-      <FormFieldComponent
-        label="Address"
-        error="{$formStore.fields.address.error}"
-        bind:value="{$formStore.fields.address.value}"
-        on:input="{onInput}"/>
+  <svelte:fragment slot="title">Transfer</svelte:fragment>
 
-      <FormFieldComponent
-        label="Amount"
-        icon="{icon}"
-        error="{$formStore.fields.amount.error}"
-        action="{["MAX", onSetMax]}"
-        bind:value="{$formStore.fields.amount.value}"
-        on:input="{onInput}"/>
-    </form>
+  <svelte:fragment slot="info">
+    Transfer {name} to another player.
+  </svelte:fragment>
 
-    <div class="modal__table">
-      <table>
-        <tr>
-          <td>BALANCE</td>
-          <td><CurrencyComponent name="{icon}" number="{receipt.balance}"/></td>
-        </tr>
-        <tr>
-          <td>REMAINING</td>
-          <td><CurrencyComponent name="{icon}" number="{receipt.remaining}"/></td>
-        </tr>
-      </table>
-    </div>
+  <FormComponent on:submit="{onSubmit}">
 
-    <FormLoadingComponent form="transfer" {formStore}/>
-  </div>
+    <InputComponent
+      label="Name"
+      error="{$formStore.fields.name.error}"
+      bind:value="{$formStore.fields.name.value}"
+      on:input="{onInput}"/>
+
+    <InputComponent
+      label="Amount"
+      icon="{icon}"
+      error="{$formStore.fields.amount.error}"
+      action="{["MAX", onSetMax]}"
+      bind:value="{$formStore.fields.amount.value}"
+      on:input="{onInput}"/>
+
+    <TableComponent items="{[
+      ["Balance", receipt.balance, icon],
+      ["Remaining", receipt.remaining, icon]
+    ]}"/>
+
+    <svelte:fragment slot="submit">
+      <FormSubmitComponent {formStore}>TRANSFER</FormSubmitComponent>
+    </svelte:fragment>
+
+  </FormComponent>
 </ModalComponent>

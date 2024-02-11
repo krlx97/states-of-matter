@@ -1,18 +1,20 @@
 import {isAddress, parseUnits} from "ethers";
-import {accountStore} from "stores";
+import {playerStore} from "stores";
 import {get, writable, type Writable} from "svelte/store";
 
-type Validator = "name" | "password" | "currency" | "item" | "address" | "craft";
+type Validator = "name" | "password" | "currency" | "item" | "address" | "craft" | "craft2";
 
 type FormField = {
   value: string;
   error: string;
   validator: Validator;
   balance: bigint | undefined;
+  balance2: bigint | undefined;
   price: bigint | undefined;
+  price2: bigint | undefined;
 };
 
-type FieldData = [string, Validator, bigint?, bigint?];
+type FieldData = [string, Validator, bigint?, bigint?, bigint?, bigint?];
 
 interface Form<K extends string> {
   fields: Record<K, FormField>;
@@ -24,7 +26,6 @@ const isEmpty = (value: string): boolean => value === "";
 const isInvalidNumber = (value: string): boolean => !/^-?\d*[\.]?\d+$/.test(value);
 const isInvalidDecimals = (value: string): boolean => (value.split(".")[1] || []).length > 18;
 const isNoDecimals = (value: string): boolean => (value.split(".")[1] || []).length > 0;
-
 const isNegative = (value: bigint): boolean => value <= 0;
 const isSufficientBalance = (balance: bigint, value: bigint): boolean => balance - value < 0;
 
@@ -69,7 +70,7 @@ const validateAddress = (address: string): string => {
     return "Invalid address format";
   }
 
-  if (address.toLowerCase() === get(accountStore).publicKey.toLowerCase()) {
+  if (address.toLowerCase() === get(playerStore).address.toLowerCase()) {
     return "Can't transfer to self";
   }
 
@@ -95,7 +96,7 @@ const validateCurrency = (balance: bigint | undefined, value: string): string =>
     return "Must be positive";
   }
 
-  if (balance && isSufficientBalance(balance, amt)) {
+  if (balance !== undefined && isSufficientBalance(balance, amt)) {
     return "Insufficient balance";
   }
 
@@ -121,7 +122,7 @@ const validateItem = (balance: bigint | undefined, value: string): string => {
     return "Must be positive";
   }
 
-  if (balance && isSufficientBalance(balance, amt)) {
+  if (balance !== undefined && balance - amt < 0) {
     return "Insufficient balance";
   }
 
@@ -147,8 +148,43 @@ const validateCraft = (balance: bigint | undefined, value: string, price: bigint
     return "Must be positive";
   }
 
-  if (balance && isSufficientBalance(balance, amt * price)) {
+  if (balance !== undefined && isSufficientBalance(balance, amt * price)) {
     return "Insufficient balance";
+  }
+
+  return "";
+};
+
+const validateCraft2 = (
+  balance: bigint | undefined,
+  balance2: bigint | undefined,
+  value: string,
+  price: bigint | undefined,
+  price2: bigint | undefined): string => {
+  if (isEmpty(value)) {
+    return "Mustn't be empty";
+  }
+
+  if (isInvalidNumber(value)) {
+    return "Invalid number format";
+  }
+
+  if (isNoDecimals(value)) {
+    return "No decimals allowed";
+  }
+
+  const amt = BigInt(value);
+
+  if (isNegative(amt)) {
+    return "Must be positive";
+  }
+
+  if (balance !== undefined && isSufficientBalance(balance, amt * price)) {
+    return "Insufficient EES balance";
+  }
+
+  if (balance2 !== undefined && isSufficientBalance(balance2, amt * price2)) {
+    return "Insufficient ECR balance";
   }
 
   return "";
@@ -161,7 +197,9 @@ const create = <K extends string>(obj: Record<K, FieldData>): Writable<Form<K>> 
       error: "",
       validator: obj[key][1],
       balance: obj[key][2],
-      price: obj[key][3]
+      price: obj[key][3],
+      balance2: obj[key][4], // used for crafting, where users pay with 2 currencise
+      price2: obj[key][5], // used for crafting, where users pay with 2 currencise
     };
     return acc;
   }, {}) as Record<K, FormField>;
@@ -188,6 +226,8 @@ const validate = (formStore: Writable<any>): void => {
         field.error = validateItem(field.balance, field.value)
       } else if (field.validator === "craft") {
         field.error = validateCraft(field.balance, field.value, field.price);
+      } else if (field.validator === "craft2") {
+        field.error = validateCraft2(field.balance, field.balance2, field.value, field.price, field.price2);
       }
     });
 

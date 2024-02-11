@@ -3,7 +3,6 @@ import {lastStand} from "./lastStand";
 import {selfDestruct} from "./selfDestruct";
 import {moveToGraveyard} from "../moveToGraveyard";
 import {deductHealth} from "../deductHealth";
-import {isGameOver} from "../isGameOver";
 import type {Animations} from "@som/shared/types/game";
 import type {GamePlayer} from "@som/shared/types/mongo";
 
@@ -14,26 +13,32 @@ interface AcidicDeath {
 
 const acidicDeath = (params: AcidicDeath): Animations => {
   const {player, opponent} = params;
-  const playerMinionKeys = Object.keys(player.field) as Array<keyof typeof player.field>;
-  const opponentMinionKeys = Object.keys(opponent.field) as Array<keyof typeof opponent.field>;
+
+  type PlayerFields = Array<keyof typeof player.field>;
+  type OpponentFields = Array<keyof typeof opponent.field>;
+
+  const playerMinionKeys = Object.keys(player.field) as PlayerFields;
+  const opponentMinionKeys = Object.keys(opponent.field) as OpponentFields;
   const animations: Animations = [];
 
-  playerMinionKeys.forEach((key) => {
+  playerMinionKeys.forEach((key): void => {
     const minion = player.field[key];
 
-    if (!minion || minion.type === CardType.HERO) { return; }
+    if (!minion || minion.type === CardType.HERO) {
+      return;
+    }
 
-    animations.push(...deductHealth(player, minion, 1));
+    animations.push(...deductHealth(player, minion, 1, key));
 
     if (minion.health.current <= 0) {
       const {trap} = player;
 
       if (trap && trap.effect === EffectId.LAST_STAND) {
-        lastStand({minion, opponent: player, trap})
+        animations.push(...lastStand({minion, opponent: player, trap}));
       } else {
         const hasAcidicDeathBuff = minion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
 
-        moveToGraveyard(player, minion, key);
+        animations.push(...moveToGraveyard(player, minion, key));
 
         if (hasAcidicDeathBuff) {
           animations.push(...acidicDeath({player, opponent}));
@@ -47,25 +52,26 @@ const acidicDeath = (params: AcidicDeath): Animations => {
 
     if (!minion || minion.type === CardType.HERO) { return; }
 
-    animations.push(...deductHealth(opponent, minion, 1));
+    animations.push(...deductHealth(opponent, minion, 1, key));
 
     if (minion.health.current <= 0) {
       const {trap} = opponent;
 
       if (trap && trap.effect === EffectId.LAST_STAND) {
-        lastStand({minion, opponent, trap})
+        animations.push(...lastStand({minion, opponent, trap}));
       } else {
         const hasAcidicDeathBuff = minion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
         const hasSelfDescturctDebuff = minion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
 
-        moveToGraveyard(opponent, minion, key);
+        animations.push(...moveToGraveyard(opponent, minion, key));
 
         if (hasSelfDescturctDebuff) {
-          selfDestruct({player}); // check for endgame? find a better way to call onDeath effects?
+          // check for endgame? find a better way to call onDeath effects?
+          animations.push(...selfDestruct({player}));
         }
 
         if (hasAcidicDeathBuff) {
-          acidicDeath({player, opponent});
+          animations.push(...acidicDeath({player, opponent}));
         }
       }
     }

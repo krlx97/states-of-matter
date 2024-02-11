@@ -2,7 +2,8 @@ import {writable} from "svelte/store";
 
 interface Notification {
   id: number;
-  msg: string;
+  color: "primary" | "success" | "warn";
+  message: string;
 }
 
 type Notifications = Array<Notification>;

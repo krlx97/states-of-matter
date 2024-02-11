@@ -1,122 +1,67 @@
 <script lang="ts">
-  import {modalService} from "services";
+  import {modalService, soundService} from "services";
   import CoinComopnent from "./Coin.svelte";
-  import Claim from "./modals/Claim/Claim.svelte";
-  import ExploreCrystals from "./modals/ExploreCrystals.svelte";
-  import ExploreEssence from "./modals/ExploreEssence.svelte";
-  import Stake from "./modals/Stake.svelte";
+  import EnergizeComponent from "./modals/Energize.svelte";
+  import ExploreCrystalsComponent from "./modals/ExploreCrystals.svelte";
+  import ExploreEnergyComponent from "./modals/ExploreEnergy.svelte";
+  import ExploreEssenceComponent from "./modals/ExploreEssence.svelte";
+  import SolidifyComponent from "./modals/Solidify.svelte";
   import TransferComponent from "./modals/Transfer.svelte";
-  import Unstake from "./modals/Unstake.svelte";
-  import SwapComponent from "./modals/Swap.svelte";
-  import RemoveLiquidity from "./modals/RemoveLiquidity.svelte";
-  import AddLiquidity from "./modals/AddLiquidity.svelte";
-  import ExploreWrappedTelos from "./modals/ExploreWrappedTelos.svelte";
-  import Wrap from "./modals/Wrap.svelte";
-  import Unwrap from "./modals/Unwrap.svelte";
-  import ExploreLpecr from "./modals/ExploreLpecr.svelte";
 
   const onExploreCrystals = (): void => {
-    modalService.open(ExploreCrystals);
+    modalService.open(ExploreCrystalsComponent);
+    soundService.play("click");
   };
 
-  const onExploreWtlos = (): void => {
-    modalService.open(ExploreWrappedTelos);
-  };
-
-  const onTransferEcr = (): void => {
-    modalService.open(TransferComponent, {id: 1n});
-  };
-
-  const onTransferWtlos = (): void => {
-    modalService.open(TransferComponent, {id: 2n});
-  };
-
-  const onTransferLpecr = (): void => {
-    modalService.open(TransferComponent, {id: 3n});
-  };
-
-  const onStakeEcr = (): void => {
-    modalService.open(Stake, {id: 1n});
-  };
-
-  const onStakeLpecr = (): void => {
-    modalService.open(Stake, {id: 3n});
-  };
-
-  const onUnstakeEcr = (): void => {
-    modalService.open(Unstake, {id: 1n});
-  };
-
-  const onUnstakeLpecr = (): void => {
-    modalService.open(Unstake, {id: 3n});
-  };
-
-  const onClaim = (): void => {
-    modalService.open(Claim);
+  const onExploreEnergy = (): void => {
+    modalService.open(ExploreEnergyComponent);
+    soundService.play("click");
   };
 
   const onExploreEssence = (): void => {
-    modalService.open(ExploreEssence);
+    modalService.open(ExploreEssenceComponent);
+    soundService.play("click");
   };
 
-  const onExploreLpecr = (): void => {
-    modalService.open(ExploreLpecr);
+  const onEnergize = (): void => {
+    modalService.open(EnergizeComponent);
+    soundService.play("click");
   };
 
-  const onSwap = (): void => {
-    modalService.open(SwapComponent);
+  const onSolidify = (): void => {
+    modalService.open(SolidifyComponent);
+    soundService.play("click");
   };
 
-  const onAddLiquidity = (): void => {
-    modalService.open(AddLiquidity);
+  const onTransferCrystals = (): void => {
+    modalService.open(TransferComponent, {id: 1n});
+    soundService.play("click");
   };
 
-  const onRemoveLiquidity = (): void => {
-    modalService.open(RemoveLiquidity);
-  };
-
-  const onWrap = (): void => {
-    modalService.open(Wrap);
-  };
-
-  const onUnwrap = (): void => {
-    modalService.open(Unwrap);
+  const onTransferEnergy = (): void => {
+    modalService.open(TransferComponent, {id: 2n});
+    soundService.play("click");
   };
 
   const coins = [{
     name: "Etheric Essence",
-    ticker: "ese",
+    ticker: "ees",
     menuItems: [["EXPLORE", onExploreEssence]]
   }, {
     name: "Etheric Crystals",
     ticker: "ecr",
     menuItems: [
       ["EXPLORE", onExploreCrystals],
-      ["TRANSFER", onTransferEcr],
-      ["STAKE", onStakeEcr],
-      ["UNSTAKE", onUnstakeEcr],
-      ["CLAIM", onClaim]
-    ]
-  }, {
-    name: "Etheric Telos",
-    ticker: "wtlos",
-    menuItems: [
-      ["EXPLORE", onExploreWtlos],
-      ["TRANSFER", onTransferWtlos],
-      ["WRAP", onWrap],
-      ["UNWRAP", onUnwrap]
+      ["TRANSFER", onTransferCrystals],
+      ["ENERGIZE", onEnergize]
     ]
   }, {
     name: "Etheric Energy",
-    ticker: "lpecr",
+    ticker: "enrg",
     menuItems: [
-      ["EXPLORE", onExploreLpecr],
-      ["TRANSFER", onTransferLpecr],
-      ["STAKE", onStakeLpecr],
-      ["UNSTAKE", onUnstakeLpecr],
-      ["SWAP", onSwap],
-      ["ADD", onAddLiquidity],
-      ["REMOVE", onRemoveLiquidity]
+      ["EXPLORE", onExploreEnergy],
+      ["TRANSFER", onTransferEnergy],
+      ["SOLIDIFY", onSolidify]
     ]
   }];
 </script>
@@ -124,7 +69,7 @@
 <style>
   .coins {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--md);
     justify-content: center;
   }
 </style>

@@ -1,7 +1,7 @@
 import {GameType, PlayerStatus} from "@som/shared/enums";
 import {modalService, socketService} from "services";
 import {playerStore} from "stores";
-import GameEndedComponent from "../../../client/play/modals/GameEnded.svelte"
+import GameEndedComponent from "../../../client/Play/modals/GameEnded.svelte"
 import { animate } from "../game/animate";
 
 const gameEnded = (): void => {

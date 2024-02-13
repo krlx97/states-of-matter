@@ -1,26 +1,50 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte";
-  import {ethersService, formService, modalService, soundService} from "services";
-  import {modalStore, playerStore, inventoryStore, ethersStore} from "stores";
-  import {ButtonComponent, CurrencyComponent, FormComponent, FormSubmitComponent, ModalComponent, TableComponent} from "ui";
+
+  import {
+    ethersService,
+    formService,
+    modalService,
+    soundService
+  } from "services";
+
+  import {playerStore, inventoryStore, ethersStore} from "stores";
+
+  import {
+    FormComponent,
+    FormSubmitComponent,
+    ModalComponent,
+    TableComponent
+  } from "ui";
+
   import RandomSkinComponent from "../../Items/modals/RandomSkin.svelte";
 
   const formStore = formService.create({});
 
   const onUnlock = async (): Promise<void> => {
-    $formStore.isLoading = true;
-    const {somGame} = ethersService.keys;
     soundService.play("click");
 
+    $formStore.isLoading = true;
+
     if (!$inventoryStore.approvals.items) {
-      const isConfirmed = await ethersService.transact("somTokens", "setApprovalForAll", [somGame, true]);
+      const isConfirmed = await ethersService.transact(
+        "somTokens",
+        "setApprovalForAll",
+        [ethersService.keys.somGame, true]
+      );
+
       if (!isConfirmed) {
         $formStore.isLoading = false;
         return;
       }
     }
 
-    const isConfirmed = await ethersService.transact("somGame", "unlockChest", []);
+    const isConfirmed = await ethersService.transact(
+      "somGame",
+      "unlockChest",
+      []
+    );
+
     if (!isConfirmed) {
       $formStore.isLoading = false;
       return;
@@ -40,12 +64,7 @@
   }
 
   onMount((): void => {
-    if ($inventoryStore.chests < 1n) {
-      $formStore.isDisabled = true;
-    } else {
-      $formStore.isDisabled = false;
-    }
-
+    $formStore.isDisabled = $inventoryStore.chests < 1n ? true : false;
     $ethersStore.contracts.somGame.on("RandomItem", onRandomSkin);
   });
 
@@ -56,10 +75,12 @@
 
 <ModalComponent>
   <svelte:fragment slot="title">Unlock chest</svelte:fragment>
+
   <svelte:fragment slot="info">
     The chest contains one completely random item. When unlocked, it will pick
     a random rarity, and give you a random item from that rarity list.
   </svelte:fragment>
+
   <FormComponent on:submit="{onUnlock}">
     <TableComponent items="{[
       ["UNCOMMON", "80%", undefined, "uncommon"],

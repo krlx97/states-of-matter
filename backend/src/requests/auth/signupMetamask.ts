@@ -1,4 +1,4 @@
-import {verifyMessage} from "ethers";
+import {isAddress, verifyMessage} from "ethers";
 import {mongo} from "app";
 import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
@@ -10,17 +10,26 @@ const signupMetamask: SocketRequest = (socket, error): void => {
     const {name, address, signature} = params;
 
     if (name.length < 3) {
-      return error("Minimum 3 characters.");
+      return error("Name minimum 3 characters.");
     }
 
     if (name.length > 16) {
-      return error("Maximum 16 characters.");
+      return error("Name maximum 16 characters.");
+    }
+
+    if (!isAddress(address)) {
+      return error("Invalid address");
     }
 
     const $player = await $players.findOne({name});
+    const $player2 = await $players.findOne({address});
 
     if ($player) {
       return error("Name taken.");
+    }
+
+    if ($player2) {
+      return error("Address taken.");
     }
 
     const recoveredAddress = verifyMessage("signup", signature);

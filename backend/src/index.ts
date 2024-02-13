@@ -11,6 +11,22 @@ process.on("uncaughtException", (error, origin): void => {
 });
 
 const cleanup = async (): Promise<void> => {
+  // await contracts.somGame["addItem"](101301n, 1n).catch(console.log);
+  // await contracts.somGame["addItem"](101302n, 2n).catch(console.log);
+  // await contracts.somGame["addItem"](101303n, 3n).catch(console.log);
+  // await contracts.somGame["addItem"](101304n, 4n).catch(console.log);
+  // await contracts.somGame["addItem"](101305n, 5n).catch(console.log);
+  // await contracts.somGame["addItem"](101401n, 1n).catch(console.log);
+  // await contracts.somGame["addItem"](101402n, 2n).catch(console.log);
+  // await contracts.somGame["addItem"](101403n, 3n).catch(console.log);
+  // await contracts.somGame["addItem"](101404n, 4n).catch(console.log);
+  // await contracts.somGame["addItem"](101405n, 5n).catch(console.log);
+  // await contracts.somGame["addItem"](101501n, 1n).catch(console.log);
+  // await contracts.somGame["addItem"](101502n, 2n).catch(console.log);
+  // await contracts.somGame["addItem"](101503n, 3n).catch(console.log);
+  // await contracts.somGame["addItem"](101504n, 4n).catch(console.log);
+  // await contracts.somGame["addItem"](101505n, 5n).catch(console.log);
+
   // remove all rankedQueuePlayers, casualQueuePlayers, and gamePopups when
   // restarting the server?
 };
@@ -58,6 +74,17 @@ server.io.on("connection", (socket): void => {
       return error("No rewards to claim");
     }
 
+    const $playerUpdate = await mongo.$players.updateOne({socketId: socket.id}, {
+      $set: {
+        "rewards.ees": "0",
+        "rewards.ecr": "0"
+      }
+    });
+
+    if (!$playerUpdate.modifiedCount) {
+      return error("Error updating player.");
+    }
+
     const tx = await contracts.somGame.claimRewards(
       $player.address,
       BigInt($player.rewards.ees),
@@ -65,21 +92,14 @@ server.io.on("connection", (socket): void => {
     ).catch(console.log);
 
     if (!tx) {
-      return error("Couldn't push tx");
+      return error("Couldn't push transaction, no tokens were minted.");
     }
 
     const fin = await tx.wait();
 
     if (!fin) {
-      return error("Error pushing tx");
+      return error("Error transacting");
     }
-
-    await mongo.$players.updateOne({socketId: socket.id}, {
-      $set: {
-        "rewards.ees": "0",
-        "rewards.ecr": "0"
-      }
-    });
 
     socket.emit("notification", {color: "success", message: "Claimed rewards."});
   });
@@ -91,7 +111,7 @@ server.io.on("connection", (socket): void => {
 
 server.http.listen(process.env.PORT || 4201);
 
-schedule("*/10 * * * *", async (): Promise<void> => {
+schedule("0 */24 * * *", async (): Promise<void> => {
   for await (let $player of mongo.$players.find()) {
     if (!$player.tasks.daily && $player.tasks.dailyAlternative) {
       $player.tasks.weekly = 0;

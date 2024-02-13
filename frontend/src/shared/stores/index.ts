@@ -1,3 +1,4 @@
+export {bindStepsStore} from "./bindStepsStore";
 export {gamePopupStore} from "./gamePopupStore";
 export {leaderboardsStore} from "./leaderboardsStore";
 export {lobbyStore} from "./lobbyStore";

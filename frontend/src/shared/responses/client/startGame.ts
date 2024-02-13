@@ -1,7 +1,7 @@
 import {PlayerStatus, QueueId} from "@som/shared/enums";
 import {modalService, socketService} from "services";
 import {gameStore, playerStore} from "stores";
-import GameStartedComponent from "../../../client/play/modals/GameStarted.svelte";
+import GameStartedComponent from "../../../client/Play/modals/GameStarted.svelte";
 
 const startGame = (): void => {
   const {socket} = socketService;

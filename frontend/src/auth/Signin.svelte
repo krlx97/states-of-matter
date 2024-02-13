@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import {ethersService, formService, socketService} from "services";
-  import {ButtonComponent, InputComponent, FormComponent, FormSubmitComponent} from "ui";
+  import {ButtonComponent, InputComponent, FormComponent, FormSubmitComponent, SelectComponent} from "ui";
   import { getAddress } from "ethers";
   import { ethersStore } from "stores";
+  import BindMetamask from "./BindMetamask.svelte";
 
   const formStore = formService.create({
     name: ["", "name"],
@@ -11,12 +12,12 @@
   });
 
   const formStoreMetamask = formService.create({});
-  formService.validate(formStoreMetamask);
-
+  let selectedAddress: any;
   let checked = false;
   let view = "password";
-
   let isPasswordVisible = false;
+
+  formService.validate(formStoreMetamask);
 
   const onInput = (): void => {
     formService.validate(formStore);
@@ -35,11 +36,12 @@
   };
 
   const onMetamask = async (): Promise<void> => {
-    const address = $ethersStore.signer?.address;
-    socketService.socket.emit("getNonce", {address});
+    await ethersService.init();
+    socketService.socket.emit("getNonce", {address: selectedAddress});
   };
 
   onMount(async () => {
+
     socketService.socket.on("getNonce", async (params) => {
       const {nonce} = params;
       const data = await ethersService.sign(`signin${nonce}`);
@@ -138,10 +140,23 @@
     <FormComponent on:submit="{onMetamask}">
       <div>Metamask signin</div>
 
-      <InputComponent
+      {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId === 41n}
+          <SelectComponent
+            label="Address"
+            values={$ethersStore.accounts}
+            bind:selected="{selectedAddress}"/>
+          <!-- {selectedAddress} -->
+          <!-- <InputComponent
+            label="Address"
+            value="{$ethersStore.accounts[0]}"
+            disabled/> -->
+        {:else}
+          <BindMetamask/>
+        {/if}
+      <!-- <InputComponent
         label="Address"
         value="{$ethersStore.signer?.address}"
-        disabled/>
+        disabled/> -->
 
       <InputComponent
         label="Remember me"

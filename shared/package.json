@@ -1,6 +1,6 @@
 {
   "name": "@som/shared",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "author": "Eternitas Games",
   "license": "ISC",
   "type": "module",
@@ -8,12 +8,11 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "ethers": "^6.8.0",
-    "mongodb": "^6.2.0",
-    "socket.io": "^4.7.2"
+    "mongodb": "^6.3.0",
+    "socket.io": "^4.7.4"
   },
   "devDependencies": {
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   },
   "exports": {
     "./data": "./dist/data/index.js",
@@ -27,14 +26,30 @@
   },
   "typesVersions": {
     "*": {
-      "data": ["dist/data/index.d.ts"],
-      "enums": ["dist/enums/index.d.ts"],
-      "types/backend": ["dist/types/backend/index.d.ts"],
-      "types/game": ["dist/types/game/index.d.ts"],
-      "types/mongo": ["dist/types/mongo/index.d.ts"],
-      "types/requests": ["dist/types/requests/index.d.ts"],
-      "types/responses": ["dist/types/responses/index.d.ts"],
-      "types/views": ["dist/types/views/index.d.ts"]
+      "data": [
+        "dist/data/index.d.ts"
+      ],
+      "enums": [
+        "dist/enums/index.d.ts"
+      ],
+      "types/backend": [
+        "dist/types/backend/index.d.ts"
+      ],
+      "types/game": [
+        "dist/types/game/index.d.ts"
+      ],
+      "types/mongo": [
+        "dist/types/mongo/index.d.ts"
+      ],
+      "types/requests": [
+        "dist/types/requests/index.d.ts"
+      ],
+      "types/responses": [
+        "dist/types/responses/index.d.ts"
+      ],
+      "types/views": [
+        "dist/types/views/index.d.ts"
+      ]
     }
   }
 }

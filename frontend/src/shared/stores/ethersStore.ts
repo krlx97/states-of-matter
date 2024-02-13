@@ -2,8 +2,10 @@ import type { BrowserProvider, Contract, JsonRpcSigner } from "ethers";
 import { writable } from "svelte/store";
 
 interface EthersStore {
-  provider: BrowserProvider;
-  signer: JsonRpcSigner | undefined;
+  // provider: BrowserProvider;
+  // signer: JsonRpcSigner | undefined;
+  // chainId: bigint;
+  accounts: Array<string>;
   chainId: bigint;
   contracts: {
     ethericEssence: Contract;
@@ -12,12 +14,13 @@ interface EthersStore {
     somTokens: Contract;
     somGame: Contract;
   };
-  isValid: boolean;
+  // isValid: boolean;
 }
 
 const ethersStore = writable<EthersStore>({
-  provider: {} as BrowserProvider,
-  signer: undefined,
+  // provider: {} as BrowserProvider,
+  // signer: undefined,
+  accounts: [],
   chainId: 0n,
   contracts: {
     ethericEssence: {} as Contract,
@@ -26,7 +29,7 @@ const ethersStore = writable<EthersStore>({
     somTokens: {} as Contract,
     somGame: {} as Contract
   },
-  isValid: false,
+  // isValid: false,
 });
 
 export {ethersStore};

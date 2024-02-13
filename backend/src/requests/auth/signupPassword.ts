@@ -10,11 +10,15 @@ const signupPassword: SocketRequest = (socket, error): void => {
     const {name, password} = params;
 
     if (name.length < 3) {
-      return error("Minimum 3 characters.");
+      return error("Name minimum 3 characters.");
     }
 
     if (name.length > 16) {
-      return error("Maximum 16 characters.");
+      return error("Name maximum 16 characters.");
+    }
+
+    if (password.length < 6) {
+      return error("Password minimum 6 characters.");
     }
 
     const $player = await $players.findOne({name});

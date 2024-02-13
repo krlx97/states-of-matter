@@ -195,7 +195,7 @@ const cardsView = [{
         },
         skins: []
     }, {
-        id: CardId.BOEDICEA,
+        id: CardId.BOEDICEA, // ----- SOLID -----
         name: "Boedicea",
         lore: `
     Immortality in any form was deemed possible. Created from metal, earth and

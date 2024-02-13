@@ -1,7 +1,7 @@
 <script lang="ts">
-  import {onMount} from "svelte";
+  import {onDestroy, onMount} from "svelte";
   import {ethersService, formService, socketService} from "services";
-  import {ButtonComponent, InputComponent, FormComponent, FormSubmitComponent} from "ui";
+  import {ButtonComponent, InputComponent, FormComponent, FormSubmitComponent, SelectComponent} from "ui";
   import BindMetamask from "./BindMetamask.svelte";
   import { ethersStore } from "stores";
 
@@ -10,23 +10,27 @@
     password: ["", "password"]
   });
 
+  let selectedAddress = $ethersStore.accounts[0];
+
   let isPasswordVisible = false;
+  let step = 1;
+  let accountType = "password";
+  // let disabled = true;
 
   const onInput = (): void => {
+    // if (accountType === "password") {
+    //   disabled = $formStore.fields.name.error !== "" || $formStore.fields.password.error !== "";
+    // } else {
+    //   console.log($formStore.fields.name.error, selectedAddress);
+    //   disabled = $formStore.fields.name.error !== "" || selectedAddress !== undefined
+    // }
+
     formService.validate(formStore);
   };
 
   const onTogglePasswordVisible = (): void => {
     isPasswordVisible = !isPasswordVisible;
   };
-
-  let step = 1;
-  let name = "";
-  let password = "";
-  let repeatPassword = "";
-  let disabled = true;
-  let accountType = "password";
-  let address = "";
 
   const onNextStep = (): void => {
     step += 1;
@@ -35,6 +39,13 @@
   const onPreviousStep = (): void => {
     step -= 1;
   };
+
+
+  // $: if (accountType === "password") {
+  //   disabled = !$formStore.fields.name.error && !$formStore.fields.password.error
+  // } else {
+  //   disabled = !$formStore.fields.name.error && selectedAddress !== undefined
+  // }
 
   const onSignup = async (): Promise<void> => {
     if (accountType === "metamask") {
@@ -57,17 +68,27 @@
     }
   };
 
-  onMount(async () => {
+  // let sub;
+  // onMount(async () => {
+  //   sub = ethersStore.subscribe((store) => {
+  //     selectedAddress = store.accounts[0];
+  //     onInput();
+  //   });
+
     // window.ethereum.on("accountsChanged", (accounts: any) => {
     //   address = accounts[0];
     // });
 
-    const accounts = await window.ethereum.request({
-      method: "eth_accounts"
-    });
+    // const accounts = await window.ethereum.request({
+    //   method: "eth_accounts"
+    // });
 
     // address = accounts[0];
-  });
+  // });
+
+  // onDestroy(() => {
+  //   sub();
+  // })
 </script>
 
 <style>
@@ -95,12 +116,12 @@
           label="Password"
           type="radio"
           value="password"
-          bind:group="{accountType}"/>
+          bind:group="{accountType}" on:change="{onInput}"/>
         <InputComponent
           label="Metamask"
           type="radio"
           value="metamask"
-          bind:group="{accountType}"/>
+          bind:group="{accountType}" on:change="{onInput}"/>
       </div>
 
       <div class="form__submit">
@@ -116,6 +137,7 @@
         error="{$formStore.fields.name.error}"
         bind:value="{$formStore.fields.name.value}"
         on:input="{onInput}"/>
+
       {#if accountType === "password"}
         <InputComponent
           label="Password"
@@ -128,21 +150,26 @@
           bind:value="{$formStore.fields.password.value}"
           on:input="{onInput}"/>
       {:else}
-        {#if $ethersStore.isValid}
-          <InputComponent
+        {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId === 41n}
+          <SelectComponent
             label="Address"
-            value="{$ethersStore.signer?.address}"
-            disabled/>
+            values={$ethersStore.accounts}
+            bind:selected="{selectedAddress}"/>
+          <!-- {selectedAddress} -->
+          <!-- <InputComponent
+            label="Address"
+            value="{$ethersStore.accounts[0]}"
+            disabled/> -->
         {:else}
           <BindMetamask/>
         {/if}
       {/if}
 
       <div style="display: flex; justify-content: space-between">
-        <ButtonComponent type="button" on:click="{onPreviousStep}">
+        <ButtonComponent on:click="{onPreviousStep}">
           PREVIOUS
         </ButtonComponent>
-        <ButtonComponent>SIGNUP</ButtonComponent>
+        <ButtonComponent type="submit">SIGNUP</ButtonComponent>
       </div>
     {/if}
 

@@ -55,8 +55,6 @@
     socketService.socket.on("getAddress", async (params: any): Promise<void> => {
       $formStore.isLoading = true;
 
-      console.log(params.address, parseUnits($formStore.fields.amount.value));
-
       const isConfirmed = await ethersService.transact(
         id === 1n ? "ethericCrystals" : "ethericEnergy",
         "transfer",

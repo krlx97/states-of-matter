@@ -1,4 +1,4 @@
-import { JsonRpcProvider, Wallet, Contract, verifyMessage } from 'ethers';
+import { JsonRpcProvider, Wallet, Contract, getAddress, verifyMessage, isAddress } from 'ethers';
 import EthericEssence from '@som/contracts/EthericEssence/artifacts/EthericEssence.json' assert { type: 'json' };
 import EthericCrystals from '@som/contracts/EthericCrystals/artifacts/EthericCrystals.json' assert { type: 'json' };
 import EthericEnergy from '@som/contracts/EthericEnergy/artifacts/EthericEnergy.json' assert { type: 'json' };
@@ -17,11 +17,11 @@ import { schedule } from 'node-cron';
 const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
 const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
 const keys = {
-    ethericEssence: "0x98c9D1e1e9e6Ee021B8288902f4D24A693DeB986",
-    ethericCrystals: "0xdB5D0309028e06aFc743f1A83fC4653DB8DAA5B8",
-    ethericEnergy: "0x4Ca02e48bC26707b83F2c14D11D838cc64C04Ba6",
-    somTokens: "0x27Eb2894A475a533c8AAA3268b521aC47f99cbC7",
-    somGame: "0x20625c87228573EA374e02844782ec3a1a0497ce"
+    ethericEssence: "0x5E2b786F404eF4E824F731F5C055f57A9619E06b",
+    ethericCrystals: "0x4f5e7F9785a102d351aD9Abd9F9ff595B702Df67",
+    ethericEnergy: "0x9c324504ac273E90c2BC9c496Fd56b364Ca9aa72",
+    somTokens: "0x0786BD21cb63d04a0EAe7B31a5c7813C3D1701d2",
+    somGame: "0x4f5735538bE5491a2f466b48Cc9Cb4deE7D6181d"
 };
 const ethericEssence = new Contract(keys.ethericEssence, EthericEssence.abi, signer);
 const ethericCrystals = new Contract(keys.ethericCrystals, EthericCrystals.abi, signer);
@@ -2358,7 +2358,7 @@ const playerTemplate = (name, passwordHash, address) => ({
     elo: 500,
     avatarId: 1000,
     bannerId: 2000,
-    deckId: 0,
+    deckId: 0, // should be called deckIndex, because this is actually index.
     queueId: QueueId.NONE,
     lobbyId: 0,
     gameId: 0,
@@ -2442,7 +2442,10 @@ const disconnect = (socket, error) => {
 const getNonce = (socket, error) => {
     const { $players } = mongo;
     socket.on("getNonce", async (params) => {
-        const { address } = params;
+        const address = getAddress(params.address);
+        if (!address) {
+            return error("Invalid address.");
+        }
         const $player = await $players.findOne({ address });
         if (!$player) {
             return error("Player not found.");
@@ -2491,6 +2494,7 @@ const signinPassword = (socket, error) => {
     socket.on("signinPassword", async (params) => {
         const { name, password, rememberMe } = params;
         const $player = await $players.findOne({ name });
+        console.log($player);
         if (!$player) {
             return error("Account not found.");
         }
@@ -2517,14 +2521,21 @@ const signupMetamask = (socket, error) => {
     socket.on("signupMetamask", async (params) => {
         const { name, address, signature } = params;
         if (name.length < 3) {
-            return error("Minimum 3 characters.");
+            return error("Name minimum 3 characters.");
         }
         if (name.length > 16) {
-            return error("Maximum 16 characters.");
+            return error("Name maximum 16 characters.");
+        }
+        if (!isAddress(address)) {
+            return error("Invalid address");
         }
         const $player = await $players.findOne({ name });
+        const $player2 = await $players.findOne({ address });
         if ($player) {
             return error("Name taken.");
+        }
+        if ($player2) {
+            return error("Address taken.");
         }
         const recoveredAddress = verifyMessage("signup", signature);
         if (recoveredAddress !== address) {
@@ -2546,10 +2557,13 @@ const signupPassword = (socket, error) => {
     socket.on("signupPassword", async (params) => {
         const { name, password } = params;
         if (name.length < 3) {
-            return error("Minimum 3 characters.");
+            return error("Name minimum 3 characters.");
         }
         if (name.length > 16) {
-            return error("Maximum 16 characters.");
+            return error("Name maximum 16 characters.");
+        }
+        if (password.length < 6) {
+            return error("Password minimum 6 characters.");
         }
         const $player = await $players.findOne({ name });
         if ($player) {
@@ -4628,6 +4642,21 @@ process.on("uncaughtException", (error, origin) => {
     console.log(`Uncaught Exception: ${error}`);
 });
 const cleanup = async () => {
+    // await contracts.somGame["addItem"](101301n, 1n).catch(console.log);
+    // await contracts.somGame["addItem"](101302n, 2n).catch(console.log);
+    // await contracts.somGame["addItem"](101303n, 3n).catch(console.log);
+    // await contracts.somGame["addItem"](101304n, 4n).catch(console.log);
+    // await contracts.somGame["addItem"](101305n, 5n).catch(console.log);
+    // await contracts.somGame["addItem"](101401n, 1n).catch(console.log);
+    // await contracts.somGame["addItem"](101402n, 2n).catch(console.log);
+    // await contracts.somGame["addItem"](101403n, 3n).catch(console.log);
+    // await contracts.somGame["addItem"](101404n, 4n).catch(console.log);
+    // await contracts.somGame["addItem"](101405n, 5n).catch(console.log);
+    // await contracts.somGame["addItem"](101501n, 1n).catch(console.log);
+    // await contracts.somGame["addItem"](101502n, 2n).catch(console.log);
+    // await contracts.somGame["addItem"](101503n, 3n).catch(console.log);
+    // await contracts.somGame["addItem"](101504n, 4n).catch(console.log);
+    // await contracts.somGame["addItem"](101505n, 5n).catch(console.log);
     // remove all rankedQueuePlayers, casualQueuePlayers, and gamePopups when
     // restarting the server?
 };
@@ -4663,20 +4692,23 @@ server.io.on("connection", (socket) => {
         if (BigInt($player.rewards.ecr) < 1 && BigInt($player.rewards.ees) < 1) {
             return error("No rewards to claim");
         }
-        const tx = await contracts.somGame.claimRewards($player.address, BigInt($player.rewards.ees), BigInt($player.rewards.ecr)).catch(console.log);
-        if (!tx) {
-            return error("Couldn't push tx");
-        }
-        const fin = await tx.wait();
-        if (!fin) {
-            return error("Error pushing tx");
-        }
-        await mongo.$players.updateOne({ socketId: socket.id }, {
+        const $playerUpdate = await mongo.$players.updateOne({ socketId: socket.id }, {
             $set: {
                 "rewards.ees": "0",
                 "rewards.ecr": "0"
             }
         });
+        if (!$playerUpdate.modifiedCount) {
+            return error("Error updating player.");
+        }
+        const tx = await contracts.somGame.claimRewards($player.address, BigInt($player.rewards.ees), BigInt($player.rewards.ecr)).catch(console.log);
+        if (!tx) {
+            return error("Couldn't push transaction, no tokens were minted.");
+        }
+        const fin = await tx.wait();
+        if (!fin) {
+            return error("Error transacting");
+        }
         socket.emit("notification", { color: "success", message: "Claimed rewards." });
     });
     requests.forEach((request) => {
@@ -4684,7 +4716,7 @@ server.io.on("connection", (socket) => {
     });
 });
 server.http.listen(process.env.PORT || 4201);
-schedule("*/10 * * * *", async () => {
+schedule("0 */24 * * *", async () => {
     for await (let $player of mongo.$players.find()) {
         if (!$player.tasks.daily && $player.tasks.dailyAlternative) {
             $player.tasks.weekly = 0;

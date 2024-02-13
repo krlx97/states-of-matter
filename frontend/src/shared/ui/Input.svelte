@@ -191,7 +191,7 @@
   </div>
 {:else if type === "radio"}
   <div class="radio-field">
-    <input {id} type="radio" {value} {name} bind:group on:click="{onClick}"/>
+    <input {id} type="radio" {value} {name} bind:group on:click="{onClick}" on:change/>
     <label for="{id}">{label}</label>
   </div>
 {:else}

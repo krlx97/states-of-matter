@@ -1,6 +1,6 @@
 <script lang="ts">
   import {playerStore, tutorialStore} from "stores";
-  import {TutorialComponent} from "ui";
+  import {ButtonComponent, TutorialComponent} from "ui";
   import CurrenciesComponent from "./Coins/Coins.svelte";
   import ItemsComponent from "./Items/Items.svelte";
   import WalletTutorial1 from "./Tutorial/WalletTutorial1.svelte";
@@ -9,10 +9,16 @@
   import WalletTutorial4 from "./Tutorial/WalletTutorial4.svelte";
   import Rewards from "./Rewards/Rewards.svelte";
     import Chest from "./Chest/Chest.svelte";
+    import { modalService } from "services";
+    import Approvals from "./Approvals.svelte";
 
   $: isTutorial = $tutorialStore.name === "inventory" && $tutorialStore.currentStep === 1;
   $: isTutorial2 = $tutorialStore.name === "inventory" && $tutorialStore.currentStep === 2;
   $: isTutorial3 = $tutorialStore.name === "inventory" && $tutorialStore.currentStep === 3;
+
+  const onApprovals = (): void => {
+    modalService.open(Approvals);
+  };
 
   const steps = [{
     position: "top: 50%; left: 50%; transform: translate(-50%, -50%)",
@@ -61,6 +67,8 @@
 <div class="inventory">
   <div class="inventory__main">
     <Chest/>
+    <ButtonComponent on:click={onApprovals}>APPROVALS</ButtonComponent>
+
     <div class:isTutorial>
       <CurrenciesComponent/>
     </div>

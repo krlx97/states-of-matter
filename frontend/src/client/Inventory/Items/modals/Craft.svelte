@@ -67,15 +67,10 @@
   };
 
   const onSetMax = (): void => {
+    soundService.play("click");
+
     const max1 = $inventoryStore.ecr / ecrPrice;
     const max2 = $inventoryStore.ees / eesPrice;
-    console.log(max1 > max2);
-
-    // if (ecrPrice * max1 < $inventoryStore.ecr && eesPrice * max2 > $inventoryStore.ees) {
-    //   $formStore.fields.amount.value = `${max1}`;
-    // } else if (eesPrice * max2 < $inventoryStore.ees && ecrPrice * max1 > $inventoryStore.ecr) {
-    //   $formStore.fields.amount.value = `${max2}`;
-    // }
 
     if (max1 > max2) {
       $formStore.fields.amount.value = `${max2}`;
@@ -84,19 +79,20 @@
     }
 
     onInput();
-    soundService.play("click");
   };
 
   const onSubmit = async (): Promise<void> => {
-    $formStore.isLoading = true;
-    const {somGame} = ethersService.keys;
     soundService.play("click");
+
+    $formStore.isLoading = true;
+
+    const {somGame} = ethersService.keys;
 
     if ($inventoryStore.approvals.ecr < receipt.priceEcr) {
       await ethersService.transact(
         "ethericCrystals",
         "approve",
-        [somGame, receipt.priceEcr - $inventoryStore.approvals.ecr]
+        [somGame, receipt.priceEcr]
       );
     }
 
@@ -104,7 +100,7 @@
       await ethersService.transact(
         "ethericEssence",
         "approve",
-        [somGame, receipt.price - $inventoryStore.approvals.ees]
+        [somGame, receipt.price]
       );
     }
 
@@ -141,18 +137,13 @@
 
       <TableComponent items="{[
         ["Price per item", eesPrice, "ees"],
-        // ["PRICE ECR", ecrPrice, "ecr"],
         ["Total price", receipt.price, "ees"],
-        // ["TOTAL ECR", receipt.priceEcr, "ecr"],
         ["Remaining", receipt.remaining, "ees"],
-        // ["REMAINING ECR", receipt.remainingEcr, "ecr"],
       ]}"/>
+
       <TableComponent items="{[
-        // ["PRICE EES", eesPrice, "ees"],
         ["Price per item", ecrPrice, "ecr"],
-        // ["TOTAL EES", receipt.price, "ees"],
         ["Total price", receipt.priceEcr, "ecr"],
-        // ["REMAINING EES", receipt.remaining, "ees"],
         ["Remaining", receipt.remainingEcr, "ecr"],
       ]}"/>
 

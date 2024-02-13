@@ -7,7 +7,7 @@
 <style>
   .spin {
     font-size: 48px;
-    animation: spin 400ms linear infinite;
+    animation: spin 800ms linear infinite;
   }
 
   @keyframes spin {

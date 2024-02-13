@@ -33,30 +33,41 @@
 
   const onSubmit = async (): Promise<void> => {
     soundService.play("click");
-    const {somGame} = ethersService.keys;
 
     $formStore.isLoading = true;
 
-    if ($inventoryStore.approvals.enrg < parseUnits($formStore.fields.amount.value)) {
+    const amount = parseUnits($formStore.fields.amount.value);
+
+    if ($inventoryStore.approvals.enrg < amount) {
       const isConfirmed = await ethersService.transact(
         "ethericEnergy",
         "approve",
-        [somGame, parseUnits($formStore.fields.amount.value) - $inventoryStore.approvals.enrg]
+        [ethersService.keys.somGame, amount]
       );
+
+      if (!isConfirmed) {
+        $formStore.isLoading = false;
+        return;
+      }
     }
 
     const isConfirmed = await ethersService.transact(
       "somGame",
       "solidify",
-      [parseUnits($formStore.fields.amount.value)]
+      [amount]
     );
 
     if (!isConfirmed) {
-      await ethersService.reloadUser();
-      balance = $inventoryStore.enrg;
-      receipt.staked = balance;
-      onInput();
+      $formStore.isLoading = false;
+      return;
     }
+
+    await ethersService.reloadUser();
+
+    balance = $inventoryStore.enrg;
+    receipt.staked = balance;
+
+    onInput();
 
     $formStore.isLoading = false;
   };

@@ -24,23 +24,23 @@ import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
 };
 
 const keys = {
-  ethericEssence: "0x98c9D1e1e9e6Ee021B8288902f4D24A693DeB986",
-  ethericCrystals: "0xdB5D0309028e06aFc743f1A83fC4653DB8DAA5B8",
-  ethericEnergy: "0x4Ca02e48bC26707b83F2c14D11D838cc64C04Ba6",
-  somTokens: "0x27Eb2894A475a533c8AAA3268b521aC47f99cbC7",
-  somGame: "0x20625c87228573EA374e02844782ec3a1a0497ce"
+  ethericEssence: "0x5E2b786F404eF4E824F731F5C055f57A9619E06b",
+  ethericCrystals: "0x4f5e7F9785a102d351aD9Abd9F9ff595B702Df67",
+  ethericEnergy: "0x9c324504ac273E90c2BC9c496Fd56b364Ca9aa72",
+  somTokens: "0x0786BD21cb63d04a0EAe7B31a5c7813C3D1701d2",
+  somGame: "0x4f5735538bE5491a2f466b48Cc9Cb4deE7D6181d"
 };
 
 const init = async () => {
   if (window.ethereum) {
     const provider = new BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
-    const network = await provider.getNetwork();
+    // const network = await provider.getNetwork();
 
     ethersStore.update((store) => {
-      store.provider = provider;
-      store.signer = signer;
-      store.chainId = network.chainId;
+      // store.provider = provider;
+      // store.signer = signer;
+      // store.chainId = network.chainId;
       store.contracts = {
         ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, signer),
         ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, signer),
@@ -48,31 +48,30 @@ const init = async () => {
         somTokens: new Contract(keys.somTokens, SomTokens.abi, signer),
         somGame: new Contract(keys.somGame, SomGame.abi, signer)
       };
-      store.isValid =
-        window.ethereum !== undefined
-        && signer?.address !== undefined
-        && network.chainId === /*1337n*/41n;
+      // store.isValid =
+      //   window.ethereum !== undefined
+      //   && signer?.address !== undefined
+      //   && network.chainId === /*1337n*/41n;
       return store;
     });
   } else {
+    const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
+
     ethersStore.update((store) => {
-      store.provider = new JsonRpcProvider(
-        // "http://localhost:8545"
-        "https://testnet.telos.net/evm"
-      ) as any;
+      // store.provider = new JsonRpcProvider("https://testnet.telos.net/evm") as any;
       // store.signer = signer;
-      store.chainId = /*1337n*/41n;
+      // store.chainId = /*1337n*/41n;
       store.contracts = {
-        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, store.provider),
-        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, store.provider),
-        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, store.provider),
-        somTokens: new Contract(keys.somTokens, SomTokens.abi, store.provider),
-        somGame: new Contract(keys.somGame, SomGame.abi, store.provider)
+        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, provider),
+        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, provider),
+        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, provider),
+        somTokens: new Contract(keys.somTokens, SomTokens.abi, provider),
+        somGame: new Contract(keys.somGame, SomGame.abi, provider)
       };
-      store.isValid =
-        window.ethereum !== undefined
-        && signer?.address !== undefined
-        && network.chainId === /*1337n*/41n;
+      // store.isValid =
+      //   window.ethereum !== undefined
+      //   && signer?.address !== undefined
+      //   && network.chainId === /*1337n*/41n;
       return store;
     });
   }
@@ -107,8 +106,10 @@ const transact = async (
 };
 
 const sign = async (message: string): Promise<{signature: string, address: string} | void> => {
-  const store = get(ethersStore);
-  const {signer} = store;
+  // const store = get(ethersStore);
+  // const {signer} = store;
+  const provider = new BrowserProvider(window.ethereum);
+  const signer = await provider.getSigner();
 
   if (!signer) {
     return console.log("Metamask not connected");
@@ -124,14 +125,8 @@ const reloadUser = async (): Promise<void> => {
   const store = get(ethersStore);
   const player = get(playerStore);
   const {contracts} = store;
-
-  if (!contracts.somTokens || !contracts.somGame) {
-    console.error("Metamask not connected");
-    return;
-  }
-
   const {ethericEssence, ethericCrystals, ethericEnergy, somTokens, somGame} = contracts;
-  const address = get(playerStore).address;
+  const {address} = player;
   const theItems = [];
 
   for (const item of items) {

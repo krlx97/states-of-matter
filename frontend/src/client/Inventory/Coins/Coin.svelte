@@ -5,11 +5,11 @@
 
   let coin: any;
   let isMenuToggled = false;
-  const number = $inventoryStore[coin.ticker as "ecr" | "enrg"];
+  $: number = $inventoryStore[coin.ticker as "ecr" | "enrg"];
 
   const onToggleMenu = (): void => {
-    isMenuToggled = !isMenuToggled;
     soundService.play("click");
+    isMenuToggled = !isMenuToggled;
   };
 
   export {coin};

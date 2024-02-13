@@ -11,12 +11,19 @@ export default {
   external: [
     "crypto",
     "http",
+    "bcrypt",
     "ethers",
+    "jsonwebtoken",
     "mongodb",
+    "node-cron",
     "socket.io",
     "@som/shared/enums",
     "@som/shared/data",
-    "@som/contracts/SomGame/artifacts/SomGame.json"
+    "@som/contracts/EthericEssence/artifacts/EthericEssence.json",
+    "@som/contracts/EthericCrystals/artifacts/EthericCrystals.json",
+    "@som/contracts/EthericEnergy/artifacts/EthericEnergy.json",
+    "@som/contracts/Game/artifacts/Game.json",
+    "@som/contracts/Items/artifacts/Items.json"
   ],
   plugins: [run(), typescript()]
 };

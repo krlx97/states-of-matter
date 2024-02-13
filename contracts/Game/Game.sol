@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@openzeppelin/contracts/access/Ownable.sol";
 import "../EthericCrystals/EthericCrystals.sol";
 import "../EthericEnergy/EthericEnergy.sol";
 import "../EthericEssence/EthericEssence.sol";
 import "../Items/Items.sol";
 
 /// @custom:security-contact krlebyte@gmail.com
-contract Game is Ownable {
+contract Game {
   enum Rarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHIC}
 
   event RandomItem (address indexed player, uint256 id);
@@ -21,13 +21,19 @@ contract Game is Ownable {
   uint256 private constant POW = 10 ** 18;
   uint256 public immutable deployTimestamp;
   uint256 public craftEcrPrice = 100 * POW;
+  address public immutable owner;
 
   EthericEssence public eesToken;
   EthericCrystals public ecrToken;
   EthericEnergy public escrToken;
   Items public items;
 
-  constructor (address initialOwner) Ownable (initialOwner) {
+  modifier onlyOwner {
+    require(owner == msg.sender, "Only admin can call.");
+    _;
+  }
+
+  constructor (address initialOwner) {
     craftPrice[Rarity.UNCOMMON] = 100 * POW;
     craftPrice[Rarity.RARE] = 400 * POW;
     craftPrice[Rarity.EPIC] = 1600 * POW;
@@ -41,6 +47,7 @@ contract Game is Ownable {
     disenchantReward[Rarity.MYTHIC] = 2560 * POW;
 
     deployTimestamp = block.timestamp;
+    owner = initialOwner;
   }
 
   function setContracts (

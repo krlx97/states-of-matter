@@ -1,7 +1,7 @@
 <script lang="ts">
   import {formatUnits, parseUnits} from "ethers";
   import {ethersService, formService, soundService} from "services";
-  import {modalStore, inventoryStore} from "stores";
+  import {inventoryStore} from "stores";
   import {InputComponent, ModalComponent, FormSubmitComponent, FormComponent, TableComponent} from "ui";
 
   let balance = $inventoryStore.ecr;
@@ -26,37 +26,48 @@
   };
 
   const onSetMax = (): void => {
+    soundService.play("click");
     $formStore.fields.amount.value = formatUnits(balance);
     onInput();
-    soundService.play("click");
   };
 
   const onSubmit = async (): Promise<void> => {
-    $formStore.isLoading = true;
     soundService.play("click");
 
-    const {somGame} = ethersService.keys;
+    $formStore.isLoading = true;
 
-    if ($inventoryStore.approvals.ecr < parseUnits($formStore.fields.amount.value)) {
+    const amount = parseUnits($formStore.fields.amount.value);
+
+    if ($inventoryStore.approvals.ecr < amount) {
       const isConfirmed = await ethersService.transact(
         "ethericCrystals",
         "approve",
-        [somGame, parseUnits($formStore.fields.amount.value) - $inventoryStore.approvals.ecr]
+        [ethersService.keys.somGame, amount]
       );
+
+      if (!isConfirmed) {
+        $formStore.isLoading = false;
+        return;
+      }
     }
 
     const isConfirmed = await ethersService.transact(
       "somGame",
       "energize",
-      [parseUnits($formStore.fields.amount.value)]
+      [amount]
     );
 
-    if (isConfirmed) {
-      await ethersService.reloadUser();
-      balance = $inventoryStore.ecr;
-      receipt.balance = balance;
-      onInput();
+    if (!isConfirmed) {
+      $formStore.isLoading = false;
+      return;
     }
+
+    await ethersService.reloadUser();
+
+    balance = $inventoryStore.ecr;
+    receipt.balance = balance;
+
+    onInput();
 
     $formStore.isLoading = false;
   };

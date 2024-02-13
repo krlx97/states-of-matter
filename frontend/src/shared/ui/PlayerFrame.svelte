@@ -44,7 +44,6 @@
 
   onMount((): void => {
     const xpProgressLen = pathElement.getTotalLength();
-    console.log(xpProgressLen);
     // const eloProgressLength = pathElement2.getTotalLength();
 
     if (elo < 250) {
@@ -66,7 +65,6 @@
     // const fix = elo - rankRequirement.get(rank);
     // const fix2 = rankRequirement.get(nextRank) - rankRequirement.get(rank);
     myEloo = (elo - rankRequirement.get(rank)) / (rankRequirement.get(nextRank) - rankRequirement.get(rank)) * 100;
-    console.log({myEloo});
     // eloOffset = eloProgressLength - (eloProgressLength * fix / fix2);
   });
 

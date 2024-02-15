@@ -1,6 +1,8 @@
 import {contracts, mongo, server} from "app";
 import {requests} from "requests";
 import {schedule} from "node-cron";
+import express from 'express';
+import path from "path";
 
 process.on("unhandledRejection", (reason, promise): void => {
   console.log(`Unhandled rejection: ${reason}`);
@@ -32,6 +34,10 @@ const cleanup = async (): Promise<void> => {
 };
 
 await cleanup();
+
+server.app.use(express.static(path.join(process.cwd(), "frontend")));
+server.app.get("/", (req, res) => res.sendFile(`${process.cwd()}/frontend/index.html`));
+server.app.get("*", (req, res) => res.sendFile(`${process.cwd()}/frontend/index.html`));
 
 server.io.on("connection", (socket): void => {
   const error = (message: string): void => {

@@ -28,6 +28,15 @@
     soundService.play("click");
   };
 
+  const onMouseEnter = (): void => {
+    klassTooltip.style.zIndex = "10";
+    klassTooltip.style.opacity = "1";
+  };
+  const onMouseLeave = (): void => {
+    klassTooltip.style.zIndex = "10";
+    klassTooltip.style.opacity = "1";
+  };
+
   onMount((): void => {
     cardView = cardsView.find(({id}): boolean => card.id === id);
     selectedSkin = $playerStore.skins.find(({cardId}): boolean => card.id === cardId);
@@ -182,6 +191,10 @@
     display: initial;
   }
 
+  /* .card__klass:hover .card__klass__tooltip {
+    opacity: 1;
+  } */
+
   .card__ability__tooltip {
     position: absolute;
     bottom: calc(100% + 8px);
@@ -224,7 +237,7 @@
   on:click
   on:contextmenu|preventDefault>
 
-  <div class="card__type">
+  <div class="card__type" >
     {#if card.type === CardType.HERO}
       <img src="images/card/hero.png" alt="Hero"/>
     {:else if card.type === CardType.MINION}
@@ -234,6 +247,7 @@
     {:else}
       <img src="images/card/trap.png" alt="Trap"/>
     {/if}
+  </div>
     <div class="card__type__tooltip">
       {#if card.type === CardType.HERO}
         Hero
@@ -245,7 +259,6 @@
         Trap
       {/if}
     </div>
-  </div>
 
   <div class="card__klass" on:click|stopPropagation={onToggleKlassTooltip}>
     {#if card.klass === CardKlass.SOLID}
@@ -260,21 +273,21 @@
       <img src="images/card/{CardKlass.NEUTRAL}.png" alt="Neutral"/>
     {/if}
   </div>
+    <div class="card__klass__tooltip" bind:this={klassTooltip}>
+      {#if cardView}
+        <div class="tooltip__name">{cardView.effect.name}</div>
+        <div class="tooltip__text">
+          {#each cardView.effect.description as chunk}
+            {#if typeof chunk === "string"}
+              {chunk}
+            {:else}
+              <TextComponent color="{chunk[0]}">{chunk[1]}</TextComponent>
+            {/if}
+          {/each}
+        </div>
+      {/if}
+    </div>
 
-  <div class="card__klass__tooltip" bind:this={klassTooltip}>
-    {#if cardView}
-      <div class="tooltip__name">{cardView.effect.name}</div>
-      <div class="tooltip__text">
-        {#each cardView.effect.description as chunk}
-          {#if typeof chunk === "string"}
-            {chunk}
-          {:else}
-            <TextComponent color="{chunk[0]}">{chunk[1]}</TextComponent>
-          {/if}
-        {/each}
-      </div>
-    {/if}
-  </div>
 
   <div class="card__name">{cardView ? cardView.name : "nema"}</div>
 

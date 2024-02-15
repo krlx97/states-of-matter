@@ -21,9 +21,7 @@
 
   const onJoinLobby = (): void => {
     soundService.play("click");
-    modalService.open(GameEnded, {isWinner: true, gameType: 2, experience: 50, elo: 20, ecrReward: "0", "eesReward": "0"});
-    // soundService.play("click");
-    // modalService.open(JoinLobbyComponent);
+    modalService.open(JoinLobbyComponent);
   };
 
   const onJoinCasualQueue = (): void => {
@@ -99,7 +97,7 @@
       {#if isInCasualQueue}
         <h2>Queue time: {$queueStore.timeInQueue}</h2>
       {:else}
-        <h2>CASUAL</h2>
+        <h2>NORMAL</h2>
       {/if}
       <div class="mode__actions">
         {#if isInCasualQueue}

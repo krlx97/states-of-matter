@@ -5,6 +5,7 @@
   import DeckBuilderComponent from "./DeckBuilder/DeckBuilder.svelte";
   import InventoryComponent from "./Inventory/Inventory.svelte";
   import LeaderboardsComponent from "./Leaderboards/Leaderboards.svelte";
+  import PatchNotesComponent from "./PatchNotes/PatchNotes.svelte";
   import PlayComponent from "./Play/Play.svelte";
   import SidenavComponent from "./Sidenav/Sidenav.svelte";
 
@@ -12,7 +13,8 @@
     {name: "Play",          component: PlayComponent},
     {name: "Deck Builder",  component: DeckBuilderComponent},
     {name: "Leaderboards",  component: LeaderboardsComponent},
-    {name: "Inventory",     component: InventoryComponent}
+    {name: "Inventory",     component: InventoryComponent},
+    {name: "Patch notes",   component: PatchNotesComponent}
   ];
 
   let currentView = views[0];

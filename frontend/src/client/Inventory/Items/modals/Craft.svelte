@@ -123,7 +123,7 @@
   <svelte:fragment slot="title">Craft {item?.name || ""}</svelte:fragment>
 
   <svelte:fragment slot="info">
-    Spend etheric crystals and etheric essence to craft a desired item.
+    Burn etheric crystals and etheric essence to craft items.
   </svelte:fragment>
 
   <svelte:fragment slot="content">

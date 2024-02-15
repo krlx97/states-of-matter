@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
-// import "@openzeppelin/contracts/access/Ownable.sol";
 import "../EthericCrystals/EthericCrystals.sol";
 import "../EthericEnergy/EthericEnergy.sol";
 import "../EthericEssence/EthericEssence.sol";
@@ -11,55 +10,58 @@ import "../Items/Items.sol";
 contract Game {
   enum Rarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHIC}
 
-  event RandomItem (address indexed player, uint256 id);
+  event Energize (uint256 ecrAmount, uint256 enrgAmount);
+  event Solidify (uint256 ecrAmount, uint256 enrgAmount);
+  event UnlockChest (address indexed player, uint256 id);
+  event CraftItem (uint256 totalEes, uint256 totalEcr, uint256 id, uint256 amount);
+  event DisenchantItem (uint256 totalEes, uint256 id, uint256 amount);
 
-  mapping(Rarity => uint256) public craftPrice;
+  struct CraftPrice {
+    uint256 ees;
+    uint256 ecr;
+  }
+
+  mapping(Rarity => CraftPrice) public craftPrice;
   mapping(Rarity => uint256) public disenchantReward;
   mapping(Rarity => uint256[]) private _chestItems;
   mapping(uint256 => Rarity) private _itemRarity;
 
   uint256 private constant POW = 10 ** 18;
+  uint256 private constant CHEST_ID = 1;
+  address private immutable _adminAddress;
   uint256 public immutable deployTimestamp;
-  uint256 public craftEcrPrice = 100 * POW;
-  address public immutable owner;
 
-  EthericEssence public eesToken;
-  EthericCrystals public ecrToken;
-  EthericEnergy public escrToken;
-  Items public items;
+  CraftPrice public craftChestPrice = CraftPrice(100 * POW, 100 * POW);
 
-  modifier onlyOwner {
-    require(owner == msg.sender, "Only admin can call.");
-    _;
-  }
+  EthericEssence public immutable eesToken;
+  EthericCrystals public immutable ecrToken;
+  EthericEnergy public immutable enrgToken;
+  Items public immutable items;
 
-  constructor (address initialOwner) {
-    craftPrice[Rarity.UNCOMMON] = 100 * POW;
-    craftPrice[Rarity.RARE] = 400 * POW;
-    craftPrice[Rarity.EPIC] = 1600 * POW;
-    craftPrice[Rarity.LEGENDARY] = 6400 * POW;
-    craftPrice[Rarity.MYTHIC] = 25600 * POW;
+  constructor (address adminAddress) {
+    eesToken = new EthericEssence(address(this));
+    ecrToken = new EthericCrystals(address(this));
+    enrgToken = new EthericEnergy(address(this));
+    items = new Items(address(this));
 
-    disenchantReward[Rarity.UNCOMMON] = 10 * POW;
-    disenchantReward[Rarity.RARE] = 40 * POW;
-    disenchantReward[Rarity.EPIC] = 160 * POW;
-    disenchantReward[Rarity.LEGENDARY] = 640 * POW;
-    disenchantReward[Rarity.MYTHIC] = 2560 * POW;
+    craftPrice[Rarity.UNCOMMON] = CraftPrice(200 * POW, 200 * POW);
+    craftPrice[Rarity.RARE] = CraftPrice(800 * POW, 400 * POW);
+    craftPrice[Rarity.EPIC] = CraftPrice(3200 * POW, 600 * POW);
+    craftPrice[Rarity.LEGENDARY] = CraftPrice(12800 * POW, 800 * POW);
+    craftPrice[Rarity.MYTHIC] = CraftPrice(51200 * POW, 1000 * POW);
 
+    disenchantReward[Rarity.UNCOMMON] = 20 * POW;
+    disenchantReward[Rarity.RARE] = 80 * POW;
+    disenchantReward[Rarity.EPIC] = 320 * POW;
+    disenchantReward[Rarity.LEGENDARY] = 1280 * POW;
+    disenchantReward[Rarity.MYTHIC] = 5120 * POW;
+
+    _adminAddress = adminAddress;
     deployTimestamp = block.timestamp;
-    owner = initialOwner;
   }
 
-  function setContracts (
-    address eesAddress,
-    address ecrAddress,
-    address enrgAddress,
-    address itemsAddress
-  ) external onlyOwner {
-    eesToken = EthericEssence(eesAddress);
-    ecrToken = EthericCrystals(ecrAddress);
-    escrToken = EthericEnergy(enrgAddress);
-    items = Items(itemsAddress);
+  modifier onlyAdmin {
+    require(_adminAddress == msg.sender, "Only admin can call.");_;
   }
 
   // ---------- S T A K I N G ----------
@@ -71,17 +73,21 @@ contract Game {
     uint256 enrgAmount = ecrAmount * POW / enrgValue;
 
     ecrToken.burnFrom(msg.sender, ecrAmount);
-    escrToken.mint(msg.sender, enrgAmount);
+    enrgToken.mint(msg.sender, enrgAmount);
+
+    emit Energize(ecrAmount, enrgAmount);
   }
 
   function solidify (uint256 enrgAmount) external {
     require(enrgAmount > 0, "Must be greater than 0.");
 
-    uint256 escrValue = _enrgValue();
-    uint256 ecrAmount = (enrgAmount * escrValue) / POW;
+    uint256 enrgValue = _enrgValue();
+    uint256 ecrAmount = (enrgAmount * enrgValue) / POW;
 
-    escrToken.burnFrom(msg.sender, enrgAmount);
+    enrgToken.burnFrom(msg.sender, enrgAmount);
     ecrToken.mint(msg.sender, ecrAmount);
+
+    emit Solidify(ecrAmount, enrgAmount);
   }
 
   // ---------- ITEMS ----------
@@ -108,44 +114,53 @@ contract Game {
 
     uint256 skinRng = _randomNumber(chestItemsRarity.length);
     uint256 itemId = chestItemsRarity[skinRng];
+    uint256 amount = 1;
+    bytes memory data = "";
 
-    emit RandomItem(msg.sender, itemId);
+    items.burn(msg.sender, CHEST_ID, amount);
+    items.mint(msg.sender, itemId, amount, data);
 
-    items.burn(msg.sender, 1, 1);
-    items.mint(msg.sender, itemId, 1, "");
+    emit UnlockChest(msg.sender, itemId);
   }
 
   function craftItem (uint256 id, uint256 amount) external {
-    uint256 priceEcr = craftEcrPrice * amount;
-    uint256 priceEes;
+    CraftPrice memory price;
 
-    if (id == 1) {
-      priceEes = craftPrice[Rarity.UNCOMMON] * amount;
+    if (id == CHEST_ID) {
+      price = craftChestPrice;
     } else {
-      priceEes = craftPrice[_itemRarity[id]] * amount;
+      price = craftPrice[_itemRarity[id]];
     }
 
-    ecrToken.burnFrom(msg.sender, priceEcr);
-    eesToken.burnFrom(msg.sender, priceEes);
-    items.mint(msg.sender, id, amount, "");
+    require(price.ees > 0 && price.ecr > 0, "Invalid item.");
+
+    uint256 totalEes = price.ees * amount;
+    uint256 totalEcr = price.ecr * amount;
+    bytes memory data = "";
+
+    eesToken.burnFrom(msg.sender, totalEes);
+    ecrToken.burnFrom(msg.sender, totalEcr);
+    items.mint(msg.sender, id, amount, data);
+
+    emit CraftItem(totalEes, totalEcr, id, amount);
   }
 
   function disenchantItem (uint256 id, uint256 amount) external {
-    require(id != 1, "Chests cannot be disenchanted");
+    require(id != CHEST_ID, "Chests cannot be disenchanted.");
 
-    uint256 reward = disenchantReward[_itemRarity[id]] * amount;
+    uint256 reward = disenchantReward[_itemRarity[id]];
+    uint256 totalEes = reward * amount;
 
-    eesToken.mint(msg.sender, reward);
+    eesToken.mint(msg.sender, totalEes);
     items.burn(msg.sender, id, amount);
+
+    emit DisenchantItem(totalEes, id, amount);
   }
 
   // ---------- A D M I N ----------
 
-  function addItem (uint256 id, Rarity rarity) external onlyOwner {
-    // if (id < 1000 || id > 19999) {
-    //   revert IdInvalid();
-    // }
-
+  function addItem (uint256 id, Rarity rarity) external onlyAdmin {
+    require(id != CHEST_ID, "Chests cannot be added to the chest.");
     _itemRarity[id] = rarity;
     _chestItems[rarity].push(id);
   }
@@ -154,7 +169,7 @@ contract Game {
     address player,
     uint256 eesAmount,
     uint256 ecrAmount
-  ) external onlyOwner {
+  ) external onlyAdmin {
     eesToken.mint(player, eesAmount);
     ecrToken.mint(player, ecrAmount);
   }

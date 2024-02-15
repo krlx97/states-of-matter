@@ -169,6 +169,9 @@ const reloadUser = async (): Promise<void> => {
         });
       }
     }
+// fix slow loading times
+//  gameItems.balanceOfBatch([playerAddress,playerAddress,playerAddress,playerAddress,playerAddress], [0,1,2,3,4])
+
   }
 
   if (address) {

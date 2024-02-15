@@ -17,7 +17,7 @@
 
 <style>
   .wrapper {
-height: 100%;
+    height: 100%;
     width: 100%;
   }
   .leaderboards {
@@ -28,7 +28,7 @@ height: 100%;
   }
 
   .leaderboards__players {
-    /* height: 100%; */
+    height: 88.8%;
     /* padding: var(--md); */
     flex-basis: 50%;
     flex-grow: 1;
@@ -41,18 +41,16 @@ height: 100%;
   }
 
   .leaderboards__players::-webkit-scrollbar {
-    width: 8px;
+    width: 4px;
   }
 
   .leaderboards__players::-webkit-scrollbar-track {
-    background-color: rgb(var(--dark-grey));
+    border-radius: 8px;
   }
 
   .leaderboards__players::-webkit-scrollbar-thumb {
-    background-color: rgb(var(--light-grey));
-    border: 1px solid transparent;
+    background-color: rgb(var(--grey));
     border-radius: 8px;
-    box-sizing: border-box;
   }
 
   .title {

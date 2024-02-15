@@ -6,6 +6,7 @@ import SomGame from '@som/contracts/Game/artifacts/Game.json' assert { type: 'js
 import SomTokens from '@som/contracts/Items/artifacts/Items.json' assert { type: 'json' };
 import { MongoClient } from 'mongodb';
 import { createServer } from 'http';
+import express from 'express';
 import { Server } from 'socket.io';
 import jsonwebtoken from 'jsonwebtoken';
 import { EffectId, CardType, PlayerStatus, GameType, QueueId, CardKlass, LogType } from '@som/shared/enums';
@@ -13,6 +14,7 @@ import { randomInt } from 'crypto';
 import { cards, cardsView } from '@som/shared/data';
 import { compare, hash } from 'bcrypt';
 import { schedule } from 'node-cron';
+import path from 'path';
 
 const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
 const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
@@ -50,7 +52,8 @@ const mongo = {
     $leaderboards: som.collection("leaderboards"),
 };
 
-const http = createServer();
+const app = express();
+const http = createServer(app);
 const io = new Server(http, {
     cors: {
         origin: "*"
@@ -59,7 +62,7 @@ const io = new Server(http, {
     transports: ["websocket"],
     allowUpgrades: false
 });
-const server = { http, io };
+const server = { app, http, io };
 
 const lastStand = (params) => {
     const { opponent, opponentMinion, opponentMinionField, opponentTrap } = params;
@@ -4661,6 +4664,9 @@ const cleanup = async () => {
     // restarting the server?
 };
 await cleanup();
+server.app.use(express.static(path.join(process.cwd(), "frontend")));
+server.app.get("/", (req, res) => res.sendFile(`${process.cwd()}/frontend/index.html`));
+server.app.get("*", (req, res) => res.sendFile(`${process.cwd()}/frontend/index.html`));
 server.io.on("connection", (socket) => {
     const error = (message) => {
         socket.emit("notification", {

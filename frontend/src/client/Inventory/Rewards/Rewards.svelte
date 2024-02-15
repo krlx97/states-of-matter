@@ -4,6 +4,8 @@
   import {ButtonComponent, CurrencyComponent} from "ui";
   import Rewards from "./modals/Rewards.svelte";
 
+  let disabled = false;
+
   const onViewRewards = (): void => {
     modalService.open(Rewards);
     soundService.play("click");
@@ -11,6 +13,7 @@
 
   const onClaimRewards = (): void => {
     soundService.play("click");
+    disabled = true;
     socketService.socket.emit("claimRewards");
   };
 </script>
@@ -52,7 +55,7 @@
     <b class="bar__header__title">Rewards</b>
     <div class="bar__header__actions">
       <ButtonComponent isIcon on:click="{onViewRewards}">?</ButtonComponent>
-      <ButtonComponent isIcon on:click="{onClaimRewards}">₿</ButtonComponent>
+      <ButtonComponent isIcon {disabled} on:click="{onClaimRewards}">₿</ButtonComponent>
     </div>
   </div>
   <div class="bar__currency">

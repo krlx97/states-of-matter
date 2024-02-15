@@ -6,6 +6,7 @@ interface InventoryStore {
   enrg: bigint;
   approvals: {
     items: boolean;
+    ees: bigint;
     ecr: bigint;
     enrg: bigint;
   };
@@ -19,6 +20,7 @@ interface InventoryStore {
   items: Array<{
     id: bigint;
     balance: bigint;
+    supply: bigint;
   }>;
 }
 
@@ -28,6 +30,7 @@ const inventoryStore = writable<InventoryStore>({
   enrg: 0n,
   approvals: {
     items: false,
+    ees: 0n,
     ecr: 0n,
     enrg: 0n
   },

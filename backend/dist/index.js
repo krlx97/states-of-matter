@@ -19,11 +19,11 @@ import path from 'path';
 const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
 const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
 const keys = {
-    ethericEssence: "0x5E2b786F404eF4E824F731F5C055f57A9619E06b",
-    ethericCrystals: "0x4f5e7F9785a102d351aD9Abd9F9ff595B702Df67",
-    ethericEnergy: "0x9c324504ac273E90c2BC9c496Fd56b364Ca9aa72",
-    somTokens: "0x0786BD21cb63d04a0EAe7B31a5c7813C3D1701d2",
-    somGame: "0x4f5735538bE5491a2f466b48Cc9Cb4deE7D6181d"
+    ethericEssence: "0xDeCD7574fa58b52Dc87dDDB3BD376228D54E78a1",
+    ethericCrystals: "0xf811f1AB4bfE4f58a703a0E32654a7789e7A9469",
+    ethericEnergy: "0x51d94d7F370DAD3971f54baAb4911acFedbCf984",
+    somTokens: "0xdF735A6a29a85E144623F8c6197b11134d4C11ae",
+    somGame: "0x3BDCc313b07cAeA90Fc5323749D13F086a4b62e0"
 };
 const ethericEssence = new Contract(keys.ethericEssence, EthericEssence.abi, signer);
 const ethericCrystals = new Contract(keys.ethericCrystals, EthericCrystals.abi, signer);
@@ -2898,10 +2898,12 @@ const getLeaderboards = (socket, error) => {
     socket.on("getLeaderboards", async () => {
         const $ = await $leaderboards.findOne({});
         if (!$) {
-            return error("Error fetching leaderboards");
+            socket.emit("getLeaderboards", { byLevel: [], byElo: [] });
         }
-        const { level, elo } = $;
-        socket.emit("getLeaderboards", { byLevel: level, byElo: elo });
+        else {
+            const { level, elo } = $;
+            socket.emit("getLeaderboards", { byLevel: level, byElo: elo });
+        }
     });
 };
 

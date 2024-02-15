@@ -41,7 +41,7 @@ contract Items is ERC1155, ERC1155Burnable, ERC1155Supply {
     address to,
     uint256[] memory ids,
     uint256[] memory values
-  ) internal override(ERC1155) {
+  ) internal override(ERC1155, ERC1155Supply) {
     super._update(from, to, ids, values);
   }
 }

@@ -24,22 +24,22 @@
 
   onMount((): void => {
     if (!item) {
-      eesPrice = 10n * 10n ** 18n;
+      eesPrice = 20n * 10n ** 18n;
     } else {
       if (item.rarity === 1) {
-        eesPrice = 10n * 10n ** 18n;
+        eesPrice = 20n * 10n ** 18n;
       }
       if (item.rarity === 2) {
-        eesPrice = 40n * 10n ** 18n;
+        eesPrice = 80n * 10n ** 18n;
       }
       if (item.rarity === 3) {
-        eesPrice = 160n * 10n ** 18n;
+        eesPrice = 320n * 10n ** 18n;
       }
       if (item.rarity === 4) {
-        eesPrice = 640n * 10n ** 18n;
+        eesPrice = 1280n * 10n ** 18n;
       }
       if (item.rarity === 5) {
-        eesPrice = 2560n * 10n ** 18n;
+        eesPrice = 5120n * 10n ** 18n;
       }
     }
   });
@@ -122,7 +122,8 @@
         // ["Item balance", receipt.owned],
         // ["Item remaining", receipt.remaining],
         // ["EES per item", eesPrice, "ees"],
-        ["Reward per item", BigInt(receipt.totalReward), "ees"],
+        ["EES per item", eesPrice, "ees"],
+        ["EES total", BigInt(receipt.totalReward), "ees"],
         ["New balance", BigInt(receipt.newBalance), "ees"],
       ]}"/>
 

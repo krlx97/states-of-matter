@@ -12,7 +12,6 @@
   onMount(async (): Promise<void> => {
     const {ethereum} = window;
 
-// await ethersService.init();
     responses.forEach((response): void => {
       response();
     });

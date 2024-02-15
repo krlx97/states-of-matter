@@ -14,11 +14,12 @@ const getLeaderboards: SocketRequest = (socket, error): void => {
   socket.on("getLeaderboards", async () => {
     const $ = await $leaderboards.findOne({});
 
-    if (!$) {return error("Error fetching leaderboards");}
-
-    const {level, elo} = $;
-
-    socket.emit("getLeaderboards", {byLevel: level, byElo: elo});
+    if (!$) {
+      socket.emit("getLeaderboards", {byLevel: [], byElo: []});
+    } else {
+      const {level, elo} = $;
+      socket.emit("getLeaderboards", {byLevel: level, byElo: elo});
+    }
   });
 };
 

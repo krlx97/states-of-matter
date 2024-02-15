@@ -38,11 +38,11 @@
 
     const amount = parseUnits($formStore.fields.amount.value);
 
-    if ($inventoryStore.approvals.enrg < amount) {
+    if ($inventoryStore.approvals.enrg < amount + 1n) {
       const isConfirmed = await ethersService.transact(
         "ethericEnergy",
         "approve",
-        [ethersService.keys.somGame, amount]
+        [ethersService.keys.somGame, amount + 1n]
       );
 
       if (!isConfirmed) {

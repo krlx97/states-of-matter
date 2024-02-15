@@ -24,11 +24,11 @@ import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
 };
 
 const keys = {
-  ethericEssence: "0x5E2b786F404eF4E824F731F5C055f57A9619E06b",
-  ethericCrystals: "0x4f5e7F9785a102d351aD9Abd9F9ff595B702Df67",
-  ethericEnergy: "0x9c324504ac273E90c2BC9c496Fd56b364Ca9aa72",
-  somTokens: "0x0786BD21cb63d04a0EAe7B31a5c7813C3D1701d2",
-  somGame: "0x4f5735538bE5491a2f466b48Cc9Cb4deE7D6181d"
+  ethericEssence: "0xDeCD7574fa58b52Dc87dDDB3BD376228D54E78a1",
+  ethericCrystals: "0xf811f1AB4bfE4f58a703a0E32654a7789e7A9469",
+  ethericEnergy: "0x51d94d7F370DAD3971f54baAb4911acFedbCf984",
+  somTokens: "0xdF735A6a29a85E144623F8c6197b11134d4C11ae",
+  somGame: "0x3BDCc313b07cAeA90Fc5323749D13F086a4b62e0"
 };
 
 const init = async () => {
@@ -122,79 +122,171 @@ const sign = async (message: string): Promise<{signature: string, address: strin
 };
 
 const reloadUser = async (): Promise<void> => {
-  const store = get(ethersStore);
-  const player = get(playerStore);
-  const {contracts} = store;
-  const {ethericEssence, ethericCrystals, ethericEnergy, somTokens, somGame} = contracts;
-  const {address} = player;
-  const theItems = [];
+  const {
+    ethericEssence,
+    ethericCrystals,
+    ethericEnergy,
+    somTokens,
+    somGame
+  } = get(ethersStore).contracts;
 
-  for (const item of items) {
-    if (item.id === 1000 || item.id === 2000) { // bronze
-      theItems.push({
-        ...item,
-        balance: 1n,
-        supply: 0n
-      });
-    } else if (item.id === 1001 || item.id === 2001) { // silver
-      theItems.push({
-        ...item,
-        balance: player.elo >= 250 ? 1n : 0n,
-        supply: 0n
-      });
-    } else if (item.id === 1002 || item.id === 2002) { // gold
-      theItems.push({
-        ...item,
-        balance: player.elo >= 500 ? 1n : 0n,
-        supply: 0n
-      });
-    } else if (item.id === 1003 || item.id === 2003) { // master
-      theItems.push({
-        ...item,
-        balance: player.elo >= 750 ? 1n : 0n,
-        supply: 0n
-      });
-    } else {
-      if (item.rarity === 0) {
+  const {address, elo} = get(playerStore);
+
+  if (address) {
+    const theItems = [];
+
+    const itemIds = items
+      .filter((item): boolean => item.rarity !== 0)
+      .map((item): bigint => BigInt(item.id));
+
+    const query = itemIds.map(() => address);
+    const bal = await somTokens.balanceOfBatch(query, itemIds);
+    const balances = [];
+
+    itemIds.forEach((id, i) => {
+      balances.push({id, balance: bal[i]});
+    });
+
+    for (const item of items) {
+      const {id, rarity} = item;
+
+      if (id === 1000 || id === 2000) { // bronze
         theItems.push({
-          ...item,
+          id: BigInt(id),
           balance: 1n,
           supply: 0n
         });
-      } else {
+      } else if (id === 1001 || id === 2001) { // silver
         theItems.push({
-          ...item,
-          balance: address ? await somTokens.balanceOf(address, item.id) : 0n,
-          supply: await somTokens["totalSupply(uint256)"](item.id)
+          id: BigInt(id),
+          balance: elo >= 250 ? 1n : 0n,
+          supply: 0n
         });
+      } else if (id === 1002 || id === 2002) { // gold
+        theItems.push({
+          id: BigInt(id),
+          balance: elo >= 500 ? 1n : 0n,
+          supply: 0n
+        });
+      } else if (id === 1003 || id === 2003) { // master
+        theItems.push({
+          id: BigInt(id),
+          balance: elo >= 750 ? 1n : 0n,
+          supply: 0n
+        });
+      } else {
+        if (rarity === 0) {
+          theItems.push({
+            id: BigInt(id),
+            balance: 1n,
+            supply: 0n
+          });
+        } else {
+          const balance = balances.find((b) => b.id === BigInt(id));
+
+          theItems.push({
+            id: BigInt(id),
+            balance: balance.balance,
+            supply: /*await somTokens["totalSupply(uint256)"](id)*/0n
+          });
+        }
       }
     }
-// fix slow loading times
-//  gameItems.balanceOfBatch([playerAddress,playerAddress,playerAddress,playerAddress,playerAddress], [0,1,2,3,4])
 
-  }
+    const [
+      eesBalance,
+      ecrBalance,
+      enrgBalance,
+      itemApproval,
+      eesApproval,
+      ecrApproval,
+      enrgApproval,
+      eesSupply,
+      ecrSupply,
+      enrgSupply,
+      deployTimestamp,
+      chests
+    ] = await Promise.all([
+      ethericEssence.balanceOf(address),
+      ethericCrystals.balanceOf(address),
+      ethericEnergy.balanceOf(address),
+      somTokens.isApprovedForAll(address, keys.somGame),
+      ethericEssence.allowance(address, keys.somGame),
+      ethericCrystals.allowance(address, keys.somGame),
+      ethericEnergy.allowance(address, keys.somGame),
+      ethericEssence.totalSupply(),
+      ethericCrystals.totalSupply(),
+      ethericEnergy.totalSupply(),
+      somGame.deployTimestamp(),
+      somTokens.balanceOf(address, 1)
+    ]);
 
-  if (address) {
     inventoryStore.set({
-      ees: await ethericEssence.balanceOf(address),
-      ecr: await ethericCrystals.balanceOf(address),
-      enrg: await ethericEnergy.balanceOf(address),
+      ees: eesBalance,
+      ecr: ecrBalance,
+      enrg: enrgBalance,
       approvals: {
-        items: await somTokens.isApprovedForAll(address, keys.somGame),
-        ees: await ethericEssence.allowance(address, keys.somGame),
-        ecr: await ethericCrystals.allowance(address, keys.somGame),
-        enrg: await ethericEnergy.allowance(address, keys.somGame)
+        items: itemApproval,
+        ees: eesApproval,
+        ecr: ecrApproval,
+        enrg: enrgApproval
       },
       total: {
-        ees: await ethericEssence.totalSupply(),
-        ecr: await ethericCrystals.totalSupply(),
-        enrg: await ethericEnergy.totalSupply()
+        ees: eesSupply,
+        ecr: ecrSupply,
+        enrg: enrgSupply
       },
-      deployTimestamp: await somGame.deployTimestamp(),
-      chests: await somTokens.balanceOf(address, 1),
+      deployTimestamp: deployTimestamp,
+      chests: chests,
       items: theItems
     });
   } else {
+    const theItems = [];
+
+    for (const item of items) {
+      const {id} = item;
+
+      if (id === 1000 || id === 2000) { // bronze
+        theItems.push({
+          id: BigInt(id),
+          balance: 1n,
+          supply: 0n
+        });
+      } else if (id === 1001 || id === 2001) { // silver
+        theItems.push({
+          id: BigInt(id),
+          balance: elo >= 250 ? 1n : 0n,
+          supply: 0n
+        });
+      } else if (id === 1002 || id === 2002) { // gold
+        theItems.push({
+          id: BigInt(id),
+          balance: elo >= 500 ? 1n : 0n,
+          supply: 0n
+        });
+      } else if (id === 1003 || id === 2003) { // master
+        theItems.push({
+          id: BigInt(id),
+          balance: elo >= 750 ? 1n : 0n,
+          supply: 0n
+        });
+      } else {
+        if (item.rarity === 0) {
+          theItems.push({
+            id: BigInt(id),
+            balance: 1n,
+            supply: 0n
+          });
+        } else {
+          theItems.push({
+            id: BigInt(id),
+            balance: 0n,
+            supply: 0n
+          });
+        }
+      }
+    }
+
     inventoryStore.set({
       ees: 0n,
       ecr: 0n,

@@ -11,25 +11,34 @@
   let ecrPrice = 0n;
   let eesPrice = 0n;
 
-  ecrPrice = 100n * 10n ** 18n;
+  // ecrPrice = 100n * 10n ** 18n;
 
   if (!item) {
     eesPrice = 100n * 10n ** 18n;
+    ecrPrice = 100n * 10n ** 18n;
   } else {
     if (item.rarity === 1) {
-      eesPrice = 100n * 10n ** 18n;
+      eesPrice = 200n * 10n ** 18n;
+      ecrPrice = 200n * 10n ** 18n;
     }
     if (item.rarity === 2) {
-      eesPrice = 400n * 10n ** 18n;
+      eesPrice = 800n * 10n ** 18n;
+      ecrPrice = 400n * 10n ** 18n;
+
     }
     if (item.rarity === 3) {
-      eesPrice = 1600n * 10n ** 18n;
+      eesPrice = 3200n * 10n ** 18n;
+      ecrPrice = 600n * 10n ** 18n;
+
     }
     if (item.rarity === 4) {
-      eesPrice = 6400n * 10n ** 18n;
+      eesPrice = 12800n * 10n ** 18n;
+      ecrPrice = 800n * 10n ** 18n;
+
     }
     if (item.rarity === 5) {
-      eesPrice = 25600n * 10n ** 18n;
+      eesPrice = 51200n * 10n ** 18n;
+      ecrPrice = 1000n * 10n ** 18n;
     }
   }
   onMount((): void => {
@@ -88,19 +97,19 @@
 
     const {somGame} = ethersService.keys;
 
-    if ($inventoryStore.approvals.ecr < receipt.priceEcr) {
+    if ($inventoryStore.approvals.ecr < receipt.priceEcr + 1n) {
       await ethersService.transact(
         "ethericCrystals",
         "approve",
-        [somGame, receipt.priceEcr]
+        [somGame, receipt.priceEcr + 1n]
       );
     }
 
-    if ($inventoryStore.approvals.ees < receipt.price) {
+    if ($inventoryStore.approvals.ees < receipt.price + 1n) {
       await ethersService.transact(
         "ethericEssence",
         "approve",
-        [somGame, receipt.price]
+        [somGame, receipt.price + 1n]
       );
     }
 

@@ -65,11 +65,11 @@
 
   onMount((): void => {
     $formStore.isDisabled = $inventoryStore.chests < 1n ? true : false;
-    $ethersStore.contracts.somGame.on("RandomItem", onRandomSkin);
+    $ethersStore.contracts.somGame.on("UnlockChest", onRandomSkin);
   });
 
   onDestroy((): void => {
-    $ethersStore.contracts.somGame.off("RandomItem", onRandomSkin);
+    $ethersStore.contracts.somGame.off("UnlockChest", onRandomSkin);
   });
 </script>
 

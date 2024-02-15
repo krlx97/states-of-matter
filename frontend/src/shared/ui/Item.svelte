@@ -6,7 +6,7 @@
   let item: any;
   let shardElement: HTMLDivElement;
   let shardElementRect: DOMRect;
-  let invitem: any = {balance: 0n, supply: 0n};
+  let invitem: any = {id: 0n, balance: 0n, supply: 0n};
 
   const onMousemove = (event: MouseEvent): void => {
     const {pageX, pageY} = event;
@@ -26,7 +26,7 @@
   };
 
   onMount((): void => {
-    invitem = $inventoryStore.items.find((i) => i.id === item.id);
+    invitem = $inventoryStore.items.find((i) => i.id === BigInt(item.id));
     shardElementRect = shardElement.getBoundingClientRect();
   });
 
@@ -144,8 +144,8 @@
     <div>
       {#if item.rarity === 0}
         <div style="text-align: center;">
-        <TextComponent color="{invitem.balance > 0 ? "success" : "warn"}">
-          {invitem.balance > 0 ? "✔" : "×"}
+        <TextComponent color="{invitem.balance > 0n ? "success" : "warn"}">
+          {invitem.balance > 0n ? "✔" : "×"}
         </TextComponent>
         </div>
       {:else}

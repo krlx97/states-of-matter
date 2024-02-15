@@ -132,7 +132,7 @@
     </div>
 
     <div class="mode custom" class:isTutorial3>
-      <h2>CUSTOM</h2>
+      <h2>CUSTOM LOBBY</h2>
       <div class="mode__actions">
         <ButtonComponent
           on:click="{onMakeLobby}"

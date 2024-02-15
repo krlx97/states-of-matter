@@ -7,7 +7,7 @@
 
   const {id} = $modalStore.data;
   const item = items.find((item) => item.id === id);
-  const itemWallet = $inventoryStore.items.find((item) => item.id === id);
+  const itemWallet = $inventoryStore.items.find((item) => item.id === BigInt(id));
   let eesPrice = 0n;
 
   console.log(itemWallet);

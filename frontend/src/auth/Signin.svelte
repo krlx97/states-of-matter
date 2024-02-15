@@ -36,7 +36,7 @@
   };
 
   const onMetamask = async (): Promise<void> => {
-    await ethersService.init();
+    await ethersService.init(selectedAddress);
     socketService.socket.emit("getNonce", {address: selectedAddress});
   };
 

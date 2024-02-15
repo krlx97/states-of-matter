@@ -1,5 +1,5 @@
 import {get} from "svelte/store";
-import {Contract, BrowserProvider, JsonRpcProvider} from "ethers";
+import {Contract, BrowserProvider, JsonRpcProvider, JsonRpcSigner} from "ethers";
 import {items} from "@som/shared/data";
 import {playerStore, ethersStore, inventoryStore} from "stores";
 
@@ -31,16 +31,14 @@ const keys = {
   somGame: "0x3BDCc313b07cAeA90Fc5323749D13F086a4b62e0"
 };
 
-const init = async () => {
+const init = async (address: string = ""): Promise<void> => {
   if (window.ethereum) {
     const provider = new BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
+    const signer = new JsonRpcSigner(provider, address)
+    // const signer = await provider.getSigner();
     // const network = await provider.getNetwork();
 
     ethersStore.update((store) => {
-      // store.provider = provider;
-      // store.signer = signer;
-      // store.chainId = network.chainId;
       store.contracts = {
         ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, signer),
         ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, signer),
@@ -48,19 +46,13 @@ const init = async () => {
         somTokens: new Contract(keys.somTokens, SomTokens.abi, signer),
         somGame: new Contract(keys.somGame, SomGame.abi, signer)
       };
-      // store.isValid =
-      //   window.ethereum !== undefined
-      //   && signer?.address !== undefined
-      //   && network.chainId === /*1337n*/41n;
+
       return store;
     });
   } else {
     const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
 
     ethersStore.update((store) => {
-      // store.provider = new JsonRpcProvider("https://testnet.telos.net/evm") as any;
-      // store.signer = signer;
-      // store.chainId = /*1337n*/41n;
       store.contracts = {
         ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, provider),
         ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, provider),
@@ -68,10 +60,7 @@ const init = async () => {
         somTokens: new Contract(keys.somTokens, SomTokens.abi, provider),
         somGame: new Contract(keys.somGame, SomGame.abi, provider)
       };
-      // store.isValid =
-      //   window.ethereum !== undefined
-      //   && signer?.address !== undefined
-      //   && network.chainId === /*1337n*/41n;
+
       return store;
     });
   }

@@ -2398,7 +2398,7 @@ const playerTemplate = (name, passwordHash, address) => ({
     ],
     skins: cards.map((card) => ({
         cardId: card.id,
-        skinId: parseInt(`1${card.id}00`)
+        skinId: parseInt(`1${card.id > 100 ? `${card.id}` : `0${card.id}`}00`)
     }))
 });
 

@@ -14,7 +14,7 @@ const signin = (): void => {
     snapshotsStore.set(snapshots);
     playerStore.set(playerView);
 
-    await ethersService.init();
+    await ethersService.init(playerView.address);
     await ethersService.reloadUser();
 
     if (lobbyView) {

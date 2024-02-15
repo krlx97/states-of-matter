@@ -1,8 +1,8 @@
 .vscode
 !.vscode/extensions.json
 node_modules
-backend/dist
-frontend/dist
+#backend/dist
+#frontend/dist
 frontend/node_modules
-shared/dist
+#shared/dist
 package-lock.json

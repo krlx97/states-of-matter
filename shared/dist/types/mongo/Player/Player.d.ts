@@ -1,0 +1,36 @@
+import type { Document } from "mongodb";
+import type { PlayerStatus, QueueId } from "../../../enums/index.js";
+import type { PlayerDecks } from "./PlayerDecks.js";
+import type { PlayerGames } from "./PlayerGames.js";
+import type { PlayerSkins } from "./PlayerSkins.js";
+import type { PlayerSocial } from "./PlayerSocial.js";
+import type { PlayerTutorial } from "./PlayerTutorial.js";
+import type { PlayerQuests } from "./PlayerQuests.js";
+import type { PlayerRewards } from "./PlayerRewards.js";
+interface Player extends Document {
+    name: string;
+    socketId: string;
+    passwordHash: string;
+    address: string;
+    nonce: number;
+    joinedAt: number;
+    avatarId: number;
+    bannerId: number;
+    experience: number;
+    level: number;
+    elo: number;
+    status: PlayerStatus;
+    queueId: QueueId;
+    lobbyId: number;
+    gamePopupId: number;
+    gameId: number;
+    deckId: number;
+    social: PlayerSocial;
+    games: PlayerGames;
+    decks: PlayerDecks;
+    skins: PlayerSkins;
+    tutorial: PlayerTutorial;
+    tasks: PlayerQuests;
+    rewards: PlayerRewards;
+}
+export type { Player };

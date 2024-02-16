@@ -1597,7 +1597,7 @@ const endGame = async (gameId, winnerName, animations) => {
             experience: 110 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? 20 : 0,
             eesReward: playerAEesReward,
-            playerADaily,
+            playerDaily: playerADaily,
             animations
         });
         io.to($playerB.socketId).emit("gameEnded", {
@@ -1606,7 +1606,7 @@ const endGame = async (gameId, winnerName, animations) => {
             experience: 90 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? -20 : 0,
             eesReward: playerBEesReward,
-            playerBDaily,
+            playerDaily: playerBDaily,
             animations
         });
     }
@@ -1719,7 +1719,7 @@ const endGame = async (gameId, winnerName, animations) => {
             gameType: $game.type,
             experience: 110 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? 20 : 0,
-            playerBDaily,
+            playerDaily: playerBDaily,
             eesReward: playerBEesReward,
             animations
         });
@@ -1728,7 +1728,7 @@ const endGame = async (gameId, winnerName, animations) => {
             gameType: $game.type,
             experience: 90 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? -20 : 0,
-            playerADaily,
+            playerDaily: playerADaily,
             eesReward: playerAEesReward, animations
         });
     }

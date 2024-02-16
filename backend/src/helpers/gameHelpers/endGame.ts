@@ -141,7 +141,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       experience: 110 + $game.currentTurn,
       elo: $game.type === GameType.RANKED ? 20 : 0,
       eesReward: playerAEesReward,
-      playerADaily,
+      playerDaily: playerADaily,
       animations
     });
 
@@ -151,7 +151,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       experience: 90 + $game.currentTurn,
       elo: $game.type === GameType.RANKED ? -20 : 0,
       eesReward: playerBEesReward,
-      playerBDaily,
+      playerDaily: playerBDaily,
       animations
     });
 
@@ -287,7 +287,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: 110 + $game.currentTurn,
       elo: $game.type === GameType.RANKED ? 20 : 0,
-      playerBDaily,
+      playerDaily: playerBDaily,
       eesReward: playerBEesReward,
       animations
     });
@@ -297,7 +297,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: 90 + $game.currentTurn,
       elo: $game.type === GameType.RANKED ? -20 : 0,
-      playerADaily,
+      playerDaily: playerADaily,
       eesReward: playerAEesReward, animations
     });
   }

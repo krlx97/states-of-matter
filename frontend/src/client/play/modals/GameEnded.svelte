@@ -6,7 +6,7 @@
   import {ButtonComponent, CurrencyComponent, ModalComponent, PlayerFrameComponent, TextComponent} from "ui";
   import { modalService } from "services";
 
-  const {isWinner, gameType, experience, elo, ecrReward, eesReward} = $modalStore.data;
+  const {isWinner, gameType, experience, elo, playerDaily, eesReward} = $modalStore.data;
   let isLevelup = false;
   let isFinished = false;
   let isClosable = false;
@@ -150,10 +150,8 @@
     {#if isFinished}
       <div class="levelup">
         <div class="assets">
-          {#if BigInt(ecrReward) > 0n}
-            <div class="reward-asset" in:fade={{delay: 0, duration: 400}}>
-              <CurrencyComponent iconSize="sm" name="ecr" number="{ecrReward}"/>
-            </div>
+          {#if playerDaily}
+            Daily task complete!
           {/if}
           {#if BigInt(eesReward) > 0n}
             <div class="reward-asset" in:fade={{delay: 400, duration: 400}}>

@@ -7,7 +7,7 @@
   let bal = 0n;
 
   const onSetAvatar = (): void => {
-    const balance = $inventoryStore.items.find((item) => item.id === avatar.id)?.balance;
+    const balance = $inventoryStore.items.find((item) => item.id === BigInt(avatar.id))?.balance;
     bal = balance || 0n;
 
     if (balance && balance > 0) {
@@ -18,7 +18,7 @@
   };
 
   onMount((): void => {
-    const balance = $inventoryStore.items.find((item) => item.id === avatar.id)?.balance;
+    const balance = $inventoryStore.items.find((item) => item.id === BigInt(avatar.id))?.balance;
     bal = balance || 0n;
   });
 

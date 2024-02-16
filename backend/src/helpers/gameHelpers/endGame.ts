@@ -32,41 +32,21 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     $playerB.status = PlayerStatus.ONLINE;
     $playerB.gameId = 0;
 
-    let playerAEcrReward = "0";
-    let playerBEcrReward = "0";
     let playerAEesReward = "0";
+    let playerADaily = false;
     let playerBEesReward = "0";
+    let playerBDaily = false;
 
     if (!$playerA.tasks.daily) {
       $playerA.tasks.daily = true;
-      $playerA.tasks.dailyAlternative = 0;
-      $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 1n * 10n ** 18n}`;
-      playerAEcrReward = `${BigInt(playerAEcrReward) + (1n * 10n ** 18n)}`;
-
-      if ($playerA.tasks.weekly < 7) {
-        $playerA.tasks.weekly += 1;
-      } else {
-        $playerA.tasks.weekly = 0;
-        $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 10n * 10n ** 18n}`;
-        playerAEcrReward = `${BigInt(playerAEcrReward) + (10n * 10n ** 18n)}`;
-      }
+      playerADaily = true;
     }
 
-    if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative < 3) {
+    if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative < 2) {
       $playerB.tasks.dailyAlternative += 1;
-    } else if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative > 3) {
+    } else if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative >= 2) {
       $playerB.tasks.daily = true;
-      $playerB.tasks.dailyAlternative = 0;
-      $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 1n * 10n ** 18n}`;
-      playerBEcrReward = `${BigInt(playerBEcrReward) + (1n * 10n ** 18n)}`;
-
-      if ($playerB.tasks.weekly < 7) {
-        $playerB.tasks.weekly += 1;
-      } else {
-        $playerB.tasks.weekly = 0;
-        $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 10n * 10n ** 18n}`;
-        playerBEcrReward = `${BigInt(playerBEcrReward) + (10n * 10n ** 18n)}`;
-      }
+      playerBDaily = true
     }
 
     if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
@@ -160,8 +140,9 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: 110 + $game.currentTurn,
       elo: $game.type === GameType.RANKED ? 20 : 0,
-      ecrReward: playerAEcrReward,
-      eesReward: playerAEesReward, animations
+      eesReward: playerAEesReward,
+      playerADaily,
+      animations
     });
 
     io.to($playerB.socketId).emit("gameEnded" as any, {
@@ -169,8 +150,9 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: 90 + $game.currentTurn,
       elo: $game.type === GameType.RANKED ? -20 : 0,
-      ecrReward: playerBEcrReward,
-      eesReward: playerBEesReward, animations
+      eesReward: playerBEesReward,
+      playerBDaily,
+      animations
     });
 
 
@@ -193,41 +175,21 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     $playerA.status = PlayerStatus.ONLINE;
     $playerA.gameId = 0;
 
-    let playerAEcrReward = "0";
-    let playerBEcrReward = "0";
+    let playerADaily = false;
+    let playerBDaily = false;
     let playerAEesReward = "0";
     let playerBEesReward = "0";
 
     if (!$playerB.tasks.daily) {
       $playerB.tasks.daily = true;
-      $playerB.tasks.dailyAlternative = 0;
-      $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 1n * 10n ** 18n}`;
-      playerBEcrReward = `${BigInt(playerBEcrReward) + (1n * 10n ** 18n)}`;
-
-      if ($playerB.tasks.weekly < 7) {
-        $playerB.tasks.weekly += 1;
-      } else {
-        $playerB.tasks.weekly = 0;
-        $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 10n * 10n ** 18n}`;
-        playerBEcrReward = `${BigInt(playerBEcrReward) + (10n * 10n ** 18n)}`;
-      }
+      playerBDaily = true;
     }
 
-    if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative < 3) {
+    if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative < 2) {
       $playerA.tasks.dailyAlternative += 1;
-    } else if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative > 3) {
+    } else if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative >= 2) {
       $playerA.tasks.daily = true;
-      $playerA.tasks.dailyAlternative = 0;
-      $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 1n * 10n ** 18n}`;
-      playerAEcrReward = `${BigInt(playerAEcrReward) + (1n * 10n ** 18n)}`;
-
-      if ($playerA.tasks.weekly < 7) {
-        $playerA.tasks.weekly += 1;
-      } else {
-        $playerA.tasks.weekly = 0;
-        $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 10n * 10n ** 18n}`;
-        playerAEcrReward = `${BigInt(playerAEcrReward) + (10n * 10n ** 18n)}`;
-      }
+      playerADaily = true;
     }
 
     if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
@@ -325,8 +287,9 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: 110 + $game.currentTurn,
       elo: $game.type === GameType.RANKED ? 20 : 0,
-      ecrReward: playerBEcrReward,
-      eesReward: playerBEesReward, animations
+      playerBDaily,
+      eesReward: playerBEesReward,
+      animations
     });
 
     io.to($playerA.socketId).emit("gameEnded" as any, {
@@ -334,7 +297,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: 90 + $game.currentTurn,
       elo: $game.type === GameType.RANKED ? -20 : 0,
-      ecrReward: playerAEcrReward,
+      playerADaily,
       eesReward: playerAEesReward, animations
     });
   }

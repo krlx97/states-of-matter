@@ -8,8 +8,9 @@
   const {socket} = socketService;
 
   let selectedSkin = $playerStore.skins[0];
+  console.log(selectedSkin);
   let item = items[0];
-  let isSelected = selectedSkin.itemId === item.id;
+  let isSelected = selectedSkin.skinId === item.id;
   let skin: any;
   let balance = 0n;
 
@@ -37,7 +38,7 @@
     selectedSkin = $playerStore.skins.find(({cardId}): boolean => skin.cardId === cardId);
     item = items.find((item): boolean => selectedSkin.skinId === item.id);
     isSelected = selectedSkin.skinId === skin.id;
-    balance = $inventoryStore.items.find((i) => i.id === skin.id)?.balance || 0n;
+    balance = $inventoryStore.items.find((i) => i.id === BigInt(skin.id))?.balance || 0n;
   });
 
   export {skin};

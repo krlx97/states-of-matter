@@ -1505,40 +1505,20 @@ const endGame = async (gameId, winnerName, animations) => {
         $playerA.gameId = 0;
         $playerB.status = PlayerStatus.ONLINE;
         $playerB.gameId = 0;
-        let playerAEcrReward = "0";
-        let playerBEcrReward = "0";
         let playerAEesReward = "0";
+        let playerADaily = false;
         let playerBEesReward = "0";
+        let playerBDaily = false;
         if (!$playerA.tasks.daily) {
             $playerA.tasks.daily = true;
-            $playerA.tasks.dailyAlternative = 0;
-            $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 1n * 10n ** 18n}`;
-            playerAEcrReward = `${BigInt(playerAEcrReward) + (1n * 10n ** 18n)}`;
-            if ($playerA.tasks.weekly < 7) {
-                $playerA.tasks.weekly += 1;
-            }
-            else {
-                $playerA.tasks.weekly = 0;
-                $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 10n * 10n ** 18n}`;
-                playerAEcrReward = `${BigInt(playerAEcrReward) + (10n * 10n ** 18n)}`;
-            }
+            playerADaily = true;
         }
-        if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative < 3) {
+        if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative < 2) {
             $playerB.tasks.dailyAlternative += 1;
         }
-        else if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative > 3) {
+        else if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative >= 2) {
             $playerB.tasks.daily = true;
-            $playerB.tasks.dailyAlternative = 0;
-            $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 1n * 10n ** 18n}`;
-            playerBEcrReward = `${BigInt(playerBEcrReward) + (1n * 10n ** 18n)}`;
-            if ($playerB.tasks.weekly < 7) {
-                $playerB.tasks.weekly += 1;
-            }
-            else {
-                $playerB.tasks.weekly = 0;
-                $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 10n * 10n ** 18n}`;
-                playerBEcrReward = `${BigInt(playerBEcrReward) + (10n * 10n ** 18n)}`;
-            }
+            playerBDaily = true;
         }
         if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
             $playerA.experience += 110 + $game.currentTurn;
@@ -1616,16 +1596,18 @@ const endGame = async (gameId, winnerName, animations) => {
             gameType: $game.type,
             experience: 110 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? 20 : 0,
-            ecrReward: playerAEcrReward,
-            eesReward: playerAEesReward, animations
+            eesReward: playerAEesReward,
+            playerADaily,
+            animations
         });
         io.to($playerB.socketId).emit("gameEnded", {
             isWinner: false,
             gameType: $game.type,
             experience: 90 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? -20 : 0,
-            ecrReward: playerBEcrReward,
-            eesReward: playerBEesReward, animations
+            eesReward: playerBEesReward,
+            playerBDaily,
+            animations
         });
     }
     else if (winnerName === playerB.name) {
@@ -1642,40 +1624,20 @@ const endGame = async (gameId, winnerName, animations) => {
         $playerB.gameId = 0;
         $playerA.status = PlayerStatus.ONLINE;
         $playerA.gameId = 0;
-        let playerAEcrReward = "0";
-        let playerBEcrReward = "0";
+        let playerADaily = false;
+        let playerBDaily = false;
         let playerAEesReward = "0";
         let playerBEesReward = "0";
         if (!$playerB.tasks.daily) {
             $playerB.tasks.daily = true;
-            $playerB.tasks.dailyAlternative = 0;
-            $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 1n * 10n ** 18n}`;
-            playerBEcrReward = `${BigInt(playerBEcrReward) + (1n * 10n ** 18n)}`;
-            if ($playerB.tasks.weekly < 7) {
-                $playerB.tasks.weekly += 1;
-            }
-            else {
-                $playerB.tasks.weekly = 0;
-                $playerB.rewards.ecr = `${BigInt($playerB.rewards.ecr) + 10n * 10n ** 18n}`;
-                playerBEcrReward = `${BigInt(playerBEcrReward) + (10n * 10n ** 18n)}`;
-            }
+            playerBDaily = true;
         }
-        if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative < 3) {
+        if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative < 2) {
             $playerA.tasks.dailyAlternative += 1;
         }
-        else if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative > 3) {
+        else if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative >= 2) {
             $playerA.tasks.daily = true;
-            $playerA.tasks.dailyAlternative = 0;
-            $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 1n * 10n ** 18n}`;
-            playerAEcrReward = `${BigInt(playerAEcrReward) + (1n * 10n ** 18n)}`;
-            if ($playerA.tasks.weekly < 7) {
-                $playerA.tasks.weekly += 1;
-            }
-            else {
-                $playerA.tasks.weekly = 0;
-                $playerA.rewards.ecr = `${BigInt($playerA.rewards.ecr) + 10n * 10n ** 18n}`;
-                playerAEcrReward = `${BigInt(playerAEcrReward) + (10n * 10n ** 18n)}`;
-            }
+            playerADaily = true;
         }
         if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
             $playerB.experience += 110 + $game.currentTurn;
@@ -1757,15 +1719,16 @@ const endGame = async (gameId, winnerName, animations) => {
             gameType: $game.type,
             experience: 110 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? 20 : 0,
-            ecrReward: playerBEcrReward,
-            eesReward: playerBEesReward, animations
+            playerBDaily,
+            eesReward: playerBEesReward,
+            animations
         });
         io.to($playerA.socketId).emit("gameEnded", {
             isWinner: false,
             gameType: $game.type,
             experience: 90 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? -20 : 0,
-            ecrReward: playerAEcrReward,
+            playerADaily,
             eesReward: playerAEesReward, animations
         });
     }
@@ -2398,7 +2361,7 @@ const playerTemplate = (name, passwordHash, address) => ({
     ],
     skins: cards.map((card) => ({
         cardId: card.id,
-        skinId: parseInt(`1${card.id > 100 ? `${card.id}` : `0${card.id}`}00`)
+        skinId: parseInt(`1${card.id > 99 ? `${card.id}` : `0${card.id}`}00`)
     }))
 });
 
@@ -4726,7 +4689,15 @@ server.io.on("connection", (socket) => {
 server.http.listen(process.env.PORT || 4201);
 schedule("0 */24 * * *", async () => {
     for await (let $player of mongo.$players.find()) {
-        if (!$player.tasks.daily && $player.tasks.dailyAlternative) {
+        if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
+            $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
+            $player.tasks.weekly += 1;
+            if ($player.tasks.weekly >= 7) {
+                $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 3n * 10n ** 18n}`;
+                $player.tasks.weekly = 0;
+            }
+        }
+        else {
             $player.tasks.weekly = 0;
         }
         $player.tasks.daily = false;
@@ -4734,41 +4705,51 @@ schedule("0 */24 * * *", async () => {
         if ($player.elo > 250) {
             $player.elo -= 1;
         }
-        if ($player.elo > 249) { // silver
+        if ($player.elo >= 250) { // silver
             $player.rewards.ees = `${BigInt($player.rewards.ees) + 1n * 10n ** 18n}`;
         }
-        if ($player.elo > 499) { // gold
+        else if ($player.elo >= 500) { // gold
             $player.rewards.ees = `${BigInt($player.rewards.ees) + 3n * 10n ** 18n}`;
         }
-        if ($player.elo > 749) { // master
-            $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
+        else if ($player.elo >= 750) { // master
+            $player.rewards.ees = `${BigInt($player.rewards.ees) + 5n * 10n ** 18n}`;
         }
         await mongo.$players.replaceOne({ name: $player.name }, $player);
     }
+    const [deployTimestamp, ees, ecr, enrg] = await Promise.all([
+        contracts.somGame.deployTimestamp(),
+        contracts.ethericEssence.totalSupply(),
+        contracts.ethericCrystals.totalSupply(),
+        contracts.ethericEnergy.totalSupply()
+    ]);
     const POW = 10n ** 18n;
-    let deployTimestamp = await contracts.somGame.deployTimestamp() * 1000n;
     const REWARD_PER_MS = 1000000n;
-    const ees = await contracts.ethericEssence.totalSupply();
-    const ecr = await contracts.ethericCrystals.totalSupply();
-    const enrg = await contracts.ethericEnergy.totalSupply();
-    const liquid = ecr;
-    const staked = (enrg * (1n * POW + ((BigInt(Date.now()) - deployTimestamp) * REWARD_PER_MS))) / POW;
-    const supply = liquid + staked;
-    await mongo.$supplySnapshots.updateOne({ name: "ees" }, {
-        $push: {
-            "snapshots": { date: Date.now(), supply: `${ees}` }
-        }
-    });
-    await mongo.$supplySnapshots.updateOne({ name: "ecr" }, {
-        $push: {
-            "snapshots": { date: Date.now(), supply: `${supply}` }
-        }
-    });
-    await mongo.$supplySnapshots.updateOne({ name: "enrg" }, {
-        $push: {
-            "snapshots": { date: Date.now(), supply: `${enrg}` }
-        }
-    });
+    const date = Date.now();
+    const ecrStaked = (enrg * (1n * POW + ((BigInt(date) - deployTimestamp * 1000n) * REWARD_PER_MS))) / POW;
+    const supply = ecr + ecrStaked;
+    await Promise.all([
+        mongo.$supplySnapshots.updateOne({
+            name: "ees"
+        }, {
+            $push: {
+                "snapshots": { date, supply: `${ees}` }
+            }
+        }),
+        mongo.$supplySnapshots.updateOne({
+            name: "ecr"
+        }, {
+            $push: {
+                "snapshots": { date, supply: `${supply}` }
+            }
+        }),
+        mongo.$supplySnapshots.updateOne({
+            name: "enrg"
+        }, {
+            $push: {
+                "snapshots": { date, supply: `${enrg}` }
+            }
+        })
+    ]);
     const byLevel = (await mongo.$players
         .find()
         .limit(100)
@@ -4782,27 +4763,32 @@ schedule("0 */24 * * *", async () => {
         .sort({
         elo: -1
     })
-        .toArray()).map(({ name, elo, level, experience, avatarId, bannerId, games }) => ({ name, level, elo, experience, avatarId, bannerId, games }));
-    mongo.$leaderboards.updateOne({}, {
+        .toArray()).map(($player) => {
+        const { name, elo, level, experience, avatarId, bannerId, games } = $player;
+        return { name, level, elo, experience, avatarId, bannerId, games };
+    });
+    await mongo.$leaderboards.updateOne({}, {
         $set: { level: byLevel, elo: byElo }
     });
-    for (let playa of byLevel) {
-        const $P = await mongo.$players.findOne({ name: playa.name });
-        if ($P) {
-            $P.rewards.ecr = `${BigInt($P.rewards.ecr) + 5n * 10n ** 18n}`;
-            await mongo.$players.replaceOne({ name: playa.name }, $P);
+    for (let { name } of byLevel) {
+        const $player = await mongo.$players.findOne({ name });
+        if ($player) {
+            const newValue = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
+            $player.rewards.ecr = newValue;
+            await mongo.$players.replaceOne({ name }, $player);
         }
     }
-    for (let playa of byElo) {
-        const $P = await mongo.$players.findOne({ name: playa.name });
-        if ($P) {
-            $P.rewards.ecr = `${BigInt($P.rewards.ecr) + 10n * 10n ** 18n}`;
-            await mongo.$players.replaceOne({ name: playa.name }, $P);
+    for (let { name } of byElo) {
+        const $player = await mongo.$players.findOne({ name });
+        if ($player) {
+            const newValue = `${BigInt($player.rewards.ecr) + 3n * 10n ** 18n}`;
+            $player.rewards.ecr = newValue;
+            await mongo.$players.replaceOne({ name }, $player);
         }
     }
     server.io.emit("notification", {
         color: "success",
-        message: "Flush complete, refresh the page!"
+        message: "Leaderboards and tasks updated, rewards distributed!"
     });
 });
 //# sourceMappingURL=index.js.map

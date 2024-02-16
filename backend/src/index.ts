@@ -119,7 +119,15 @@ server.http.listen(process.env.PORT || 4201);
 
 schedule("0 */24 * * *", async (): Promise<void> => {
   for await (let $player of mongo.$players.find()) {
-    if (!$player.tasks.daily && $player.tasks.dailyAlternative) {
+    if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
+      $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
+      $player.tasks.weekly += 1;
+
+      if ($player.tasks.weekly >= 7) {
+        $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 3n * 10n ** 18n}`;
+        $player.tasks.weekly = 0;
+      }
+    } else {
       $player.tasks.weekly = 0;
     }
 
@@ -130,50 +138,53 @@ schedule("0 */24 * * *", async (): Promise<void> => {
       $player.elo -= 1;
     }
 
-    if ($player.elo > 249) { // silver
+    if ($player.elo >= 250) { // silver
       $player.rewards.ees = `${BigInt($player.rewards.ees) + 1n * 10n ** 18n}`;
-    }
-
-    if ($player.elo > 499) { // gold
+    } else if ($player.elo >= 500) { // gold
       $player.rewards.ees = `${BigInt($player.rewards.ees) + 3n * 10n ** 18n}`;
-    }
-
-    if ($player.elo > 749) { // master
-      $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
+    } else if ($player.elo >= 750) { // master
+      $player.rewards.ees = `${BigInt($player.rewards.ees) + 5n * 10n ** 18n}`;
     }
 
     await mongo.$players.replaceOne({name: $player.name}, $player);
   }
 
+  const [deployTimestamp, ees, ecr, enrg] = await Promise.all([
+    contracts.somGame.deployTimestamp(),
+    contracts.ethericEssence.totalSupply(),
+    contracts.ethericCrystals.totalSupply(),
+    contracts.ethericEnergy.totalSupply()
+  ]);
+
   const POW = 10n ** 18n;
-  let deployTimestamp = await contracts.somGame.deployTimestamp() * 1000n;
   const REWARD_PER_MS = 1000000n;
+  const date = Date.now();
+  const ecrStaked = (enrg * (1n * POW + ((BigInt(date) - deployTimestamp * 1000n) * REWARD_PER_MS))) / POW;
+  const supply = ecr + ecrStaked;
 
-  const ees = await contracts.ethericEssence.totalSupply();
-  const ecr = await contracts.ethericCrystals.totalSupply();
-  const enrg = await contracts.ethericEnergy.totalSupply();
-
-  const liquid = ecr;
-  const staked = (enrg * (1n * POW + ((BigInt(Date.now()) - deployTimestamp) * REWARD_PER_MS))) / POW;
-  const supply = liquid + staked;
-
-  await mongo.$supplySnapshots.updateOne({name: "ees"}, {
-    $push: {
-      "snapshots": {date: Date.now(), supply: `${ees}`}
-    }
-  });
-
-  await mongo.$supplySnapshots.updateOne({name: "ecr"}, {
-    $push: {
-      "snapshots": {date: Date.now(), supply: `${supply}`}
-    }
-  });
-
-  await mongo.$supplySnapshots.updateOne({name: "enrg"}, {
-    $push: {
-      "snapshots": {date: Date.now(), supply: `${enrg}`}
-    }
-  });
+  await Promise.all([
+    mongo.$supplySnapshots.updateOne({
+      name: "ees"
+    }, {
+      $push: {
+        "snapshots": {date, supply: `${ees}`}
+      }
+    }),
+    mongo.$supplySnapshots.updateOne({
+      name: "ecr"
+    }, {
+      $push: {
+        "snapshots": {date, supply: `${supply}`}
+      }
+    }),
+    mongo.$supplySnapshots.updateOne({
+      name: "enrg"
+    }, {
+      $push: {
+        "snapshots": {date, supply: `${enrg}`}
+      }
+    })
+  ]);
 
   const byLevel = (await mongo.$players
     .find()
@@ -182,7 +193,9 @@ schedule("0 */24 * * *", async (): Promise<void> => {
       level: -1
     })
     .toArray()
-  ).map(({name, elo, level, experience, avatarId, bannerId, games}) => ({name, level, elo, experience, avatarId, bannerId, games}));
+  ).map(({name, elo, level, experience, avatarId, bannerId, games}) =>
+    ({name, level, elo, experience, avatarId, bannerId, games})
+  );
 
   const byElo = (await mongo.$players
     .find()
@@ -191,30 +204,37 @@ schedule("0 */24 * * *", async (): Promise<void> => {
       elo: -1
     })
     .toArray()
-  ).map(({name, elo, level, experience, avatarId, bannerId, games}) => ({name, level, elo, experience, avatarId, bannerId, games}));
+  ).map(($player) => {
+    const {name, elo, level, experience, avatarId, bannerId, games} = $player;
+    return {name, level, elo, experience, avatarId, bannerId, games};
+  });
 
-  mongo.$leaderboards.updateOne({}, {
+  await mongo.$leaderboards.updateOne({}, {
     $set: {level: byLevel, elo: byElo}
   });
 
-  for (let playa of byLevel) {
-    const $P = await mongo.$players.findOne({name: playa.name});
-    if ($P) {
-      $P.rewards.ecr = `${BigInt($P.rewards.ecr) + 5n * 10n ** 18n}`;
-      await mongo.$players.replaceOne({name: playa.name}, $P);
+  for (let {name} of byLevel) {
+    const $player = await mongo.$players.findOne({name});
+
+    if ($player) {
+      const newValue = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`
+      $player.rewards.ecr = newValue;
+      await mongo.$players.replaceOne({name}, $player);
     }
   }
 
-  for (let playa of byElo) {
-    const $P = await mongo.$players.findOne({name: playa.name});
-    if ($P) {
-      $P.rewards.ecr = `${BigInt($P.rewards.ecr) + 10n * 10n ** 18n}`;
-      await mongo.$players.replaceOne({name: playa.name}, $P);
+  for (let {name} of byElo) {
+    const $player = await mongo.$players.findOne({name});
+
+    if ($player) {
+      const newValue = `${BigInt($player.rewards.ecr) + 3n * 10n ** 18n}`
+      $player.rewards.ecr = newValue;
+      await mongo.$players.replaceOne({name}, $player);
     }
   }
 
   server.io.emit("notification", {
     color: "success",
-    message: "Flush complete, refresh the page!"
+    message: "Leaderboards and tasks updated, rewards distributed!"
   });
 });

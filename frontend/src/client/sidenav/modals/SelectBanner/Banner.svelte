@@ -4,11 +4,11 @@
     import { onMount } from "svelte";
 
   let banner: any;
-  let balance = $inventoryStore.items.find((item) => item.id === banner.id)?.balance;
+  let balance = $inventoryStore.items.find((item) => item.id === BigInt(banner.id))?.balance;
   let bal = 0n;
 
   const onSetBanner = (): void => {
-    const balance = $inventoryStore.items.find((item) => item.id === banner.id)?.balance;
+    const balance = $inventoryStore.items.find((item) => item.id === BigInt(banner.id))?.balance;
 
     if (balance && balance > 0) {
       const bannerId = banner.id;
@@ -18,7 +18,7 @@
   };
 
   onMount((): void => {
-    const balance = $inventoryStore.items.find((item) => item.id === banner.id)?.balance;
+    const balance = $inventoryStore.items.find((item) => item.id === BigInt(banner.id))?.balance;
     bal = balance || 0n;
   });
 

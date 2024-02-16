@@ -17,10 +17,11 @@
 
   onMount((): void => {
     const ecrr = $snapshotsStore.find((s) => s.name === "ecr");
-    const labels = ecrr.snapshots.map(({date}) => new Date(date).toLocaleDateString());
-    const data = ecrr.snapshots.map(({supply}) => formatUnits(supply));
 
-    if (data) {
+    if (ecrr) {
+      const labels = ecrr.snapshots.map(({date}) => new Date(date).toLocaleDateString());
+      const data = ecrr.snapshots.map(({supply}) => formatUnits(supply));
+
       new Chart(chartCanvas, {
         type: "line",
         data: {
@@ -36,6 +37,7 @@
       });
     } else {
       isNoDataYet = true;
+      chartCanvas.style.display = "none";
     }
 
     int = setInterval((): void => {
@@ -55,6 +57,16 @@
   ]
 </script>
 
+<style>
+  .center {
+    width: 640px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+
 <ModalComponent width="640px">
   <svelte:fragment slot="title">Etheric Crystals</svelte:fragment>
 
@@ -70,7 +82,7 @@
   <svelte:fragment slot="content">
     <canvas bind:this="{chartCanvas}"></canvas>
     {#if isNoDataYet}
-      There are no snapshots yet...
+      <div class="center">There are no snapshots yet...</div>
     {/if}
     <TableComponent {items}/>
   </svelte:fragment>

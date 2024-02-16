@@ -17,12 +17,11 @@
   onMount((): void => {
     deployTimestamp = BigInt($inventoryStore.deployTimestamp * 1000n);
     const eenrg = $snapshotsStore.find((s) => s.name === "enrg");
-    const labels = eenrg.snapshots.map(({date}) => new Date(date).toLocaleDateString());
-    const data = eenrg.snapshots.map(({supply}) => formatUnits(supply));
 
-    console.log({labels, data});
+    if (eenrg) {
+      const labels = eenrg.snapshots.map(({date}) => new Date(date).toLocaleDateString());
+      const data = eenrg.snapshots.map(({supply}) => formatUnits(supply));
 
-    if (data) {
       new Chart(chartCanvas, {
         type: "line",
         data: {
@@ -38,6 +37,7 @@
       });
     } else {
       isNoDataYet = true;
+      chartCanvas.style.display = "none";
     }
 
     int = setInterval((): void => {
@@ -64,6 +64,14 @@
     align-items: center;
     gap: 4px;
   }
+
+  .center {
+    width: 640px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>
 
 <ModalComponent width="640px">
@@ -78,7 +86,7 @@
 
     <canvas bind:this="{chartCanvas}"></canvas>
     {#if isNoDataYet}
-      There are no snapshots yet...
+      <div class="center">There are no snapshots yet...</div>
     {/if}
 
     <TableComponent items="{[

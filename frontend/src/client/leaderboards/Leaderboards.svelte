@@ -76,19 +76,27 @@
   <div class="leaderboards">
     <div class="leaderboards__players">
       <div class="title">Level</div>
-      {#each $leaderboardsStore.byLevel as {name, elo, level, experience, avatarId, bannerId, games}, i}
-        <div>
-          <PlayerFrameComponent {name} {level} {elo} {avatarId} {bannerId} {experience} {games} leaderboardPosition="{i + 1}"/>
-        </div>
-      {/each}
+      {#if $leaderboardsStore.byLevel.length}
+        {#each $leaderboardsStore.byLevel as {name, elo, level, experience, avatarId, bannerId, games}, i}
+          <div>
+            <PlayerFrameComponent {name} {level} {elo} {avatarId} {bannerId} {experience} {games} leaderboardPosition="{i + 1}"/>
+          </div>
+        {/each}
+      {:else}
+        Leaderboards haven't been generated yet.
+      {/if}
     </div>
     <div class="leaderboards__players">
       <div class="title">Elo</div>
-      {#each $leaderboardsStore.byElo as {name, elo, level, experience, avatarId, bannerId, games}, i}
-        <div>
-          <PlayerFrameComponent {name} {level} {elo} {avatarId} {bannerId} {experience} {games} leaderboardPosition="{i + 1}"/>
-        </div>
-      {/each}
+      {#if $leaderboardsStore.byElo.length}
+        {#each $leaderboardsStore.byElo as {name, elo, level, experience, avatarId, bannerId, games}, i}
+          <div>
+            <PlayerFrameComponent {name} {level} {elo} {avatarId} {bannerId} {experience} {games} leaderboardPosition="{i + 1}"/>
+          </div>
+        {/each}
+      {:else}
+          Leaderboards haven't been generated yet.
+      {/if}
     </div>
   </div>
 

@@ -12,6 +12,7 @@
   const REWARD_PER_MS = 1000000n;
   let chartCanvas: HTMLCanvasElement;
   let val2: any;
+  let isNoDataYet = false;
 
   onMount((): void => {
     deployTimestamp = BigInt($inventoryStore.deployTimestamp * 1000n);
@@ -21,19 +22,23 @@
 
     console.log({labels, data});
 
-    new Chart(chartCanvas, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            label: "Supply",
-            data,
-            borderColor: "rgb(121, 108, 255)"
-          }
-        ]
-      }
-    });
+    if (data) {
+      new Chart(chartCanvas, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Supply",
+              data,
+              borderColor: "rgb(121, 108, 255)"
+            }
+          ]
+        }
+      });
+    } else {
+      isNoDataYet = true;
+    }
 
     int = setInterval((): void => {
       const timestamp = BigInt(Date.now());
@@ -72,6 +77,9 @@
     </div>
 
     <canvas bind:this="{chartCanvas}"></canvas>
+    {#if isNoDataYet}
+      There are no snapshots yet...
+    {/if}
 
     <TableComponent items="{[
       ["Supply", $inventoryStore.total.enrg, "enrg"]

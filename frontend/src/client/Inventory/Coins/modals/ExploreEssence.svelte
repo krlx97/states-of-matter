@@ -8,23 +8,28 @@
   let chartElement: HTMLCanvasElement;
   let chart: Chart;
   const items = [["Supply", $inventoryStore.total.ees, "ees"]];
+  let isNoDataYet = false;
 
   onMount((): void => {
     const ees = $snapshotsStore.find((s) => s.name === "ees");
     const labels = ees.snapshots.map(({date}) => new Date(date).toLocaleDateString());
     const data = ees.snapshots.map(({supply}) => formatUnits(supply));
 
-    chart = new Chart(chartElement, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Supply",
-          data,
-          borderColor: "rgb(121, 108, 255)"
-        }]
-      }
-    });
+    if (data) {
+      chart = new Chart(chartElement, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Supply",
+            data,
+            borderColor: "rgb(121, 108, 255)"
+          }]
+        }
+      });
+    } else {
+      isNoDataYet = true;
+    }
   });
 </script>
 
@@ -41,6 +46,9 @@
 
   <svelte:fragment slot="content">
     <canvas bind:this="{chartElement}"></canvas>
+    {#if isNoDataYet}
+      There are no snapshots yet...
+    {/if}
     <TableComponent {items}/>
   </svelte:fragment>
 </ModalComponent>

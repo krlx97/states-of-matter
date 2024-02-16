@@ -13,39 +13,30 @@
   let supply = liquid + staked;
   let chartCanvas: HTMLCanvasElement;
   let int: NodeJS.Timeout;
+  let isNoDataYet = false;
 
   onMount((): void => {
     const ecrr = $snapshotsStore.find((s) => s.name === "ecr");
     const labels = ecrr.snapshots.map(({date}) => new Date(date).toLocaleDateString());
     const data = ecrr.snapshots.map(({supply}) => formatUnits(supply));
 
-    new Chart(chartCanvas, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Supply",
-            data,
-            borderColor: "rgb(121, 108, 255)"
-          }
-        ]
-      },
-      // options: {
-      //   scales: {
-      //     y: {
-      //       ticks: {
-      //         display: false
-      //       }
-      //     }
-      //   },
-      //   plugins: {
-      //     legend: {
-      //       display: false
-      //     }
-      //   }
-      // }
-    });
+    if (data) {
+      new Chart(chartCanvas, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Supply",
+              data,
+              borderColor: "rgb(121, 108, 255)"
+            }
+          ]
+        }
+      });
+    } else {
+      isNoDataYet = true;
+    }
 
     int = setInterval((): void => {
       staked = ($inventoryStore.total.enrg * (1n * POW + ((BigInt(Date.now()) - deployTimestamp) * REWARD_PER_MS))) / POW;
@@ -78,6 +69,9 @@
 
   <svelte:fragment slot="content">
     <canvas bind:this="{chartCanvas}"></canvas>
+    {#if isNoDataYet}
+      There are no snapshots yet...
+    {/if}
     <TableComponent {items}/>
   </svelte:fragment>
 </ModalComponent>

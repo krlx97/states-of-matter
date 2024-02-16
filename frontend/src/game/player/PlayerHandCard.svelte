@@ -31,7 +31,7 @@
         $selectedCardStore.hand = card;
       }
 
-      if (card.id === CardId.GAMBIT || card.id === CardId.ANVIL) {
+      if (card.id === CardId.GAMBIT || card.id === CardId.ANVIL || card.id === CardId.PACT) {
         socket.emit("playMagic", {gid});
       }
 

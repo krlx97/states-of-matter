@@ -17,8 +17,6 @@
   const icon = id === 1n ? "ecr" : "enrg";
   let balance = id === 1n ? $inventoryStore.ecr : $inventoryStore.enrg;
 
-  console.log(balance);
-
   const formStore = formService.create({
     name: ["", "name"],
     amount: ["", "currency", balance]

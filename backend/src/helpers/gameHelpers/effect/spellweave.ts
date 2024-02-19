@@ -13,30 +13,32 @@ interface Spellweave {
   playerMinionField: MinionField;
 }
 
-const spellweave = (params: Spellweave): Animations => {
-  const {player, playerMinion, playerMinionField} = params;
-  const {name, graveyard} = player;
+const spellweave = {
+  onNormalSummon (params: Spellweave): Animations {
+    const {player, playerMinion, playerMinionField} = params;
+    const {name, graveyard} = player;
 
-  const amount = graveyard.reduce(
-    (sum, {type}) => type === CardType.MAGIC ? sum += 1 : sum, 0
-  );
+    const amount = graveyard.reduce(
+      (sum, {type}) => type === CardType.MAGIC ? sum += 1 : sum, 0
+    );
 
-  playerMinion.buffs.push({
-    id: EffectId.SHIELD,
-    data: {amount}
-  });
+    playerMinion.buffs.push({
+      id: EffectId.SHIELD,
+      data: {amount}
+    });
 
-  return [{
-    type: "FLOATING_TEXT",
-    field: playerMinionField,
-    name,
-    text: "SPELLWEAVE"
-  }, {
-    type: "FLOATING_TEXT",
-    field: playerMinionField,
-    name,
-    text: `+${amount} Shield`
-  }];
+    return [{
+      type: "FLOATING_TEXT",
+      field: playerMinionField,
+      name,
+      text: "SPELLWEAVE"
+    }, {
+      type: "FLOATING_TEXT",
+      field: playerMinionField,
+      name,
+      text: `+${amount} Shield`
+    }];
+  }
 };
 
 export {spellweave};

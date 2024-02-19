@@ -28,12 +28,6 @@
 					{
 						"indexed": false,
 						"internalType": "uint256",
-						"name": "totalEcr",
-						"type": "uint256"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
 						"name": "id",
 						"type": "uint256"
 					},
@@ -95,6 +89,25 @@
 				"anonymous": false,
 				"inputs": [
 					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "player",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "id",
+						"type": "uint256"
+					}
+				],
+				"name": "RandomItem",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
 						"indexed": false,
 						"internalType": "uint256",
 						"name": "ecrAmount",
@@ -111,38 +124,19 @@
 				"type": "event"
 			},
 			{
-				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "player",
-						"type": "address"
+						"internalType": "uint256[]",
+						"name": "ids",
+						"type": "uint256[]"
 					},
 					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
+						"internalType": "enum Game.Rarity[]",
+						"name": "rarities",
+						"type": "uint8[]"
 					}
 				],
-				"name": "UnlockChest",
-				"type": "event"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "enum Game.Rarity",
-						"name": "rarity",
-						"type": "uint8"
-					}
-				],
-				"name": "addItem",
+				"name": "addItems",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -168,24 +162,6 @@
 				"name": "claimRewards",
 				"outputs": [],
 				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "craftChestPrice",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "ees",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "ecr",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -218,12 +194,7 @@
 				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "ees",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "ecr",
+						"name": "",
 						"type": "uint256"
 					}
 				],
@@ -346,6 +317,26 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "randomItem",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "randomSkinPrice",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -354,13 +345,6 @@
 					}
 				],
 				"name": "solidify",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "unlockChest",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -531,43 +515,43 @@
 			]
 		},
 		"contracts/EthericCrystals/EthericCrystals.sol": {
-			"keccak256": "0xe0117be431e5bbf21df92126a808ba49ec010389910a5dc022b122873f66f4e6",
+			"keccak256": "0xd82ce7ff19d3b67f01d64cfc9819443c304de6607c6cf3b1fffd49786ce364c7",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://305c3841a33bff510251e7d04a8669f6800b2945aee54e2f1789288d27959c61",
-				"dweb:/ipfs/QmcGzy96KP9vJP31wk8kUQnWgT4PbkQAseTsnhHBRyfLiP"
+				"bzz-raw://978ca6ecd92f1bcd84f955ba26348765484b53d213b2cde2dd6592af92da819b",
+				"dweb:/ipfs/QmZhSSwBHUr6PLiMx42ivTwZWQ8ETJ58LaNVkt4RGGm3A8"
 			]
 		},
 		"contracts/EthericEnergy/EthericEnergy.sol": {
-			"keccak256": "0x3dee3846aafc268d0c5528a4a83a10146f623a0ded874a7031833fac708f4fbe",
+			"keccak256": "0x3ae5b28a441e993cf72c258e9d7011e25be0b8a1f53b4c38d40007eb2cf1e357",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://9abc01eab3b6f01110ea45f4037ef4e512e6dac984d7f7e2b09409cd1210c80c",
-				"dweb:/ipfs/QmWc3o11bGNowFTpCDKPdH9V9iwV1HwvgjrUkPASGYUQe2"
+				"bzz-raw://b78219c031950637db45b35e384a9b32d2aadb328cf977227c4f17a58581d64d",
+				"dweb:/ipfs/QmRcRb5mBbq25R8L3YJzca9a6CHrEr2WwDrCrKFh6CVw24"
 			]
 		},
 		"contracts/EthericEssence/EthericEssence.sol": {
-			"keccak256": "0x5d3ba6dca136f6c863385e480b0c35df9f784c465ea2565799c9a15086b45f6e",
+			"keccak256": "0xd8dfaa53e35744d2f2386c2fe45522bd0094d2611eba09580f58a3ede31714d5",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://ce99855cfab7c6b9e8fce9c4d732aa8657d0b72057361765444317cfd28b0fe5",
-				"dweb:/ipfs/QmfWBUzH9SsCD8Z1ppUskBGmcDpmPMJEJ6ZAV92N8dw14o"
+				"bzz-raw://fba0c2a2a344e7907759761d4a107e7969b08820a38499cea3c7859d38a6cdb9",
+				"dweb:/ipfs/QmQbQnnnA5QUAzx5rmjbBJS1gSa6aicrrjKdXKYJRL7H2e"
 			]
 		},
 		"contracts/Game/Game.sol": {
-			"keccak256": "0x10a697e603326c4d0f1f8a232508584e2ef9a80d40bf3cefef2a1d3b39125f01",
+			"keccak256": "0x43468d011f79080c44585f7ed03ad1424c6ea61196d9f15d73cb254a19e2db07",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://9d1e183fe7f0c8b633b6e9b70b82f3587b5f63bab3abe8261ae8a7690fa3e5fa",
-				"dweb:/ipfs/QmTbnHL2BP34Ap95H8XTdVJcRFCV7GdKEJphAKB9XdbKCb"
+				"bzz-raw://e6b641963214cf9dd3d74326dda3ce39dcf17400480ea0d2bf7466956c90a68e",
+				"dweb:/ipfs/QmZDGhxkKW9BA3U4cVNMpFzdES99sqspfSyVxP6vs39eMJ"
 			]
 		},
 		"contracts/Items/Items.sol": {
-			"keccak256": "0x9741817cdfbe5d8577ff90de66e459c21056eb2c6f813c2745e7ff92d21b5eda",
+			"keccak256": "0xfbb1898f5e95ab6ab5ef8d17e35f31299837e28ddcc8b072e701236a9327c288",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://37042ba813379a170131626971aff7dc50858e447de3c30ed9b65757161f5483",
-				"dweb:/ipfs/QmXpc6JvUBoKzkF6ZVjdgg9kV1xYBWjNnCHMvBRKGj6Fpf"
+				"bzz-raw://175a0b8adc90eaff99eaea3aecb8f5a531ae13a0e15ab92aa5a02d533ff6b7ea",
+				"dweb:/ipfs/QmRsgJn3mYxGacjwpbLpmrfbc2EWqZoSx3ojpEiauQrvyh"
 			]
 		}
 	},

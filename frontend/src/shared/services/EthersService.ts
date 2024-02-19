@@ -24,27 +24,29 @@ import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
 };
 
 const keys = {
-  ethericEssence: "0xDeCD7574fa58b52Dc87dDDB3BD376228D54E78a1",
-  ethericCrystals: "0xf811f1AB4bfE4f58a703a0E32654a7789e7A9469",
-  ethericEnergy: "0x51d94d7F370DAD3971f54baAb4911acFedbCf984",
-  somTokens: "0xdF735A6a29a85E144623F8c6197b11134d4C11ae",
-  somGame: "0x3BDCc313b07cAeA90Fc5323749D13F086a4b62e0"
+  ethericEssence: "0xba69ddE1586be3Ab4E101C13f8f9d730082b5BE0",
+  ethericCrystals: "0x5ef70Dd1B3D4BA9D2509C665E63A0aDCbF3EA259",
+  ethericEnergy: "0x4cd0B057577770a5699Be8fefd399035be894F3d",
+  somTokens: "0xD0A76288A6b84059FAf5218AC2420251c6C5b5f8",
+  somGame: "0x90Acf3677114443AF72798a558d5bb56278eb743"
 };
 
-const init = async (address: string = ""): Promise<void> => {
+const init = async (address: string): Promise<void> => {
   if (window.ethereum) {
     const provider = new BrowserProvider(window.ethereum);
-    const signer = new JsonRpcSigner(provider, address)
-    // const signer = await provider.getSigner();
-    // const network = await provider.getNetwork();
+    let signer: JsonRpcSigner | undefined;
+
+    if (address.length) {
+      signer = new JsonRpcSigner(provider, address)
+    }
 
     ethersStore.update((store) => {
       store.contracts = {
-        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, signer),
-        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, signer),
-        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, signer),
-        somTokens: new Contract(keys.somTokens, SomTokens.abi, signer),
-        somGame: new Contract(keys.somGame, SomGame.abi, signer)
+        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, signer ? signer : provider),
+        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, signer ? signer : provider),
+        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, signer ? signer : provider),
+        somTokens: new Contract(keys.somTokens, SomTokens.abi, signer ? signer : provider),
+        somGame: new Contract(keys.somGame, SomGame.abi, signer ? signer : provider)
       };
 
       return store;

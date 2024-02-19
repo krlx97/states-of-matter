@@ -10,7 +10,9 @@
   let selectedType = "All";
   let currentSort = "Initial";
   let sortAscending = true;
-  let filteredCards = cards.filter((card): boolean => card.type !== CardType.HERO);
+  let filteredCards = cards.filter((card): boolean => card.type !== CardType.HERO
+    && (card.klass === 0 || card.klass === 1)
+    );
 
   $: isTutorial =
     $tutorialStore.name === "deckBuilder" &&
@@ -18,7 +20,7 @@
 
   const onFilterCards = (): void => {
     filteredCards = cards
-      .filter((card): boolean => card.type !== CardType.HERO)
+      .filter((card): boolean => card.type !== CardType.HERO && (card.klass === 0 || card.klass === 1))
       .filter((card) => {
         if (selectedKlass === "All") {
           return true;
@@ -195,9 +197,9 @@
           "All",
           "Neutral",
           "Solid",
-          "Liquid",
-          "Gas",
-          "Plasma"
+          // "Liquid",
+          // "Gas",
+          // "Plasma"
         ]}"
         label="Class"
         bind:selected="{selectedKlass}"

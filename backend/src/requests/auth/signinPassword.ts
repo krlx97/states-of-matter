@@ -11,7 +11,7 @@ const signinPassword: SocketRequest = (socket, error): void => {
   socket.on("signinPassword", async (params) => {
     const {name, password, rememberMe} = params;
     const $player = await $players.findOne({name});
-    console.log($player);
+
     if (!$player) {
       return error("Account not found.");
     }

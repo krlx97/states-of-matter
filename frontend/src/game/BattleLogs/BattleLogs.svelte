@@ -24,6 +24,7 @@
     transform: translateY(-50%);
     /* border: 1px solid red; */
     overflow-y: scroll;
+    z-index: 50;
   }
   .battle-logs::-webkit-scrollbar {
     /* width: 8px; */

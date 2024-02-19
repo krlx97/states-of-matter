@@ -151,7 +151,7 @@ const cardsView = [{ // ----- NEUTRAL -----
   effect: {
     name: "Diminish",
     description: colorTooltip`
-      Target enemy minion loses ${["damage", "2 damage"]}.
+      Target enemy minion loses ${["damage", "1 damage"]}.
     `
   },
   skins: []
@@ -293,7 +293,7 @@ const cardsView = [{ // ----- NEUTRAL -----
   effect: {
     name: "Shieldwall",
     description: colorTooltip`
-      When normal summoned, adjacent units gain ${["solid", "1 shield"]}.
+      When normal summoned, adjacent minions gain ${["solid", "1 shield"]}.
     `
   },
   skins: []
@@ -325,8 +325,8 @@ const cardsView = [{ // ----- NEUTRAL -----
   effect: {
     name: "Protector",
     description: colorTooltip`
-      Gain ${["solid", "taunt"]} when normal summoned, or gain
-      ${["solid", "3 shield"]} when special summoned.
+      Gain ${["solid", "1 shield"]} when normal summoned, or gain
+      ${["solid", "taunt"]} when special summoned.
     `
   },
   skins: []

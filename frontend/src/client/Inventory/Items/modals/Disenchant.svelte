@@ -9,8 +9,6 @@
   const item = items.find((item) => item.id === id);
   const itemWallet = $inventoryStore.items.find((item) => item.id === BigInt(id));
   let eesPrice = 0n;
-
-  console.log(itemWallet);
   const formStore = formService.create({
     amount: ["", "item", itemWallet.balance],
   });
@@ -44,12 +42,6 @@
     }
   });
 
-  const getPrice = (): any => {
-    // const item = items.find((item) => item.id === id);
-    // if (item.type !== 2) { return 0; }
-    return 100;
-  }
-
   const onInput = (): void => {
     formService.validate(formStore);
 
@@ -65,9 +57,9 @@
   };
 
   const onSetMax = (): void => {
+    soundService.play("click");
     $formStore.fields.amount.value = `${receipt.owned}`;
     onInput();
-    soundService.play("click");
   };
 
   const onDisenchant = async (): Promise<void> => {

@@ -1,15 +1,22 @@
 <script lang="ts">
   import {onMount} from "svelte";
-  import {cardEffectNames, cards, cardsView, items} from "@som/shared/data";
+  import {cardEffectNames, cardsView, items} from "@som/shared/data";
   import {CardType, CardKlass} from "@som/shared/enums";
-  import {gameStore, playerStore} from "stores";
+  import {gameStore} from "stores";
+  import {TextComponent} from "ui";
+  import type {EasingFunction, TransitionConfig} from "svelte/transition";
   import type {GameCard} from "@som/shared/types/mongo";
-    import { TextComponent } from "ui";
 
   let card: GameCard;
   let isOpponent = false;
-  let cardView = cardsView.find(({id}): boolean => card.id === id);
-  let selectedSkin: any;
+  let cardView = {
+    id: 0,
+    name: "",
+    lore: "",
+    effect: {name: "", description: ""},
+    ability: {name: "", description: ""}
+  };
+  let selectedSkin = {cardId: 0, skinId: 0};
   let klassTooltip: any;
   let isToggled = false;
   let isSelected = false;
@@ -25,35 +32,32 @@
 
   export {card, isOpponent, isSelected, isAttackable, isTargetable};
 
-  const spin = (node: any, {duration}: any) => ({
-    duration,
-    css(t: number) {
-      const scale = (t + 0.2) / t;
-      // translateX -50% because using only scale would overwrite standard css
-      return `transform: translateX(-50%) scale(${scale});`
-    }
-  });
-
-  onMount(() => {
-    if (isOpponent) {
-      selectedSkin = $gameStore.opponent.skins ? $gameStore.opponent.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
-    } else {
-      selectedSkin = $gameStore.player.skins ? $gameStore.player.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
-    }
-    cardView = cardsView.find(({id}): boolean => card.id === id);
-    // selectedSkin = $playerStore.skins.find(({cardId}): boolean => card.id === cardId);
-    item = items.find(({id}): boolean => selectedSkin.skinId === id) || items[0];
-
-  });
-
-  // check which skin is selected
-  $: {
-    if (isOpponent) {
-      selectedSkin = $gameStore.opponent.skins ? $gameStore.opponent.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
-    } else {
-      selectedSkin = $gameStore.player.skins ? $gameStore.player.skins.find((skin) => skin.cardId === card.id) : {cardId: 0, skinId: 0};
-    }
+  interface Spin {
+    delay: number | undefined;
+    duration: number | undefined;
+    easing: EasingFunction | undefined;
   }
+
+  const spin = (
+    node: Element,
+    {delay, duration, easing}: Spin
+  ): TransitionConfig => ({
+    delay,
+    duration,
+    easing,
+    css: (t) => `transform: translateX(-50%) scale(${(t + 0.2) / t});`
+  });
+
+  onMount((): void => {
+    if (isOpponent) {
+      selectedSkin = $gameStore.opponent.skins?.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
+    } else {
+      selectedSkin = $gameStore.player.skins?.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
+    }
+
+    cardView = cardsView.find(({id}): boolean => card.id === id);
+    item = items.find(({id}): boolean => selectedSkin.skinId === id) || items[0];
+  });
 </script>
 
 <style>
@@ -309,6 +313,7 @@
   {#if card.type === CardType.MINION && !card.canAttack}
     <div class="canAttack">💤</div>
   {/if}
+
   {#if card.type === CardType.MINION || card.type === CardType.HERO}
     <div class="buffs">
       {#each card.buffs as buff}
@@ -318,13 +323,9 @@
             ({Object.values(buff.data)})
           {/if}
         </TextComponent>
-          <!-- cardsView.find((cardView) => cardView.id === cards.find(({effect}) => effect === buff.id)?.id)?.effect.name -->
-        <!-- <div class="buff"></div> -->
       {/each}
       {#each card.debuffs as debuff}
         <TextComponent color="warn">{cardEffectNames.get(debuff.id)}</TextComponent>
-          <!-- cardsView.find((cardView) => cardView.id === cards.find(({effect}) => effect === debuff.id)?.id)?.effect.name -->
-        <!-- <div class="debuff"></div> -->
       {/each}
     </div>
   {/if}
@@ -394,50 +395,61 @@
 
   {#if card.type === CardType.HERO}
     <div class="card__ability">
-      <img src="images/card/{card.ability}.png" alt="Neurotoxin"/>
+      {#if card.ability === 0}
+        <img src="images/card/fortify.png" alt="Ability"/>
+      {:else if card.ability === 1}
+        <img src="images/card/heal.png" alt="Ability"/>
+      {:else if card.ability === 2}
+        <img src="images/card/neurotoxin.png" alt="Ability"/>
+      {:else}
+        <img src="images/card/corruption.png" alt="Ability"/>
+      {/if}
+
       <div class="card__ability__tooltip">
         {#if cardView}
-          {cardView.ability?.name || ""}
+          {cardView.ability?.name}
           <hr/>
-          {cardView.ability?.description || ""}
+          {cardView.ability?.description}
         {/if}
       </div>
     </div>
     <div class="card__mana card__mana--center">
       <img src="images/card/mana.png" alt="Mana"/>
       {#key card.mana.current}
-        <div class="card__health__num" in:spin={{duration: 800}}>{card.mana.current}</div>
+        <div class="card__health__num" in:spin={{duration: 900}}>{card.mana.current}</div>
       {/key}
     </div>
     <div class="card__health">
       <img src="images/card/health.png" alt="Health"/>
         {#key card.health.current}
-          <div class="card__health__num" in:spin={{duration: 800}}>{card.health.current}</div>
+          <div class="card__health__num" in:spin={{duration: 900}}>{card.health.current}</div>
         {/key}
     </div>
   {:else if card.type === CardType.MINION}
     <div class="card__health">
       <img src="images/card/health.png" alt="Health"/>
       {#key card.health.current}
-        <div class="card__health__num" in:spin={{duration: 800}}>{card.health.current}</div>
+        <div class="card__health__num" in:spin={{duration: 900}}>{card.health.current}</div>
       {/key}
     </div>
     <div class="card__damage">
       <img src="images/card/damage.png" alt="Damage"/>
       {#key card.damage.current}
-        <div class="card__health__num" in:spin={{duration: 800}}>{card.damage.current}</div>
+        <div class="card__health__num" in:spin={{duration: 900}}>{card.damage.current}</div>
       {/key}
     </div>
     <div class="card__mana">
       <img src="images/card/manacost.png" alt="Mana cost"/>
       {#key card.manaCost.current}
-        <div class="card__health__num" in:spin={{duration: 800}}>{card.manaCost.current}</div>
+        <div class="card__health__num" in:spin={{duration: 900}}>{card.manaCost.current}</div>
       {/key}
     </div>
   {:else}
     <div class="card__mana card__mana--center">
       <img src="images/card/manacost.png" alt="Mana cost"/>
-      <div class="card__health__num">{card.manaCost.current}</div>
+      {#key card.manaCost.current}
+        <div class="card__health__num" in:spin={{duration: 900}}>{card.manaCost.current}</div>
+      {/key}
     </div>
   {/if}
 </div>

@@ -62,17 +62,14 @@
         requests: [],
         blocked: []
       },
-      quests: {
+      tasks: {
         daily: false,
         weekly: 0,
         dailyAlternative: 0
       },
       rewards: {
-        chests: "0",
         ecr: "0",
-        ees: "0",
-        shards: "0",
-        skins: "0"
+        ees: "0"
       },
       tutorial: {
         deckBuilder: false,
@@ -203,13 +200,15 @@
 </style>
 
 <div class="player">
-  <PlayerFrameComponent
-    {actions}
-    name="{$playerStore.name}"
-    experience="{$playerStore.experience}"
-    level="{$playerStore.level}"
-    elo="{$playerStore.elo}"
-    avatarId="{$playerStore.avatarId}"
-    bannerId="{$playerStore.bannerId}"
-    games="{$playerStore.games}"/>
+  {#key $playerStore}
+    <PlayerFrameComponent
+      {actions}
+      name="{$playerStore.name}"
+      experience="{$playerStore.experience}"
+      level="{$playerStore.level}"
+      elo="{$playerStore.elo}"
+      avatarId="{$playerStore.avatarId}"
+      bannerId="{$playerStore.bannerId}"
+      games="{$playerStore.games}"/>
+  {/key}
 </div>

@@ -169,8 +169,8 @@ const cards: ClientCards = [{ // Heroes
   klass: CardKlass.SOLID,
   effect: EffectId.PROTECTOR,
   type: CardType.MINION,
-  health: 7,
-  damage: 2,
+  health: 4,
+  damage: 3,
   manaCost: 7
 }, {
   id: CardId.PACT,

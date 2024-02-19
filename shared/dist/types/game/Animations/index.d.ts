@@ -7,6 +7,7 @@ import { ManaAnimation } from "./ManaAnimation.js";
 import { ManaCostAnimation } from "./ManaCostAnimation.js";
 import { ShakeAnimation } from "./ShakeAnimation.js";
 import { TrapAnimation } from "./TrapAnimation.js";
-type Animation = DamageAnimation | DeathAnimation | EffectAnimation | FloatingTextAnimation | HealthAnimation | ManaAnimation | ManaCostAnimation | ShakeAnimation | TrapAnimation;
+import { SummonAnimation } from "./SummonAnimation.js";
+type Animation = DamageAnimation | DeathAnimation | EffectAnimation | FloatingTextAnimation | HealthAnimation | ManaAnimation | ManaCostAnimation | ShakeAnimation | TrapAnimation | SummonAnimation;
 type Animations = Array<Animation>;
 export type { Animations };

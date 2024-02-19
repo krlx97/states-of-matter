@@ -13,7 +13,7 @@ declare enum EffectId {
     BLAZE = 11,// ♾️ On Normal Summon, On End Turn
     NECROMANCY = 12,// ♾️ On Normal Summon & Special Summon
     ELUSIVE = 13,// ♾️ On Normal Summon
-    REVENGE = 14,// ♾️ On Self Death
+    REVENGE = 14,// ♾️ On Normal Summon, On Death
     REBIRTH = 15,// ⚡ On Normal Summon
     DIMINISH = 16,// ♾️ On Normal Summon
     RELOAD = 17,// ⚡ On Normal Summon
@@ -21,7 +21,7 @@ declare enum EffectId {
     SMITE = 19,// ⚡ On Opponent Normal Summon
     SILENCE = 20,// ⚡ On Opponent Normal Summon
     GLORY = 21,// ⚡ On Normal Summon
-    UNITY = 22,// ♾️ On Self Death
+    UNITY = 22,// ♾️ On Death
     SPELLWEAVE = 23,// ♾️ On Normal Summon
     SHIELDWALL = 24,// ⚡ On Normal Summon
     UNBREAKABLE = 25,// ♾️ On Normal Summon

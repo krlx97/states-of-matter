@@ -1,6 +1,7 @@
 <script lang="ts">
   import {gameStore} from "stores";
   import PlayerHandCardComponent from "./PlayerHandCard.svelte";
+    import { slide } from "svelte/transition";
 </script>
 
 <style>
@@ -16,7 +17,9 @@
 <div class="hand-cards">
   {#key $gameStore.player.hand}
     {#each $gameStore.player.hand as card}
-      <PlayerHandCardComponent {card}/>
+      <div in:slide>
+        <PlayerHandCardComponent {card}/>
+      </div>
     {/each}
   {/key}
 </div>

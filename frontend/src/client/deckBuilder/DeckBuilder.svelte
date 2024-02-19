@@ -12,6 +12,8 @@
   import DeckBuilderTutorial4 from "./tutorial/DeckBuilderTutorial4.svelte";
   import DeckBuilderTutorial5 from "./tutorial/DeckBuilderTutorial5.svelte";
     import { slide, fly } from "svelte/transition";
+    import { onDestroy } from "svelte";
+    import { socketService } from "services";
 
   $: isTutorial = $tutorialStore.name === "deckBuilder" && $tutorialStore.currentStep === 4;
 
@@ -20,6 +22,14 @@
   const onToggleDeckSlots = (): void => {
     areDeckSlotsVisible = !areDeckSlotsVisible;
   };
+
+  // onDestroy((): void => {
+  //   const {id, name, klass} = $playerStore.decks[$playerStore.deckId];
+  //   const cards = $playerStore.decks[$playerStore.deckId].cards.map(({id, amount}) => ({id, amount}));
+  //   const deck = {id, name, klass, cards};
+
+  //   socketService.socket.emit("saveDeck", {deck});
+  // });
 </script>
 
 <style>

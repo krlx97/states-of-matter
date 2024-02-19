@@ -5,6 +5,7 @@
   import {CardComponent} from "ui";
   import type {GameMagicCard, GameMinionCard, GameTrapCard} from "@som/shared/types/mongo";
     import EffectSelect from "../modals/EffectSelect.svelte";
+    import { slide } from "svelte/transition";
 
   const {socket} = socketService;
   let card: GameMagicCard | GameMinionCard | GameTrapCard;
@@ -62,6 +63,6 @@
   }
 </style>
 
-<div class="hand-card">
+<div class="hand-card" >
   <CardComponent {isSelected} {card} on:click="{onSelectCard}"/>
 </div>

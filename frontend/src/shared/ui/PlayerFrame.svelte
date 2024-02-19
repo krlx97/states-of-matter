@@ -12,7 +12,7 @@
   let elo: number;
   let avatarId: number;
   let bannerId: number;
-  let status: PlayerStatus | undefined;
+  let status: PlayerStatus | undefined = undefined;
   let games: any;
   let leaderboardPosition = 0;
   let hasUnseenMessages = false;

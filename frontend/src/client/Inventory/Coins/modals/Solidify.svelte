@@ -26,9 +26,9 @@
   };
 
   const onSetMax = (): void => {
+    soundService.play("click");
     $formStore.fields.amount.value = formatUnits(balance);
     onInput();
-    soundService.play("click");
   };
 
   const onSubmit = async (): Promise<void> => {

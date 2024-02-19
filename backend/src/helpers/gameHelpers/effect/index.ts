@@ -1,3 +1,4 @@
+import {elusive} from "./elusive";
 import {acidicDeath} from "./acidicDeath";
 import {banish} from "./banish";
 import {shadowSurge} from "./shadowSurge";
@@ -47,6 +48,8 @@ import { hysteria } from "./hysteria";
 import { explosive } from "./explosive";
 import { reflection } from "./reflection";
 import { constriction } from "./constriction";
+import { unbreakable } from "./unbreakable";
+import { protector } from "./protector";
 
 export {mirrorsEdge};
 
@@ -60,6 +63,7 @@ const effect = {
   contaminatedAir,
   shadowSurge,
   diminish,
+  elusive,
   electroShock,
   fortitude,
   frostbite,
@@ -100,6 +104,8 @@ const effect = {
   explosive,
   reflection,
   constriction,
+  unbreakable,
+  protector
 };
 
 export {effect};

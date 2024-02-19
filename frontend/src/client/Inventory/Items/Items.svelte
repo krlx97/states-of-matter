@@ -3,9 +3,20 @@
   import {SelectComponent} from "ui";
   import ItemComponent from "./Item.svelte";
 
+const inDevelopment = [
+    111300, 111400, 111500, 111600, 111700, 111800,
+    113000, 113100, 113200, 114000, 114100, 114200,
+    116300, 116400, 116500, 116600, 116700, 116800,
+    118000, 118100, 118200, 119000, 119100, 119200,
+    121300, 121400, 121500, 121600, 121700, 121800,
+    123000, 123100, 123200, 124000, 124100, 124200
+  ];
+
   let selectedRarity = "All";
   let selectedType = "All";
-  let filteredItems = [...items];
+    const x = items.filter((itm) => !inDevelopment.includes(itm.id));
+
+  let filteredItems = x;
   let scrollTimeout: NodeJS.Timeout;
   let inc = 0;
 
@@ -21,7 +32,7 @@
   };
 
   const onFilterItems = (): void => {
-    filteredItems = [...items]
+    filteredItems = x
       .filter((item) => {
         if (selectedRarity === "All") {
           return true;

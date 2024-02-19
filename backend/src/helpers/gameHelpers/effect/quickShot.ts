@@ -1,63 +1,68 @@
 import {randomInt} from "crypto";
-import {CardType, EffectId} from "@som/shared/enums";
+import {EffectId} from "@som/shared/enums";
 import {deductHealth} from "../deductHealth";
 import {moveToGraveyard} from "../moveToGraveyard";
 import type {Animations} from "@som/shared/types/game";
-import type {GameMinionCard, GamePlayer} from "@som/shared/types/mongo";
+
+import type {
+  GameMinionCard,
+  GamePlayer,
+  MinionField,
+  FieldKeys
+} from "@som/shared/types/mongo";
 
 interface QuickShot {
   opponent: GamePlayer;
 }
 
-const quickShot = (params: QuickShot): Animations => {
-  const {opponent} = params;
+const quickShot = {
+  onNormalSummon (params: QuickShot): Animations {
+    const {opponent} = params;
 
-  type PossibleMinionKey = keyof typeof opponent.field;
-  type PossibleMinionKeys = Array<PossibleMinionKey>;
+    interface PossibleMinion {
+      minion: GameMinionCard;
+      field: MinionField;
+    }
 
-  interface PossibleMinion {
-    minion: GameMinionCard;
-    key: PossibleMinionKey;
-  }
+    type PossibleMinions = Array<PossibleMinion>;
 
-  type PossibleMinions = Array<PossibleMinion>;
+    const possibleMinions: PossibleMinions = [];
+    const minionFields = Object.keys(opponent.field) as FieldKeys;
+    const animations: Animations = [];
 
-  const possibleMinions: PossibleMinions = [];
-  const minionKeys = Object.keys(opponent.field) as PossibleMinionKeys;
-  const animations: Animations = [];
+    minionFields.forEach((field): void => {
+      if (field === "hero") {
+        return;
+      }
 
-  minionKeys.forEach((key): void => {
-    const minion = opponent.field[key];
-
-    if (minion && minion.type !== CardType.HERO) {
-      const hasElusiveBuff = minion.buffs.find(
+      const minion = opponent.field[field];
+      const hasElusiveBuff = minion?.buffs.find(
         (buff): boolean => buff.id === EffectId.ELUSIVE
       );
 
-      if (!hasElusiveBuff) {
-        possibleMinions.push({minion, key});
+      if (minion && hasElusiveBuff === undefined) {
+        possibleMinions.push({minion, field});
+      }
+    });
+
+    if (possibleMinions.length) {
+      let randomMinion = randomInt(possibleMinions.length);
+      let {minion, field} = possibleMinions[randomMinion];
+
+      animations.push({
+        type: "FLOATING_TEXT",
+        field,
+        name: opponent.name,
+        text: "QUICK SHOT"
+      }, ...deductHealth(opponent, minion, 2, field))
+
+      if (minion.health.current <= 0) {
+        animations.push(...moveToGraveyard(opponent, minion, field));
       }
     }
-  });
 
-  if (possibleMinions.length) {
-    let randomMinion = randomInt(possibleMinions.length);
-    let {minion, key} = possibleMinions[randomMinion];
-
-    animations.push({
-      type: "FLOATING_TEXT",
-      field: key,
-      name: opponent.name,
-      text: "QUICK SHOT"
-    })
-    animations.push(...deductHealth(opponent, minion, 2, key));
-
-    if (minion.health.current <= 0) {
-      animations.push(...moveToGraveyard(opponent, minion, (key as any)));
-    }
+    return animations;
   }
-
-  return animations;
 };
 
 export {quickShot};

@@ -234,10 +234,10 @@
 
 
  const onClose = (): void => {
-    cancelAnimationFrame(frame);
-          document.body.removeChild(container);
-    modalService.close();
     soundService.play("click");
+    cancelAnimationFrame(frame);
+    document.body.removeChild(container);
+    modalService.close();
   };
 
   const rarityNames = new Map([

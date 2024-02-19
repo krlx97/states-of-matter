@@ -24,11 +24,11 @@ const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
 const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
 
 const keys = {
-  ethericEssence: "0xDeCD7574fa58b52Dc87dDDB3BD376228D54E78a1",
-  ethericCrystals: "0xf811f1AB4bfE4f58a703a0E32654a7789e7A9469",
-  ethericEnergy: "0x51d94d7F370DAD3971f54baAb4911acFedbCf984",
-  somTokens: "0xdF735A6a29a85E144623F8c6197b11134d4C11ae",
-  somGame: "0x3BDCc313b07cAeA90Fc5323749D13F086a4b62e0"
+  ethericEssence: "0xba69ddE1586be3Ab4E101C13f8f9d730082b5BE0",
+  ethericCrystals: "0x5ef70Dd1B3D4BA9D2509C665E63A0aDCbF3EA259",
+  ethericEnergy: "0x4cd0B057577770a5699Be8fefd399035be894F3d",
+  somTokens: "0xD0A76288A6b84059FAf5218AC2420251c6C5b5f8",
+  somGame: "0x90Acf3677114443AF72798a558d5bb56278eb743"
 };
 
 const ethericEssence = new Contract(keys.ethericEssence, EthericEssence.abi, signer);

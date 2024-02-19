@@ -1,6 +1,6 @@
 <script lang="ts">
   import {playerStore, tutorialStore} from "stores";
-  import {ButtonComponent, TutorialComponent} from "ui";
+  import {ButtonComponent, TextComponent, TutorialComponent} from "ui";
   import CurrenciesComponent from "./Coins/Coins.svelte";
   import ItemsComponent from "./Items/Items.svelte";
   import WalletTutorial1 from "./Tutorial/WalletTutorial1.svelte";
@@ -11,6 +11,7 @@
     import Chest from "./Chest/Chest.svelte";
     import { modalService } from "services";
     import Approvals from "./Approvals.svelte";
+    import Unlock from "./Chest/modals/Unlock.svelte";
 
   $: isTutorial = $tutorialStore.name === "inventory" && $tutorialStore.currentStep === 1;
   $: isTutorial2 = $tutorialStore.name === "inventory" && $tutorialStore.currentStep === 2;
@@ -18,6 +19,10 @@
 
   const onApprovals = (): void => {
     modalService.open(Approvals);
+  };
+
+  const onRandomItem = (): void => {
+    modalService.open(Unlock);
   };
 
   const steps = [{
@@ -65,9 +70,19 @@
 </style>
 
 <div class="inventory">
+  <!-- <div>
+    <TextComponent color="warn">
+      We're aware of an issue with JSON RPC errors and are looking for a fix. Sorry for the inconvenience.
+      We only know they occur when trying to set approvals to 0, or trying to spend your full balance.
+      So in the meantime just leave some dust behind in your wallet.
+    </TextComponent>
+  </div> -->
   <div class="inventory__main">
-    <Chest/>
-    <ButtonComponent on:click={onApprovals}>APPROVALS</ButtonComponent>
+    <!-- <Chest/> -->
+    <div>
+      <ButtonComponent on:click={onApprovals}>APPROVALS</ButtonComponent>
+      <ButtonComponent on:click={onRandomItem}>RANDOM ITEM</ButtonComponent>
+    </div>
 
     <div class:isTutorial>
       <CurrenciesComponent/>

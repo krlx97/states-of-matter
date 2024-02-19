@@ -233,14 +233,21 @@
 
   .abs {
     position: absolute;
-    bottom: 0;
-    left: 0;
+    bottom: -4px;
+    left: -12px;
+    /* background-color: rgb(var(--dark-grey)); */
   }
 
 
   .bar {
     display: inline-block;
     cursor: pointer;
+    animation: breathe 900ms linear infinite alternate;
+  }
+
+  @keyframes breathe {
+    from {transform: scale(1);}
+    to {transform: scale(1.3);}
   }
 
   .bar1, .bar2, .bar3 {
@@ -347,6 +354,14 @@
     </div>
 
     <ProgressBarComponent {bars}/>
+
+    <!-- <div style="display: flex;">
+
+          💾
+          🗑
+          ↺
+          ✎
+    </div> -->
   </div>
 
 </div>

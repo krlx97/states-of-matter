@@ -42,6 +42,8 @@ const generateGame = (
   return {
     id,
     type,
+    endTurnTimeout: 0,
+    endTurnTime: Date.now() + 36000, // account for 6 seconds match started dialog
     currentPlayer: playerA.name,
     currentTurn: 0,
     gameLogs: [],
@@ -55,8 +57,8 @@ const generateGame = (
             default: 20
           },
           mana: {
-            current: 20,
-            default: 20
+            current: 5,
+            default: 10
           },
           buffs: [],
           debuffs: []
@@ -82,8 +84,8 @@ const generateGame = (
             default: 20
           },
           mana: {
-            current: 20,
-            default: 20
+            current: 5,
+            default: 10
           },
           buffs: [],
           debuffs: []

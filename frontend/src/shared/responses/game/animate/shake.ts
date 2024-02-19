@@ -24,20 +24,23 @@ const shake = (animation: any): void => {
   create_in_transition(elem, (node) => {
     return {
       duration: 800,
-      css (t, u) {
-        let d = Math.floor(t * 10);
-        isReversed = d % 2 === 0;
+      // css (t, u) {
+      //   let d = Math.floor(t * 10);
+      //   isReversed = d % 2 === 0;
 
-        if (isReversed) {
-          px -= 3;
-        } else {
-          px += 3;
-        }
+      //   if (isReversed) {
+      //     px -= 3;
+      //   } else {
+      //     px += 3;
+      //   }
 
-          // box-shadow: 0 0 ${shadow * 2}px ${shadow * 1}px rgb(var(--red));
-        return `
-          transform: translateX(${px}px);
-        `;
+      //     // box-shadow: 0 0 ${shadow * 2}px ${shadow * 1}px rgb(var(--red));
+      //   return `
+      //     transform: translateX(${px}px);
+      //   `;
+      // }
+      css(t, u) {
+        return `transform: translateX(${u * -0.27}turn); opacity: ${t};`;
       }
     };
   }, {}).start();

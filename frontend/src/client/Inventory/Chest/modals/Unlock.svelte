@@ -20,17 +20,18 @@
   import RandomSkinComponent from "../../Items/modals/RandomSkin.svelte";
 
   const formStore = formService.create({});
+  let price = 100n * 10n ** 18n;
 
   const onUnlock = async (): Promise<void> => {
     soundService.play("click");
 
     $formStore.isLoading = true;
 
-    if (!$inventoryStore.approvals.items) {
+    if ($inventoryStore.approvals.ecr < price + 1n) {
       const isConfirmed = await ethersService.transact(
-        "somTokens",
-        "setApprovalForAll",
-        [ethersService.keys.somGame, true]
+        "ethericCrystals",
+        "approve",
+        [ethersService.keys.somGame, price + 1n]
       );
 
       if (!isConfirmed) {
@@ -41,7 +42,7 @@
 
     const isConfirmed = await ethersService.transact(
       "somGame",
-      "unlockChest",
+      "randomItem",
       []
     );
 
@@ -64,12 +65,12 @@
   }
 
   onMount((): void => {
-    $formStore.isDisabled = $inventoryStore.chests < 1n ? true : false;
-    $ethersStore.contracts.somGame.on("UnlockChest", onRandomSkin);
+    $formStore.isDisabled = $inventoryStore.ecr < price ? true : false;
+    $ethersStore.contracts.somGame.on("RandomItem", onRandomSkin);
   });
 
   onDestroy((): void => {
-    $ethersStore.contracts.somGame.off("UnlockChest", onRandomSkin);
+    $ethersStore.contracts.somGame.off("RandomItem", onRandomSkin);
   });
 </script>
 
@@ -88,6 +89,12 @@
       ["EPIC", "3.9%", undefined, "epic"],
       ["LEGENDARY", "1%", undefined, "legendary"],
       ["MYTHIC", "0.1%", undefined, "mythic"],
+    ]}"/>
+
+    <TableComponent items="{[
+      ["PRICE", price, "ecr"],
+      ["BALANCE", $inventoryStore.ecr, "ecr"],
+      ["REMAINING", $inventoryStore.ecr - price, "ecr"]
     ]}"/>
 
     <svelte:fragment slot="submit">

@@ -70,59 +70,46 @@ const playMinion: SocketRequest = (socket, error): void => {
     // [1] INSERT BUFFS / DEBUFFS
     switch (minion.effect) {
       case EffectId.BLAZE: // Neutral
-        const hasAttackedTwice = true;
-        gameHelpers.insertBuff(minion, EffectId.BLAZE, {hasAttackedTwice});
-        animations.push({
-          type: "FLOATING_TEXT",
-          field,
-          name: player.name,
-          text: "BLAZE"
-        });
+        animations.push(...effect.blaze.onNormalSummon({
+          player,
+          playerMinion: minion,
+          playerMinionField: field
+        }));
         break;
       case EffectId.ELUSIVE:
-        gameHelpers.insertBuff(minion, EffectId.ELUSIVE);
-        animations.push({
-          type: "FLOATING_TEXT",
-          field,
-          name: player.name,
-          text: "ELUSIVE"
-        });
+        animations.push(...effect.elusive.onNormalSummon({
+          player,
+          playerMinion: minion,
+          playerMinionField: field
+        }));
         break;
       case EffectId.REVENGE:
-        gameHelpers.insertBuff(minion, EffectId.REVENGE);
-        animations.push({
-          type: "FLOATING_TEXT",
-          field,
-          name: player.name,
-          text: "REVENGE"
-        });
+        animations.push(...effect.revenge.onNormalSummon({
+          player,
+          playerMinion: minion,
+          playerMinionField: field
+        }));
         break;
       case EffectId.UNITY: // Solid
-        gameHelpers.insertBuff(minion, EffectId.UNITY);
-        animations.push({
-          type: "FLOATING_TEXT",
-          field,
-          name: player.name,
-          text: "UNITY"
-        });
+        animations.push(...effect.unity.onNormalSummon({
+          player,
+          playerMinion: minion,
+          playerMinionField: field
+        }));
         break;
       case EffectId.UNBREAKABLE:
-        gameHelpers.insertBuff(minion, EffectId.UNBREAKABLE);
-        animations.push({
-          type: "FLOATING_TEXT",
-          field,
-          name: player.name,
-          text: "UNBREAKABLE"
-        });
+        animations.push(...effect.unbreakable.onNormalSummon({
+          player,
+          playerMinion: minion,
+          playerMinionField: field
+        }));
         break;
       case EffectId.PROTECTOR:
-        gameHelpers.insertBuff(minion, EffectId.TAUNT);
-        animations.push({
-          type: "FLOATING_TEXT",
-          field,
-          name: player.name,
-          text: "TAUNT"
-        });
+        animations.push(...effect.protector.onNormalSummon({
+          player,
+          playerMinion: minion,
+          playerMinionField: field
+        }));
         break;
       case EffectId.RISING_FURY: // Liquid
         gameHelpers.insertBuff(minion, EffectId.RISING_FURY);
@@ -176,11 +163,14 @@ const playMinion: SocketRequest = (socket, error): void => {
         break;
     }
 
+    let isMinionDestroyed = false;
+
     // [2] ON SUMMON TRAP TRIGGERS
     if (trap && !isElusive) {
       switch (trap.effect) {
         case EffectId.SMITE:
           animations.push(...effect.smite({player, opponent, minion, trap, field}));
+          isMinionDestroyed = true;
           break;
         case EffectId.BANISH:
           effect.banish({
@@ -190,12 +180,15 @@ const playMinion: SocketRequest = (socket, error): void => {
             opponentTrap: trap,
             playerMinionField: field
           });
+          isMinionDestroyed = true;
           break;
         case EffectId.POISONED_GROUND:
           effect.poisonedGround({player: opponent, minion, trap});
           break;
       }
-    } else {
+    }
+
+    if (!isMinionDestroyed) {
       // [3] TRIGGER ON SUMMON EFFECTS
       switch (minion.effect) {
         case EffectId.SHADOW_SURGE: // Neutral
@@ -204,36 +197,34 @@ const playMinion: SocketRequest = (socket, error): void => {
             playerMinion: minion,
             playerMinionField: field
           }));
-
           break;
         case EffectId.QUICK_SHOT:
-          animations.push(...effect.quickShot({opponent}));
+          animations.push(...effect.quickShot.onNormalSummon({opponent}));
           break;
         case EffectId.NECROMANCY:
-          animations.push(...effect.necromancy({
+          animations.push(...effect.necromancy.onNormalSummon({
             player,
             playerMinion: minion,
-            playerMinionField: field,
-            isPositive: false
+            playerMinionField: field
           }));
           break;
         case EffectId.GLORY: // Solid
-          animations.push(...effect.glory({
+          animations.push(...effect.glory.onNormalSummon({
             player,
-            opponent,
-            minion,
+            playerMinion: minion,
             playerMinionField: field,
+            opponent,
           }));
           break;
         case EffectId.SPELLWEAVE:
-          animations.push(...effect.spellweave({
+          animations.push(...effect.spellweave.onNormalSummon({
             player,
             playerMinion: minion,
             playerMinionField: field
           }));
           break;
         case EffectId.SHIELDWALL:
-          animations.push(...effect.shieldwall({
+          animations.push(...effect.shieldwall.onNormalSummon({
             player,
             playerMinionField: field
           }));
@@ -255,9 +246,6 @@ const playMinion: SocketRequest = (socket, error): void => {
       minionId: minion.id
     });
 
-    
-
-    // await gameHelpers.saveGame($game, animations);
     await gameHelpers.attackMinionSave($game, animations);
   });
 };

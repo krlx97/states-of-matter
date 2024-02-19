@@ -40,6 +40,11 @@ const valor = (params: Valor): Animations => {
   opponent.field.hero.health.current -= damage;
 
   animations.push({
+    type: "SHAKE",
+    playerA: opponent.name,
+    playerANumber: -damage,
+    playerAField: "hero"
+  }, {
     type: "HEALTH",
     field: "hero",
     name: opponent.name,

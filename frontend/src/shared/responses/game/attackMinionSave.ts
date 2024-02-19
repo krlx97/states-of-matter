@@ -1,11 +1,34 @@
 import {socketService} from "services";
-import {gameStore} from "stores";
+import {gameStore, intervals, intervalsStore, nodeStore, playerStore} from "stores";
 import {animate} from "./animate";
+import { get } from "svelte/store";
+
+let interval: NodeJS.Timeout;
+const TURN_DURATION_MS = 30000;
 
 const attackMinionSave = (): void => {
   socketService.socket.on("attackMinionSave", async (params): Promise<void> => {
-    const {game, animations} = params;
+    const {game, animations, isEndTurn} = params;
     const animationDuration = 800;
+
+    if (isEndTurn) {
+      const endTurnTime = game.endTurnTime;
+
+      clearInterval(intervals[0]);
+
+      intervals[0] = setInterval(() => {
+        const time = Date.now();
+        let rem = endTurnTime - time;
+        let x = (rem / TURN_DURATION_MS) * 100;
+
+        if (time <= endTurnTime) {
+          nodeStore.update((store) => {
+            store.barHeight = `${x}%`;
+            return store;
+          });
+        }
+      }, 1000 / 60);
+    }
 
     animations.forEach((animation, i): void => {
       const {type} = animation;

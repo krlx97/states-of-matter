@@ -1,7 +1,9 @@
 <script lang="ts">
   import {socketService, soundService} from "services";
-  import {gameStore, playerStore} from "stores";
-    import { ButtonComponent } from "ui";
+  import {gameStore, nodeStore, playerStore} from "stores";
+  import {ButtonComponent} from "ui";
+
+  $: height = $nodeStore.barHeight;
 
   const onEndTurn = (): void => {
     soundService.play("endTurn");
@@ -11,14 +13,15 @@
 
 <style>
   .game-timer {
-    /* position: absolute;
-    top: 0;
-    right: 0; */
-    height: 100%;
-    /* width: 160px; */
+    position: absolute;
+    top: 50%;
+    right: 0;
+    height: 66%;
+    width: 160px;
     display: flex;
     align-items: center;
-    margin-right: var(--md);
+    transform: translateY(-50%);
+    /* margin-right: var(--md); */
   }
 
   .bar {
@@ -72,10 +75,10 @@
 <div class="game-timer">
   <div class="info">
     <div class="bgd" class:glow={$gameStore.opponent.name === $gameStore.currentPlayer}>{$gameStore.opponent.name}</div>
-    <ButtonComponent on:click={onEndTurn}>END</ButtonComponent>
+    <ButtonComponent on:click={onEndTurn}>END TURN</ButtonComponent>
     <div class="bgd" class:glow={$playerStore.name === $gameStore.currentPlayer}>{$gameStore.player.name}</div>
   </div>
   <div class="bar">
-    <div class="progress"></div>
+    <div class="progress" style:height></div>
   </div>
 </div>

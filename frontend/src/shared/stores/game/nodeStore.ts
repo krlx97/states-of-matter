@@ -42,6 +42,8 @@ interface NodeStore {
     trigger: boolean;
     name: string;
   },
+  barInterval: NodeJS.Timeout;
+  barHeight: string;
 }
 
 const nodeStore = writable<NodeStore>({
@@ -85,6 +87,8 @@ const nodeStore = writable<NodeStore>({
     trigger: false,
     name: ""
   },
+  barInterval: undefined,
+  barHeight: "0%"
 });
 
 export {nodeStore};

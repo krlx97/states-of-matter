@@ -6,7 +6,6 @@
   import {FormComponent, InputComponent, FormSubmitComponent, TableComponent, ModalComponent} from "ui";
 
   const {id} = $modalStore.data;
-  console.log({id});
   const item = id !== 1 ? items.find((item) => item.id === id) : {name: "Chest", rarity: 0};
   const itemWallet = id !== 1 ? $inventoryStore.items.find((item) => item.id === BigInt(id)).balance : $inventoryStore.chests;
 

@@ -16,7 +16,7 @@ enum EffectId {
   BLAZE,            // ♾️ On Normal Summon, On End Turn
   NECROMANCY,       // ♾️ On Normal Summon & Special Summon
   ELUSIVE,          // ♾️ On Normal Summon
-  REVENGE,          // ♾️ On Self Death
+  REVENGE,          // ♾️ On Normal Summon, On Death
   // ----- MAGIC -----
   REBIRTH,          // ⚡ On Normal Summon
   DIMINISH,         // ♾️ On Normal Summon
@@ -28,7 +28,7 @@ enum EffectId {
   // ========== SOLID ==========
   // ----- MINION -----
   GLORY,            // ⚡ On Normal Summon
-  UNITY,            // ♾️ On Self Death
+  UNITY,            // ♾️ On Death
   SPELLWEAVE,       // ♾️ On Normal Summon
   SHIELDWALL,       // ⚡ On Normal Summon
   UNBREAKABLE,      // ♾️ On Normal Summon

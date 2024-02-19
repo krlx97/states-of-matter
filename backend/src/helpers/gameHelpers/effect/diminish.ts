@@ -12,13 +12,13 @@ const diminish = (params: Diminish): Animations => {
   const {opponent, opponentMinion, opponentMinionField} = params;
   const animations: Animations = [];
 
-  if (opponentMinion.damage.current > 2) {
-    opponentMinion.damage.current -= 2;
+  if (opponentMinion.damage.current > 1) {
+    opponentMinion.damage.current -= 1;
 
     opponentMinion.debuffs.push({
       id: EffectId.DIMINISH,
       data: {
-        damage: -2
+        damage: -1
       }
     });
 
@@ -31,7 +31,8 @@ const diminish = (params: Diminish): Animations => {
       type: "DAMAGE",
       name: opponent.name,
       field: opponentMinionField,
-      increment: (-2)
+      increment: undefined,
+      decrement: 1,
     });
   } else {
     const val = opponentMinion.damage.current;
@@ -53,7 +54,8 @@ const diminish = (params: Diminish): Animations => {
       type: "DAMAGE",
       name: opponent.name,
       field: opponentMinionField,
-      increment: -val
+      increment: undefined,
+      decrement: val
     });
   }
 

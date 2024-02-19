@@ -1,35 +1,63 @@
 import {EffectId} from "@som/shared/enums";
-import {insertBuff} from "../insertBuff";
-import type {GameMinionCard, GamePlayer} from "@som/shared/types/mongo";
-import type { Animations } from "@som/shared/types/game";
+import type {Animations} from "@som/shared/types/game";
+import type {GameMinionCard, GamePlayer, MinionField} from "@som/shared/types/mongo";
 
-interface Unity {
+interface OnDeath {
   player: GamePlayer;
 }
 
-const unity = (params: Unity): Animations => {
-  const {player: {name, hand, deck}} = params;
+interface OnNormalSummon {
+  player: GamePlayer;
+  playerMinion: GameMinionCard;
+  playerMinionField: MinionField;
+}
 
-  const handCard = hand.find(
-    (card): boolean => card.effect === EffectId.UNITY
-  ) as GameMinionCard | undefined;
+const unity = {
+  onNormalSummon (params: OnNormalSummon): Animations {
+    const {player, playerMinion, playerMinionField} = params;
 
-  const deckCard = deck.find(
-    (card): boolean => card.effect === EffectId.UNITY
-  ) as GameMinionCard | undefined;
+    playerMinion.buffs.push({
+      id: EffectId.TAUNT,
+      data: {}
+    });
 
-  if (handCard) {
-    insertBuff(handCard, EffectId.TAUNT);
-  } else if (deckCard) {
-    insertBuff(deckCard, EffectId.TAUNT);
+    return [{
+      type: "FLOATING_TEXT",
+      field: playerMinionField,
+      name: player.name,
+      text: "UNITY"
+    }];
+  },
+  onDeath (params: OnDeath): Animations {
+    const {player: {name, hand, deck}} = params;
+
+    const handCard = hand.find(
+      (card): boolean => card.effect === EffectId.UNITY
+    ) as GameMinionCard | undefined;
+
+    const deckCard = deck.find(
+      (card): boolean => card.effect === EffectId.UNITY
+    ) as GameMinionCard | undefined;
+
+    if (handCard) {
+      handCard.buffs.push({
+        id: EffectId.TAUNT,
+        data: {}
+      });
+    } else if (deckCard) {
+      deckCard.buffs.push({
+        id: EffectId.TAUNT,
+        data: {}
+      });
+    }
+
+    return [{
+      type: "FLOATING_TEXT",
+      name: name,
+      field: "hero",
+      text: "UNITY"
+    }];
   }
-
-  return [{
-    type: "FLOATING_TEXT",
-    name: name,
-    field: "hero",
-    text: "UNITY"
-  }];
 };
 
 export {unity};

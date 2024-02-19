@@ -1,6 +1,6 @@
 <script lang="ts">
   import {cards, cardsView} from "@som/shared/data";
-  import {CardKlass, CardType} from "@som/shared/enums";
+  import {CardId, CardKlass, CardType} from "@som/shared/enums";
   import {modalService, soundService} from "services";
   import {notificationsStore, playerStore} from "stores";
   import {ClientCardComponent} from "ui";
@@ -11,6 +11,16 @@
 
   const onAddToDeck = (): void => {
     if (deck.cardsInDeck >= 30) {
+      return soundService.play("TAB");
+    }
+
+    if (card.id === CardId.FURY) {
+      notificationsStore.update((store) => {
+        const id = Math.random();
+        store.push({id, color: "warn", message: `Fury is temporarily disabled due to a game breaking bug...`});
+        return store;
+      });
+
       return soundService.play("TAB");
     }
 

@@ -31,7 +31,7 @@ const deductHealth = (
         animations.push(...heartOfSteel({opponentMinion: minion, opponent: player, opponentTrap: player.trap, field}));
       }
 
-      const remaining = shieldBuff.data.amount - damage;
+      const remaining = damage - shieldBuff.data.amount;
 
       if (remaining < 0) {
         if (minion.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
@@ -50,7 +50,8 @@ const deductHealth = (
         type: "HEALTH",
         field: field,
         name: player.name,
-        increment: -remaining
+        decrement: remaining,
+        increment: undefined,
       });
 
       minion.buffs.splice(minion.buffs.indexOf(shieldBuff), 1);
@@ -66,7 +67,8 @@ const deductHealth = (
       type: "HEALTH",
       field: field,
       name: player.name,
-      increment: -damage
+      decrement: damage,
+      increment: undefined,
     });
   }
 

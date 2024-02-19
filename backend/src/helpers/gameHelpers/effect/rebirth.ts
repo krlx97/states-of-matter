@@ -1,77 +1,64 @@
-import {CardType, EffectId} from "@som/shared/enums";
+import {EffectId} from "@som/shared/enums";
+import {necromancy} from "./necromancy";
+import {protector} from "./protector";
 import type {Animations} from "@som/shared/types/game";
-import type {GameMinionCard, GamePlayer, MinionField} from "@som/shared/types/mongo";
+
+import type {
+  GameMinionCard,
+  GamePlayer,
+  MinionField
+} from "@som/shared/types/mongo";
+import { shadowSurge } from "./shadowSurge";
 
 interface Rebirth {
   player: GamePlayer;
-  minion: GameMinionCard;
-  field: MinionField;
+  playerMinion: GameMinionCard;
+  playerMinionField: MinionField;
 }
 
 const rebirth = (params: Rebirth): Animations => {
-  const {player, minion, field} = params;
+  const {player, playerMinion, playerMinionField} = params;
   const animations: Animations = [];
 
   animations.push({
     type: "SUMMON",
     name: player.name,
-    field,
-    minion,
+    field: playerMinionField,
+    minion: playerMinion,
     necromancyFixPositive: true
   }, {
     type: "FLOATING_TEXT",
-    field,
+    field: playerMinionField,
     text: "REBIRTH",
     name: player.name
   });
 
-  if (minion.effect === EffectId.NECROMANCY) {
-    minion.damage.current += 2;
-    minion.health.current += 2;
-    minion.buffs.push({
-      id: EffectId.NECROMANCY,
-      data: {damage: 2, health: 2}
-    });
-
-    animations.push({
-      type: "FLOATING_TEXT",
-      field,
-      text: "NECROMANCY",
-      name: player.name
-    }, {
-      type: "DAMAGE",
-      name: player.name,
-      field,
-      increment: 2
-    }, {
-      type: "HEALTH",
-      name: player.name,
-      field,
-      increment: 2
-    });
+  if (playerMinion.effect === EffectId.SHADOW_SURGE) {
+    animations.push(...shadowSurge.onSpecialSummon({
+      player,
+      playerMinion,
+      playerMinionField
+    }));
   }
 
-  if (minion.effect === EffectId.PROTECTOR) {
-    minion.buffs.push({
-      id: EffectId.SHIELD,
-      data: {amount: 3}
-    });
-
-    animations.push({
-      type: "FLOATING_TEXT",
-      field,
-      text: "PROTECTOR",
-      name: player.name
-    }, {
-     type: "FLOATING_TEXT",
-      field,
-      text: "+3 Shield",
-      name: player.name
-    });
+  if (playerMinion.effect === EffectId.NECROMANCY) {
+    animations.push(...necromancy.onSpecialSummon({
+      player,
+      playerMinion,
+      playerMinionField
+    }));
   }
 
-  player.field[field] = minion;
-  player.graveyard.splice(player.graveyard.indexOf(minion), 1);
+  if (playerMinion.effect === EffectId.PROTECTOR) {
+    animations.push(...protector.onSpecialSummon({
+      player,
+      playerMinion,
+      playerMinionField
+    }));
+  }
+
+  player.field[playerMinionField] = playerMinion;
+  player.graveyard.splice(player.graveyard.indexOf(playerMinion), 1);
 
   return animations;
 };

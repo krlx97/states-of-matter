@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte";
   import {modalService, soundService} from "services";
-  import {modalStore} from "stores";
+  import {intervalsStore, modalStore} from "stores";
   import {ModalComponent, PlayerFrameComponent, ProgressBarComponent} from "ui";
 
   const {playerA, playerB} = $modalStore.data;
@@ -14,12 +14,19 @@
     }
 
     const elapsed = timestamp - start;
-    progress = 100 - (elapsed / 10000 * 100);
+    progress = 100 - (elapsed / 6000 * 100);
 
     if (progress > 0) {
       requestAnimationFrame(progressBarAnimation);
     } else {
       modalService.close();
+
+      intervalsStore.update((store) => {
+        clearInterval(store.queueTimer);
+        store.timeInQueue = "00:00";
+        document.title = "States of Matter";
+        return store;
+      });
     }
   };
 

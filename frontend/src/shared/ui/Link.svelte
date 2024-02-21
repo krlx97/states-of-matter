@@ -18,7 +18,8 @@
     "mythic" |
     "primary" |
     "success" |
-    "warn";
+    "warn" |
+    "white";
 
   export {isActive, color};
 </script>
@@ -35,7 +36,7 @@
 
   button:hover {
     cursor: pointer;
-    text-shadow: 0 0 8px rgba(var(--white), 1);
+    /* text-shadow: 0 0 8px rgba(var(--white), 1); */
   }
 
   .isActive {
@@ -62,9 +63,35 @@
   .primary {color: rgb(var(--primary));}
   .success {color: rgb(var(--success));}
   .warn {color: rgb(var(--warn));}
+
+  .white {color: white}
+
+  .neutral:hover {text-shadow: 0 0 8px rgb(var(--neutral));}
+  .solid:hover {text-shadow: 0 0 8px rgb(var(--solid));}
+  .liquid:hover {text-shadow: 0 0 8px rgb(var(--liquid));}
+  .gas:hover {text-shadow: 0 0 8px rgb(var(--gas));}
+  .plasma:hover {text-shadow: 0 0 8px rgb(var(--plasma));}
+
+  .health:hover {text-shadow: 0 0 8px rgb(var(--health));}
+  .damage:hover {text-shadow: 0 0 8px rgb(var(--damage));}
+  .mana:hover {text-shadow: 0 0 8px rgb(var(--mana));}
+
+  .common:hover {text-shadow: 0 0 8px rgb(var(--common));}
+  .uncommon:hover {text-shadow: 0 0 8px rgb(var(--uncommon));}
+  .rare:hover {text-shadow: 0 0 8px rgb(var(--rare));}
+  .epic:hover {text-shadow: 0 0 8px rgb(var(--epic));}
+  .legendary:hover {text-shadow: 0 0 8px rgb(var(--legendary));}
+  .mythic:hover {text-shadow: 0 0 8px rgb(var(--mythic));}
+
+  .primary:hover {text-shadow: 0 0 8px rgb(var(--primary));}
+  .success:hover {text-shadow: 0 0 8px rgb(var(--success));}
+  .warn:hover {text-shadow: 0 0 8px rgb(var(--warn));}
+
+  .white:hover {text-shadow: 0 0 8px rgb(var(--white));}
 </style>
 
-<button class:neutral="{color === "neutral"}"
+<button
+  class:neutral="{color === "neutral"}"
   class:solid="{color === "solid"}"
   class:liquid="{color === "liquid"}"
   class:gas="{color === "gas"}"
@@ -80,6 +107,9 @@
   class:mythic="{color === "mythic"}"
   class:primary="{color === "primary"}"
   class:success="{color === "success"}"
-  class:warn="{color === "warn"}" class:isActive on:click>
+  class:warn="{color === "warn"}"
+  class:white="{color === "white"}"
+  class:isActive
+  on:click>
   <slot/>
 </button>

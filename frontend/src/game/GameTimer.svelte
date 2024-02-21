@@ -1,11 +1,15 @@
 <script lang="ts">
   import {socketService, soundService} from "services";
-  import {gameStore, nodeStore, playerStore} from "stores";
+  import {gameStore, nodeStore, playerStore, selectedCardStore} from "stores";
   import {ButtonComponent} from "ui";
 
   $: height = $nodeStore.barHeight;
 
   const onEndTurn = (): void => {
+    $selectedCardStore.field = undefined;
+    $selectedCardStore.graveyard = undefined;
+    $selectedCardStore.hand = undefined;
+
     soundService.play("endTurn");
     socketService.socket.emit("endTurn");
   };
@@ -56,8 +60,10 @@
   @keyframes glow4 {
     from {
       text-shadow: 0 0 0 rgb(var(--primary));
+      transform: scale(1);
     } to {
       text-shadow: 2px 2px 32px rgb(var(--primary));
+      transform: scale(1.2);
     }
   }
 

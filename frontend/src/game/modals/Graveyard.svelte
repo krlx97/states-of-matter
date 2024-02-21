@@ -5,9 +5,10 @@
 
 <style>
   .cards {
-    width: calc(144px * 4);
+    width: calc(148px * 4 + var(--md) * 3);
+    padding-bottom: var(--md);
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--md);
     overflow-x: scroll;
   }
 

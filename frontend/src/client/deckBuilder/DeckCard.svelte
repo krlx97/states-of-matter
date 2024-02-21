@@ -1,14 +1,16 @@
 <script lang="ts">
   import {fly, scale} from "svelte/transition";
-  import {CardKlass, CardType} from "@som/shared/enums";
+  import {CardId, CardKlass, CardType} from "@som/shared/enums";
   import {soundService} from "services";
-  import {playerStore} from "stores";
+  import {notificationsStore, playerStore} from "stores";
   import {TextComponent} from "ui";
   import type {PlayerDeckCardView} from "@som/shared/types/views";
-    import { cards } from "@som/shared/data";
+    import { cards, cardsView } from "@som/shared/data";
+    import { onMount } from "svelte";
 
   let deckCard: PlayerDeckCardView;
   $: deck = $playerStore.decks[$playerStore.deckId];
+  let cardView = cardsView.find(({id}): boolean => deckCard.id === id);
 
   const onRemoveFromDeck = (): void => {
     const x = $playerStore.decks[$playerStore.deckId].cards.find((x) => x.id === deckCard.id);
@@ -97,14 +99,114 @@
     soundService.play("card");
   };
 
-  const spin = (node: any, {duration}: any) => ({
-    duration,
-    css(t: number) {
-      const scale = (t + 0.2) / t;
-      // translateX -50% because using only scale would overwrite standard css
-      return `transform: translateX(-50%) scale(${scale});`
+  const onAddToDeck = (): void => {
+    if (deck.cardsInDeck >= 30) {
+      return soundService.play("TAB");
     }
-  });
+
+    const {id, klass, type, manaCost} = deckCard;
+    // const deckCard = $playerStore.decks[$playerStore.deckId].cards.find((deckCard): boolean => deckCard.id === id);
+    // const cardView = cardsView.find(({id}): boolean => deckCard.id === id);
+
+    if (!cardView) { return; }
+
+    const {name} = cardView;
+
+    if (deckCard) {
+      if (deckCard.amount < 2) {
+        deckCard.amount += 1;
+      } else {
+        return soundService.play("TAB");
+      }
+    } else {
+      const amount = 1;
+      if (type === CardType.MINION) {
+        const {health, damage} = deckCard;
+        $playerStore.decks[$playerStore.deckId].cards.push({id, type, name, klass, amount, health, damage, manaCost});
+      } else {
+        $playerStore.decks[$playerStore.deckId].cards.push({id, type, name, klass, amount, manaCost});
+      }
+    }
+
+    $playerStore.decks[$playerStore.deckId].average.health = deck.cards.reduce((acc, deckCard) => {
+      if (
+        deckCard.type === CardType.MAGIC ||
+        deckCard.type === CardType.TRAP
+      ) {
+        return acc;
+      }
+
+      return acc += deckCard.health * deckCard.amount;
+    }, 0) / deck.cards.reduce((acc, deckCard) => {
+      if (deckCard.type !== CardType.MINION) {
+        return acc;
+      } else {
+        return acc += deckCard.amount;
+      }
+    }, 0) || 0;
+
+    $playerStore.decks[$playerStore.deckId].average.damage = deck.cards.reduce((acc, deckCard) => {
+      const card = cards.find((card): boolean => deckCard.id === card.id);
+
+      if (
+        !card ||
+        card.type === CardType.HERO ||
+        card.type === CardType.MAGIC ||
+        card.type === CardType.TRAP
+      ) {
+        return acc;
+      }
+
+      return acc += card.damage * deckCard.amount;
+    }, 0) / deck.cards.reduce((acc, deckCard) => {
+      if (deckCard.type !== CardType.MINION) {
+        return acc;
+      } else {
+        return acc += deckCard.amount;
+      }
+    }, 0) || 0;
+
+    $playerStore.decks[$playerStore.deckId].average.manaCost = deck.cards.reduce((acc, deckCard) => {
+      const card = cards.find((card): boolean => deckCard.id === card.id);
+
+      if (!card || card.type === CardType.HERO) {
+        return acc;
+      }
+
+      return acc += card.manaCost * deckCard.amount;
+    }, 0) / deck.cards.reduce((acc, deckCard) => acc += deckCard.amount, 0) || 0;
+
+    if (type === CardType.MINION) {
+      $playerStore.decks[$playerStore.deckId].attribute.minion += 1;
+    } else if (type === CardType.MAGIC) {
+      $playerStore.decks[$playerStore.deckId].attribute.magic += 1;
+    } else if (type === CardType.TRAP) {
+      $playerStore.decks[$playerStore.deckId].attribute.trap += 1;
+    }
+
+    if (klass === CardKlass.NEUTRAL) {
+      $playerStore.decks[$playerStore.deckId].attribute.neutral += 1;
+    } else if (klass === CardKlass.SOLID) {
+      $playerStore.decks[$playerStore.deckId].attribute.solid += 1;
+    } else if (klass === CardKlass.LIQUID) {
+      $playerStore.decks[$playerStore.deckId].attribute.liquid += 1;
+    } else if (klass === CardKlass.GAS) {
+      $playerStore.decks[$playerStore.deckId].attribute.gas += 1;
+    } else if (klass === CardKlass.PLASMA) {
+      $playerStore.decks[$playerStore.deckId].attribute.plasma += 1;
+    }
+
+    $playerStore.decks[$playerStore.deckId].cardsInDeck = $playerStore.decks[$playerStore.deckId].cards.reduce((acc, {amount}) => acc += amount, 0);
+
+    // if (deckCard?.amount >= 2) {
+    //   isGrayscale = true;
+    // }
+    // const has = $playerStore.decks[$playerStore.deckId].cards.find((deckCard) => deckCard.id === card.id);
+    // if (has && has.amount === 2) {
+    //   isGrayscale = true;
+    // }
+    soundService.play("card");
+  };
 
   const klassColors = new Map([
     [0, "neutral"],
@@ -114,11 +216,16 @@
     [4, "plasma"]
   ]);
 
+  onMount((): void => {
+    cardView = cardsView.find(({id}): boolean => deckCard.id === id);
+  });
+
   export {deckCard};
 </script>
 
 <style>
   .deck-card {
+    position: relative;
     padding-right: var(--xs);
     display: flex;
     align-items: center;
@@ -140,11 +247,44 @@
   .deck-card__name {
     flex-grow: 1;
   }
+
+  .deck-card__tooltip {
+    padding: 4px;
+    position: absolute;
+    /* top: 0; */
+    top: calc(100%);
+    left: 0;
+    width: 100%;
+    /* height: 100%; */
+    display: none;
+    box-sizing: border-box;
+    background-color: rgb(var(--dark-grey));
+    border: 1px solid rgb(var(--grey));
+    border-radius: 4px;
+    /* border-bottom-left-radius: 32px;
+    border-top-left-radius: 32px; */
+    font-size: var(--xs);
+    z-index: 100;
+  }
+
+  .deck-card:hover .deck-card__tooltip {
+    display: initial;
+  }
 </style>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="deck-card" on:click="{onRemoveFromDeck}">
+<div class="deck-card" on:click="{onRemoveFromDeck}" on:contextmenu|preventDefault="{onAddToDeck}">
+
+  <!-- <div class="deck-card__tooltip">
+    {#each cardView.effect.description as chunk}
+      {#if typeof chunk === "string"}
+        {chunk}
+      {:else}
+        <TextComponent color="{chunk[0]}">{chunk[1]}</TextComponent>
+      {/if}
+    {/each}
+  </div> -->
 
   <img
     class="deck-card__img"

@@ -10,13 +10,13 @@ const damage = (animation: any): void => {
   const player = get(playerStore);
   const {increment, decrement, field, name} = animation;
 
-  setTimeout(() => {
+  // setTimeout(() => {
     const step = (timestamp: number): void => {
       if (!startTimestamp) {
         startTimestamp = timestamp;
       }
 
-      const progress = Math.min((timestamp - startTimestamp) / 400, 1);
+      const progress = Math.min((timestamp - startTimestamp) / 600, 1);
 
       gameStore.update((store) => {
         let minion: GameMinionCard;
@@ -52,7 +52,7 @@ const damage = (animation: any): void => {
 
     requestAnimationFrame(step);
     soundService.play("attributeChange");
-  }, 400);
+  // }, 400);
 };
 
 export {damage};

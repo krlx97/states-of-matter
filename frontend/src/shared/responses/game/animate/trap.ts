@@ -20,7 +20,7 @@ const trap = (animations: any) => {
       store.trap.name = "";
       return store;
     });
-  }, 800);
+  }, 3000);
 };
 
 export {trap};

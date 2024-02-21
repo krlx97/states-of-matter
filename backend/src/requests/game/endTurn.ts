@@ -54,6 +54,8 @@ const endTurn: SocketRequest = (socket, error): void => {
 
     let howMuchMana = 5;
 
+    $game.currentTurn += 1;
+
     if ($game.currentTurn === 0 || $game.currentTurn === 1) {
       howMuchMana = 5;
     } else if ($game.currentTurn === 2 || $game.currentTurn === 3) {
@@ -72,6 +74,9 @@ const endTurn: SocketRequest = (socket, error): void => {
     player.field.hero.mana.current = howMuchMana;
 
     animations.push({
+      type: "END_TURN",
+      name: player.name
+    }, {
       type: "MANA_CAPACITY",
       name: player.name,
       increment: manaDelta,
@@ -110,16 +115,15 @@ const endTurn: SocketRequest = (socket, error): void => {
       }
     });
 
-    $game.endTurnTime = Date.now() + 30000;
+    $game.endTurnTime = Date.now() + 90000;
     $game.currentPlayer = opponent.name;
-    $game.currentTurn += 1;
 
     await gameHelpers.attackMinionSave($game, animations, true);
 
     clearTimeout(endTurnTimeouts[$game.id]);
     endTurnTimeouts[$game.id] = setTimeout(async (): Promise<void> => {
       await gameHelpers.endTurn($game.currentPlayer);
-    }, 30000);
+    }, 90000);
   });
 };
 

@@ -48,6 +48,11 @@
   .isTutorial {
     position: relative;
     z-index: 101;
+    animation: opa 1500ms linear infinite alternate
+  }
+  @keyframes opa {
+    from {opacity: 0.5}
+    to {opacity: 1}
   }
 
   .borderce {

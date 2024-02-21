@@ -4,7 +4,7 @@ import {gameStore, intervals, intervalsStore, nodeStore, playerStore} from "stor
 import GameStartedComponent from "../../../client/Play/modals/GameStarted.svelte";
 import { get } from "svelte/store";
 
-const TURN_DURATION_MS = 30000;
+const TURN_DURATION_MS = 90000;
 
 
 const startGame = (): void => {
@@ -49,20 +49,6 @@ const startGame = (): void => {
         });
       }
     }, 1000 / 60);
-
-      // interval = setInterval(() => {
-      //   const time = Date.now();
-      //   let rem = endTurnTime - time;
-      //   let x = (rem / TURN_DURATION_MS) * 100;
-
-      //   if (time <= endTurnTime) {
-      //     nodeStore.update((store) => {
-      //       store.barHeight = `${x}%`;
-      //       return store;
-      //     });
-      //   }
-      // }, 1000 / 60);
-    // }
   });
 };
 

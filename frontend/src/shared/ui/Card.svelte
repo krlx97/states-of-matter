@@ -48,12 +48,15 @@
     css: (t) => `transform: translateX(-50%) scale(${(t + 0.2) / t});`
   });
 
+
   onMount((): void => {
     if (isOpponent) {
       selectedSkin = $gameStore.opponent.skins?.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
     } else {
       selectedSkin = $gameStore.player.skins?.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
     }
+
+    
 
     cardView = cardsView.find(({id}): boolean => card.id === id);
     item = items.find(({id}): boolean => selectedSkin.skinId === id) || items[0];
@@ -72,6 +75,7 @@
     /* box-sizing: border-box; */
     /* overflow: hidden; */
   }
+
 
   .card:hover {
     cursor: pointer;
@@ -416,39 +420,39 @@
     <div class="card__mana card__mana--center">
       <img src="images/card/mana.png" alt="Mana"/>
       {#key card.mana.current}
-        <div class="card__health__num" in:spin={{duration: 900}}>{card.mana.current}</div>
+        <div class="card__health__num" in:spin={{duration: 600}}>{card.mana.current}</div>
       {/key}
     </div>
     <div class="card__health">
       <img src="images/card/health.png" alt="Health"/>
         {#key card.health.current}
-          <div class="card__health__num" in:spin={{duration: 900}}>{card.health.current}</div>
+          <div class="card__health__num" in:spin={{duration: 600}}>{card.health.current}</div>
         {/key}
     </div>
   {:else if card.type === CardType.MINION}
     <div class="card__health">
       <img src="images/card/health.png" alt="Health"/>
       {#key card.health.current}
-        <div class="card__health__num" in:spin={{duration: 900}}>{card.health.current}</div>
+        <div class="card__health__num" in:spin={{duration: 600}}>{card.health.current}</div>
       {/key}
     </div>
     <div class="card__damage">
       <img src="images/card/damage.png" alt="Damage"/>
       {#key card.damage.current}
-        <div class="card__health__num" in:spin={{duration: 900}}>{card.damage.current}</div>
+        <div class="card__health__num" in:spin={{duration: 600}}>{card.damage.current}</div>
       {/key}
     </div>
     <div class="card__mana">
       <img src="images/card/manacost.png" alt="Mana cost"/>
       {#key card.manaCost.current}
-        <div class="card__health__num" in:spin={{duration: 900}}>{card.manaCost.current}</div>
+        <div class="card__health__num" in:spin={{duration: 600}}>{card.manaCost.current}</div>
       {/key}
     </div>
   {:else}
     <div class="card__mana card__mana--center">
       <img src="images/card/manacost.png" alt="Mana cost"/>
       {#key card.manaCost.current}
-        <div class="card__health__num" in:spin={{duration: 900}}>{card.manaCost.current}</div>
+        <div class="card__health__num" in:spin={{duration: 600}}>{card.manaCost.current}</div>
       {/key}
     </div>
   {/if}

@@ -2202,6 +2202,7 @@ const endTurn$1 = async (name) => {
     }
     opponent.hand.push(card);
     let howMuchMana = 5;
+    $game.currentTurn += 1;
     if ($game.currentTurn === 0 || $game.currentTurn === 1) {
         howMuchMana = 5;
     }
@@ -2223,6 +2224,9 @@ const endTurn$1 = async (name) => {
     const manaDelta = howMuchMana - player.field.hero.mana.current;
     player.field.hero.mana.current = howMuchMana;
     animations.push({
+        type: "END_TURN",
+        name: player.name
+    }, {
         type: "MANA_CAPACITY",
         name: player.name,
         increment: manaDelta,
@@ -2248,14 +2252,13 @@ const endTurn$1 = async (name) => {
             animations.push(...regeneration({ player }));
         }
     });
-    $game.endTurnTime = Date.now() + 30000;
+    $game.endTurnTime = Date.now() + 90000;
     $game.currentPlayer = opponent.name;
-    $game.currentTurn += 1;
     await attackMinionSave($game, animations, true);
     clearTimeout(endTurnTimeouts[$game.id]);
     endTurnTimeouts[$game.id] = setTimeout(async () => {
         await endTurn$1($game.currentPlayer);
-    }, 30000);
+    }, 90000);
 };
 
 const startGame = async (id, type, playerA, playerB) => {
@@ -3976,6 +3979,7 @@ const endTurn = (socket, error) => {
         }
         opponent.hand.push(card);
         let howMuchMana = 5;
+        $game.currentTurn += 1;
         if ($game.currentTurn === 0 || $game.currentTurn === 1) {
             howMuchMana = 5;
         }
@@ -3997,6 +4001,9 @@ const endTurn = (socket, error) => {
         const manaDelta = howMuchMana - player.field.hero.mana.current;
         player.field.hero.mana.current = howMuchMana;
         animations.push({
+            type: "END_TURN",
+            name: player.name
+        }, {
             type: "MANA_CAPACITY",
             name: player.name,
             increment: manaDelta,
@@ -4022,14 +4029,13 @@ const endTurn = (socket, error) => {
                 animations.push(...gameHelpers.effect.regeneration({ player }));
             }
         });
-        $game.endTurnTime = Date.now() + 30000;
+        $game.endTurnTime = Date.now() + 90000;
         $game.currentPlayer = opponent.name;
-        $game.currentTurn += 1;
         await gameHelpers.attackMinionSave($game, animations, true);
         clearTimeout(endTurnTimeouts[$game.id]);
         endTurnTimeouts[$game.id] = setTimeout(async () => {
             await gameHelpers.endTurn($game.currentPlayer);
-        }, 30000);
+        }, 90000);
     });
 };
 
@@ -5101,9 +5107,18 @@ schedule("0 */24 * * *", async () => {
         const { name, elo, level, experience, avatarId, bannerId, games } = $player;
         return { name, level, elo, experience, avatarId, bannerId, games };
     });
-    await mongo.$leaderboards.updateOne({}, {
-        $set: { level: byLevel, elo: byElo }
-    });
+    const leaderboards = await mongo.$leaderboards.findOne({});
+    if (leaderboards) {
+        await mongo.$leaderboards.updateOne({}, {
+            $set: { level: byLevel, elo: byElo }
+        });
+    }
+    else {
+        await mongo.$leaderboards.insertOne({
+            level: byLevel,
+            elo: byElo
+        });
+    }
     for (let { name } of byLevel) {
         const $player = await mongo.$players.findOne({ name });
         if ($player) {

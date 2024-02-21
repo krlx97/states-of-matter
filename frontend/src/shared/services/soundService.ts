@@ -16,6 +16,7 @@ const sounds = {
   skinReveal: new Audio("sounds/skin-reveal.mp3"),
   magic: new Audio("sounds/magic.mp3"),
   trap: new Audio("sounds/trap.mp3"),
+  effect: new Audio("sounds/effect.mp3"),
 };
 
 const setVolume = (volume: number): void => {

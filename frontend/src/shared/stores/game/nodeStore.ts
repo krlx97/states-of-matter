@@ -87,6 +87,10 @@ const nodeStore = writable<NodeStore>({
     trigger: false,
     name: ""
   },
+  turn: {
+    trigger: false,
+    name: ""
+  },
   barInterval: undefined,
   barHeight: "0%"
 });

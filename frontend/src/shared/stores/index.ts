@@ -1,3 +1,4 @@
+export {animationsQueue} from "./animationsQueue";
 export {bindStepsStore} from "./bindStepsStore";
 export {gamePopupStore} from "./gamePopupStore";
 export {leaderboardsStore} from "./leaderboardsStore";
@@ -10,6 +11,7 @@ export {modalStore, notificationsStore, playerStore, tutorialStore} from "./glob
 export {ethersStore} from "./ethersStore";
 export {chatStore} from "./chatStore";
 export {intervalsStore} from "./intervalsStore";
+export {isAnimating} from "./isAnimating";
 export {queueStore} from "./queueStore";
 export {snapshotsStore} from "./snapshotsStore";
 

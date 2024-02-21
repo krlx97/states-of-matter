@@ -25,7 +25,6 @@ const cardsView = [{
       Seafarer can attack immediately when normal or special summoned.
     `
         },
-        skins: []
     }, {
         id: CardId.AVET,
         name: "Avet",
@@ -42,7 +41,6 @@ const cardsView = [{
       summoned.
     `
         },
-        skins: []
     }, {
         id: CardId.GUIDING_LIGHTS,
         name: "Guiding Lights",
@@ -59,7 +57,6 @@ const cardsView = [{
       Guiding Lights can attack twice per turn.
     `
         },
-        skins: []
     }, {
         id: CardId.VESSELS,
         name: "Vessels",
@@ -78,7 +75,6 @@ const cardsView = [{
       when special summoned.
     `
         },
-        skins: []
     }, {
         id: CardId.SLEEPER,
         name: "Sleeper",
@@ -95,7 +91,6 @@ const cardsView = [{
       Can't be targeted by card effects.
     `
         },
-        skins: []
     }, {
         id: CardId.PILGRIMS,
         name: "Pilgrims",
@@ -113,7 +108,6 @@ const cardsView = [{
       card from the deck or hand.
     `
         },
-        skins: []
     }, {
         id: CardId.GRAVECALL,
         name: "Gravecall",
@@ -127,7 +121,6 @@ const cardsView = [{
       Special summon one minion from the graveyard.
     `
         },
-        skins: []
     }, {
         id: CardId.CROSS,
         name: "Cross",
@@ -140,7 +133,6 @@ const cardsView = [{
       Target enemy minion loses ${["damage", "1 damage"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.GAMBIT,
         name: "Gambit",
@@ -153,7 +145,6 @@ const cardsView = [{
       Draw one card from the deck.
     `
         },
-        skins: []
     }, {
         id: CardId.REFLECTION,
         name: "Reflection",
@@ -166,7 +157,6 @@ const cardsView = [{
       Reflect next incoming attack back to the enemy hero.
     `
         },
-        skins: []
     }, {
         id: CardId.DISCUS,
         name: "Discus",
@@ -179,7 +169,6 @@ const cardsView = [{
       Destroy the enemies next normal summoned minion card.
     `
         },
-        skins: []
     }, {
         id: CardId.SPELLBANE,
         name: "Spellbane",
@@ -193,7 +182,6 @@ const cardsView = [{
       Destroy the enemies next magic card.
     `
         },
-        skins: []
     }, {
         id: CardId.BOEDICEA, // ----- SOLID -----
         name: "Boedicea",
@@ -207,15 +195,13 @@ const cardsView = [{
         effect: {
             name: "Eternal Aura",
             description: colorTooltip `
-      Boedicea and solid minions block ${["damage", "1 damage"]} if they have
-      taunt.
+      ${["solid", "Solid"]} cards' ${["mana", "mana cost"]} is reduced by ${["mana", "1"]}.
     `
         },
-        skins: [],
         ability: {
             name: "Fortify",
             description: colorTooltip `
-      Give your minion ${["solid", "1 shield"]}.
+      Target minion or hero gains ${["solid", "1 shield"]}.
     `
         }
     }, {
@@ -234,7 +220,6 @@ const cardsView = [{
       ${["solid", "taunt"]} if the minion is sent to the graveyard.
     `
         },
-        skins: []
     }, {
         id: CardId.GNOMES,
         name: "Gnomes",
@@ -251,7 +236,6 @@ const cardsView = [{
       deck or hand gain ${["solid", "taunt"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.MUD_SPIRIT,
         name: "Mud Spirit",
@@ -266,7 +250,6 @@ const cardsView = [{
       Gains ${["solid", "1 shield"]} for each magic card in your graveyard.
     `
         },
-        skins: []
     }, {
         id: CardId.PEACEMAKER,
         name: "Peacemaker",
@@ -282,7 +265,6 @@ const cardsView = [{
       When normal summoned, adjacent minions gain ${["solid", "1 shield"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.GOLEMICA,
         name: "Golemica",
@@ -297,7 +279,6 @@ const cardsView = [{
       Golemica gains double ${["solid", "shield"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.CAVE_LION,
         name: "Cave Lion",
@@ -315,7 +296,6 @@ const cardsView = [{
       ${["solid", "taunt"]} when special summoned.
     `
         },
-        skins: []
     }, {
         id: CardId.PACT,
         name: "Pact",
@@ -330,7 +310,6 @@ const cardsView = [{
       ${["damage", "damage"]} to the enemy hero.
     `
         },
-        skins: []
     }, {
         id: CardId.ANVIL,
         name: "Anvil",
@@ -343,7 +322,6 @@ const cardsView = [{
       All your minions gain ${["solid", "1 shield"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.QUICK_SAND,
         name: "Quicksand",
@@ -357,7 +335,6 @@ const cardsView = [{
       ${["solid", "taunt"]} if it survives.
     `
         },
-        skins: []
     }, {
         id: CardId.WORMHOLE,
         name: "Wormhole",
@@ -370,7 +347,6 @@ const cardsView = [{
       Redirect the next incoming attack to a random enemy minion.
     `
         },
-        skins: []
     }, {
         id: CardId.CAGE,
         name: "Cage",
@@ -384,7 +360,6 @@ const cardsView = [{
       ${["health", "1 health"]} and give it ${["solid", "taunt"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.FURY,
         name: "Fury",
@@ -398,7 +373,6 @@ const cardsView = [{
       gains ${["damage", "3 damage"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_HERO,
         name: "Liquid Hero",
@@ -408,15 +382,13 @@ const cardsView = [{
         effect: {
             name: "Life Aura",
             description: colorTooltip `
-      Liquid minions can be ${["liquid", "healed"]} over the
-      ${["health", "max health"]} cap.
+      ${["liquid", "Liquid"]} cards' ${["mana", "mana cost"]} is reduced by ${["mana", "1"]}.
     `
         },
-        skins: [],
         ability: {
-            name: "Heal",
+            name: "Rejuvenate",
             description: colorTooltip `
-      Target minion is ${["liquid", "healed"]} for ${["health", "1 health"]}.
+      Target minion's ${["health", "health"]} is increased by ${["health", "1"]}.
     `
         }
     }, {
@@ -433,7 +405,6 @@ const cardsView = [{
       ${["health", "1 health"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_2,
         name: "Liquid 2",
@@ -447,7 +418,6 @@ const cardsView = [{
       for ${["health", "2 health"]}, excluding this minion.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_3,
         name: "Liquid 3",
@@ -461,7 +431,6 @@ const cardsView = [{
       graveyard, your hero gains ${["health", "3 health"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_4,
         name: "Liquid 4",
@@ -474,7 +443,6 @@ const cardsView = [{
       Liquid 4 can attack enemy minions with ${["health", "stealth"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_5,
         name: "Liquid 5",
@@ -488,7 +456,6 @@ const cardsView = [{
       ${["health", "health"]} equal to the ${["damage", "damage"]} dealt.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_6,
         name: "Liquid 6",
@@ -501,7 +468,6 @@ const cardsView = [{
       This card always takes ${["damage", "1 damage"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_7,
         name: "Liquid 7",
@@ -515,7 +481,6 @@ const cardsView = [{
       fields.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_8,
         name: "Liquid 8",
@@ -528,7 +493,6 @@ const cardsView = [{
       ${["liquid", "Cleanse"]} all debuffs from your minion.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_9,
         name: "Liquid 9",
@@ -541,7 +505,6 @@ const cardsView = [{
       All your minions gain ${["health", "3 health"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_10,
         name: "Liquid 10",
@@ -555,7 +518,6 @@ const cardsView = [{
       lose ${["damage", "2 damage"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_11,
         name: "Liquid 11",
@@ -569,7 +531,6 @@ const cardsView = [{
       ${["damage", "1"]}.
     `
         },
-        skins: []
     }, {
         id: CardId.LIQUID_12,
         name: "Liquid 12",
@@ -582,20 +543,21 @@ const cardsView = [{
       When an enemy minion is summoned, it is returned to opponents hand.
     `
         },
-        skins: []
     },
     { id: CardId.GAS_HERO,
         name: "Gas Hero",
         lore: `Coming soon.`,
         effect: {
             name: "Toxic Aura",
-            description: "Minions infected with neurotoxin take 1 additional damage from gas minions."
+            description: colorTooltip `
+      ${["gas", "Gas"]} cards' ${["mana", "mana cost"]} is reduced by ${["mana", "1"]}.
+    `
         },
-        skins: [],
         ability: {
             name: "Neurotoxin",
-            description: `
-      Enemy minion or hero takes 1 damage each turn.
+            description: colorTooltip `
+      Target enemy minion or hero ${["health", "health"]} is reduced by
+      ${["health", "1"]} every time you end your turn.
     `
         }
     }, {
@@ -606,7 +568,6 @@ const cardsView = [{
             name: "Acidic Death",
             description: "Deals 1 damage to all Minions on the board when this card dies."
         },
-        skins: []
     }, {
         id: CardId.GAS_2,
         name: "Gas 2",
@@ -615,7 +576,6 @@ const cardsView = [{
             name: "Vanish",
             description: colorTooltip `Gas 2 gains ${["gas", "Stealth"]} when normal summoned.`
         },
-        skins: []
     }, {
         id: CardId.GAS_3,
         name: "Gas Minion 3",
@@ -624,7 +584,6 @@ const cardsView = [{
             name: "Poisonous Touch",
             description: "Attacks infect their target with Neurotoxin."
         },
-        skins: []
     }, {
         id: CardId.GAS_4,
         name: "Gas Minion 4",
@@ -633,7 +592,6 @@ const cardsView = [{
             name: "Toxic Spray",
             description: "On Normal Summon, this Minion deals 1 damage to a random enemy minion and infects it with Neurotoxin."
         },
-        skins: []
     }, {
         id: CardId.GAS_5,
         name: "Gas Minion 5",
@@ -642,7 +600,6 @@ const cardsView = [{
             name: "Corrosive Touch",
             description: "Whenever this Minion attacks, it deals 1 extra damage to the enemy Hero."
         },
-        skins: []
     }, {
         id: CardId.GAS_6,
         name: "Gas Minion 6",
@@ -651,7 +608,6 @@ const cardsView = [{
             name: "Toxic Gas",
             description: "On Normal Summon, all enemy Minions are infected with Neurotoxin."
         },
-        skins: []
     }, {
         id: CardId.GAS_7,
         name: "Gas Magic 1",
@@ -660,7 +616,6 @@ const cardsView = [{
             name: "Acid Rain",
             description: "Deals 1 Damage to all enemy minions."
         },
-        skins: []
     }, {
         id: CardId.GAS_8,
         name: "Gas Magic 2",
@@ -669,7 +624,6 @@ const cardsView = [{
             name: "Smoke Bomb",
             description: "All your minions gain stealth."
         },
-        skins: []
     }, {
         id: CardId.GAS_9,
         name: "Gas Magic 3",
@@ -678,7 +632,6 @@ const cardsView = [{
             name: "Contaminated Air",
             description: "All minions on the board have -1 Attack."
         },
-        skins: []
     }, {
         id: CardId.GAS_10,
         name: "Gas Trap 1",
@@ -687,7 +640,6 @@ const cardsView = [{
             name: "Rusty Needle",
             description: "When an enemy Minion attacks, infect it with Neurotoxin."
         },
-        skins: []
     }, {
         id: CardId.GAS_11,
         name: "Gas Trap 2",
@@ -696,7 +648,6 @@ const cardsView = [{
             name: "Noxious Fumes",
             description: "When an enemy Minion attacks, deal 1 damage to it and it's adjacent Minions."
         },
-        skins: []
     }, {
         id: CardId.GAS_12,
         name: "Gas Trap 3",
@@ -705,19 +656,22 @@ const cardsView = [{
             name: "Poisoned Ground",
             description: "When an enemy Minion is summoned, it becomes infected with Neurotoxin."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_HERO,
         name: "Plasma Hero",
         lore: `Coming soon.`,
         effect: {
             name: "Burning Aura",
-            description: "Plasma minions affected by corruption have -1 health and +2 damage."
+            description: colorTooltip `
+      ${["plasma", "Plasma"]} cards' ${["mana", "mana cost"]} is reduced by ${["mana", "1"]}.
+    `
         },
-        skins: [],
         ability: {
-            name: "Corruption",
-            description: "Target minion gains +1 damage."
+            name: "Electrocute",
+            description: colorTooltip `
+      Target enemy minion or hero ${["health", "health"]} is reduced by
+      ${["health", "2"]}.
+    `
         }
     }, {
         id: CardId.PLASMA_1,
@@ -727,7 +681,6 @@ const cardsView = [{
             name: "Self-Destruct",
             description: "When card dies, deal 3 damage to the enemy hero."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_2,
         name: "Plasma Minion 2",
@@ -736,7 +689,6 @@ const cardsView = [{
             name: "Rampage",
             description: "Whenever attacks and survives, gain +1 damage."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_3,
         name: "Plasma Minion 3",
@@ -745,7 +697,6 @@ const cardsView = [{
             name: "Backstab",
             description: "When attacking a hero, deal 1 additional damage and leech 1 Mana."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_4,
         name: "Centaur Archer",
@@ -754,7 +705,6 @@ const cardsView = [{
             name: "Marksmanship",
             description: "Centaur Archer's attacks ignore Taunt."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_5,
         name: "Plasma Minion 5",
@@ -763,7 +713,6 @@ const cardsView = [{
             name: "Overpower",
             description: "When attacking a minion, deal excess damage to the enemy hero."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_6,
         name: "Plasma Minion 6",
@@ -772,7 +721,6 @@ const cardsView = [{
             name: "Execute",
             description: "Executes minions below 1 health after combat."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_7,
         name: "Plasma Magic 1",
@@ -781,7 +729,6 @@ const cardsView = [{
             name: "Ignite",
             description: "Deal 3 damage to a target."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_8,
         name: "Plasma Magic 2",
@@ -790,7 +737,6 @@ const cardsView = [{
             name: "Sacrifice",
             description: "Deal 2 damage to your minion and give it Corruption."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_9,
         name: "Plasma Magic 3",
@@ -799,7 +745,6 @@ const cardsView = [{
             name: "Hysteria",
             description: "Double your cards damage, but reduce it's health to 1, and destroy it when the turn is over."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_10,
         name: "Plasma Trap 1",
@@ -808,7 +753,6 @@ const cardsView = [{
             name: "Explosive",
             description: "When an enemy minion attacks, deal 3 damage to it."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_11,
         name: "Plasma Trap 2",
@@ -817,7 +761,6 @@ const cardsView = [{
             name: "Reflection",
             description: "When an enemy kills your minion with Corruption, all other minions on your field gain corruption."
         },
-        skins: []
     }, {
         id: CardId.PLASMA_12,
         name: "Plasma Trap 3",
@@ -826,6 +769,5 @@ const cardsView = [{
             name: "Constriction",
             description: "Reduce attacking Minions damage to 1."
         },
-        skins: []
     }];
 export { cardsView };

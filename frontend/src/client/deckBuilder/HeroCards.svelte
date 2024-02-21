@@ -5,6 +5,9 @@ import {tutorialStore} from "stores";
   import HeroCardComponent from "./HeroCard.svelte";
     
   $: isTutorial = $tutorialStore.name === "deckBuilder" && $tutorialStore.currentStep === 2;
+$: isTutorial2 =
+    $tutorialStore.name === "deckBuilder" &&
+    $tutorialStore.currentStep === 1;
 </script>
 
 <style>
@@ -26,10 +29,22 @@ import {tutorialStore} from "stores";
 
   .isTutorial {
     z-index: 101;
+    animation: opa 1500ms linear infinite alternate
+
+  }
+ .isTutorial2 {
+    position: relative;
+    z-index: 101;
+    animation: opa 1500ms linear infinite alternate
+  }
+
+  @keyframes opa {
+    from {opacity: 0.5}
+    to {opacity: 1}
   }
 </style>
 
-<div class="heroes" class:isTutorial>
+<div class="heroes" class:isTutorial class:isTutorial2>
   {#each cards as card}
     {#if card.type === CardType.HERO}
       <HeroCardComponent {card}/>

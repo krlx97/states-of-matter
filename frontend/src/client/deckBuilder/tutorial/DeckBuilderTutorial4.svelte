@@ -6,21 +6,6 @@
   be placed onto the game field to attack other minions or heroes, while magic
   cards have an immediate effect when played. Trap cards are hidden until
   triggered by your opponent's actions, and only one can be set at a time.
-  <br/><br/>
-  <div>
-    <b>Left Click</b>
-    - Add to deck.<br/>
-  </div>
-  <div>
-    <b>Left Click (Attribute)</b>
-    - More details.<br/>
-  </div>
-  <div>
-    <b>Right Click</b>
-    - Preview lore and skins.<br/>
-  </div>
-  <div>
-    <b>Hover</b>
-    - Hover the icons for more details
-  </div>
+  <hr/>
+  Left click the card card to add it to deck.
 </div>

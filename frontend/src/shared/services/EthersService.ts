@@ -33,11 +33,11 @@ const keys = {
 
 const init = async (address: string): Promise<void> => {
   if (window.ethereum) {
-    const provider = new BrowserProvider(window.ethereum);
+    let provider = new BrowserProvider(window.ethereum);
     let signer: JsonRpcSigner | undefined;
 
     if (address.length) {
-      signer = new JsonRpcSigner(provider, address)
+      signer = new JsonRpcSigner(provider, address);
     }
 
     ethersStore.update((store) => {
@@ -69,27 +69,26 @@ const init = async (address: string): Promise<void> => {
 };
 
 const transact = async (
-  contractName: any,
+  contractName: keyof typeof keys,
   action: string,
-  params: any[]
+  params: Array<string | bigint>
 ): Promise<boolean> => {
-  const store = get(ethersStore);
-  const contract = store.contracts[contractName];
+  const $ethersStore = get(ethersStore);
+  const contract = $ethersStore.contracts[contractName];
 
   if (!contract) {
-    console.error("Metamask not connected.");
     return false;
   }
 
-  const tx = await contract[action](...params).catch(console.log);
+  const transaction = await contract[action](...params).catch(console.log);
 
-  if (!tx) {
+  if (!transaction) {
     return false;
   }
 
-  const fin = await tx.wait();
+  const receipt = await transaction.wait().catch(console.log);
 
-  if (!fin) {
+  if (!receipt) {
     return false;
   }
 
@@ -124,6 +123,15 @@ const reloadUser = async (): Promise<void> => {
   const {address, elo} = get(playerStore);
 
   if (address) {
+    const accounts = await window.ethereum?.request({
+      method: "eth_requestAccounts"
+    });
+
+    ethersStore.update((store) => {
+      store.accounts = accounts || [];
+      return store;
+    });
+
     const theItems = [];
 
     const itemIds = items
@@ -298,6 +306,11 @@ const reloadUser = async (): Promise<void> => {
       items: theItems
     });
   }
+
+  ethersStore.update((store) => {
+    store.isLoaded = true;
+    return store;
+  });
 };
 
 const ethersService = {keys, init, transact, sign, reloadUser};

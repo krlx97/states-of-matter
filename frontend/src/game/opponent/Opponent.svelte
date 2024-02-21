@@ -27,7 +27,7 @@
 <div class="game-opponent">
   <OpponentTrapFieldComponent/>
 <!-- transform: scale(0.8) causes animations to break. -->
-  <div style="position: relative;">
+  <div style="position: relative; transform: scale(0.8)">
     <div class="game-opponent__fields">
       <OpponentDeckComponent/>
 <div></div>

@@ -17,7 +17,7 @@
   let isMenuToggled = false;
 
   let sortGroup: "name" | "rank" | "level" = "name";
-  let sortAscending = true;
+  let sortAscending = false;
 
   const onAddFriend = (): void => {
     modalService.open(AddFriendComponent);
@@ -139,19 +139,19 @@
   <div class="friends__toolbar">
     <div>Friends <b>{$playerStore.social.friends.length}</b></div>
     <div class="friends__toolbar__sort">
-      <LinkComponent color="white" on:click="{() => onSort("name", sortAscending ? false : true)}">
+      <LinkComponent color="{sortGroup === "name" ? "primary" : "white"}" on:click="{() => onSort("name", sortAscending ? false : true)}">
         Name
         {#if sortGroup === "name"}
           <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
         {/if}
       </LinkComponent>
-      <LinkComponent color="white" on:click="{() => onSort("rank", sortAscending ? false : true)}">
+      <LinkComponent color="{sortGroup === "rank" ? "primary" : "white"}" on:click="{() => onSort("rank", sortAscending ? false : true)}">
         Rank
         {#if sortGroup === "rank"}
           <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
         {/if}
       </LinkComponent>
-      <LinkComponent color="white" on:click="{() => onSort("level", sortAscending ? false : true)}">
+      <LinkComponent color="{sortGroup === "level" ? "primary" : "white"}" on:click="{() => onSort("level", sortAscending ? false : true)}">
         Level
         {#if sortGroup === "level"}
           <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>

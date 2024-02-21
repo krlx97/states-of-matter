@@ -224,9 +224,18 @@ schedule("0 */24 * * *", async (): Promise<void> => {
     return {name, level, elo, experience, avatarId, bannerId, games};
   });
 
-  await mongo.$leaderboards.updateOne({}, {
-    $set: {level: byLevel, elo: byElo}
-  });
+  const leaderboards = await mongo.$leaderboards.findOne({});
+
+  if (leaderboards) {
+    await mongo.$leaderboards.updateOne({}, {
+      $set: {level: byLevel, elo: byElo}
+    });
+  } else {
+    await mongo.$leaderboards.insertOne({
+      level: byLevel,
+      elo: byElo
+    });
+  }
 
   for (let {name} of byLevel) {
     const $player = await mongo.$players.findOne({name});

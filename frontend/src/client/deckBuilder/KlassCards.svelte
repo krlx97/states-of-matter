@@ -14,6 +14,9 @@
     && (card.klass === 0 || card.klass === 1)
     );
 
+  $: isTutorial2 =
+    $tutorialStore.name === "deckBuilder" &&
+    $tutorialStore.currentStep === 1;
   $: isTutorial =
     $tutorialStore.name === "deckBuilder" &&
     $tutorialStore.currentStep === 3;
@@ -178,6 +181,16 @@
   .isTutorial {
     position: relative;
     z-index: 101;
+    animation: opa 1500ms linear infinite alternate
+  }
+  .isTutorial2 {
+    position: relative;
+    z-index: 101;
+    animation: opa 1500ms linear infinite alternate
+  }
+  @keyframes opa {
+    from {opacity: 0.5}
+    to {opacity: 1}
   }
 
   .arrow {
@@ -189,7 +202,7 @@
   }
 </style>
 
-<div class="klass-cards" class:isTutorial>
+<div class="klass-cards" class:isTutorial class:isTutorial2>
   <div class="cards__actions">
     <div class="cards__action">
       <SelectComponent
@@ -212,20 +225,20 @@
         on:change="{onFilterCards}"/>
     </div>
     <div class="cards__action">
-      <LinkComponent on:click="{onSortInitial}">Initial</LinkComponent>
-      <LinkComponent on:click="{onSortDamage}">
+      <LinkComponent color="{currentSort === "Initial" ? "primary" : "white"}" on:click="{onSortInitial}">Initial</LinkComponent>
+      <LinkComponent color="{currentSort === "Damage" ? "damage" : "white"}" on:click="{onSortDamage}">
         Damage
         {#if currentSort === "Damage"}
           <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
         {/if}
       </LinkComponent>
-      <LinkComponent on:click="{onSortManaCost}">
+      <LinkComponent color="{currentSort === "Mana Cost" ? "mana" : "white"}" on:click="{onSortManaCost}">
         Mana Cost
         {#if currentSort === "Mana Cost"}
           <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
         {/if}
       </LinkComponent>
-      <LinkComponent on:click="{onSortHealth}">
+      <LinkComponent color="{currentSort === "Health" ? "health" : "white"}" on:click="{onSortHealth}">
         Health
         {#if currentSort === "Health"}
           <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>

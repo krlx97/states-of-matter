@@ -6,6 +6,7 @@ const summon = (animation: any): void => {
   const {name, field, minion, necromancyFixPositive} = animation;
 
   // fix for necromancy animations
+  // card already has attributes changed, need to revert them back and animate them.
   if (necromancyFixPositive !== undefined && necromancyFixPositive === true && minion.effect === EffectId.NECROMANCY) {
     minion.health.current -= 2;
     minion.damage.current -= 2;

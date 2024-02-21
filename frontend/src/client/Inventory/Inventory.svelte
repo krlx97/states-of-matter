@@ -1,6 +1,7 @@
 <script lang="ts">
-  import {playerStore, tutorialStore} from "stores";
-  import {ButtonComponent, TextComponent, TutorialComponent} from "ui";
+  import {modalService} from "services";
+  import {ethersStore, playerStore, tutorialStore} from "stores";
+  import {ButtonComponent, TutorialComponent} from "ui";
   import CurrenciesComponent from "./Coins/Coins.svelte";
   import ItemsComponent from "./Items/Items.svelte";
   import WalletTutorial1 from "./Tutorial/WalletTutorial1.svelte";
@@ -8,22 +9,12 @@
   import WalletTutorial3 from "./Tutorial/WalletTutorial3.svelte";
   import WalletTutorial4 from "./Tutorial/WalletTutorial4.svelte";
   import Rewards from "./Rewards/Rewards.svelte";
-    import Chest from "./Chest/Chest.svelte";
-    import { modalService } from "services";
-    import Approvals from "./Approvals.svelte";
-    import Unlock from "./Chest/modals/Unlock.svelte";
+  import ApprovalsComponent from "./Approvals.svelte";
+  import UnlockComponent from "./Chest/modals/Unlock.svelte";
+    import { getAddress, isAddress } from "ethers";
+    import { onMount } from "svelte";
 
-  $: isTutorial = $tutorialStore.name === "inventory" && $tutorialStore.currentStep === 1;
-  $: isTutorial2 = $tutorialStore.name === "inventory" && $tutorialStore.currentStep === 2;
-  $: isTutorial3 = $tutorialStore.name === "inventory" && $tutorialStore.currentStep === 3;
-
-  const onApprovals = (): void => {
-    modalService.open(Approvals);
-  };
-
-  const onRandomItem = (): void => {
-    modalService.open(Unlock);
-  };
+  const isInventoryTutorial = $tutorialStore.name === "inventory";
 
   const steps = [{
     position: "top: 50%; left: 50%; transform: translate(-50%, -50%)",
@@ -38,6 +29,22 @@
     position: "top: 266px; left: 900px;",
     component: WalletTutorial4
   }];
+
+  $: isTutorial = isInventoryTutorial && $tutorialStore.currentStep === 1;
+  $: isTutorial2 = isInventoryTutorial && $tutorialStore.currentStep === 2;
+  $: isTutorial3 = isInventoryTutorial && $tutorialStore.currentStep === 3;
+
+  const onApprovals = (): void => {
+    modalService.open(ApprovalsComponent);
+  };
+
+  const onRandomItem = (): void => {
+    modalService.open(UnlockComponent);
+  };
+
+  onMount(() => {
+    console.log($playerStore.address, $ethersStore.chainId, $ethersStore.accounts, $ethersStore.accounts.includes($playerStore.address.toLowerCase()));
+  });
 </script>
 
 <style>
@@ -69,33 +76,35 @@
   }
 </style>
 
-<div class="inventory">
-  <!-- <div>
-    <TextComponent color="warn">
-      We're aware of an issue with JSON RPC errors and are looking for a fix. Sorry for the inconvenience.
-      We only know they occur when trying to set approvals to 0, or trying to spend your full balance.
-      So in the meantime just leave some dust behind in your wallet.
-    </TextComponent>
-  </div> -->
-  <div class="inventory__main">
-    <!-- <Chest/> -->
-    <div>
-      <ButtonComponent on:click={onApprovals}>APPROVALS</ButtonComponent>
-      <ButtonComponent on:click={onRandomItem}>RANDOM ITEM</ButtonComponent>
+{#if $ethersStore.isLoaded}
+  {#if
+    !$playerStore.address ||
+    ($playerStore.address && $ethersStore.chainId === 41n && $ethersStore.accounts.includes($playerStore.address.toLowerCase()))}
+    <div class="inventory">
+      <div class="inventory__main">
+        <div>
+          <ButtonComponent on:click={onApprovals}>APPROVALS</ButtonComponent>
+          <ButtonComponent on:click={onRandomItem}>RANDOM ITEM</ButtonComponent>
+        </div>
+
+        <div class:isTutorial>
+          <CurrenciesComponent/>
+        </div>
+        <div class:isTutorial3>
+          <Rewards/>
+        </div>
+      </div>
+      <div class:isTutorial2>
+        <ItemsComponent/>
+      </div>
     </div>
 
-    <div class:isTutorial>
-      <CurrenciesComponent/>
-    </div>
-    <div class:isTutorial3>
-      <Rewards/>
-    </div>
-  </div>
-  <div class:isTutorial2>
-    <ItemsComponent/>
-  </div>
-</div>
-
-{#if !$playerStore.tutorial.inventory}
-  <TutorialComponent tutorial="inventory" {steps}/>
+    {#if !$playerStore.tutorial.inventory}
+      <TutorialComponent tutorial="inventory" {steps}/>
+    {/if}
+  {:else if $playerStore.address && ($ethersStore.chainId !== 41n || !$ethersStore.accounts.includes(getAddress($playerStore.address)))}
+    Wrong network / address selected.
+  {/if}
+{:else}
+  Loading...
 {/if}

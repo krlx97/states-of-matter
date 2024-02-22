@@ -192,9 +192,9 @@
     border-bottom-width: 1px;
     border-image: linear-gradient(
       90deg,
-      rgba(63, 63, 63, 1) 0%,
-      rgba(255, 255, 255, 1) 50%,
-      rgba(63, 63, 63, 1) 100%
+      rgba(var(--dark-grey), 0) 0%,
+      rgba(var(--grey), 0.333) 50%,
+      rgba(var(--dark-grey), 0) 100%
     ) 1;
   }
 </style>

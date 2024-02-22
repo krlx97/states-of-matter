@@ -25,7 +25,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.666);
     z-index: 110;
   }
 
@@ -34,9 +34,9 @@
     /* height: 480px; */
     /* overflow-y: scroll; */
     padding: var(--md);
-    backdrop-filter: blur(32px);
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgb(127, 127, 127);
+    backdrop-filter: blur(var(--md));
+    background-color: rgba(64, 64, 64, 0.666);
+    border: 1px solid rgba(var(--grey), 0.666);
     border-radius: 8px;
     box-sizing: border-box;
   }

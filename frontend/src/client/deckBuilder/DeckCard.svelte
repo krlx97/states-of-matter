@@ -230,21 +230,29 @@
     display: flex;
     align-items: center;
     gap: var(--xs);
-    background-color: rgb(var(--dark-grey));
-    border: 1px solid rgb(var(--grey));
+    background-color: rgba(var(--dark-grey), var(--opacity-sm));
+    backdrop-filter: blur(var(--md));
+    border: 1px solid rgba(var(--grey), var(--opacity-sm));
     border-radius: 8px;
-    border-bottom-left-radius: 48px;
-    border-top-left-radius: 48px;
+    border-bottom-left-radius: 32px;
+    border-top-left-radius: 32px;
     box-sizing: border-box;
-    cursor: pointer;
     font-size: var(--sm);
+    transition: border-color 333ms cubic-bezier(var(--ease-in-out-quad));
+  }
+
+  .deck-card:hover {
+    cursor: pointer;
+    border-color: rgba(var(--white), var(--opacity-full));
   }
 
   .deck-card__img {
-    border-radius: 48px;
+    border-radius: 32px;
   }
 
   .deck-card__name {
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
   }
 
@@ -295,8 +303,7 @@
     <TextComponent color="{klassColors.get(deckCard.klass) || "common"}">
       {deckCard.name}
     </TextComponent>
-    <br/>
-    <div style="color: white; display: flex; gap: 4px">
+    <div>
       {deckCard.amount} / 2
     </div>
   </div>

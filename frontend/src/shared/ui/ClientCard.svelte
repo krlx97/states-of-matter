@@ -71,8 +71,10 @@
     display: flex;
     height: var(--card-height);
     width: var(--card-width);
-    border: 1px solid rgb(127, 127, 127);
+    border: 1px solid rgba(var(--grey), var(--opacity-sm));
     border-radius: 8px;
+    overflow: hidden;
+    box-sizing: border-box;
   }
 
   .isGrayscale {
@@ -122,6 +124,11 @@
     top: 3px;
     right: 3px;
     z-index: 2;
+    transition: transform 333ms cubic-bezier(var(--ease-in-out-quad));
+  }
+
+  .card__klass:hover {
+    transform: translateY(-2px);
   }
 
   .card__klass__tooltip {
@@ -165,21 +172,20 @@
     left: 50%;
     transform: translateX(-50%);
     width: 84px;
-    font-size: 0.8rem;
+    font-size: var(--xs);
     text-align: center;
     z-index: 2;
   }
 
   .card__mana {
     position: absolute;
-    bottom: 6px;
-    right: 6px;
-    /* transform: translateX(-50%); */
+    bottom: 3px;
+    right: 3px;
     z-index: 2;
   }
 
   .card__mana--center {
-    bottom: 8px;
+    bottom: 7px;
     right: unset;
     left: 50%;
     transform: translateX(-50%);
@@ -187,22 +193,22 @@
 
   .card__health {
     position: absolute;
-    bottom: 6px;
-    left: 6px;
+    bottom: 3px;
+    left: 3px;
     z-index: 2;
   }
 
   .card__health__num {
     position: absolute;
-    bottom: 0;
+    bottom: 5px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 14px;
+    font-size: var(--xs);
   }
 
   .card__damage {
     position: absolute;
-    bottom: 6px;
+    bottom: 7px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
@@ -210,7 +216,7 @@
 
   .card__ability {
     position: absolute;
-    bottom: 6px;
+    bottom: 7px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
@@ -250,10 +256,10 @@
     z-index: 1;
   }
 
-  .redglow {border-color: rgb(var(--solid));}
-  .blueglow {border-color: rgb(var(--liquid));}
-  .greenglow {border-color: rgb(var(--gas));}
-  .purpleglow {border-color: rgb(var(--plasma));}
+  .redglow {border-color: rgba(var(--solid), var(--opacity-sm));}
+  .blueglow {border-color: rgba(var(--liquid), var(--opacity-sm));}
+  .greenglow {border-color: rgba(var(--gas), var(--opacity-sm));}
+  .purpleglow {border-color: rgba(var(--plasma), var(--opacity-sm));}
 </style>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

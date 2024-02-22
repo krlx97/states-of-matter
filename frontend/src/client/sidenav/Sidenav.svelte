@@ -4,6 +4,9 @@
   import FriendsComponent from "./Friends.svelte";
   import PlayerComponent from "./Player.svelte";
   import RequestsComponent from "./Requests.svelte";
+
+  const ms2md = new Date().setHours(24,0,0,0) - Date.now();
+
 </script>
 
 <style>
@@ -18,9 +21,9 @@
     border-left-width: 1px;
     border-image: linear-gradient(
       180deg,
-      rgb(var(--dark-grey), 1) 0%,
-      rgb(var(--grey), 1) 50%,
-      rgb(var(--dark-grey), 1) 100%
+      rgba(var(--dark-grey), 0) 0%,
+      rgba(var(--grey), 0.333) 50%,
+      rgba(var(--dark-grey), 0) 100%
     ) 1;
   }
 
@@ -51,6 +54,10 @@
     <FriendsComponent/>
     <RequestsComponent/>
     <BlockedComponent/>
+  </div>
+
+  <div style="text-align: center; font-size: var(--xl); padding-bottom: var(--md);">
+    Next update: {`${new Date(Date.now() + ms2md).toLocaleDateString()} ${new Date(Date.now() + ms2md).toLocaleTimeString()}`}
   </div>
 
   <ChatComponent/>

@@ -52,8 +52,8 @@
 
   $: items = [
     ["Supply", supply, "ecr"],
-    ["Crystals", liquid, "ecr"],
-    ["Energy", staked, "ecr"]
+    ["Etheric Crystals", liquid, "ecr"],
+    ["Etheric Energy", staked, "ecr"]
   ]
 </script>
 

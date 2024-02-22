@@ -2,7 +2,7 @@
   import {onMount} from "svelte";
   import {socketService} from "services";
   import {leaderboardsStore} from "stores";
-  import {PlayerFrameComponent} from "ui";
+  import {PlayerFrameComponent, TextComponent} from "ui";
 
   const ms2md = new Date().setHours(24,0,0,0) - Date.now();
 
@@ -16,28 +16,40 @@
 </script>
 
 <style>
-  .wrapper {
-    height: 100%;
-    width: 100%;
-  }
   .leaderboards {
-    height: 100%;
-    width: 100%;
     display: flex;
-    justify-content: center;
+  }
+
+  .leaderboards__title {
+    width: 100%;
+    background-color: rgba(var(--dark-grey), 0.333);
+    backdrop-filter: blur(var(--md));
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: var(--md);
+    padding-bottom: var(--xl);
+    border: 0 solid;
+    border-bottom-width: 1px;
+    border-image: linear-gradient(
+      90deg,
+      rgba(var(--dark-grey), 0) 0%,
+      rgba(var(--grey), 0.333) 50%,
+      rgba(var(--dark-grey), 0) 100%
+    ) 1;
+    box-sizing: border-box;
   }
 
   .leaderboards__players {
-    height: 88.8%;
-    /* padding: var(--md); */
+    height: 778px;
     flex-basis: 50%;
-    flex-grow: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--md);
+    padding-block: var(--md);
     overflow-y: scroll;
-    /* box-sizing: border-box; */
+    box-sizing: border-box;
   }
 
   .leaderboards__players::-webkit-scrollbar {
@@ -52,34 +64,21 @@
     background-color: rgb(var(--grey));
     border-radius: 8px;
   }
-
-  .title {
-    text-align: center;
-    font-size: var(--xl);
-    font-weight: bold;
-  }
-
-  .reset {
-    width: 100%;
-    text-align: center;
-    font-size: var(--xl);
-    font-weight: bold;
-  }
 </style>
 
-<div class="wrapper">
+<div>
 
-  <div class="reset">
-    Next update: {`${new Date(Date.now() + ms2md).toLocaleDateString()} ${new Date(Date.now() + ms2md).toLocaleTimeString()}`}
+  <div class="leaderboards__title">
+    <TextComponent isBold size="xl">Level</TextComponent>
+    <TextComponent isBold size="xl">Elo</TextComponent>
   </div>
 
   <div class="leaderboards">
     <div class="leaderboards__players">
-      <div class="title">Level</div>
       {#if $leaderboardsStore.byLevel.length}
-        {#each $leaderboardsStore.byLevel as {name, elo, level, experience, avatarId, bannerId, games}, i}
+        {#each $leaderboardsStore.byLevel as params, i}
           <div>
-            <PlayerFrameComponent {name} {level} {elo} {avatarId} {bannerId} {experience} {games} leaderboardPosition="{i + 1}"/>
+            <PlayerFrameComponent {...params} leaderboardPosition="{i + 1}"/>
           </div>
         {/each}
       {:else}
@@ -87,15 +86,14 @@
       {/if}
     </div>
     <div class="leaderboards__players">
-      <div class="title">Elo</div>
       {#if $leaderboardsStore.byElo.length}
-        {#each $leaderboardsStore.byElo as {name, elo, level, experience, avatarId, bannerId, games}, i}
+        {#each $leaderboardsStore.byElo as params, i}
           <div>
-            <PlayerFrameComponent {name} {level} {elo} {avatarId} {bannerId} {experience} {games} leaderboardPosition="{i + 1}"/>
+            <PlayerFrameComponent {...params} leaderboardPosition="{i + 1}"/>
           </div>
         {/each}
       {:else}
-          Leaderboards haven't been generated yet.
+        Leaderboards haven't been generated yet.
       {/if}
     </div>
   </div>

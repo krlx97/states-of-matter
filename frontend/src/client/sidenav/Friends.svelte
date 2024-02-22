@@ -87,9 +87,9 @@
     border-bottom-width: 1px;
     border-image: linear-gradient(
       90deg,
-      rgba(63, 63, 63, 1) 0%,
-      rgba(255, 255, 255, 1) 50%,
-      rgba(63, 63, 63, 1) 100%
+      rgba(var(--dark-grey), 0) 0%,
+      rgba(var(--grey), 0.333) 50%,
+      rgba(var(--dark-grey), 0) 100%
     ) 1;
   }
 
@@ -142,28 +142,28 @@
       <LinkComponent color="{sortGroup === "name" ? "primary" : "white"}" on:click="{() => onSort("name", sortAscending ? false : true)}">
         Name
         {#if sortGroup === "name"}
-          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
         {/if}
       </LinkComponent>
       <LinkComponent color="{sortGroup === "rank" ? "primary" : "white"}" on:click="{() => onSort("rank", sortAscending ? false : true)}">
         Rank
         {#if sortGroup === "rank"}
-          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
         {/if}
       </LinkComponent>
       <LinkComponent color="{sortGroup === "level" ? "primary" : "white"}" on:click="{() => onSort("level", sortAscending ? false : true)}">
         Level
         {#if sortGroup === "level"}
-          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
         {/if}
       </LinkComponent>
     </div>
     <div class="friends__toolbar__actions">
       <ButtonComponent isIcon on:click="{onAddFriend}">
-        +
+        <i class="fa-solid fa-user-plus"></i>
       </ButtonComponent>
       <ButtonComponent isIcon on:click="{onToggle}">
-        <div class="chevron" class:isToggled>⯆</div>
+        <i class="fa-solid fa-chevron-{isToggled ? "up" : "down"}"></i>
       </ButtonComponent>
     </div>
   </div>

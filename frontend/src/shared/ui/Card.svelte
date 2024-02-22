@@ -66,14 +66,13 @@
 <style>
   .card {
     position: relative;
-    display: flex;
-    /* overflow: hidden; */
     height: var(--card-height);
     width: var(--card-width);
-    border: 1px solid rgb(127, 127, 127);
+    display: flex;
+    border: 1px solid rgba(var(--grey), var(--opacity-sm));
     border-radius: 8px;
     /* box-sizing: border-box; */
-    /* overflow: hidden; */
+    overflow: hidden;
   }
 
 

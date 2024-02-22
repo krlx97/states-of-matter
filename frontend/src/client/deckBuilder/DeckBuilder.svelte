@@ -59,8 +59,8 @@
     height: 768px;
     display: flex;
     flex-direction: column;
-    border: 1px solid rgb(var(--grey));
-    border-radius: 8px;
+    /* border: 1px solid rgb(var(--grey)); */
+    /* border-radius: 8px; */
     box-sizing: border-box;
     overflow: hidden;
   }

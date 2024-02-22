@@ -4,7 +4,7 @@
   import {tutorialStore} from "stores";
   import {LinkComponent, SelectComponent} from "ui";
   import KlassCardComponent from "./KlassCard.svelte";
-    import { soundService } from "services";
+  import {soundService} from "services";
 
   let selectedKlass = "All";
   let selectedType = "All";
@@ -77,14 +77,15 @@
     }
 
     filteredCards = filteredCards.sort((a, b) => {
-      if (a.type === CardType.MINION && b.type === CardType.MINION) {
-        return sortAscending ? a.damage - b.damage : b.damage - a.damage;
-      } else if (a.type === CardType.MINION && b.type !== CardType.MINION) {
-        return 1;
+      if (a.type === CardType.MINION && b.type !== CardType.MINION) {
+        return -1; // Minions always come before magic/trap cards
       } else if (a.type !== CardType.MINION && b.type === CardType.MINION) {
-        return -1
+        return 1; // Magic/trap cards always come after minions
+      } else if (a.type === CardType.MINION && b.type === CardType.MINION) {
+        // Both are minions, sort based on damage
+        return sortAscending ? a.damage - b.damage : b.damage - a.damage;
       } else {
-        return 0;
+        return 0; // Cards other than minions are considered equal in terms of sorting
       }
     });
 
@@ -119,14 +120,15 @@
     }
 
     filteredCards = filteredCards.sort((a, b) => {
-      if (a.type === CardType.MINION && b.type === CardType.MINION) {
-        return sortAscending ? a.health - b.health : b.health - a.health;
-      } else if (a.type === CardType.MINION && b.type !== CardType.MINION) {
-        return 1;
+      if (a.type === CardType.MINION && b.type !== CardType.MINION) {
+        return -1; // Minions always come before magic/trap cards
       } else if (a.type !== CardType.MINION && b.type === CardType.MINION) {
-        return -1;
+        return 1; // Magic/trap cards always come after minions
+      } else if (a.type === CardType.MINION && b.type === CardType.MINION) {
+        // Both are minions, sort based on health
+        return sortAscending ? a.health - b.health : b.health - a.health;
       } else {
-        return 0;
+        return 0; // Cards other than minions are considered equal in terms of sorting
       }
     });
 
@@ -145,6 +147,7 @@
   .cards__actions {
     display: flex;
     justify-content: space-between;
+    padding-inline: calc(var(--md) * 2);
     /* margin: var(--xl) 0 var(--sm) 0; */
   }
 
@@ -193,13 +196,6 @@
     to {opacity: 1}
   }
 
-  .arrow {
-    border: solid white;
-    border-width: 0 3px 3px 0;
-    display: inline-block;
-    padding: 3px;
-    transform: rotate(45deg);
-  }
 </style>
 
 <div class="klass-cards" class:isTutorial class:isTutorial2>
@@ -229,19 +225,19 @@
       <LinkComponent color="{currentSort === "Damage" ? "damage" : "white"}" on:click="{onSortDamage}">
         Damage
         {#if currentSort === "Damage"}
-          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
         {/if}
       </LinkComponent>
       <LinkComponent color="{currentSort === "Mana Cost" ? "mana" : "white"}" on:click="{onSortManaCost}">
         Mana Cost
         {#if currentSort === "Mana Cost"}
-          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
         {/if}
       </LinkComponent>
       <LinkComponent color="{currentSort === "Health" ? "health" : "white"}" on:click="{onSortHealth}">
         Health
         {#if currentSort === "Health"}
-          <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
         {/if}
       </LinkComponent>
     </div>

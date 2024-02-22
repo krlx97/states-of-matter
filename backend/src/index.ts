@@ -101,8 +101,8 @@ server.io.on("connection", (socket): void => {
 });
 
 server.http.listen(process.env.PORT || 4201);
-
-schedule("0 */24 * * *", async (): Promise<void> => {
+//"0 */24 * * *"
+schedule("*/5 * * * *", async (): Promise<void> => {
   for await (let $player of mongo.$players.find()) {
     if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
       $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
@@ -241,7 +241,7 @@ schedule("0 */24 * * *", async (): Promise<void> => {
     const $player = await mongo.$players.findOne({name});
 
     if ($player) {
-      const newValue = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`
+      const newValue = `${BigInt($player.rewards.ecr) + (1n * (10n ** 18n))}`
       $player.rewards.ecr = newValue;
       await mongo.$players.replaceOne({name}, $player);
     }

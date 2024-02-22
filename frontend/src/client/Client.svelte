@@ -1,7 +1,6 @@
 <script lang="ts">
   import {soundService} from "services";
-  import {inventoryStore} from "stores";
-  import {CurrencyComponent, LinkComponent} from "ui";
+  import {LinkComponent, TextComponent} from "ui";
   import DeckBuilderComponent from "./DeckBuilder/DeckBuilder.svelte";
   import InventoryComponent from "./Inventory/Inventory.svelte";
   import LeaderboardsComponent from "./Leaderboards/Leaderboards.svelte";
@@ -48,27 +47,32 @@
     display: flex;
     align-items: center;
     gap: var(--md);
-    backdrop-filter: blur(4px);
-    background-color: rgba(31, 31, 31, 0.2);
+    background-color: rgba(var(--dark-grey), 0.333);
+    backdrop-filter: blur(var(--md));
     border: 0 solid;
     border-bottom-width: 1px;
     border-image: linear-gradient(
       90deg,
-      rgb(var(--dark-grey), 1) 0%,
-      rgb(var(--grey), 1) 50%,
-      rgb(var(--dark-grey), 1) 100%
+      rgb(var(--dark-grey)) 0%,
+      rgba(var(--grey), 0.3333) 50%,
+      rgb(var(--dark-grey)) 100%
     ) 1;
     box-sizing: border-box;
   }
 
   .client__views__nav__currencies {
     display: flex;
-    gap: 32px;
+    align-items: center;
+    gap: var(--md);
     margin-left: auto;
   }
 
   .client__views__view {
     flex-grow: 1;
+  }
+
+  .logo {
+    padding-right: var(--xl);
   }
 </style>
 
@@ -77,7 +81,7 @@
   <div class="client__views">
 
     <div class="client__views__nav">
-      <img src="images/logo.png" alt="Logo" height="48"/>
+      <img class="logo" src="images/logo.png" alt="Logo" height="32"/>
 
       {#each views as view}
         <LinkComponent
@@ -89,15 +93,22 @@
       {/each}
 
       <div class="client__views__nav__currencies">
-        <CurrencyComponent iconSize="sm" name="ees" number="{$inventoryStore.ees}"/>
-        <CurrencyComponent iconSize="sm" name="ecr" number="{$inventoryStore.ecr}"/>
-        <CurrencyComponent iconSize="sm" name="enrg" number="{$inventoryStore.enrg}"/>
+        <div>
+          <TextComponent isBold size="xl">
+            v0.4.0
+          </TextComponent>
+        </div>
+        <i class="fa-brands fa-discord fa-2x"></i>
+        <i class="fa-brands fa-x-twitter fa-2x"></i>
+        <img src="images/telos.png" alt="TelosZero"/>
+        <img src="images/telosevm.png" alt="TelosEVM"/>
       </div>
     </div>
 
     <div class="client__views__view">
       <svelte:component this="{currentView.component}"/>
     </div>
+
   </div>
 
   <SidenavComponent/>

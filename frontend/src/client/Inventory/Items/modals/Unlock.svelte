@@ -17,7 +17,7 @@
     TableComponent
   } from "ui";
 
-  import RandomSkinComponent from "../../Items/modals/RandomSkin.svelte";
+  import RandomSkinComponent from "./RandomSkin.svelte";
 
   const formStore = formService.create({});
   let price = 100n * 10n ** 18n;
@@ -74,31 +74,38 @@
   });
 </script>
 
+<style>
+  a {
+    color: rgb(var(--primary));
+  }
+</style>
+
 <ModalComponent>
-  <svelte:fragment slot="title">Unlock chest</svelte:fragment>
+  <svelte:fragment slot="title">Craft random</svelte:fragment>
 
   <svelte:fragment slot="info">
-    The chest contains one completely random item. When unlocked, it will pick
-    a random rarity, and give you a random item from that rarity list.
+    Craft one completely random item. Two random numbers will be rolled, one
+    deciding the rarity, and the other deciding a skin from that rarity list.
+    Random numbers are <a href="https://github.com/krlx97/states-of-matter/blob/main/contracts/Game/Game.sol#L88" target="_blank">generated on chain</a> for full transparency.
   </svelte:fragment>
 
   <FormComponent on:submit="{onUnlock}">
     <TableComponent items="{[
-      ["UNCOMMON", "80%", undefined, "uncommon"],
-      ["RARE", "15%", undefined, "rare"],
-      ["EPIC", "3.9%", undefined, "epic"],
-      ["LEGENDARY", "1%", undefined, "legendary"],
-      ["MYTHIC", "0.1%", undefined, "mythic"],
+      ["Uncommon", "80%", undefined, "uncommon"],
+      ["Rare", "15%", undefined, "rare"],
+      ["Epic", "3.9%", undefined, "epic"],
+      ["Legendary", "1%", undefined, "legendary"],
+      ["Mythic", "0.1%", undefined, "mythic"],
     ]}"/>
 
     <TableComponent items="{[
-      ["PRICE", price, "ecr"],
-      ["BALANCE", $inventoryStore.ecr, "ecr"],
-      ["REMAINING", $inventoryStore.ecr - price, "ecr"]
+      ["Price", price, "ecr"],
+      ["Balance", $inventoryStore.ecr, "ecr"],
+      ["Remaining balance", $inventoryStore.ecr - price, "ecr"]
     ]}"/>
 
     <svelte:fragment slot="submit">
-      <FormSubmitComponent {formStore}>UNLOCK</FormSubmitComponent>
+      <FormSubmitComponent {formStore}>CRAFT</FormSubmitComponent>
     </svelte:fragment>
   </FormComponent>
 </ModalComponent>

@@ -74,8 +74,52 @@
   });
 </script>
 
+<style>
+.commona {
+    color: rgb(var(--common));
+    text-shadow: 0px 2px 8px rgb(var(--common));
+  }
+
+  .uncommona {
+    color: rgb(var(--uncommon));
+    text-shadow: 0px 2px 8px rgb(var(--uncommon));
+  }
+
+  .rarea {
+    color: rgb(var(--rare));
+    text-shadow: 0px 2px 8px rgb(var(--rare));
+  }
+
+  .epica {
+    color: rgb(var(--epic));
+    text-shadow: 0px 2px 8px rgb(var(--epic));
+  }
+
+  .legendarya {
+    color: rgb(var(--legendary));
+    text-shadow: 0px 2px 8px rgb(var(--legendary));
+  }
+
+  .mythica {
+    color: rgb(var(--mythic));
+    text-shadow: 0px 2px 8px rgb(var(--mythic));
+  }
+</style>
+
 <ModalComponent>
-  <svelte:fragment slot="title">Transfer</svelte:fragment>
+  <svelte:fragment slot="title">Transfer
+    <span
+      class:commona={item?.rarity === 0}
+      class:uncommona={item?.rarity === 1}
+      class:rarea={item?.rarity === 2}
+      class:epica={item?.rarity === 3}
+      class:legendarya={item?.rarity === 4}
+      class:mythica={item?.rarity === 5}>
+      {item?.name || ""}
+    </span></svelte:fragment>
+  <svelte:fragment slot="info">
+    Transfer an item to another player
+  </svelte:fragment>
   <FormComponent on:submit="{onTransfer}">
     <InputComponent
       label="Name"
@@ -91,8 +135,8 @@
       on:input="{onInput}"/>
 
     <TableComponent items="{[
-      ["BALANCE", receipt.owned],
-      ["REMAINING", receipt.remaining]
+      ["Balance", receipt.owned],
+      ["Remaining balance", receipt.remaining]
     ]}"/>
 
     <svelte:fragment slot="submit">

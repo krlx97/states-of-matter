@@ -186,7 +186,7 @@ const reloadUser = async (): Promise<void> => {
           theItems.push({
             id: BigInt(id),
             balance: balance.balance,
-            supply: /*await somTokens["totalSupply(uint256)"](id)*/0n
+            supply: await somTokens["totalSupply(uint256)"](id)/*0n*/
           });
         }
       }
@@ -280,7 +280,7 @@ const reloadUser = async (): Promise<void> => {
           theItems.push({
             id: BigInt(id),
             balance: 0n,
-            supply: 0n
+            supply: await somTokens["totalSupply(uint256)"](id)
           });
         }
       }

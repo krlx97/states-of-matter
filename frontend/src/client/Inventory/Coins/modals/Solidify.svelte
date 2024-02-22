@@ -91,8 +91,8 @@
       on:input="{onInput}"/>
 
     <TableComponent items="{[
-      ["BALANCE", receipt.staked, "enrg"],
-      ["REMAINING", receipt.remaining, "enrg"]
+      ["Balance", receipt.staked, "enrg"],
+      ["Remaining balance", receipt.remaining, "enrg"]
     ]}"/>
 
     <svelte:fragment slot="submit">

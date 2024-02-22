@@ -7,6 +7,7 @@
   import ExploreEssenceComponent from "./modals/ExploreEssence.svelte";
   import SolidifyComponent from "./modals/Solidify.svelte";
   import TransferComponent from "./modals/Transfer.svelte";
+    import Approvals from "./modals/Approval.svelte";
 
   const onExploreCrystals = (): void => {
     modalService.open(ExploreCrystalsComponent);
@@ -42,18 +43,35 @@
     modalService.open(TransferComponent, {id: 2n});
     soundService.play("click");
   };
+  const onApprovalsCrystals = (): void => {
+    modalService.open(Approvals, {id: 1n});
+    soundService.play("click");
+  };
+
+  const onApprovalsEnergy = (): void => {
+    modalService.open(Approvals, {id: 3n});
+    soundService.play("click");
+  };
+  const onApprovalsEssence = (): void => {
+    modalService.open(Approvals, {id: 2n});
+    soundService.play("click");
+  };
 
   const coins = [{
     name: "Etheric Essence",
     ticker: "ees",
-    menuItems: [["EXPLORE", onExploreEssence]]
+    menuItems: [
+      ["EXPLORE", onExploreEssence],
+      ["APPROVALS", onApprovalsEssence]
+    ]
   }, {
     name: "Etheric Crystals",
     ticker: "ecr",
     menuItems: [
       ["EXPLORE", onExploreCrystals],
       ["TRANSFER", onTransferCrystals],
-      ["ENERGIZE", onEnergize]
+      ["ENERGIZE", onEnergize],
+      ["APPROVALS", onApprovalsCrystals]
     ]
   }, {
     name: "Etheric Energy",
@@ -61,7 +79,8 @@
     menuItems: [
       ["EXPLORE", onExploreEnergy],
       ["TRANSFER", onTransferEnergy],
-      ["SOLIDIFY", onSolidify]
+      ["SOLIDIFY", onSolidify],
+      ["APPROVALS", onApprovalsEnergy]
     ]
   }];
 </script>

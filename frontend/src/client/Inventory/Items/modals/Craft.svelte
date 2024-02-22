@@ -81,13 +81,57 @@
 
     $formStore.isLoading = false;
   };
+
 </script>
 
+<style>
+.commona {
+    color: rgb(var(--common));
+    text-shadow: 0px 2px 8px rgb(var(--common));
+  }
+
+  .uncommona {
+    color: rgb(var(--uncommon));
+    text-shadow: 0px 2px 8px rgb(var(--uncommon));
+  }
+
+  .rarea {
+    color: rgb(var(--rare));
+    text-shadow: 0px 2px 8px rgb(var(--rare));
+  }
+
+  .epica {
+    color: rgb(var(--epic));
+    text-shadow: 0px 2px 8px rgb(var(--epic));
+  }
+
+  .legendarya {
+    color: rgb(var(--legendary));
+    text-shadow: 0px 2px 8px rgb(var(--legendary));
+  }
+
+  .mythica {
+    color: rgb(var(--mythic));
+    text-shadow: 0px 2px 8px rgb(var(--mythic));
+  }
+</style>
+
 <ModalComponent>
-  <svelte:fragment slot="title">Craft {item?.name || ""}</svelte:fragment>
+  <svelte:fragment slot="title">
+    Craft
+    <span
+      class:commona={item?.rarity === 0}
+      class:uncommona={item?.rarity === 1}
+      class:rarea={item?.rarity === 2}
+      class:epica={item?.rarity === 3}
+      class:legendarya={item?.rarity === 4}
+      class:mythica={item?.rarity === 5}>
+      {item?.name || ""}
+    </span>
+  </svelte:fragment>
 
   <svelte:fragment slot="info">
-    Burn Etheric Essence to craft items.
+    Spend Etheric Essence to craft specified amount of items.
   </svelte:fragment>
 
   <svelte:fragment slot="content">
@@ -100,10 +144,10 @@
         on:input="{onInput}"/>
 
       <TableComponent items="{[
-        ["PER ITEM", eesPrice, "ees"],
-        ["TOTAL", receipt.price, "ees"],
-        ["BALANCE", receipt.balance, "ees"],
-        ["REMAINING", receipt.remaining, "ees"],
+        ["Item price", eesPrice, "ees"],
+        ["Total price", receipt.price, "ees"],
+        ["Balance", receipt.balance, "ees"],
+        ["Remaining balance", receipt.remaining, "ees"]
       ]}"/>
 
       <svelte:fragment slot="submit">

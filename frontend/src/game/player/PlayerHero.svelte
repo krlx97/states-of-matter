@@ -1,13 +1,14 @@
 <script lang="ts">
+  import {onMount} from "svelte";
   import {floatingTextStore, gameStore, nodeStore} from "stores";
   import {CardComponent} from "ui";
-    import FloatingText from "../FloatingText.svelte";
-    import { onMount } from "svelte";
+  import FloatingText from "../FloatingText.svelte";
 
-let damageDealtElement: HTMLDivElement;
+  let damageDealtElement: HTMLDivElement;
   let fieldElement: HTMLDivElement;
+  $: card = $gameStore.player.field.hero;
 
-onMount((): void => {
+  onMount((): void => {
     $nodeStore.player.hero = fieldElement;
     $nodeStore.player.heroDamage = damageDealtElement;
   });
@@ -19,7 +20,7 @@ onMount((): void => {
     z-index: 0;
   }
 
-.damage-dealt {
+  .damage-dealt {
     position: absolute;
     top: 0;
     height: 100%;
@@ -40,6 +41,8 @@ onMount((): void => {
   {#if $floatingTextStore.player.hero}
     <FloatingText field="hero"/>
   {/if}
-  <CardComponent card={$gameStore.player.field.hero}/>
+  {#key $gameStore.player.field.hero.id}
+    <CardComponent {card}/>
+  {/key}
   <div class="damage-dealt" bind:this={damageDealtElement}></div>
 </div>

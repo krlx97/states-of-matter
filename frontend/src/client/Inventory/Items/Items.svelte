@@ -1,11 +1,27 @@
 <script lang="ts">
   import {items} from "@som/shared/data";
-  import {SelectComponent} from "ui";
+  import {ButtonComponent, LinkComponent, SelectComponent} from "ui";
   import ItemComponent from "./Item.svelte";
+    import { modalService, soundService } from "services";
+    import Unlock from "./modals/Unlock.svelte";
+    import { inventoryStore } from "stores";
+
+const inDevelopment = [
+    111300, 111400, 111500, 111600, 111700, 111800,
+    113000, 113100, 113200, 114000, 114100, 114200,
+    116300, 116400, 116500, 116600, 116700, 116800,
+    118000, 118100, 118200, 119000, 119100, 119200,
+    121300, 121400, 121500, 121600, 121700, 121800,
+    123000, 123100, 123200, 124000, 124100, 124200
+  ];
+  let currentSort = "Initial";
+  let sortAscending = true;
 
   let selectedRarity = "All";
   let selectedType = "All";
-  let filteredItems = [...items];
+    const x = items.filter((itm) => !inDevelopment.includes(itm.id));
+
+  let filteredItems = x;
   let scrollTimeout: NodeJS.Timeout;
   let inc = 0;
 
@@ -21,7 +37,7 @@
   };
 
   const onFilterItems = (): void => {
-    filteredItems = [...items]
+    filteredItems = x
       .filter((item) => {
         if (selectedRarity === "All") {
           return true;
@@ -58,6 +74,82 @@
           }
         }
       });
+  };
+
+  const onSortInitial = (): void => {
+    currentSort = "Initial";
+    sortAscending = true;
+    filteredItems = filteredItems.sort((a, b) => a.id - b.id);
+
+    soundService.play("click");
+  };
+
+  const onSortBalance = (): void => {
+    if (currentSort === "Balance") {
+      sortAscending = !sortAscending;
+    } else {
+      sortAscending = true;
+      currentSort = "Balance";
+    }
+
+    filteredItems = filteredItems.sort((a, b) => {
+      if (a.rarity === 0 && b.rarity !== 0) {
+        return 1; // Common rarity (0) always comes after others
+      }
+      if (b.rarity === 0 && a.rarity !== 0) {
+        return -1; // Common rarity (0) always comes after others
+      }
+      if (a.rarity === 0 && b.rarity === 0) {
+        return 0; // Both are common rarity, leave them as is
+      }
+
+      let aInventory = $inventoryStore.items.find((item): boolean => item.id === BigInt(a.id));
+      let bInventory = $inventoryStore.items.find((item): boolean => item.id === BigInt(b.id));
+
+      if (!aInventory || !bInventory) {
+        return 0;
+      }
+
+      return sortAscending ? Number(aInventory.balance - bInventory.balance) : Number(bInventory.balance - aInventory.balance);
+    });
+
+    soundService.play("click");
+  };
+
+  const onSortSupply = (): void => {
+    if (currentSort === "Supply") {
+      sortAscending = !sortAscending;
+    } else {
+      sortAscending = true;
+      currentSort = "Supply";
+    }
+
+    filteredItems = filteredItems.sort((a, b) => {
+      if (a.rarity === 0 && b.rarity !== 0) {
+        return 1; // Common rarity (0) always comes after others
+      }
+      if (b.rarity === 0 && a.rarity !== 0) {
+        return -1; // Common rarity (0) always comes after others
+      }
+      if (a.rarity === 0 && b.rarity === 0) {
+        return 0; // Both are common rarity, leave them as is
+      }
+
+      let aInventory = $inventoryStore.items.find((item): boolean => item.id === BigInt(a.id));
+      let bInventory = $inventoryStore.items.find((item): boolean => item.id === BigInt(b.id));
+
+      if (!aInventory || !bInventory) {
+        return 0;
+      }
+
+      return sortAscending ? Number(aInventory.supply - bInventory.supply) : Number(bInventory.supply - aInventory.supply);
+    });
+
+    soundService.play("click");
+  };
+
+  const onRandomItem = (): void => {
+    modalService.open(Unlock);
   };
 </script>
 
@@ -97,36 +189,61 @@
   }
 
   .nav {
+    width: 100%;
+    /* margin: 0 auto; */
     display: flex;
-    gap: var(--md);
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 calc(var(--md) * 2);
+    box-sizing: border-box;
   }
 </style>
 
 <div class="items">
   <div class="nav">
-    <SelectComponent
-      values="{[
-        "All",
-        "Common",
-        "Uncommon",
-        "Rare",
-        "Epic",
-        "Legendary",
-        "Mythic",
-      ]}"
-      label="Rarity"
-      bind:selected="{selectedRarity}"
-      on:change="{onFilterItems}"/>
-    <SelectComponent
-      values="{[
-        "All",
-        "Avatar",
-        "Banner",
-        "Skin"
-      ]}"
-      label="Type"
-      bind:selected="{selectedType}"
-      on:change="{onFilterItems}"/>
+    <div style="display: flex; gap: var(--md);">
+      <SelectComponent
+        values="{[
+          "All",
+          "Common",
+          "Uncommon",
+          "Rare",
+          "Epic",
+          "Legendary",
+          "Mythic",
+        ]}"
+        label="Rarity"
+        bind:selected="{selectedRarity}"
+        on:change="{onFilterItems}"/>
+      <SelectComponent
+        values="{[
+          "All",
+          "Avatar",
+          "Banner",
+          "Skin"
+        ]}"
+        label="Type"
+        bind:selected="{selectedType}"
+        on:change="{onFilterItems}"/>
+    </div>
+    <div style="display: flex; gap: var(--md);">
+      <LinkComponent color="{currentSort === "Initial" ? "primary" : "white"}" on:click="{onSortInitial}">
+        Initial
+      </LinkComponent>
+      <LinkComponent color="{currentSort === "Balance" ? "primary" : "white"}" on:click="{onSortBalance}">
+        Balance
+        {#if currentSort === "Balance"}
+          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
+        {/if}
+      </LinkComponent>
+      <LinkComponent color="{currentSort === "Supply" ? "primary" : "white"}" on:click="{onSortSupply}">
+        Supply
+        {#if currentSort === "Supply"}
+          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
+        {/if}
+      </LinkComponent>
+    </div>
+    <ButtonComponent on:click={onRandomItem}>CRAFT RANDOM</ButtonComponent>
   </div>
 
   <div class="container" on:scroll="{onScroll}">

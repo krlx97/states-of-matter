@@ -1,7 +1,11 @@
 import {PlayerStatus, QueueId} from "@som/shared/enums";
 import {modalService, socketService} from "services";
-import {gameStore, playerStore} from "stores";
+import {gameStore, intervals, intervalsStore, nodeStore, playerStore} from "stores";
 import GameStartedComponent from "../../../client/Play/modals/GameStarted.svelte";
+import { get } from "svelte/store";
+
+const TURN_DURATION_MS = 90000;
+
 
 const startGame = (): void => {
   const {socket} = socketService;
@@ -28,6 +32,23 @@ const startGame = (): void => {
 
       socket.emit("updateFriend");
     }, 400);
+
+    const endTurnTime = game.endTurnTime;
+
+    clearInterval(intervals[0]);
+
+    intervals[0] = setInterval(() => {
+      const time = Date.now();
+      let rem = endTurnTime - time;
+      let x = (rem / TURN_DURATION_MS) * 100;
+
+      if (time <= endTurnTime) {
+        nodeStore.update((store) => {
+          store.barHeight = `${x}%`;
+          return store;
+        });
+      }
+    }, 1000 / 60);
   });
 };
 

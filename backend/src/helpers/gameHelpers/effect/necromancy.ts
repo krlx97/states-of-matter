@@ -13,39 +13,13 @@ interface Necromancy {
   player: GamePlayer;
   playerMinion: GameMinionCard;
   playerMinionField: MinionField;
-  isPositive: boolean;
 }
 
-const necromancy = (params: Necromancy): Animations => {
-  const {player, playerMinion, playerMinionField, isPositive} = params;
-  const animations: Animations = [];
+const necromancy = {
+  onNormalSummon (params: Necromancy): Animations {
+    const {player, playerMinion, playerMinionField} = params;
+    const animations: Animations = [];
 
-  if (isPositive) {
-    playerMinion.health.current += 2;
-    playerMinion.damage.current += 2;
-
-    insertBuff(playerMinion, EffectId.NECROMANCY, {
-      health: 2,
-      damage: 2
-    });
-
-    animations.push({
-      type: "FLOATING_TEXT",
-      field: playerMinionField,
-      text: "NECROMANCY",
-      name: player.name
-    }, {
-      type: "DAMAGE",
-      name: player.name,
-      field: playerMinionField,
-      increment: 2
-    }, {
-      type: "HEALTH",
-      name: player.name,
-      field: playerMinionField,
-      increment: 2
-    });
-  } else {
     playerMinion.health.current -= 2;
     playerMinion.damage.current -= 2;
 
@@ -63,16 +37,51 @@ const necromancy = (params: Necromancy): Animations => {
       type: "DAMAGE",
       name: player.name,
       field: playerMinionField,
-      increment: -2
+      increment: undefined,
+      decrement: 2,
     }, {
       type: "HEALTH",
       name: player.name,
       field: playerMinionField,
-      increment: -2
+      increment: undefined,
+      decrement: 2,
     });
-  }
 
-  return animations;
+    return animations;
+  },
+  onSpecialSummon (params: Necromancy): Animations {
+    const {player, playerMinion, playerMinionField} = params;
+    const animations: Animations = [];
+
+    playerMinion.health.current += 2;
+    playerMinion.damage.current += 2;
+
+    insertBuff(playerMinion, EffectId.NECROMANCY, {
+      health: 2,
+      damage: 2
+    });
+
+    animations.push({
+      type: "FLOATING_TEXT",
+      field: playerMinionField,
+      text: "NECROMANCY",
+      name: player.name
+    }, {
+      type: "DAMAGE",
+      name: player.name,
+      field: playerMinionField,
+      increment: 2,
+      decrement: undefined,
+    }, {
+      type: "HEALTH",
+      name: player.name,
+      field: playerMinionField,
+      increment: 2,
+      decrement: undefined,
+    });
+
+    return animations;
+  }
 };
 
 export {necromancy};

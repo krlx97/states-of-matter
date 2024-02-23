@@ -12,28 +12,33 @@
   const REWARD_PER_MS = 1000000n;
   let chartCanvas: HTMLCanvasElement;
   let val2: any;
+  let isNoDataYet = false;
 
   onMount((): void => {
     deployTimestamp = BigInt($inventoryStore.deployTimestamp * 1000n);
     const eenrg = $snapshotsStore.find((s) => s.name === "enrg");
-    const labels = eenrg.snapshots.map(({date}) => new Date(date).toLocaleDateString());
-    const data = eenrg.snapshots.map(({supply}) => formatUnits(supply));
 
-    console.log({labels, data});
+    if (eenrg) {
+      const labels = eenrg.snapshots.map(({date}) => new Date(date).toLocaleDateString());
+      const data = eenrg.snapshots.map(({supply}) => formatUnits(supply));
 
-    new Chart(chartCanvas, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            label: "Supply",
-            data,
-            borderColor: "rgb(121, 108, 255)"
-          }
-        ]
-      }
-    });
+      new Chart(chartCanvas, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Supply",
+              data,
+              borderColor: "rgb(121, 108, 255)"
+            }
+          ]
+        }
+      });
+    } else {
+      isNoDataYet = true;
+      chartCanvas.style.display = "none";
+    }
 
     int = setInterval((): void => {
       const timestamp = BigInt(Date.now());
@@ -59,6 +64,14 @@
     align-items: center;
     gap: 4px;
   }
+
+  .center {
+    width: 640px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>
 
 <ModalComponent width="640px">
@@ -72,6 +85,9 @@
     </div>
 
     <canvas bind:this="{chartCanvas}"></canvas>
+    {#if isNoDataYet}
+      <div class="center">There are no snapshots yet...</div>
+    {/if}
 
     <TableComponent items="{[
       ["Supply", $inventoryStore.total.enrg, "enrg"]

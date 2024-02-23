@@ -17,8 +17,6 @@
   const icon = id === 1n ? "ecr" : "enrg";
   let balance = id === 1n ? $inventoryStore.ecr : $inventoryStore.enrg;
 
-  console.log(balance);
-
   const formStore = formService.create({
     name: ["", "name"],
     amount: ["", "currency", balance]
@@ -81,10 +79,10 @@
 
 <ModalComponent>
 
-  <svelte:fragment slot="title">Transfer</svelte:fragment>
+  <svelte:fragment slot="title">Transfer {name}</svelte:fragment>
 
   <svelte:fragment slot="info">
-    Transfer {name} to another player.
+    Transfer tokens to another player.
   </svelte:fragment>
 
   <FormComponent on:submit="{onSubmit}">
@@ -105,7 +103,7 @@
 
     <TableComponent items="{[
       ["Balance", receipt.balance, icon],
-      ["Remaining", receipt.remaining, icon]
+      ["Remaining balance", receipt.remaining, icon]
     ]}"/>
 
     <svelte:fragment slot="submit">

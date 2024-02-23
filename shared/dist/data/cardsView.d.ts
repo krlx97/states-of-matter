@@ -10,7 +10,6 @@ declare const cardsView: ({
         name: string;
         description: ColorTooltip;
     };
-    skins: never[];
     ability?: undefined;
 } | {
     id: CardId;
@@ -20,7 +19,6 @@ declare const cardsView: ({
         name: string;
         description: ColorTooltip;
     };
-    skins: never[];
     ability: {
         name: string;
         description: ColorTooltip;
@@ -33,20 +31,6 @@ declare const cardsView: ({
         name: string;
         description: string;
     };
-    skins: never[];
-    ability: {
-        name: string;
-        description: string;
-    };
-} | {
-    id: CardId;
-    name: string;
-    lore: string;
-    effect: {
-        name: string;
-        description: string;
-    };
-    skins: never[];
     ability?: undefined;
 })[];
 export { cardsView };

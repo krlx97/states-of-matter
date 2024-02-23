@@ -2,61 +2,39 @@
   import {items} from "@som/shared/data";
   import {ethersService, formService, soundService} from "services";
   import {modalStore, inventoryStore} from "stores";
-  import { onMount } from "svelte";
-  import {CurrencyComponent, InputComponent, FormComponent, FormSubmitComponent, ModalComponent, TableComponent} from "ui";
+
+  import {
+    InputComponent,
+    FormComponent,
+    FormSubmitComponent,
+    ModalComponent,
+    TableComponent
+  } from "ui";
 
   const {id} = $modalStore.data;
-  const item = items.find((item) => item.id === id);
-  const itemWallet = $inventoryStore.items.find((item) => item.id === BigInt(id));
-  let ecrPrice = 0n;
+  const item = items.find((item): boolean => item.id === id);
   let eesPrice = 0n;
 
-  // ecrPrice = 100n * 10n ** 18n;
-
-  if (!item) {
-    eesPrice = 100n * 10n ** 18n;
-    ecrPrice = 100n * 10n ** 18n;
-  } else {
-    if (item.rarity === 1) {
-      eesPrice = 200n * 10n ** 18n;
-      ecrPrice = 200n * 10n ** 18n;
-    }
-    if (item.rarity === 2) {
-      eesPrice = 800n * 10n ** 18n;
-      ecrPrice = 400n * 10n ** 18n;
-
-    }
-    if (item.rarity === 3) {
-      eesPrice = 3200n * 10n ** 18n;
-      ecrPrice = 600n * 10n ** 18n;
-
-    }
-    if (item.rarity === 4) {
-      eesPrice = 12800n * 10n ** 18n;
-      ecrPrice = 800n * 10n ** 18n;
-
-    }
-    if (item.rarity === 5) {
-      eesPrice = 51200n * 10n ** 18n;
-      ecrPrice = 1000n * 10n ** 18n;
-    }
-  }
-  onMount((): void => {
-  });
-
-  const getPrice = (): number => {
-    return 100;
+  if (item?.rarity === 1) {
+    eesPrice = 200n * 10n ** 18n;
+  } else if (item?.rarity === 2) {
+    eesPrice = 800n * 10n ** 18n;
+  } else if (item?.rarity === 3) {
+    eesPrice = 3200n * 10n ** 18n;
+  } else if (item?.rarity === 4) {
+    eesPrice = 12800n * 10n ** 18n;
+  } else if (item?.rarity === 5) {
+    eesPrice = 51200n * 10n ** 18n;
   }
 
   const formStore = formService.create({
-    amount: ["", "craft2", $inventoryStore.ees, eesPrice, $inventoryStore.ecr, ecrPrice],
+    amount: ["", "craft", $inventoryStore.ees, eesPrice],
   });
 
   const receipt = {
     price: 0n,
-    priceEcr: 0n,
-    remaining: $inventoryStore.ees,
-    remainingEcr: $inventoryStore.ecr
+    balance: $inventoryStore.ees,
+    remaining: $inventoryStore.ees
   };
 
   const onInput = (): void => {
@@ -64,29 +42,16 @@
 
     if (!$formStore.fields.amount.error) {
       receipt.price = eesPrice * BigInt($formStore.fields.amount.value);
-      receipt.priceEcr = ecrPrice * BigInt($formStore.fields.amount.value);
       receipt.remaining = $inventoryStore.ees - BigInt(receipt.price);
-      receipt.remainingEcr = $inventoryStore.ecr - receipt.priceEcr;
     } else {
       receipt.price = 0n;
-      receipt.priceEcr = 0n;
       receipt.remaining = $inventoryStore.ees;
-      receipt.remainingEcr = $inventoryStore.ecr;
     }
   };
 
   const onSetMax = (): void => {
     soundService.play("click");
-
-    const max1 = $inventoryStore.ecr / ecrPrice;
-    const max2 = $inventoryStore.ees / eesPrice;
-
-    if (max1 > max2) {
-      $formStore.fields.amount.value = `${max2}`;
-    } else {
-      $formStore.fields.amount.value = `${max1}`;
-    }
-
+    $formStore.fields.amount.value = `${$inventoryStore.ees / eesPrice}`;
     onInput();
   };
 
@@ -95,21 +60,11 @@
 
     $formStore.isLoading = true;
 
-    const {somGame} = ethersService.keys;
-
-    if ($inventoryStore.approvals.ecr < receipt.priceEcr + 1n) {
-      await ethersService.transact(
-        "ethericCrystals",
-        "approve",
-        [somGame, receipt.priceEcr + 1n]
-      );
-    }
-
     if ($inventoryStore.approvals.ees < receipt.price + 1n) {
       await ethersService.transact(
         "ethericEssence",
         "approve",
-        [somGame, receipt.price + 1n]
+        [ethersService.keys.somGame, receipt.price + 1n]
       );
     }
 
@@ -126,13 +81,57 @@
 
     $formStore.isLoading = false;
   };
+
 </script>
 
+<style>
+.commona {
+    color: rgb(var(--common));
+    text-shadow: 0px 2px 8px rgb(var(--common));
+  }
+
+  .uncommona {
+    color: rgb(var(--uncommon));
+    text-shadow: 0px 2px 8px rgb(var(--uncommon));
+  }
+
+  .rarea {
+    color: rgb(var(--rare));
+    text-shadow: 0px 2px 8px rgb(var(--rare));
+  }
+
+  .epica {
+    color: rgb(var(--epic));
+    text-shadow: 0px 2px 8px rgb(var(--epic));
+  }
+
+  .legendarya {
+    color: rgb(var(--legendary));
+    text-shadow: 0px 2px 8px rgb(var(--legendary));
+  }
+
+  .mythica {
+    color: rgb(var(--mythic));
+    text-shadow: 0px 2px 8px rgb(var(--mythic));
+  }
+</style>
+
 <ModalComponent>
-  <svelte:fragment slot="title">Craft {item?.name || ""}</svelte:fragment>
+  <svelte:fragment slot="title">
+    Craft
+    <span
+      class:commona={item?.rarity === 0}
+      class:uncommona={item?.rarity === 1}
+      class:rarea={item?.rarity === 2}
+      class:epica={item?.rarity === 3}
+      class:legendarya={item?.rarity === 4}
+      class:mythica={item?.rarity === 5}>
+      {item?.name || ""}
+    </span>
+  </svelte:fragment>
 
   <svelte:fragment slot="info">
-    Burn etheric crystals and etheric essence to craft items.
+    Spend Etheric Essence to craft specified amount of items.
   </svelte:fragment>
 
   <svelte:fragment slot="content">
@@ -145,15 +144,10 @@
         on:input="{onInput}"/>
 
       <TableComponent items="{[
-        ["Price per item", eesPrice, "ees"],
+        ["Item price", eesPrice, "ees"],
         ["Total price", receipt.price, "ees"],
-        ["Remaining", receipt.remaining, "ees"],
-      ]}"/>
-
-      <TableComponent items="{[
-        ["Price per item", ecrPrice, "ecr"],
-        ["Total price", receipt.priceEcr, "ecr"],
-        ["Remaining", receipt.remainingEcr, "ecr"],
+        ["Balance", receipt.balance, "ees"],
+        ["Remaining balance", receipt.remaining, "ees"]
       ]}"/>
 
       <svelte:fragment slot="submit">

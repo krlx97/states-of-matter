@@ -31,5 +31,7 @@
 
 <div class="block">
   <div>{name}</div>
-  <ButtonComponent isIcon on:click="{onUnblock}">×</ButtonComponent>
+  <ButtonComponent isIcon on:click="{onUnblock}">
+    <i class="fa-solid fa-times"></i>
+  </ButtonComponent>
 </div>

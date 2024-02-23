@@ -18,7 +18,7 @@ const magic = (animations: any) => {
       store.magic.card = undefined;
       return store;
     });
-  }, 800);
+  }, 3000);
 };
 
 export {magic};

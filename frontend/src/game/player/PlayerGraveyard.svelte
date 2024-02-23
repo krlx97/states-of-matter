@@ -36,7 +36,7 @@
 
   .graveyard__cards {
     position: absolute;
-    bottom: -48px;
+    top: -48px;
     left: 50%;
     width: 75%;
     padding: var(--sm);
@@ -55,7 +55,9 @@
   bind:this="{graveyardElement}"
   on:click="{onViewGraveyard}">
   {#if $gameStore.player.graveyard.length}
-    <CardComponent {card}/>
+    {#key card}
+      <CardComponent {card}/>
+    {/key}
   {:else}
     <div class="graveyard-empty">Graveyard</div>
   {/if}

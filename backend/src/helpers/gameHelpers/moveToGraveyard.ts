@@ -24,11 +24,11 @@ const moveToGraveyard = (player: GamePlayer, minion: GameMinionCard, field: Mini
   });
 
   if (hasRevengeBuff) {
-    animations.push(...revenge({player, field}));
+    animations.push(...revenge.onDeath({player, playerMinionField: field}));
   }
 
   if (hasUnityBuff) {
-    animations.push(...unity({player}));
+    animations.push(...unity.onDeath({player}));
   }
 
   return animations;

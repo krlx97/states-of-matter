@@ -6,73 +6,63 @@
   import {ButtonComponent, CurrencyComponent, ModalComponent, PlayerFrameComponent, TextComponent} from "ui";
   import { modalService } from "services";
 
-  const {isWinner, gameType, experience, elo, ecrReward, eesReward} = $modalStore.data;
+  let {
+    isWinner,
+    gameType,
+    experience,
+    elo,
+    playerDaily,
+    eesReward,
+    animations
+  } = $modalStore.data;
+
   let isLevelup = false;
-  let isFinished = false;
-  let isClosable = false;
 
   const onClose = (): void => {
     modalService.close();
   };
 
   onMount((): void => {
-    setTimeout((): void => {
-      const animateValue = (): void => {
-        let sum = 0;
-        let sum2 = 0;
+    let experienceSum = 0;
+    let eloSum = 0;
 
-        const step2 = (): void => {
-          if (elo < 0) { // lost elo
-            $playerStore.elo -= 1;
-            sum2 -= 1;
+    const animateExperience = (): void => {
+      $playerStore.experience += 1;
+      experienceSum += 1;
 
-            if (sum2 > elo) {
-              setTimeout(() => {
-                requestAnimationFrame(step2);
-              }, 100);
-            }
-          } else { // gained elo
-            $playerStore.elo += 1;
-            sum2 += 1;
-
-            if (sum2 < elo) {
-              setTimeout(() => {
-                requestAnimationFrame(step2);
-              }, 100);
-            } else {
-              isFinished = true;
-              setTimeout(() => {isClosable=true;}, 800);
-            }
-          }
-        };
-
-        const step = (): void => {
-          $playerStore.experience += 1;
-          sum += 1;
-
-          if ($playerStore.experience > 1000) {
-            $playerStore.experience = 0;
-            $playerStore.level += 1;
-            isLevelup = true;
-          }
-
-          if (sum < experience) {
-            requestAnimationFrame(step);
-          } else {
-            if (gameType === GameType.RANKED) {
-              requestAnimationFrame(step2);
-            } else {
-              isFinished = true;
-              isClosable=true;
-            }
-          }
-        };
-
-        window.requestAnimationFrame(step);
+      if ($playerStore.experience > 1000) {
+        $playerStore.experience = 0;
+        $playerStore.level += 1;
       }
 
-      animateValue();
-    }, 1000);
+      if (experienceSum < experience) {
+        requestAnimationFrame(animateExperience);
+      }
+    };
+
+    const animateElo = (): void => {
+      if (elo < 0) { // lost elo
+        $playerStore.elo -= 1;
+        eloSum -= 1;
+
+        if (eloSum > elo) {
+          setTimeout((): void => { requestAnimationFrame(animateElo); }, 50);
+        }
+      } else { // gained elo
+        $playerStore.elo += 1;
+        eloSum += 1;
+
+        if (eloSum < elo) {
+          setTimeout((): void => { requestAnimationFrame(animateElo); }, 50);
+        }
+      }
+    };
+
+    requestAnimationFrame(animateExperience);
+
+    if (gameType === GameType.RANKED) {
+      requestAnimationFrame(animateElo);
+    }
   });
 </script>
 
@@ -129,9 +119,18 @@
     </div>
 
     {#if gameType === GameType.CASUAL || gameType === GameType.RANKED}
-      <div>+{experience} experience</div>
+      <div>gained {experience} experience</div>
       {#if gameType === GameType.RANKED}
-        <div>+{elo} elo</div>
+        <div>{isWinner ? "gained" : "lost"} {Math.abs(elo)} elo</div>
+      {/if}
+      {#if playerDaily}
+        <div>Daily task complete!</div>
+      {/if}
+      {#if BigInt(eesReward) > 0n}
+        <div>Level up!</div>
+        <div style="display: flex; align-items: center;">
+          + <CurrencyComponent iconSize="sm" name="ees" number="{eesReward}"/>
+        </div>
       {/if}
     {/if}
 
@@ -143,31 +142,11 @@
         elo="{$playerStore.elo}"
         avatarId="{$playerStore.avatarId}"
         bannerId="{$playerStore.bannerId}"
-        games="{$playerStore.games}"
-      />
+        games="{$playerStore.games}"/>
     {/key}
-
-    {#if isFinished}
-      <div class="levelup">
-        <div class="assets">
-          {#if BigInt(ecrReward) > 0n}
-            <div class="reward-asset" in:fade={{delay: 0, duration: 400}}>
-              <CurrencyComponent iconSize="sm" name="ecr" number="{ecrReward}"/>
-            </div>
-          {/if}
-          {#if BigInt(eesReward) > 0n}
-            <div class="reward-asset" in:fade={{delay: 400, duration: 400}}>
-              <CurrencyComponent iconSize="sm" name="ees" number="{eesReward}"/>
-            </div>
-          {/if}
-        </div>
-      </div>
-    {/if}
   </div>
 
-  {#if isClosable}
-    <div style="display: flex; justify-content: center;">
-      <ButtonComponent on:click="{onClose}">CLOSE</ButtonComponent>
-    </div>
-  {/if}
+  <div style="display: flex; justify-content: center;">
+    <ButtonComponent type="button" on:click="{onClose}">CLOSE</ButtonComponent>
+  </div>
 </ModalComponent>

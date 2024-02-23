@@ -21,7 +21,6 @@
     // if (accountType === "password") {
     //   disabled = $formStore.fields.name.error !== "" || $formStore.fields.password.error !== "";
     // } else {
-    //   console.log($formStore.fields.name.error, selectedAddress);
     //   disabled = $formStore.fields.name.error !== "" || selectedAddress !== undefined
     // }
 

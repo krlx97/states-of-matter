@@ -8,25 +8,42 @@
   let chartElement: HTMLCanvasElement;
   let chart: Chart;
   const items = [["Supply", $inventoryStore.total.ees, "ees"]];
+  let isNoDataYet = false;
 
   onMount((): void => {
     const ees = $snapshotsStore.find((s) => s.name === "ees");
-    const labels = ees.snapshots.map(({date}) => new Date(date).toLocaleDateString());
-    const data = ees.snapshots.map(({supply}) => formatUnits(supply));
 
-    chart = new Chart(chartElement, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Supply",
-          data,
-          borderColor: "rgb(121, 108, 255)"
-        }]
-      }
-    });
+    if (ees) {
+      const labels = ees.snapshots.map(({date}) => new Date(date).toLocaleDateString());
+      const data = ees.snapshots.map(({supply}) => formatUnits(supply));
+
+      chart = new Chart(chartElement, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Supply",
+            data,
+            borderColor: "rgb(121, 108, 255)"
+          }]
+        }
+      });
+    } else {
+      isNoDataYet = true;
+      chartElement.style.display = "none";
+    }
   });
 </script>
+
+<style>
+  .center {
+    width: 640px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
 
 <ModalComponent width="640px">
   <svelte:fragment slot="title">Etheric Essence</svelte:fragment>
@@ -41,6 +58,9 @@
 
   <svelte:fragment slot="content">
     <canvas bind:this="{chartElement}"></canvas>
+     {#if isNoDataYet}
+      <div class="center">There are no snapshots yet...</div>
+    {/if}
     <TableComponent {items}/>
   </svelte:fragment>
 </ModalComponent>

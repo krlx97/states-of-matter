@@ -8,15 +8,15 @@ const health = (animation: any): void => {
   let start: number | undefined;
   let end: number | undefined;
   const player = get(playerStore);
-  const {type, increment, field, name} = animation;
+  const {increment, decrement, field, name} = animation;
 
-  setTimeout(() => {
+  // setTimeout(() => {
     const step = (timestamp: number): void => {
       if (!startTimestamp) {
         startTimestamp = timestamp;
       }
 
-      const progress = Math.min((timestamp - startTimestamp) / 400, 1);
+      const progress = Math.min((timestamp - startTimestamp) / 600, 1);
 
       gameStore.update((store) => {
         let minion: GameMinionCard;
@@ -29,10 +29,10 @@ const health = (animation: any): void => {
 
         if (start === undefined && end === undefined) { // can be 0, so check for === undefined
           start = minion.health.current;
-          if (increment < 0) {
+          if (increment && !decrement) {
             end = minion.health.current + increment;
-          } else {
-            end = minion.health.current - increment;
+          } else if (!increment && decrement) {
+            end = minion.health.current - decrement;
           }
         }
 
@@ -52,7 +52,7 @@ const health = (animation: any): void => {
 
     requestAnimationFrame(step);
     soundService.play("attributeChange");
-  }, 400);
+  // }, 400);
 };
 
 export {health};

@@ -16,9 +16,12 @@
     "mythic" |
     "primary" |
     "success" |
-    "warn";
+    "warn" | "white" | "grey" | "black" = "white";
 
-  export {color};
+  let size: "xs" | "sm" | "md" | "lg" | "xl" = "md";
+  let isBold = false;
+
+  export {color, size, isBold};
 </script>
 
 <style>
@@ -42,9 +45,24 @@
   .primary {color: rgb(var(--primary));}
   .success {color: rgb(var(--success));}
   .warn {color: rgb(var(--warn));}
+
+  .white {color: rgb(var(--white));}
+  .grey {color: rgb(var(--grey));}
+  .black {color: rgb(var(--dark-grey));}
+
+  .xs {font-size: var(--xs);}
+  .sm {font-size: var(--sm);}
+  .md {font-size: var(--md);}
+  .lg {font-size: var(--lg);}
+  .xl {font-size: var(--xl);}
+
+  .isBold {
+    font-weight: bold;
+  }
 </style>
 
 <span
+  class:isBold
   class:neutral="{color === "neutral"}"
   class:solid="{color === "solid"}"
   class:liquid="{color === "liquid"}"
@@ -61,6 +79,14 @@
   class:mythic="{color === "mythic"}"
   class:primary="{color === "primary"}"
   class:success="{color === "success"}"
-  class:warn="{color === "warn"}">
+  class:warn="{color === "warn"}"
+  class:white="{color === "white"}"
+  class:grey="{color === "grey"}"
+  class:black="{color === "black"}"
+  class:xs="{size === "xs"}"
+  class:sm="{size === "sm"}"
+  class:md="{size === "md"}"
+  class:lg="{size === "lg"}"
+  class:xl="{size === "xl"}">
   <slot/>
 </span>

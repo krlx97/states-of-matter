@@ -1,35 +1,30 @@
-import type { BrowserProvider, Contract, JsonRpcSigner } from "ethers";
-import { writable } from "svelte/store";
+import {writable} from "svelte/store";
+import type {Contract} from "ethers";
 
 interface EthersStore {
-  // provider: BrowserProvider;
-  // signer: JsonRpcSigner | undefined;
-  // chainId: bigint;
   accounts: Array<string>;
   chainId: bigint;
+  isLoaded: boolean;
   contracts: {
-    ethericEssence: Contract;
-    ethericCrystals: Contract;
-    ethericEnergy: Contract;
-    somTokens: Contract;
-    somGame: Contract;
+    ethericEssence: Contract | undefined;
+    ethericCrystals: Contract | undefined;
+    ethericEnergy: Contract | undefined;
+    somTokens: Contract | undefined;
+    somGame: Contract | undefined;
   };
-  // isValid: boolean;
 }
 
-const ethersStore = writable<EthersStore>({
-  // provider: {} as BrowserProvider,
-  // signer: undefined,
+let ethersStore = writable<EthersStore>({
   accounts: [],
   chainId: 0n,
+  isLoaded: false,
   contracts: {
-    ethericEssence: {} as Contract,
-    ethericCrystals: {} as Contract,
-    ethericEnergy: {} as Contract,
-    somTokens: {} as Contract,
-    somGame: {} as Contract
-  },
-  // isValid: false,
+    ethericEssence: undefined,
+    ethericCrystals: undefined,
+    ethericEnergy: undefined,
+    somTokens: undefined,
+    somGame: undefined
+  }
 });
 
 export {ethersStore};

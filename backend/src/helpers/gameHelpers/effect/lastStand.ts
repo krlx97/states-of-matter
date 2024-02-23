@@ -13,18 +13,11 @@ const lastStand = (params: LastStand): Animations => {
   const {opponent, opponentMinion, opponentMinionField, opponentTrap} = params;
   const animations: Animations = [];
 
-  opponentMinion.buffs.push({
-    id: EffectId.TAUNT,
-    data: {}
-  });
-
   animations.push({
     type: "TRAP",
     name: opponent.name,
     card: opponentTrap
-  });
-
-  animations.push({
+  }, {
     type: "HEALTH",
     field: opponentMinionField,
     name: opponent.name,
@@ -39,6 +32,11 @@ const lastStand = (params: LastStand): Animations => {
     field: opponentMinionField,
     name: opponent.name,
     text: `+ Taunt`
+  });
+
+  opponentMinion.buffs.push({
+    id: EffectId.TAUNT,
+    data: {}
   });
 
   opponentMinion.health.current = 1;

@@ -7,6 +7,7 @@ import {ManaAnimation} from "./ManaAnimation.js";
 import {ManaCostAnimation} from "./ManaCostAnimation.js";
 import {ShakeAnimation} from "./ShakeAnimation.js";
 import {TrapAnimation} from "./TrapAnimation.js";
+import {SummonAnimation} from "./SummonAnimation.js";
 
 type Animation =
   DamageAnimation |
@@ -17,7 +18,8 @@ type Animation =
   ManaAnimation |
   ManaCostAnimation |
   ShakeAnimation |
-  TrapAnimation;
+  TrapAnimation |
+  SummonAnimation;
 
 type Animations = Array<Animation>;
 

@@ -52,12 +52,13 @@
 </style>
 
 <div class="notifications">
-  {#each $notificationsStore as {id, color, message}}
+  {#each $notificationsStore as {id, color, message} (id)}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
       class="notification"
       in:fly={inFly}
+      out:fade
       class:isPrimary="{color === "primary"}"
       class:isSuccess="{color === "success"}"
       class:isWarn="{color === "warn"}" on:click="{() => onCloseNotification({id, color, message})}">

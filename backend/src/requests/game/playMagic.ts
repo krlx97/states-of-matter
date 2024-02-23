@@ -89,7 +89,7 @@ const playMagic: SocketRequest = (socket, error): void => {
           return error("Rebirth negated.");
         }
 
-        animations.push(...effect.rebirth({player, minion: toRevive, field}));
+        animations.push(...effect.rebirth({player, playerMinion: toRevive, playerMinionField: field}));
       }
 
       if (card.effect === EffectId.DIMINISH) {

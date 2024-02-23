@@ -8,7 +8,6 @@
   const {socket} = socketService;
 
   let selectedSkin = $playerStore.skins[0];
-  console.log(selectedSkin);
   let item = items[0];
   let isSelected = selectedSkin.skinId === item.id;
   let skin: any;

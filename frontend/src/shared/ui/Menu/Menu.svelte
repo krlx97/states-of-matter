@@ -22,7 +22,7 @@
     gap: var(--md);
     background-color: rgb(31, 31, 31);
     /* transform: translateX(-50%); */
-    z-index: 101;
+    z-index: 105;
     cursor: initial;
     padding: var(--md);
     box-sizing: border-box;

@@ -62,17 +62,14 @@
         requests: [],
         blocked: []
       },
-      quests: {
+      tasks: {
         daily: false,
         weekly: 0,
         dailyAlternative: 0
       },
       rewards: {
-        chests: "0",
         ecr: "0",
-        ees: "0",
-        shards: "0",
-        skins: "0"
+        ees: "0"
       },
       tutorial: {
         deckBuilder: false,
@@ -195,21 +192,23 @@
     border-bottom-width: 1px;
     border-image: linear-gradient(
       90deg,
-      rgba(63, 63, 63, 1) 0%,
-      rgba(255, 255, 255, 1) 50%,
-      rgba(63, 63, 63, 1) 100%
+      rgba(var(--dark-grey), 0) 0%,
+      rgba(var(--grey), 0.333) 50%,
+      rgba(var(--dark-grey), 0) 100%
     ) 1;
   }
 </style>
 
 <div class="player">
-  <PlayerFrameComponent
-    {actions}
-    name="{$playerStore.name}"
-    experience="{$playerStore.experience}"
-    level="{$playerStore.level}"
-    elo="{$playerStore.elo}"
-    avatarId="{$playerStore.avatarId}"
-    bannerId="{$playerStore.bannerId}"
-    games="{$playerStore.games}"/>
+  {#key $playerStore}
+    <PlayerFrameComponent
+      {actions}
+      name="{$playerStore.name}"
+      experience="{$playerStore.experience}"
+      level="{$playerStore.level}"
+      elo="{$playerStore.elo}"
+      avatarId="{$playerStore.avatarId}"
+      bannerId="{$playerStore.bannerId}"
+      games="{$playerStore.games}"/>
+  {/key}
 </div>

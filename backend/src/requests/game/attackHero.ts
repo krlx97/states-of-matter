@@ -146,14 +146,9 @@ const attackHero: SocketRequest = (socket, error): void => {
         playerBField: "hero"
       });
 
-      opponentHero.health.current -= playerMinion.damage.current;
-
-      animations.push({
-        type: "HEALTH",
-        field: "hero",
-        name: opponent.name,
-        increment: -playerMinion.damage.current
-      });
+      animations.push(
+        ...gameHelpers.deductHeroHealth(opponent, playerMinion.damage.current)
+      );
     }
 
     if (await gameHelpers.isGameOver($game, animations)) {

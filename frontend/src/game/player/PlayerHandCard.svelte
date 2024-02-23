@@ -5,6 +5,7 @@
   import {CardComponent} from "ui";
   import type {GameMagicCard, GameMinionCard, GameTrapCard} from "@som/shared/types/mongo";
     import EffectSelect from "../modals/EffectSelect.svelte";
+    import { slide } from "svelte/transition";
 
   const {socket} = socketService;
   let card: GameMagicCard | GameMinionCard | GameTrapCard;
@@ -31,7 +32,7 @@
         $selectedCardStore.hand = card;
       }
 
-      if (card.id === CardId.GAMBIT || card.id === CardId.ANVIL) {
+      if (card.id === CardId.GAMBIT || card.id === CardId.ANVIL || card.id === CardId.PACT) {
         socket.emit("playMagic", {gid});
       }
 
@@ -62,6 +63,6 @@
   }
 </style>
 
-<div class="hand-card">
+<div class="hand-card" >
   <CardComponent {isSelected} {card} on:click="{onSelectCard}"/>
 </div>

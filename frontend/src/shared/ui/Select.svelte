@@ -15,7 +15,7 @@
 <style>
 
   select {
-    height: 50px;
+    height: 48px;
     width: 100%;
     /* Since input is 48px height and text is 16px vertical centered, there is 16px "padding" on top and bot. */
     /* We therefore don't set top and bottom padding */
@@ -24,7 +24,7 @@
     padding: 0 var(--md) 0 var(--md);
     display: block;
     background-color: rgb(var(--dark-grey));
-    border: 1px solid rgb(var(--grey));
+    border: 1px solid rgba(var(--grey), var(--opacity-sm));
     border-radius: 8px;
     box-sizing: border-box;
     color: white;
@@ -32,31 +32,27 @@
     /* font-family: "Nunito"; */
     /* font-size: var(--font-md); */
     letter-spacing: 4px;
-    transition:
-      border-color 0.2s cubic-bezier(var(--ease-in-out-quad)),
-      color 0.2s cubic-bezier(var(--ease-in-out-quad));
+    transition: border-color 333ms cubic-bezier(var(--ease-in-out-quad));
     outline: 0;
+  }
+
+  select:hover {
+    border-color: rgba(var(--white), var(--opacity-full));
+    cursor: pointer;
   }
 
   label {
     position: absolute;
-    /* 8px top padding from form__field, +16px text padding */
     top: -8px;
-    /* again, simulate the 16px "padding", but since label is absolute border 1px doesnt count */
     left: 22px;
-    /* cursor: text; */
+    cursor: text;
     background: linear-gradient(
       0deg,
-      rgba(31,31,31,1) 0%,
-      rgba(31,31,31,1) 50%,
-      rgba(255,255,255,0) 50%,
-      rgba(255,255,255,0) 100%
+      rgb(var(--dark-grey)) 0%,
+      rgb(var(--dark-grey)) 50%,
+      rgba(0, 0, 0, 0) 50%,
+      rgba(0, 0, 0, 0) 100%
     );
-    transition:
-      color 0.2s cubic-bezier(var(--ease-in-out-quad)),
-      transform 0.2s cubic-bezier(var(--ease-in-out-quad));
-    /* transform: translateY(-24px); */
-
   }
 
   .select {

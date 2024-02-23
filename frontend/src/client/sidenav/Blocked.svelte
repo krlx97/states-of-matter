@@ -51,7 +51,7 @@
   <div class="blocked__toolbar">
     <div>Blocked <b>{$playerStore.social.blocked.length}</b></div>
     <ButtonComponent isIcon on:click="{onToggle}">
-      <div class="chevron" class:isToggled>⯆</div>
+      <i class="fa-solid fa-chevron-{isToggled ? "up" : "down"}"></i>
     </ButtonComponent>
   </div>
 

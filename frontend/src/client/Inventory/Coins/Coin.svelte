@@ -19,20 +19,19 @@
   .coin {
     position: relative;
     padding: var(--md) 0;
-    width: 128px;
+    width: 160px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--md);
+    gap: var(--xl);
     border: 1px solid transparent;
     border-radius: 8px;
-    cursor: pointer;
-    transition: border-color 400ms ease, background-color 400ms ease;
+    transition: border-color 333ms cubic-bezier(var(--ease-in-out-quad));
   }
 
   .coin:hover {
-    border-color: rgb(var(--grey));
-    background-color: rgb(var(--dark-grey));
+    border-color: rgba(var(--grey), var(--opacity-sm));
+    cursor: pointer;
   }
 
   .coin__text {

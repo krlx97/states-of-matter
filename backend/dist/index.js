@@ -19,11 +19,11 @@ import path from 'path';
 const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
 const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
 const keys = {
-    ethericEssence: "0xDeCD7574fa58b52Dc87dDDB3BD376228D54E78a1",
-    ethericCrystals: "0xf811f1AB4bfE4f58a703a0E32654a7789e7A9469",
-    ethericEnergy: "0x51d94d7F370DAD3971f54baAb4911acFedbCf984",
-    somTokens: "0xdF735A6a29a85E144623F8c6197b11134d4C11ae",
-    somGame: "0x3BDCc313b07cAeA90Fc5323749D13F086a4b62e0"
+    ethericEssence: "0xba69ddE1586be3Ab4E101C13f8f9d730082b5BE0",
+    ethericCrystals: "0x5ef70Dd1B3D4BA9D2509C665E63A0aDCbF3EA259",
+    ethericEnergy: "0x4cd0B057577770a5699Be8fefd399035be894F3d",
+    somTokens: "0xD0A76288A6b84059FAf5218AC2420251c6C5b5f8",
+    somGame: "0x90Acf3677114443AF72798a558d5bb56278eb743"
 };
 const ethericEssence = new Contract(keys.ethericEssence, EthericEssence.abi, signer);
 const ethericCrystals = new Contract(keys.ethericCrystals, EthericCrystals.abi, signer);
@@ -64,19 +64,30 @@ const io = new Server(http, {
 });
 const server = { app, http, io };
 
+const elusive = {
+    onNormalSummon(params) {
+        const { player, playerMinion, playerMinionField } = params;
+        playerMinion.buffs.push({
+            id: EffectId.ELUSIVE,
+            data: {}
+        });
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name: player.name,
+                text: "ELUSIVE"
+            }];
+    }
+};
+
 const lastStand = (params) => {
     const { opponent, opponentMinion, opponentMinionField, opponentTrap } = params;
     const animations = [];
-    opponentMinion.buffs.push({
-        id: EffectId.TAUNT,
-        data: {}
-    });
     animations.push({
         type: "TRAP",
         name: opponent.name,
         card: opponentTrap
-    });
-    animations.push({
+    }, {
         type: "HEALTH",
         field: opponentMinionField,
         name: opponent.name,
@@ -92,6 +103,10 @@ const lastStand = (params) => {
         name: opponent.name,
         text: `+ Taunt`
     });
+    opponentMinion.buffs.push({
+        id: EffectId.TAUNT,
+        data: {}
+    });
     opponentMinion.health.current = 1;
     opponent.graveyard.push(opponentTrap);
     opponent.trap = undefined;
@@ -103,53 +118,87 @@ const selfDestruct = (params) => {
     return [true, ""];
 };
 
-const revenge = (params) => {
-    const { player, field } = params;
-    const handCard = player.hand.find((card) => card.effect === EffectId.REVENGE);
-    const deckCard = player.deck.find((card) => card.effect === EffectId.REVENGE);
-    if (!handCard && !deckCard) {
-        return [];
+const revenge = {
+    onNormalSummon(params) {
+        const { player, playerMinion, playerMinionField } = params;
+        playerMinion.buffs.push({
+            id: EffectId.REVENGE,
+            data: {}
+        });
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name: player.name,
+                text: "REVENGE"
+            }];
+    },
+    onDeath(params) {
+        const { player, playerMinionField } = params;
+        const handCard = player.hand.find((card) => card.effect === EffectId.REVENGE);
+        const deckCard = player.deck.find((card) => card.effect === EffectId.REVENGE);
+        if (!handCard && !deckCard) {
+            return [];
+        }
+        if (handCard) {
+            const index = player.hand.indexOf(handCard);
+            player.field[playerMinionField] = handCard;
+            player.hand.splice(index, 1);
+        }
+        else if (deckCard) {
+            const index = player.deck.indexOf(deckCard);
+            player.field[playerMinionField] = deckCard;
+            player.deck.splice(index, 1);
+        }
+        const playerMinion = player.field[playerMinionField];
+        if (!playerMinion) {
+            return [];
+        }
+        return [{
+                type: "SUMMON",
+                name: player.name,
+                field: playerMinionField,
+                minion: playerMinion
+            }];
     }
-    if (handCard) {
-        const index = player.hand.indexOf(handCard);
-        player.field[field] = handCard;
-        player.hand.splice(index, 1);
-    }
-    else if (deckCard) {
-        const index = player.deck.indexOf(deckCard);
-        player.field[field] = deckCard;
-        player.deck.splice(index, 1);
-    }
-    return [{
-            type: "SUMMON",
-            name: player.name,
-            field,
-            minion: player.field[field]
-        }];
 };
 
-// remove this?
-const insertBuff = (card, id, data = {}) => {
-    card.buffs.push({ id, data });
-    return [];
-};
-
-const unity = (params) => {
-    const { player: { name, hand, deck } } = params;
-    const handCard = hand.find((card) => card.effect === EffectId.UNITY);
-    const deckCard = deck.find((card) => card.effect === EffectId.UNITY);
-    if (handCard) {
-        insertBuff(handCard, EffectId.TAUNT);
+const unity = {
+    onNormalSummon(params) {
+        const { player, playerMinion, playerMinionField } = params;
+        playerMinion.buffs.push({
+            id: EffectId.TAUNT,
+            data: {}
+        });
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name: player.name,
+                text: "UNITY"
+            }];
+    },
+    onDeath(params) {
+        const { player: { name, hand, deck } } = params;
+        const handCard = hand.find((card) => card.effect === EffectId.UNITY);
+        const deckCard = deck.find((card) => card.effect === EffectId.UNITY);
+        if (handCard) {
+            handCard.buffs.push({
+                id: EffectId.TAUNT,
+                data: {}
+            });
+        }
+        else if (deckCard) {
+            deckCard.buffs.push({
+                id: EffectId.TAUNT,
+                data: {}
+            });
+        }
+        return [{
+                type: "FLOATING_TEXT",
+                name: name,
+                field: "hero",
+                text: "UNITY"
+            }];
     }
-    else if (deckCard) {
-        insertBuff(deckCard, EffectId.TAUNT);
-    }
-    return [{
-            type: "FLOATING_TEXT",
-            name: name,
-            field: "hero",
-            text: "UNITY"
-        }];
 };
 
 const moveToGraveyard = (player, minion, field) => {
@@ -168,10 +217,10 @@ const moveToGraveyard = (player, minion, field) => {
         name: player.name
     });
     if (hasRevengeBuff) {
-        animations.push(...revenge({ player, field }));
+        animations.push(...revenge.onDeath({ player, playerMinionField: field }));
     }
     if (hasUnityBuff) {
-        animations.push(...unity({ player }));
+        animations.push(...unity.onDeath({ player }));
     }
     return animations;
 };
@@ -189,7 +238,8 @@ const heartOfSteel = (params) => {
             type: "DAMAGE",
             field,
             name: opponent.name,
-            increment: 3
+            increment: 3,
+            decrement: 0
         }];
 };
 
@@ -211,7 +261,7 @@ const deductHealth = (player, minion, damage, field) => {
             if (player.trap && player.trap.effect === EffectId.HEART_OF_STEEL) {
                 animations.push(...heartOfSteel({ opponentMinion: minion, opponent: player, opponentTrap: player.trap, field }));
             }
-            const remaining = shieldBuff.data.amount - damage;
+            const remaining = damage - shieldBuff.data.amount;
             if (remaining < 0) {
                 if (minion.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
                     minion.health.current -= 1;
@@ -229,7 +279,8 @@ const deductHealth = (player, minion, damage, field) => {
                 type: "HEALTH",
                 field: field,
                 name: player.name,
-                increment: -remaining
+                decrement: remaining,
+                increment: undefined,
             });
             minion.buffs.splice(minion.buffs.indexOf(shieldBuff), 1);
         }
@@ -245,7 +296,8 @@ const deductHealth = (player, minion, damage, field) => {
             type: "HEALTH",
             field: field,
             name: player.name,
-            increment: -damage
+            decrement: damage,
+            increment: undefined,
         });
     }
     return animations;
@@ -323,7 +375,17 @@ const banish = (params) => {
 };
 
 const shadowSurge = {
-    onNormalSummon(params) {
+    onNormalSummon: function (params) {
+        const { player, playerMinion, playerMinionField } = params;
+        playerMinion.canAttack = true;
+        return [{
+                type: "FLOATING_TEXT",
+                name: player.name,
+                field: playerMinionField,
+                text: "SHADOW SURGE"
+            }];
+    },
+    onSpecialSummon: function (params) {
         const { player, playerMinion, playerMinionField } = params;
         playerMinion.canAttack = true;
         return [{
@@ -338,12 +400,12 @@ const shadowSurge = {
 const diminish = (params) => {
     const { opponent, opponentMinion, opponentMinionField } = params;
     const animations = [];
-    if (opponentMinion.damage.current > 2) {
-        opponentMinion.damage.current -= 2;
+    if (opponentMinion.damage.current > 1) {
+        opponentMinion.damage.current -= 1;
         opponentMinion.debuffs.push({
             id: EffectId.DIMINISH,
             data: {
-                damage: -2
+                damage: -1
             }
         });
         animations.push({
@@ -355,7 +417,8 @@ const diminish = (params) => {
             type: "DAMAGE",
             name: opponent.name,
             field: opponentMinionField,
-            increment: (-2)
+            increment: undefined,
+            decrement: 1,
         });
     }
     else {
@@ -376,7 +439,8 @@ const diminish = (params) => {
             type: "DAMAGE",
             name: opponent.name,
             field: opponentMinionField,
-            increment: -val
+            increment: undefined,
+            decrement: val
         });
     }
     return animations;
@@ -395,42 +459,47 @@ const frostbite = (params) => {
         }];
 };
 
-const glory = (params) => {
-    const { player, opponent, minion, playerMinionField } = params;
-    const animations = [];
-    const possibleMinions = [];
-    const minionKeys = Object.keys(opponent.field);
-    minionKeys.forEach((key) => {
-        const Minion = opponent.field[key];
-        if (Minion && Minion.type !== CardType.HERO && key !== "hero") {
-            const hasElusiveBuff = Minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
-            if (!hasElusiveBuff) {
-                possibleMinions.push({ Minion, key });
+const glory = {
+    onNormalSummon(params) {
+        const { player, playerMinion, playerMinionField, opponent } = params;
+        const possibleMinions = [];
+        const minionFields = Object.keys(opponent.field);
+        const animations = [];
+        for (let field of minionFields) {
+            if (field === "hero") {
+                continue;
+            }
+            const minion = opponent.field[field];
+            const hasElusiveBuff = minion?.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
+            if (minion && !hasElusiveBuff) {
+                possibleMinions.push({ minion, field });
             }
         }
-    });
-    if (possibleMinions.length) {
-        let randomMinion = randomInt(possibleMinions.length);
-        let { Minion, key } = possibleMinions[randomMinion];
-        animations.push({
-            type: "FLOATING_TEXT",
-            name: opponent.name,
-            field: key,
-            text: "GLORY"
-        });
-        animations.push(...deductHealth(opponent, Minion, 1, key));
-        if (Minion.health.current <= 0) {
-            animations.push(...moveToGraveyard(opponent, Minion, key));
-            minion.buffs.push({ id: EffectId.TAUNT, data: {} });
+        if (possibleMinions.length) {
+            let randomMinion = randomInt(possibleMinions.length);
+            let { minion, field } = possibleMinions[randomMinion];
             animations.push({
                 type: "FLOATING_TEXT",
-                name: player.name,
-                field: playerMinionField,
-                text: "TAUNT"
-            });
+                name: opponent.name,
+                field,
+                text: "GLORY"
+            }, ...deductHealth(opponent, minion, 1, field));
+            if (minion.health.current <= 0) {
+                animations.push(...moveToGraveyard(opponent, minion, field));
+                playerMinion.buffs.push({
+                    id: EffectId.TAUNT,
+                    data: {}
+                });
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    name: player.name,
+                    field: playerMinionField,
+                    text: "TAUNT"
+                });
+            }
         }
+        return animations;
     }
-    return animations;
 };
 
 const mirrorsEdge = (params) => {
@@ -462,19 +531,32 @@ const risingFury = (params) => {
     return [true, ""];
 };
 
-const blaze = (params) => {
-    const { player, playerMinion, playerMinionField } = params;
-    const blazeBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.BLAZE);
-    if (!blazeBuff) {
-        return [];
+const blaze = {
+    onNormalSummon(params) {
+        const { player, playerMinion, playerMinionField } = params;
+        playerMinion.buffs.push({
+            id: EffectId.BLAZE,
+            data: {
+                hasAttackedTwice: true
+            }
+        });
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name: player.name,
+                text: "BLAZE"
+            }];
+    },
+    onEndTurn(params) {
+        const { player, playerMinionField, blazeBuff } = params;
+        blazeBuff.data.hasAttackedTwice = false;
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                text: "BLAZE",
+                name: player.name
+            }];
     }
-    blazeBuff.data.hasAttackedTwice = false;
-    return [{
-            type: "FLOATING_TEXT",
-            field: playerMinionField,
-            text: "BLAZE",
-            name: player.name
-        }];
 };
 
 const insertDebuff = (card, id, data = {}) => {
@@ -482,34 +564,16 @@ const insertDebuff = (card, id, data = {}) => {
     return [true, "Debuff added."];
 };
 
-const necromancy = (params) => {
-    const { player, playerMinion, playerMinionField, isPositive } = params;
-    const animations = [];
-    if (isPositive) {
-        playerMinion.health.current += 2;
-        playerMinion.damage.current += 2;
-        insertBuff(playerMinion, EffectId.NECROMANCY, {
-            health: 2,
-            damage: 2
-        });
-        animations.push({
-            type: "FLOATING_TEXT",
-            field: playerMinionField,
-            text: "NECROMANCY",
-            name: player.name
-        }, {
-            type: "DAMAGE",
-            name: player.name,
-            field: playerMinionField,
-            increment: 2
-        }, {
-            type: "HEALTH",
-            name: player.name,
-            field: playerMinionField,
-            increment: 2
-        });
-    }
-    else {
+// remove this?
+const insertBuff = (card, id, data = {}) => {
+    card.buffs.push({ id, data });
+    return [];
+};
+
+const necromancy = {
+    onNormalSummon(params) {
+        const { player, playerMinion, playerMinionField } = params;
+        const animations = [];
         playerMinion.health.current -= 2;
         playerMinion.damage.current -= 2;
         insertDebuff(playerMinion, EffectId.NECROMANCY, {
@@ -525,106 +589,148 @@ const necromancy = (params) => {
             type: "DAMAGE",
             name: player.name,
             field: playerMinionField,
-            increment: -2
+            increment: undefined,
+            decrement: 2,
         }, {
             type: "HEALTH",
             name: player.name,
             field: playerMinionField,
-            increment: -2
+            increment: undefined,
+            decrement: 2,
         });
-    }
-    return animations;
-};
-
-const quickShot = (params) => {
-    const { opponent } = params;
-    const possibleMinions = [];
-    const minionKeys = Object.keys(opponent.field);
-    const animations = [];
-    minionKeys.forEach((key) => {
-        const minion = opponent.field[key];
-        if (minion && minion.type !== CardType.HERO) {
-            const hasElusiveBuff = minion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
-            if (!hasElusiveBuff) {
-                possibleMinions.push({ minion, key });
-            }
-        }
-    });
-    if (possibleMinions.length) {
-        let randomMinion = randomInt(possibleMinions.length);
-        let { minion, key } = possibleMinions[randomMinion];
-        animations.push({
-            type: "FLOATING_TEXT",
-            field: key,
-            name: opponent.name,
-            text: "QUICK SHOT"
-        });
-        animations.push(...deductHealth(opponent, minion, 2, key));
-        if (minion.health.current <= 0) {
-            animations.push(...moveToGraveyard(opponent, minion, key));
-        }
-    }
-    return animations;
-};
-
-const rebirth = (params) => {
-    const { player, minion, field } = params;
-    const animations = [];
-    animations.push({
-        type: "SUMMON",
-        name: player.name,
-        field,
-        minion,
-        necromancyFixPositive: true
-    }, {
-        type: "FLOATING_TEXT",
-        field,
-        text: "REBIRTH",
-        name: player.name
-    });
-    if (minion.effect === EffectId.NECROMANCY) {
-        minion.damage.current += 2;
-        minion.health.current += 2;
-        minion.buffs.push({
-            id: EffectId.NECROMANCY,
-            data: { damage: 2, health: 2 }
+        return animations;
+    },
+    onSpecialSummon(params) {
+        const { player, playerMinion, playerMinionField } = params;
+        const animations = [];
+        playerMinion.health.current += 2;
+        playerMinion.damage.current += 2;
+        insertBuff(playerMinion, EffectId.NECROMANCY, {
+            health: 2,
+            damage: 2
         });
         animations.push({
             type: "FLOATING_TEXT",
-            field,
+            field: playerMinionField,
             text: "NECROMANCY",
             name: player.name
         }, {
             type: "DAMAGE",
             name: player.name,
-            field,
-            increment: 2
+            field: playerMinionField,
+            increment: 2,
+            decrement: undefined,
         }, {
             type: "HEALTH",
             name: player.name,
-            field,
-            increment: 2
+            field: playerMinionField,
+            increment: 2,
+            decrement: undefined,
         });
+        return animations;
     }
-    if (minion.effect === EffectId.PROTECTOR) {
-        minion.buffs.push({
+};
+
+const quickShot = {
+    onNormalSummon(params) {
+        const { opponent } = params;
+        const possibleMinions = [];
+        const minionFields = Object.keys(opponent.field);
+        const animations = [];
+        minionFields.forEach((field) => {
+            if (field === "hero") {
+                return;
+            }
+            const minion = opponent.field[field];
+            const hasElusiveBuff = minion?.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
+            if (minion && hasElusiveBuff === undefined) {
+                possibleMinions.push({ minion, field });
+            }
+        });
+        if (possibleMinions.length) {
+            let randomMinion = randomInt(possibleMinions.length);
+            let { minion, field } = possibleMinions[randomMinion];
+            animations.push({
+                type: "FLOATING_TEXT",
+                field,
+                name: opponent.name,
+                text: "QUICK SHOT"
+            }, ...deductHealth(opponent, minion, 2, field));
+            if (minion.health.current <= 0) {
+                animations.push(...moveToGraveyard(opponent, minion, field));
+            }
+        }
+        return animations;
+    }
+};
+
+let protector = {
+    onNormalSummon(params) {
+        let { player, playerMinion, playerMinionField } = params;
+        playerMinion.buffs.push({
             id: EffectId.SHIELD,
-            data: { amount: 3 }
+            data: { amount: 1 }
         });
-        animations.push({
-            type: "FLOATING_TEXT",
-            field,
-            text: "PROTECTOR",
-            name: player.name
-        }, {
-            type: "FLOATING_TEXT",
-            field,
-            text: "+3 Shield",
-            name: player.name
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name: player.name,
+                text: "+1 Shield"
+            }];
+    },
+    onSpecialSummon(params) {
+        let { player, playerMinion, playerMinionField } = params;
+        playerMinion.buffs.push({
+            id: EffectId.TAUNT,
+            data: {}
         });
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name: player.name,
+                text: "Taunt"
+            }];
     }
-    player.field[field] = minion;
-    player.graveyard.splice(player.graveyard.indexOf(minion), 1);
+};
+
+const rebirth = (params) => {
+    const { player, playerMinion, playerMinionField } = params;
+    const animations = [];
+    animations.push({
+        type: "SUMMON",
+        name: player.name,
+        field: playerMinionField,
+        minion: playerMinion,
+        necromancyFixPositive: true
+    }, {
+        type: "FLOATING_TEXT",
+        field: playerMinionField,
+        text: "REBIRTH",
+        name: player.name
+    });
+    if (playerMinion.effect === EffectId.SHADOW_SURGE) {
+        animations.push(...shadowSurge.onSpecialSummon({
+            player,
+            playerMinion,
+            playerMinionField
+        }));
+    }
+    if (playerMinion.effect === EffectId.NECROMANCY) {
+        animations.push(...necromancy.onSpecialSummon({
+            player,
+            playerMinion,
+            playerMinionField
+        }));
+    }
+    if (playerMinion.effect === EffectId.PROTECTOR) {
+        animations.push(...protector.onSpecialSummon({
+            player,
+            playerMinion,
+            playerMinionField
+        }));
+    }
+    player.field[playerMinionField] = playerMinion;
+    player.graveyard.splice(player.graveyard.indexOf(playerMinion), 1);
     return animations;
 };
 
@@ -709,58 +815,60 @@ const shell = (params) => {
 };
 
 const getAdjacentMinions = (field) => {
-    const adjacentFields = [];
+    let adjacentFields = [];
     switch (field) {
         case "a":
-            adjacentFields.push("b");
+            adjacentFields = ["b"];
             break;
         case "b":
-            adjacentFields.push("a", "c");
+            adjacentFields = ["a", "c"];
             break;
         case "c":
-            adjacentFields.push("b", "d");
+            adjacentFields = ["b", "d"];
             break;
         case "d":
-            adjacentFields.push("c");
+            adjacentFields = ["c"];
             break;
     }
     return adjacentFields;
 };
 
-const shieldwall = (params) => {
-    const { player, playerMinionField } = params;
-    const animations = [];
-    const fields = getAdjacentMinions(playerMinionField);
-    animations.push({
-        type: "FLOATING_TEXT",
-        field: playerMinionField,
-        name: player.name,
-        text: `SHIELDWALL`
-    });
-    fields.forEach((field) => {
-        const minion = player.field[field];
-        if (minion) {
-            const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
-            const unbreakableBuff = minion.buffs.find((buff) => buff.id === EffectId.UNBREAKABLE);
-            const amount = unbreakableBuff ? 2 : 1;
-            if (shieldBuff) {
-                shieldBuff.data.amount += amount;
-            }
-            else {
-                minion.buffs.push({
-                    id: EffectId.SHIELD,
-                    data: { amount }
+const shieldwall = {
+    onNormalSummon(params) {
+        const { player, playerMinionField } = params;
+        const animations = [];
+        const fields = getAdjacentMinions(playerMinionField);
+        animations.push({
+            type: "FLOATING_TEXT",
+            field: playerMinionField,
+            name: player.name,
+            text: `SHIELDWALL`
+        });
+        fields.forEach((field) => {
+            const minion = player.field[field];
+            if (minion) {
+                const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
+                const unbreakableBuff = minion.buffs.find((buff) => buff.id === EffectId.UNBREAKABLE);
+                const amount = unbreakableBuff ? 2 : 1;
+                if (shieldBuff) {
+                    shieldBuff.data.amount += amount;
+                }
+                else {
+                    minion.buffs.push({
+                        id: EffectId.SHIELD,
+                        data: { amount }
+                    });
+                }
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    field: field,
+                    name: player.name,
+                    text: `+${amount} Shield`
                 });
             }
-            animations.push({
-                type: "FLOATING_TEXT",
-                field: field,
-                name: player.name,
-                text: `+${amount} Shield`
-            });
-        }
-    });
-    return animations;
+        });
+        return animations;
+    }
 };
 
 const silence = (params) => {
@@ -788,25 +896,27 @@ const smite = (params) => {
     return animations;
 };
 
-const spellweave = (params) => {
-    const { player, playerMinion, playerMinionField } = params;
-    const { name, graveyard } = player;
-    const amount = graveyard.reduce((sum, { type }) => type === CardType.MAGIC ? sum += 1 : sum, 0);
-    playerMinion.buffs.push({
-        id: EffectId.SHIELD,
-        data: { amount }
-    });
-    return [{
-            type: "FLOATING_TEXT",
-            field: playerMinionField,
-            name,
-            text: "SPELLWEAVE"
-        }, {
-            type: "FLOATING_TEXT",
-            field: playerMinionField,
-            name,
-            text: `+${amount} Shield`
-        }];
+const spellweave = {
+    onNormalSummon(params) {
+        const { player, playerMinion, playerMinionField } = params;
+        const { name, graveyard } = player;
+        const amount = graveyard.reduce((sum, { type }) => type === CardType.MAGIC ? sum += 1 : sum, 0);
+        playerMinion.buffs.push({
+            id: EffectId.SHIELD,
+            data: { amount }
+        });
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name,
+                text: "SPELLWEAVE"
+            }, {
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name,
+                text: `+${amount} Shield`
+            }];
+    }
 };
 
 const toxicSpray = (params) => {
@@ -858,6 +968,11 @@ const valor = (params) => {
     }, 0);
     opponent.field.hero.health.current -= damage;
     animations.push({
+        type: "SHAKE",
+        playerA: opponent.name,
+        playerANumber: -damage,
+        playerAField: "hero"
+    }, {
         type: "HEALTH",
         field: "hero",
         name: opponent.name,
@@ -1148,13 +1263,14 @@ const backstab = (params) => {
             name: opponent.name,
             text: "BACKSTAB"
         }, {
-            type: "MANA",
-            increment: -1,
-            field: "hero",
+            type: "MANA_CAPACITY",
+            increment: undefined,
+            decrement: 1,
             name: opponent.name
         }, {
             type: "DAMAGE",
             increment: 2,
+            decrement: undefined,
             field: playerMinionField,
             name: player.name
         }];
@@ -1292,6 +1408,22 @@ const constriction = (params) => {
         }];
 };
 
+let unbreakable = {
+    onNormalSummon(params) {
+        let { player, playerMinion, playerMinionField } = params;
+        playerMinion.buffs.push({
+            id: EffectId.UNBREAKABLE,
+            data: {}
+        });
+        return [{
+                type: "FLOATING_TEXT",
+                field: playerMinionField,
+                name: player.name,
+                text: "UNBREAKABLE"
+            }];
+    }
+};
+
 const effect = {
     acidicDeath,
     acidRain,
@@ -1302,6 +1434,7 @@ const effect = {
     contaminatedAir,
     shadowSurge,
     diminish,
+    elusive,
     electroShock,
     fortitude,
     frostbite,
@@ -1342,13 +1475,16 @@ const effect = {
     explosive,
     reflection,
     constriction,
+    unbreakable,
+    protector
 };
 
-const generateGameView = ({ id, type, currentPlayer, currentTurn, gameLogs, playerA, playerB }, name) => ({
+const generateGameView = ({ id, type, currentPlayer, currentTurn, endTurnTime, gameLogs, playerA, playerB }, name) => ({
     id,
     type,
     currentPlayer,
     currentTurn,
+    endTurnTime,
     gameLogs,
     player: playerA.name === name ? {
         name: playerA.name,
@@ -1394,7 +1530,7 @@ const generateGameView = ({ id, type, currentPlayer, currentTurn, gameLogs, play
     }
 });
 
-const attackMinionSave = async ($game, animations) => {
+const attackMinionSave = async ($game, animations, isEndTurn = false) => {
     const { $players, $games } = mongo;
     const { io } = server;
     const { playerA, playerB } = $game;
@@ -1411,11 +1547,13 @@ const attackMinionSave = async ($game, animations) => {
     }
     io.to($playerA.socketId).emit("attackMinionSave", {
         game: generateGameView($game, $playerA.name),
-        animations
+        animations,
+        isEndTurn
     });
     io.to($playerB.socketId).emit("attackMinionSave", {
         game: generateGameView($game, $playerB.name),
-        animations
+        animations,
+        isEndTurn
     });
     await $games.replaceOne({ id: $game.id }, $game);
 };
@@ -1483,6 +1621,71 @@ const buildDeck = (deck) => {
     return gameDeck;
 };
 
+const deductHeroHealth = (player, 
+// minion: GameMinionCard,
+damage) => {
+    const { hero } = player.field;
+    const shieldBuff = hero.buffs.find((buff) => buff.id === EffectId.SHIELD);
+    const animations = [];
+    if (shieldBuff) { // has shield
+        const amt = shieldBuff.data.amount;
+        if (amt > damage) { // shield reduced
+            shieldBuff.data.amount -= damage;
+            animations.push({
+                type: "FLOATING_TEXT",
+                field: "hero",
+                name: player.name,
+                text: `-${damage} Shield`
+            });
+        }
+        else if (amt <= damage) { // shield broken
+            // if (player.trap && player.trap.effect === EffectId.HEART_OF_STEEL) {
+            //   animations.push(...heartOfSteel({opponentMinion: minion, opponent: player, opponentTrap: player.trap, field}));
+            // }
+            const remaining = damage - shieldBuff.data.amount;
+            if (remaining < 0) {
+                if (hero.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
+                    hero.health.current -= 1;
+                }
+                else {
+                    hero.health.current -= remaining;
+                }
+            }
+            animations.push({
+                type: "FLOATING_TEXT",
+                field: "hero",
+                name: player.name,
+                text: `-${shieldBuff.data.amount} Shield`
+            }, {
+                type: "HEALTH",
+                field: "hero",
+                name: player.name,
+                decrement: remaining,
+                increment: undefined,
+            });
+            hero.buffs.splice(hero.buffs.indexOf(shieldBuff), 1);
+        }
+    }
+    else { // no shield
+        if (hero.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
+            hero.health.current -= 1;
+        }
+        else {
+            hero.health.current -= damage;
+        }
+        animations.push({
+            type: "HEALTH",
+            field: "hero",
+            name: player.name,
+            decrement: damage,
+            increment: undefined,
+        });
+    }
+    return animations;
+};
+
+const endTurnTimeouts = [];
+
 const endGame = async (gameId, winnerName, animations) => {
     const { $games, $players } = mongo;
     const { io } = server;
@@ -1505,9 +1708,9 @@ const endGame = async (gameId, winnerName, animations) => {
         $playerA.gameId = 0;
         $playerB.status = PlayerStatus.ONLINE;
         $playerB.gameId = 0;
-        let playerAEesReward = "0";
+        let playerAEesReward = 0n;
         let playerADaily = false;
-        let playerBEesReward = "0";
+        let playerBEesReward = 0n;
         let playerBDaily = false;
         if (!$playerA.tasks.daily) {
             $playerA.tasks.daily = true;
@@ -1521,58 +1724,63 @@ const endGame = async (gameId, winnerName, animations) => {
             playerBDaily = true;
         }
         if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
-            $playerA.experience += 110 + $game.currentTurn;
             const XP_REQUIRED = 1000;
+            const POW = 10n ** 18n;
+            $playerA.experience += 110 + $game.currentTurn;
+            $playerB.experience += 90 + $game.currentTurn;
             if ($playerA.experience >= XP_REQUIRED) {
                 const remaining = $playerA.experience - XP_REQUIRED;
                 $playerA.level += 1;
                 $playerA.experience = remaining;
-                playerAEesReward = `${BigInt(playerAEesReward) + 1n * 10n ** 18n}`;
+                playerAEesReward = 1n * POW;
                 if ($playerA.level % 2 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 2n * 10n ** 18n}`;
+                    playerAEesReward += 2n * POW;
                 }
                 if ($playerA.level % 4 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 4n * 10n ** 18n}`;
+                    playerAEesReward += 4n * POW;
                 }
                 if ($playerA.level % 8 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 8n * 10n ** 18n}`;
+                    playerAEesReward += 8n * POW;
                 }
                 if ($playerA.level % 16 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 16n * 10n ** 18n}`;
+                    playerAEesReward += 16n * POW;
                 }
                 if ($playerA.level % 32 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 32n * 10n ** 18n}`;
+                    playerAEesReward += 32n * POW;
                 }
                 if ($playerA.level % 64 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 64n * 10n ** 18n}`;
+                    playerAEesReward += 64n * POW;
                 }
-                $playerA.rewards.ees = `${BigInt($playerA.rewards.ees) + playerAEesReward}`;
+                let currentEes = BigInt($playerA.rewards.ees);
+                let newEes = currentEes + playerAEesReward;
+                $playerA.rewards.ees = newEes.toString();
             }
-            $playerB.experience += 90 + $game.currentTurn;
             if ($playerB.experience >= XP_REQUIRED) {
                 const rem = $playerB.experience - XP_REQUIRED;
                 $playerB.level += 1;
                 $playerB.experience = rem;
-                playerBEesReward = `${BigInt(playerBEesReward) + 1n * 10n ** 18n}`;
+                playerBEesReward = 1n * POW;
                 if ($playerB.level % 2 === 0) {
-                    playerBEesReward = `${BigInt(playerBEesReward) + 2n * 10n ** 18n}`;
+                    playerBEesReward += 2n * POW;
                 }
                 if ($playerB.level % 4 === 0) {
-                    playerBEesReward = `${BigInt(playerBEesReward) + 4n * 10n ** 18n}`;
+                    playerBEesReward += 4n * POW;
                 }
                 if ($playerB.level % 8 === 0) {
-                    playerBEesReward = `${BigInt(playerBEesReward) + 8n * 10n ** 18n}`;
+                    playerBEesReward += 8n * POW;
                 }
                 if ($playerB.level % 16 === 0) {
-                    playerBEesReward = `${BigInt(playerBEesReward) + 16n * 10n ** 18n}`;
+                    playerBEesReward += 16n * POW;
                 }
                 if ($playerB.level % 32 === 0) {
-                    playerBEesReward = `${BigInt(playerBEesReward) + 32n * 10n ** 18n}`;
+                    playerBEesReward += 32n * POW;
                 }
                 if ($playerB.level % 64 === 0) {
-                    playerBEesReward = `${BigInt(playerBEesReward) + 64n * 10n ** 18n}`;
+                    playerBEesReward += 64n * POW;
                 }
-                $playerB.rewards.ees = `${BigInt($playerB.rewards.ees) + playerBEesReward}`;
+                let currentEes = BigInt($playerB.rewards.ees);
+                let newEes = currentEes + playerBEesReward;
+                $playerB.rewards.ees = newEes.toString();
             }
         }
         if ($game.type === GameType.CASUAL) {
@@ -1596,8 +1804,8 @@ const endGame = async (gameId, winnerName, animations) => {
             gameType: $game.type,
             experience: 110 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? 20 : 0,
-            eesReward: playerAEesReward,
-            playerADaily,
+            eesReward: playerAEesReward.toString(),
+            playerDaily: playerADaily,
             animations
         });
         io.to($playerB.socketId).emit("gameEnded", {
@@ -1605,8 +1813,8 @@ const endGame = async (gameId, winnerName, animations) => {
             gameType: $game.type,
             experience: 90 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? -20 : 0,
-            eesReward: playerBEesReward,
-            playerBDaily,
+            eesReward: playerBEesReward.toString(),
+            playerDaily: playerBDaily,
             animations
         });
     }
@@ -1626,8 +1834,8 @@ const endGame = async (gameId, winnerName, animations) => {
         $playerA.gameId = 0;
         let playerADaily = false;
         let playerBDaily = false;
-        let playerAEesReward = "0";
-        let playerBEesReward = "0";
+        let playerAEesReward = 0n;
+        let playerBEesReward = 0n;
         if (!$playerB.tasks.daily) {
             $playerB.tasks.daily = true;
             playerBDaily = true;
@@ -1640,62 +1848,63 @@ const endGame = async (gameId, winnerName, animations) => {
             playerADaily = true;
         }
         if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
-            $playerB.experience += 110 + $game.currentTurn;
             const XP_REQUIRED = 1000;
+            const POW = 10n ** 18n;
+            $playerB.experience += 110 + $game.currentTurn;
+            $playerA.experience += 90 + $game.currentTurn;
             if ($playerB.experience >= XP_REQUIRED) {
                 const remaining = $playerB.experience - XP_REQUIRED;
                 $playerB.level += 1;
                 $playerB.experience = remaining;
-                if ($playerB.experience >= XP_REQUIRED) {
-                    const rem = $playerB.experience - XP_REQUIRED;
-                    $playerB.level += 1;
-                    $playerB.experience = rem;
-                    playerBEesReward = `${BigInt(playerBEesReward) + 1n * 10n ** 18n}`;
-                    if ($playerB.level % 2 === 0) {
-                        playerBEesReward = `${BigInt(playerBEesReward) + 2n * 10n ** 18n}`;
-                    }
-                    if ($playerB.level % 4 === 0) {
-                        playerBEesReward = `${BigInt(playerBEesReward) + 4n * 10n ** 18n}`;
-                    }
-                    if ($playerB.level % 8 === 0) {
-                        playerBEesReward = `${BigInt(playerBEesReward) + 8n * 10n ** 18n}`;
-                    }
-                    if ($playerB.level % 16 === 0) {
-                        playerBEesReward = `${BigInt(playerBEesReward) + 16n * 10n ** 18n}`;
-                    }
-                    if ($playerB.level % 32 === 0) {
-                        playerBEesReward = `${BigInt(playerBEesReward) + 32n * 10n ** 18n}`;
-                    }
-                    if ($playerB.level % 64 === 0) {
-                        playerBEesReward = `${BigInt(playerBEesReward) + 64n * 10n ** 18n}`;
-                    }
-                    $playerB.rewards.ees = `${BigInt($playerB.rewards.ees) + playerBEesReward}`;
+                playerBEesReward = 1n * POW;
+                if ($playerB.level % 2 === 0) {
+                    playerBEesReward += 2n * POW;
                 }
+                if ($playerB.level % 4 === 0) {
+                    playerBEesReward += 4n * POW;
+                }
+                if ($playerB.level % 8 === 0) {
+                    playerBEesReward += 8n * POW;
+                }
+                if ($playerB.level % 16 === 0) {
+                    playerBEesReward += 16n * POW;
+                }
+                if ($playerB.level % 32 === 0) {
+                    playerBEesReward += 32n * POW;
+                }
+                if ($playerB.level % 64 === 0) {
+                    playerBEesReward += 64n * POW;
+                }
+                let currentEes = BigInt($playerB.rewards.ees);
+                let newEes = currentEes + playerBEesReward;
+                $playerB.rewards.ees = newEes.toString();
             }
-            $playerA.experience += 90 + $game.currentTurn;
             if ($playerA.experience >= XP_REQUIRED) {
-                const rem = $playerA.experience - XP_REQUIRED;
+                const remaining = $playerA.experience - XP_REQUIRED;
                 $playerA.level += 1;
-                $playerA.experience = rem;
+                $playerA.experience = remaining;
+                playerAEesReward = 1n * POW;
                 if ($playerA.level % 2 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 2n * 10n ** 18n}`;
+                    playerAEesReward += 2n * POW;
                 }
                 if ($playerA.level % 4 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 4n * 10n ** 18n}`;
+                    playerAEesReward += 4n * POW;
                 }
                 if ($playerA.level % 8 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 8n * 10n ** 18n}`;
+                    playerAEesReward += 8n * POW;
                 }
                 if ($playerA.level % 16 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 16n * 10n ** 18n}`;
+                    playerAEesReward += 16n * POW;
                 }
                 if ($playerA.level % 32 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 32n * 10n ** 18n}`;
+                    playerAEesReward += 32n * POW;
                 }
                 if ($playerA.level % 64 === 0) {
-                    playerAEesReward = `${BigInt(playerAEesReward) + 64n * 10n ** 18n}`;
+                    playerAEesReward += 64n * POW;
                 }
-                $playerA.rewards.ees = `${BigInt($playerA.rewards.ees) + playerAEesReward}`;
+                let currentEes = BigInt($playerA.rewards.ees);
+                let newEes = currentEes + playerAEesReward;
+                $playerA.rewards.ees = newEes.toString();
             }
         }
         if ($game.type === GameType.CASUAL) {
@@ -1719,8 +1928,8 @@ const endGame = async (gameId, winnerName, animations) => {
             gameType: $game.type,
             experience: 110 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? 20 : 0,
-            playerBDaily,
-            eesReward: playerBEesReward,
+            playerDaily: playerBDaily,
+            eesReward: playerBEesReward.toString(),
             animations
         });
         io.to($playerA.socketId).emit("gameEnded", {
@@ -1728,14 +1937,13 @@ const endGame = async (gameId, winnerName, animations) => {
             gameType: $game.type,
             experience: 90 + $game.currentTurn,
             elo: $game.type === GameType.RANKED ? -20 : 0,
-            playerADaily,
-            eesReward: playerAEesReward, animations
+            playerDaily: playerADaily,
+            eesReward: playerAEesReward.toString(),
+            animations
         });
     }
-    const isDeletedGame = await $games.deleteOne({ id: gameId });
-    if (!isDeletedGame.deletedCount) {
-        return;
-    }
+    delete endTurnTimeouts[gameId];
+    await $games.deleteOne({ id: gameId });
 };
 
 const gamePopup = async (type, playerA, playerB) => {
@@ -1840,6 +2048,8 @@ const generateGame = (id, type, playerA, playerB) => {
     return {
         id,
         type,
+        endTurnTimeout: 0,
+        endTurnTime: Date.now() + 36000, // account for 6 seconds match started dialog
         currentPlayer: playerA.name,
         currentTurn: 0,
         gameLogs: [],
@@ -1853,8 +2063,8 @@ const generateGame = (id, type, playerA, playerB) => {
                         default: 20
                     },
                     mana: {
-                        current: 20,
-                        default: 20
+                        current: 5,
+                        default: 10
                     },
                     buffs: [],
                     debuffs: []
@@ -1880,8 +2090,8 @@ const generateGame = (id, type, playerA, playerB) => {
                         default: 20
                     },
                     mana: {
-                        current: 20,
-                        default: 20
+                        current: 5,
+                        default: 10
                     },
                     buffs: [],
                     debuffs: []
@@ -1971,6 +2181,86 @@ const saveGame = async (game, animations) => {
     });
 };
 
+const endTurn$1 = async (name) => {
+    const $player = await mongo.$players.findOne({ name });
+    const [getGameData, getGameError] = await getGame($player.socketId);
+    const animations = [];
+    if (!getGameData) {
+        return;
+    }
+    // const {playerA, playerB} = $game;
+    // const player = playerA.name === $game.currentPlayer ? playerA : playerB;
+    // const opponent = playerA.name === $game.currentPlayer ? playerB : playerA;
+    const { $game, player, opponent } = getGameData;
+    if (player.hand.length > 6) {
+        const toRemove = player.hand.splice(0, player.hand.length - 6);
+        player.graveyard.push(...toRemove);
+    }
+    const card = opponent.deck.pop();
+    if (!card) {
+        return await endGame($game.id, player.name, animations);
+    }
+    opponent.hand.push(card);
+    let howMuchMana = 5;
+    $game.currentTurn += 1;
+    if ($game.currentTurn === 0 || $game.currentTurn === 1) {
+        howMuchMana = 5;
+    }
+    else if ($game.currentTurn === 2 || $game.currentTurn === 3) {
+        howMuchMana = 6;
+    }
+    else if ($game.currentTurn === 4 || $game.currentTurn === 5) {
+        howMuchMana = 7;
+    }
+    else if ($game.currentTurn === 6 || $game.currentTurn === 7) {
+        howMuchMana = 9;
+    }
+    else if ($game.currentTurn === 8 || $game.currentTurn === 9) {
+        howMuchMana = 9;
+    }
+    else if ($game.currentTurn >= 10) {
+        howMuchMana = 10;
+    }
+    const manaDelta = howMuchMana - player.field.hero.mana.current;
+    player.field.hero.mana.current = howMuchMana;
+    animations.push({
+        type: "END_TURN",
+        name: player.name
+    }, {
+        type: "MANA_CAPACITY",
+        name: player.name,
+        increment: manaDelta,
+        decrement: undefined
+    });
+    const playerMinionFields = ["a", "b", "c", "d"];
+    playerMinionFields.forEach((field) => {
+        const minion = player.field[field];
+        if (!minion) {
+            return;
+        }
+        minion.canAttack = true;
+        const blazeBuff = minion.buffs.find((buff) => buff.id === EffectId.BLAZE);
+        const regenerationBuff = minion.buffs.find((buff) => buff.id === EffectId.REGENERATION);
+        if (blazeBuff) {
+            animations.push(...blaze.onEndTurn({
+                player,
+                playerMinionField: field,
+                blazeBuff
+            }));
+        }
+        if (regenerationBuff) {
+            animations.push(...regeneration({ player }));
+        }
+    });
+    $game.endTurnTime = Date.now() + 90000;
+    $game.currentPlayer = opponent.name;
+    await attackMinionSave($game, animations, true);
+    clearTimeout(endTurnTimeouts[$game.id]);
+    endTurnTimeouts[$game.id] = setTimeout(async () => {
+        await endTurn$1($game.currentPlayer);
+    }, 90000);
+};
+
 const startGame = async (id, type, playerA, playerB) => {
     const { $games, $players } = mongo;
     const { io } = server;
@@ -2006,6 +2296,10 @@ const startGame = async (id, type, playerA, playerB) => {
     if (!isInserted.insertedId) {
         return;
     }
+    clearTimeout(endTurnTimeouts[game.id]);
+    endTurnTimeouts[game.id] = setTimeout(async () => {
+        await endTurn$1(game.currentPlayer);
+    }, 30000);
     io.to($playerA.socketId).emit("startGame", {
         playerA: {
             name: $playerA.name,
@@ -2052,14 +2346,17 @@ const startGame = async (id, type, playerA, playerB) => {
 
 const gameHelpers = {
     effect,
+    endTurn: endTurn$1,
     attackMinionSave,
     buildDeck,
     deductHealth,
+    deductHeroHealth,
     endGame,
     gamePopup,
     generateGame,
     generateGameView,
     getAdjacentMinions,
+    endTurnTimeouts,
     getGame,
     getRandomMinion,
     insertBuff,
@@ -2385,7 +2682,6 @@ const disconnect = (socket, error) => {
     const socketId = socket.id;
     const { $players } = mongo;
     socket.on("disconnect", async () => {
-        // console.log("DISCONNECT", socketId);
         const $playerUpdate = await $players.findOneAndUpdate({ socketId }, {
             $set: {
                 socketId: "",
@@ -2394,13 +2690,11 @@ const disconnect = (socket, error) => {
         }, {
             returnDocument: "after"
         });
-        console.log($playerUpdate?.status);
         if (!$playerUpdate) {
             return error("Error updating player.");
         }
         const { name, status, social } = $playerUpdate;
         const socketIds = await playerHelpers.getSocketIds(social.friends);
-        // console.log(name, status);
         server.io.to(socketIds).emit("updateFriend", { name, status });
     });
 };
@@ -2460,7 +2754,6 @@ const signinPassword = (socket, error) => {
     socket.on("signinPassword", async (params) => {
         const { name, password, rememberMe } = params;
         const $player = await $players.findOne({ name });
-        console.log($player);
         if (!$player) {
             return error("Account not found.");
         }
@@ -3289,7 +3582,7 @@ const attackHero = (socket, error) => {
         const { attacker } = params;
         const { $game, player, opponent } = getGameData;
         const playerMinion = player.field[attacker];
-        const opponentHero = opponent.field.hero;
+        opponent.field.hero;
         const animations = [];
         if (!playerMinion) {
             return;
@@ -3391,13 +3684,7 @@ const attackHero = (socket, error) => {
                 playerBNumber: playerMinion.damage.current,
                 playerBField: "hero"
             });
-            opponentHero.health.current -= playerMinion.damage.current;
-            animations.push({
-                type: "HEALTH",
-                field: "hero",
-                name: opponent.name,
-                increment: -playerMinion.damage.current
-            });
+            animations.push(...gameHelpers.deductHeroHealth(opponent, playerMinion.damage.current));
         }
         if (await gameHelpers.isGameOver($game, animations)) {
             return;
@@ -3446,7 +3733,6 @@ const attackMinion = (socket, error) => {
                 }
             }
         }
-        console.log(!tauntFields.includes(attacked));
         // tauntFields = [a, c]
         if (tauntFields.length) {
             playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
@@ -3455,10 +3741,12 @@ const attackMinion = (socket, error) => {
             }
         }
         // -----------------------------------------------------
+        // Check whether opponent minion has stealth
         if (opponentMinion.buffs.find((buff) => buff.id === EffectId.STEALTH) &&
             !playerMinion.buffs.find((buff) => buff.id === EffectId.SHADOWSTRIKE)) {
             return error("Can't attack minion with stealth.");
         }
+        // Check whether the player minion can attack
         if (!playerMinion.canAttack) {
             const blazeBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.BLAZE);
             if (blazeBuff && !blazeBuff.data.hasAttackedTwice) {
@@ -3473,18 +3761,18 @@ const attackMinion = (socket, error) => {
         }
         let isAttackNegated = false;
         const elusiveBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
-        if (opponentTrap && opponentTrap.effect === EffectId.MIRRORS_EDGE && !elusiveBuff) {
+        if (opponentTrap?.effect === EffectId.MIRRORS_EDGE && !elusiveBuff) {
             animations.push(...effect.mirrorsEdge({ player, playerMinion, opponent, opponentTrap }));
             if (await gameHelpers.isGameOver($game, animations)) {
                 return;
             }
             isAttackNegated = true;
         }
-        if (opponentTrap && opponentTrap.effect === EffectId.RICOCHET && !elusiveBuff) {
+        if (opponentTrap?.effect === EffectId.RICOCHET && !elusiveBuff) {
             animations.push(...effect.ricochet({ player, playerMinion, opponent, opponentMinionField: attacked, opponentTrap }));
             isAttackNegated = true;
         }
-        if (opponentTrap && opponentTrap.effect === EffectId.FROSTBITE) {
+        if (opponentTrap?.effect === EffectId.FROSTBITE) {
             animations.push(...effect.frostbite({
                 player,
                 playerMinion,
@@ -3493,10 +3781,10 @@ const attackMinion = (socket, error) => {
                 opponentTrap
             }));
         }
-        if (opponentTrap && opponentTrap.effect === EffectId.RUSTY_NEEDLE) {
+        if (opponentTrap?.effect === EffectId.RUSTY_NEEDLE) {
             gameHelpers.insertDebuff(playerMinion, EffectId.NEUROTOXIN);
         }
-        if (opponentTrap && opponentTrap.effect === EffectId.NOXIOUS_FUMES) {
+        if (opponentTrap?.effect === EffectId.NOXIOUS_FUMES) {
             animations.push(...effect.noxiousFumes({
                 player,
                 playerMinion,
@@ -3505,7 +3793,7 @@ const attackMinion = (socket, error) => {
                 opponentTrap
             }));
         }
-        if (opponentTrap && opponentTrap.effect === EffectId.EXPLOSIVE) {
+        if (opponentTrap?.effect === EffectId.EXPLOSIVE) {
             animations.push(...effect.explosive({
                 player,
                 playerMinionField: attacker,
@@ -3513,7 +3801,7 @@ const attackMinion = (socket, error) => {
                 opponentTrap
             }));
         }
-        if (opponentTrap && opponentTrap.effect === EffectId.CONSTRICTION) {
+        if (opponentTrap?.effect === EffectId.CONSTRICTION) {
             animations.push(...effect.constriction({ player, playerMinion, opponent, opponentTrap, playerMinionField: attacker }));
         }
         if (playerMinion.buffs.find((buff) => buff.id === EffectId.POISONOUS_TOUCH)) {
@@ -3564,43 +3852,42 @@ const attackMinion = (socket, error) => {
             animations.push(...gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage.current, attacker));
             animations.push(...gameHelpers.deductHealth(opponent, opponentMinion, playerMinion.damage.current, attacked));
         }
-        if (playerMinion.health.current <= 0 || (playerMinion.health.current === 1 && opponentMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
-            if (player.trap && player.trap.effect === EffectId.LAST_STAND) ;
-            else {
-                const hasAcidicDeathBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
-                const hasSelfDescturctDebuff = playerMinion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
-                if (player.trap && player.trap.effect === EffectId.REFLECTION) {
-                    gameHelpers.effect.reflection({ player, opponent, trap: player.trap });
-                }
-                animations.push(...gameHelpers.moveToGraveyard(player, playerMinion, attacker));
-                if (hasSelfDescturctDebuff) {
-                    gameHelpers.effect.selfDestruct({ player });
-                    if (await gameHelpers.isGameOver($game, animations)) {
-                        return;
-                    }
-                }
-                if (hasAcidicDeathBuff) {
-                    effect.acidicDeath({ player, opponent });
-                }
-                Object.keys(player.field).forEach((key) => {
-                    const minion = player.field[key];
-                    if (!minion) {
-                        return;
-                    }
-                    if (minion.buffs.find((buff) => buff.id === EffectId.RISING_FURY)) {
-                        gameHelpers.effect.risingFury({ minionCard: minion });
-                    }
-                    if (minion.buffs.find((buff) => buff.id === EffectId.SACRIFICE)) {
-                        if (playerMinion.klass === CardKlass.LIQUID) {
-                            const minion = gameHelpers.getRandomMinion(player);
-                            if (!minion) {
-                                return;
-                            }
-                            minion.health.current += 3;
-                        }
-                    }
-                });
+        if (playerMinion.health.current <= 0 ||
+            (playerMinion.health.current === 1 &&
+                opponentMinion.buffs.find((buff) => buff.id === EffectId.EXECUTE))) {
+            const hasAcidicDeathBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ACIDIC_DEATH);
+            const hasSelfDescturctDebuff = playerMinion.debuffs.find((debuff) => debuff.id === EffectId.SELF_DESTRUCT);
+            if (player.trap && player.trap.effect === EffectId.REFLECTION) {
+                gameHelpers.effect.reflection({ player, opponent, trap: player.trap });
             }
+            animations.push(...gameHelpers.moveToGraveyard(player, playerMinion, attacker));
+            if (hasSelfDescturctDebuff) {
+                gameHelpers.effect.selfDestruct({ player });
+                if (await gameHelpers.isGameOver($game, animations)) {
+                    return;
+                }
+            }
+            if (hasAcidicDeathBuff) {
+                effect.acidicDeath({ player, opponent });
+            }
+            Object.keys(player.field).forEach((key) => {
+                const minion = player.field[key];
+                if (!minion) {
+                    return;
+                }
+                if (minion.buffs.find((buff) => buff.id === EffectId.RISING_FURY)) {
+                    gameHelpers.effect.risingFury({ minionCard: minion });
+                }
+                if (minion.buffs.find((buff) => buff.id === EffectId.SACRIFICE)) {
+                    if (playerMinion.klass === CardKlass.LIQUID) {
+                        const minion = gameHelpers.getRandomMinion(player);
+                        if (!minion) {
+                            return;
+                        }
+                        minion.health.current += 3;
+                    }
+                }
+            });
         }
         else {
             if (playerMinion.buffs.find((buff) => buff.id === EffectId.RAMPAGE)) {
@@ -3670,35 +3957,85 @@ const endTurn = (socket, error) => {
         if (!getGameData) {
             return error(getGameError);
         }
+        // const {$game, player, opponent} = getGameData;
+        // await gameHelpers.endTurn({$game, player, opponent});
+        // setTimeout(async () => {
+        //   await gameHelpers.endTurn({
+        //     $game,
+        //     player: opponent,
+        //     opponent: player
+        //   });
+        //   await gameHelpers.attackMinionSave($game, animations, true);
+        // }, 20000);
+        // await gameHelpers.attackMinionSave($game, animations, true);
         const { $game, player, opponent } = getGameData;
+        if (player.hand.length > 6) {
+            const toRemove = player.hand.splice(0, player.hand.length - 6);
+            player.graveyard.push(...toRemove);
+        }
         const card = opponent.deck.pop();
         if (!card) {
-            return await gameHelpers.endGame($game.id, player.name);
+            return await gameHelpers.endGame($game.id, player.name, animations);
         }
         opponent.hand.push(card);
-        const manaDelta = 10 - opponent.field.hero.mana.current;
-        player.field.hero.mana.current = 10;
+        let howMuchMana = 5;
+        $game.currentTurn += 1;
+        if ($game.currentTurn === 0 || $game.currentTurn === 1) {
+            howMuchMana = 5;
+        }
+        else if ($game.currentTurn === 2 || $game.currentTurn === 3) {
+            howMuchMana = 6;
+        }
+        else if ($game.currentTurn === 4 || $game.currentTurn === 5) {
+            howMuchMana = 7;
+        }
+        else if ($game.currentTurn === 6 || $game.currentTurn === 7) {
+            howMuchMana = 9;
+        }
+        else if ($game.currentTurn === 8 || $game.currentTurn === 9) {
+            howMuchMana = 9;
+        }
+        else if ($game.currentTurn >= 10) {
+            howMuchMana = 10;
+        }
+        const manaDelta = howMuchMana - player.field.hero.mana.current;
+        player.field.hero.mana.current = howMuchMana;
         animations.push({
+            type: "END_TURN",
+            name: player.name
+        }, {
             type: "MANA_CAPACITY",
-            field: "hero",
-            name: opponent.name,
-            increment: manaDelta
+            name: player.name,
+            increment: manaDelta,
+            decrement: undefined
         });
-        const playerMinionFields = Object.keys(player.field);
+        const playerMinionFields = ["a", "b", "c", "d"];
         playerMinionFields.forEach((field) => {
             const minion = player.field[field];
-            if (!minion || minion.type === CardType.HERO || field === "hero") {
+            if (!minion) {
                 return;
             }
             minion.canAttack = true;
-            animations.push(...gameHelpers.effect.blaze({ player, playerMinion: minion, playerMinionField: field }));
-            if (minion.buffs.find((buff) => buff.id === EffectId.REGENERATION)) {
-                gameHelpers.effect.regeneration({ player });
+            const blazeBuff = minion.buffs.find((buff) => buff.id === EffectId.BLAZE);
+            const regenerationBuff = minion.buffs.find((buff) => buff.id === EffectId.REGENERATION);
+            if (blazeBuff) {
+                animations.push(...gameHelpers.effect.blaze.onEndTurn({
+                    player,
+                    playerMinionField: field,
+                    blazeBuff
+                }));
+            }
+            if (regenerationBuff) {
+                animations.push(...gameHelpers.effect.regeneration({ player }));
             }
         });
+        $game.endTurnTime = Date.now() + 90000;
         $game.currentPlayer = opponent.name;
-        $game.currentTurn += 1;
-        await gameHelpers.attackMinionSave($game, animations);
+        await gameHelpers.attackMinionSave($game, animations, true);
+        clearTimeout(endTurnTimeouts[$game.id]);
+        endTurnTimeouts[$game.id] = setTimeout(async () => {
+            await gameHelpers.endTurn($game.currentPlayer);
+        }, 90000);
     });
 };
 
@@ -3767,7 +4104,7 @@ const playMagic = (socket, error) => {
                 if (toRevive.effect === EffectId.ELUSIVE) {
                     return error("Rebirth negated.");
                 }
-                animations.push(...effect.rebirth({ player, minion: toRevive, field }));
+                animations.push(...effect.rebirth({ player, playerMinion: toRevive, playerMinionField: field }));
             }
             if (card.effect === EffectId.DIMINISH) {
                 if (!field) {
@@ -3936,59 +4273,46 @@ const playMinion = (socket, error) => {
         // [1] INSERT BUFFS / DEBUFFS
         switch (minion.effect) {
             case EffectId.BLAZE: // Neutral
-                const hasAttackedTwice = true;
-                gameHelpers.insertBuff(minion, EffectId.BLAZE, { hasAttackedTwice });
-                animations.push({
-                    type: "FLOATING_TEXT",
-                    field,
-                    name: player.name,
-                    text: "BLAZE"
-                });
+                animations.push(...effect.blaze.onNormalSummon({
+                    player,
+                    playerMinion: minion,
+                    playerMinionField: field
+                }));
                 break;
             case EffectId.ELUSIVE:
-                gameHelpers.insertBuff(minion, EffectId.ELUSIVE);
-                animations.push({
-                    type: "FLOATING_TEXT",
-                    field,
-                    name: player.name,
-                    text: "ELUSIVE"
-                });
+                animations.push(...effect.elusive.onNormalSummon({
+                    player,
+                    playerMinion: minion,
+                    playerMinionField: field
+                }));
                 break;
             case EffectId.REVENGE:
-                gameHelpers.insertBuff(minion, EffectId.REVENGE);
-                animations.push({
-                    type: "FLOATING_TEXT",
-                    field,
-                    name: player.name,
-                    text: "REVENGE"
-                });
+                animations.push(...effect.revenge.onNormalSummon({
+                    player,
+                    playerMinion: minion,
+                    playerMinionField: field
+                }));
                 break;
             case EffectId.UNITY: // Solid
-                gameHelpers.insertBuff(minion, EffectId.UNITY);
-                animations.push({
-                    type: "FLOATING_TEXT",
-                    field,
-                    name: player.name,
-                    text: "UNITY"
-                });
+                animations.push(...effect.unity.onNormalSummon({
+                    player,
+                    playerMinion: minion,
+                    playerMinionField: field
+                }));
                 break;
             case EffectId.UNBREAKABLE:
-                gameHelpers.insertBuff(minion, EffectId.UNBREAKABLE);
-                animations.push({
-                    type: "FLOATING_TEXT",
-                    field,
-                    name: player.name,
-                    text: "UNBREAKABLE"
-                });
+                animations.push(...effect.unbreakable.onNormalSummon({
+                    player,
+                    playerMinion: minion,
+                    playerMinionField: field
+                }));
                 break;
             case EffectId.PROTECTOR:
-                gameHelpers.insertBuff(minion, EffectId.TAUNT);
-                animations.push({
-                    type: "FLOATING_TEXT",
-                    field,
-                    name: player.name,
-                    text: "TAUNT"
-                });
+                animations.push(...effect.protector.onNormalSummon({
+                    player,
+                    playerMinion: minion,
+                    playerMinionField: field
+                }));
                 break;
             case EffectId.RISING_FURY: // Liquid
                 gameHelpers.insertBuff(minion, EffectId.RISING_FURY);
@@ -4041,11 +4365,13 @@ const playMinion = (socket, error) => {
                 gameHelpers.insertBuff(minion, EffectId.EXECUTE);
                 break;
         }
+        let isMinionDestroyed = false;
         // [2] ON SUMMON TRAP TRIGGERS
         if (trap && !isElusive) {
             switch (trap.effect) {
                 case EffectId.SMITE:
                     animations.push(...effect.smite({ player, opponent, minion, trap, field }));
+                    isMinionDestroyed = true;
                     break;
                 case EffectId.BANISH:
                     effect.banish({
@@ -4055,13 +4381,14 @@ const playMinion = (socket, error) => {
                         opponentTrap: trap,
                         playerMinionField: field
                     });
+                    isMinionDestroyed = true;
                     break;
                 case EffectId.POISONED_GROUND:
                     effect.poisonedGround({ player: opponent, minion, trap });
                     break;
             }
         }
-        else {
+        if (!isMinionDestroyed) {
             // [3] TRIGGER ON SUMMON EFFECTS
             switch (minion.effect) {
                 case EffectId.SHADOW_SURGE: // Neutral
@@ -4072,33 +4399,32 @@ const playMinion = (socket, error) => {
                     }));
                     break;
                 case EffectId.QUICK_SHOT:
-                    animations.push(...effect.quickShot({ opponent }));
+                    animations.push(...effect.quickShot.onNormalSummon({ opponent }));
                     break;
                 case EffectId.NECROMANCY:
-                    animations.push(...effect.necromancy({
+                    animations.push(...effect.necromancy.onNormalSummon({
                         player,
                         playerMinion: minion,
-                        playerMinionField: field,
-                        isPositive: false
+                        playerMinionField: field
                     }));
                     break;
                 case EffectId.GLORY: // Solid
-                    animations.push(...effect.glory({
+                    animations.push(...effect.glory.onNormalSummon({
                         player,
-                        opponent,
-                        minion,
+                        playerMinion: minion,
                         playerMinionField: field,
+                        opponent,
                     }));
                     break;
                 case EffectId.SPELLWEAVE:
-                    animations.push(...effect.spellweave({
+                    animations.push(...effect.spellweave.onNormalSummon({
                         player,
                         playerMinion: minion,
                         playerMinionField: field
                     }));
                     break;
                 case EffectId.SHIELDWALL:
-                    animations.push(...effect.shieldwall({
+                    animations.push(...effect.shieldwall.onNormalSummon({
                         player,
                         playerMinionField: field
                     }));
@@ -4118,7 +4444,6 @@ const playMinion = (socket, error) => {
             player: player.name,
             minionId: minion.id
         });
-        // await gameHelpers.saveGame($game, animations);
         await gameHelpers.attackMinionSave($game, animations);
     });
 };
@@ -4610,23 +4935,9 @@ process.on("uncaughtException", (error, origin) => {
     console.log(`Uncaught Exception: ${error}`);
 });
 const cleanup = async () => {
-    // await contracts.somGame["addItem"](101301n, 1n).catch(console.log);
-    // await contracts.somGame["addItem"](101302n, 2n).catch(console.log);
-    // await contracts.somGame["addItem"](101303n, 3n).catch(console.log);
-    // await contracts.somGame["addItem"](101304n, 4n).catch(console.log);
-    // await contracts.somGame["addItem"](101305n, 5n).catch(console.log);
-    // await contracts.somGame["addItem"](101401n, 1n).catch(console.log);
-    // await contracts.somGame["addItem"](101402n, 2n).catch(console.log);
-    // await contracts.somGame["addItem"](101403n, 3n).catch(console.log);
-    // await contracts.somGame["addItem"](101404n, 4n).catch(console.log);
-    // await contracts.somGame["addItem"](101405n, 5n).catch(console.log);
-    // await contracts.somGame["addItem"](101501n, 1n).catch(console.log);
-    // await contracts.somGame["addItem"](101502n, 2n).catch(console.log);
-    // await contracts.somGame["addItem"](101503n, 3n).catch(console.log);
-    // await contracts.somGame["addItem"](101504n, 4n).catch(console.log);
-    // await contracts.somGame["addItem"](101505n, 5n).catch(console.log);
     // remove all rankedQueuePlayers, casualQueuePlayers, and gamePopups when
     // restarting the server?
+    // also restart all games timers here as well...
 };
 await cleanup();
 server.app.use(express.static(path.join(process.cwd(), "frontend")));
@@ -4687,7 +4998,7 @@ server.io.on("connection", (socket) => {
     });
 });
 server.http.listen(process.env.PORT || 4201);
-schedule("0 */24 * * *", async () => {
+schedule("0 */6 * * *", async () => {
     for await (let $player of mongo.$players.find()) {
         if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
             $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
@@ -4722,34 +5033,63 @@ schedule("0 */24 * * *", async () => {
         contracts.ethericCrystals.totalSupply(),
         contracts.ethericEnergy.totalSupply()
     ]);
+    const snapshots = await Promise.all([
+        mongo.$supplySnapshots.findOne({
+            name: "ees"
+        }),
+        mongo.$supplySnapshots.findOne({
+            name: "ecr"
+        }),
+        mongo.$supplySnapshots.findOne({
+            name: "enrg"
+        })
+    ]);
     const POW = 10n ** 18n;
     const REWARD_PER_MS = 1000000n;
     const date = Date.now();
     const ecrStaked = (enrg * (1n * POW + ((BigInt(date) - deployTimestamp * 1000n) * REWARD_PER_MS))) / POW;
     const supply = ecr + ecrStaked;
-    await Promise.all([
-        mongo.$supplySnapshots.updateOne({
-            name: "ees"
-        }, {
-            $push: {
-                "snapshots": { date, supply: `${ees}` }
-            }
-        }),
-        mongo.$supplySnapshots.updateOne({
-            name: "ecr"
-        }, {
-            $push: {
-                "snapshots": { date, supply: `${supply}` }
-            }
-        }),
-        mongo.$supplySnapshots.updateOne({
-            name: "enrg"
-        }, {
-            $push: {
-                "snapshots": { date, supply: `${enrg}` }
-            }
-        })
-    ]);
+    if (!snapshots[0] && !snapshots[1] && !snapshots[2]) {
+        await Promise.all([
+            mongo.$supplySnapshots.insertOne({
+                name: "ees",
+                snapshots: [{ date, supply: `${ees}` }]
+            }),
+            mongo.$supplySnapshots.insertOne({
+                name: "ecr",
+                snapshots: [{ date, supply: `${supply}` }]
+            }),
+            mongo.$supplySnapshots.insertOne({
+                name: "enrg",
+                snapshots: [{ date, supply: `${enrg}` }]
+            })
+        ]);
+    }
+    else {
+        await Promise.all([
+            mongo.$supplySnapshots.updateOne({
+                name: "ees"
+            }, {
+                $push: {
+                    "snapshots": { date, supply: `${ees}` }
+                }
+            }),
+            mongo.$supplySnapshots.updateOne({
+                name: "ecr"
+            }, {
+                $push: {
+                    "snapshots": { date, supply: `${supply}` }
+                }
+            }),
+            mongo.$supplySnapshots.updateOne({
+                name: "enrg"
+            }, {
+                $push: {
+                    "snapshots": { date, supply: `${enrg}` }
+                }
+            })
+        ]);
+    }
     const byLevel = (await mongo.$players
         .find()
         .limit(100)
@@ -4767,13 +5107,22 @@ schedule("0 */24 * * *", async () => {
         const { name, elo, level, experience, avatarId, bannerId, games } = $player;
         return { name, level, elo, experience, avatarId, bannerId, games };
     });
-    await mongo.$leaderboards.updateOne({}, {
-        $set: { level: byLevel, elo: byElo }
-    });
+    const leaderboards = await mongo.$leaderboards.findOne({});
+    if (leaderboards) {
+        await mongo.$leaderboards.updateOne({}, {
+            $set: { level: byLevel, elo: byElo }
+        });
+    }
+    else {
+        await mongo.$leaderboards.insertOne({
+            level: byLevel,
+            elo: byElo
+        });
+    }
     for (let { name } of byLevel) {
         const $player = await mongo.$players.findOne({ name });
         if ($player) {
-            const newValue = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
+            const newValue = `${BigInt($player.rewards.ecr) + (1n * (10n ** 18n))}`;
             $player.rewards.ecr = newValue;
             await mongo.$players.replaceOne({ name }, $player);
         }

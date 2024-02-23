@@ -56,6 +56,9 @@ const gameEnded = (): void => {
             isWinner ? ranked.won += 1 : ranked.lost += 1;
           }
 
+
+          store.rewards.ees = `${BigInt(store.rewards.ees) + BigInt(params.eesReward)}`;
+
           return store;
         });
 

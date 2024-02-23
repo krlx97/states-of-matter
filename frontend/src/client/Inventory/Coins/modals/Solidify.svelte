@@ -26,9 +26,9 @@
   };
 
   const onSetMax = (): void => {
+    soundService.play("click");
     $formStore.fields.amount.value = formatUnits(balance);
     onInput();
-    soundService.play("click");
   };
 
   const onSubmit = async (): Promise<void> => {
@@ -91,8 +91,8 @@
       on:input="{onInput}"/>
 
     <TableComponent items="{[
-      ["BALANCE", receipt.staked, "enrg"],
-      ["REMAINING", receipt.remaining, "enrg"]
+      ["Balance", receipt.staked, "enrg"],
+      ["Remaining balance", receipt.remaining, "enrg"]
     ]}"/>
 
     <svelte:fragment slot="submit">

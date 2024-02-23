@@ -1,7 +1,7 @@
 import {create_in_transition} from "svelte/internal";
 import {soundService} from "services";
 import {get} from "svelte/store";
-import {nodeStore, playerStore} from "stores";
+import {gameStore, nodeStore, playerStore} from "stores";
 
 const death = (animation: any): void => {
   const nodes = get(nodeStore);
@@ -24,22 +24,43 @@ const death = (animation: any): void => {
     isPlayer = false;
   }
 
+
   create_in_transition(elem, () => {
     return {
-      duration: 800,
-      css (t, u) {
+      duration: 900,
+      css (t) {
         if (isPlayer) {
           return `
             transform: translateX(-${t * (cardRect.left - graveRect.left)}px);
           `;
         } else {
+          const distance = graveRect.left - cardRect.left;
+          // For the opponent, we need to mirror the translation, so we negate the distance
+          const translationX = distance * t;
+
+          // Apply the translation
+          // card.style.transform = `translateX(${translationX}px)`;
           return `
-            transform: translateX(${t * (graveRect.right - cardRect.right)}px);
+            transform: translateX(${translationX}px);
           `;
         }
       }
     };
   }, {}).start();
+
+  setTimeout(() => {
+    gameStore.update((store) => {
+      if (isPlayer) {
+        store.player.graveyard.push(store.player.field[field]);
+        store.player.field[field] = undefined;
+      } else {
+        store.opponent.graveyard.push(store.opponent.field[field]);
+        store.opponent.field[field] = undefined;
+      }
+
+      return store;
+    });
+  }, 890);
 
   soundService.play("death");
 };

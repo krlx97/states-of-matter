@@ -5,15 +5,25 @@
 
 <style>
   .field {
-    height: 24px;
-    width: 24px;
+    position: relative;
+    height: 32px;
+    width: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgb(var(--red));
+    background-color: rgb(var(--warn));
     border-radius: 50%;
-    box-shadow: var(--elevation-sm);
     cursor: pointer;
+    box-shadow: 0 0 1px 2px rgb(var(--warn));
+    animation: glowred 600ms linear infinite alternate;
+  }
+
+  @keyframes glowred {
+    from {
+      background-color: transparent;
+    } to {
+      background-color: rgb(var(--warn));
+    }
   }
 
   .field:hover .field-card {
@@ -23,9 +33,10 @@
   .field-card {
     visibility: hidden;
     position: absolute;
-    top: -114px;
+    top: -166px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) scale(0.6);
+
   }
 </style>
 

@@ -66,7 +66,7 @@ $: bars = [{
       rgba(179, 105, 244, 0.1) 0%,
       rgba(0, 0, 0, 0) 100%
     );
-    border: 1px solid;
+    /* border: 1px solid;
     border-right-width: 0;
     border-left-width: 0;
     border-image: linear-gradient(
@@ -74,7 +74,7 @@ $: bars = [{
       rgba(63,63,63,1) 0%,
       rgba(255,255,255,1) 50%,
       rgba(63,63,63,1) 100%
-    ) 1;
+    ) 1; */
     box-sizing: border-box;
     cursor: pointer;
   }
@@ -112,9 +112,9 @@ $: bars = [{
     display: flex;
     align-items: center;
     gap: var(--xs);
-    border: 1px solid transparent;
+    border: 1px solid rgba(var(--grey), 0.333);
     /* border: 0 solid; */
-    border-bottom-color: rgb(var(--grey));
+    /* border-bottom-color: rgb(var(--grey)); */
     /* border-image: linear-gradient(
       90deg,
       rgb(63, 63, 63) 0%,
@@ -127,7 +127,7 @@ $: bars = [{
     transition: border-color 400ms, background-color 400ms;
   }
   .selected-deck:hover {
-    border-color: rgb(var(--grey));
+    border-color: rgb(var(--white));
     cursor: pointer;
     background-color: rgb(var(--dark-grey));
   }
@@ -227,8 +227,8 @@ $: bars = [{
   <div class="selected-deck__attrs">
 
     <div style="display: flex; justify-content: space-between; line-height: 1.25;;">
-      <div class="selected-deck__main__title">
-        <TextComponent color="{klassColors.get(deck.klass) || "common"}">
+      <div class="selected-deck__main__title" style="font-size: var(--xs);">
+        <TextComponent color="{klassColors.get(deck.klass) || "common"}" size="xs">
           {deck.name}
         </TextComponent>
         <br/>
@@ -237,13 +237,13 @@ $: bars = [{
 
       <div class="selected-deck__main__title">
         <div class="deck__stats">
-          <TextComponent color="damage">
+          <TextComponent color="damage" size="xs">
             {deck.average.damage.toFixed(2)}
           </TextComponent>
-          <TextComponent color="mana">
+          <TextComponent color="mana" size="xs">
             {deck.average.manaCost.toFixed(2)}
           </TextComponent>
-          <TextComponent color="health">
+          <TextComponent color="health" size="xs">
             {deck.average.health.toFixed(2)}
           </TextComponent>
         </div>

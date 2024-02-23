@@ -13,24 +13,9 @@ process.on("uncaughtException", (error, origin): void => {
 });
 
 const cleanup = async (): Promise<void> => {
-  // await contracts.somGame["addItem"](101301n, 1n).catch(console.log);
-  // await contracts.somGame["addItem"](101302n, 2n).catch(console.log);
-  // await contracts.somGame["addItem"](101303n, 3n).catch(console.log);
-  // await contracts.somGame["addItem"](101304n, 4n).catch(console.log);
-  // await contracts.somGame["addItem"](101305n, 5n).catch(console.log);
-  // await contracts.somGame["addItem"](101401n, 1n).catch(console.log);
-  // await contracts.somGame["addItem"](101402n, 2n).catch(console.log);
-  // await contracts.somGame["addItem"](101403n, 3n).catch(console.log);
-  // await contracts.somGame["addItem"](101404n, 4n).catch(console.log);
-  // await contracts.somGame["addItem"](101405n, 5n).catch(console.log);
-  // await contracts.somGame["addItem"](101501n, 1n).catch(console.log);
-  // await contracts.somGame["addItem"](101502n, 2n).catch(console.log);
-  // await contracts.somGame["addItem"](101503n, 3n).catch(console.log);
-  // await contracts.somGame["addItem"](101504n, 4n).catch(console.log);
-  // await contracts.somGame["addItem"](101505n, 5n).catch(console.log);
-
   // remove all rankedQueuePlayers, casualQueuePlayers, and gamePopups when
   // restarting the server?
+  // also restart all games timers here as well...
 };
 
 await cleanup();
@@ -117,7 +102,7 @@ server.io.on("connection", (socket): void => {
 
 server.http.listen(process.env.PORT || 4201);
 
-schedule("0 */24 * * *", async (): Promise<void> => {
+schedule("0 */6 * * *", async (): Promise<void> => {
   for await (let $player of mongo.$players.find()) {
     if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
       $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
@@ -156,35 +141,65 @@ schedule("0 */24 * * *", async (): Promise<void> => {
     contracts.ethericEnergy.totalSupply()
   ]);
 
+
+  const snapshots = await Promise.all([
+    mongo.$supplySnapshots.findOne({
+      name: "ees"
+    }),
+    mongo.$supplySnapshots.findOne({
+      name: "ecr"
+    }),
+    mongo.$supplySnapshots.findOne({
+      name: "enrg"
+    })
+  ]);
+
   const POW = 10n ** 18n;
   const REWARD_PER_MS = 1000000n;
   const date = Date.now();
   const ecrStaked = (enrg * (1n * POW + ((BigInt(date) - deployTimestamp * 1000n) * REWARD_PER_MS))) / POW;
   const supply = ecr + ecrStaked;
 
-  await Promise.all([
-    mongo.$supplySnapshots.updateOne({
-      name: "ees"
-    }, {
-      $push: {
-        "snapshots": {date, supply: `${ees}`}
-      }
-    }),
-    mongo.$supplySnapshots.updateOne({
-      name: "ecr"
-    }, {
-      $push: {
-        "snapshots": {date, supply: `${supply}`}
-      }
-    }),
-    mongo.$supplySnapshots.updateOne({
-      name: "enrg"
-    }, {
-      $push: {
-        "snapshots": {date, supply: `${enrg}`}
-      }
-    })
-  ]);
+  if (!snapshots[0] && !snapshots[1] && !snapshots[2]) {
+    await Promise.all([
+      mongo.$supplySnapshots.insertOne({
+        name: "ees",
+        snapshots: [{date, supply: `${ees}`}]
+      }),
+      mongo.$supplySnapshots.insertOne({
+        name: "ecr",
+        snapshots: [{date, supply: `${supply}`}]
+      }),
+      mongo.$supplySnapshots.insertOne({
+        name: "enrg",
+        snapshots: [{date, supply: `${enrg}`}]
+      })
+    ]);
+  } else {
+    await Promise.all([
+      mongo.$supplySnapshots.updateOne({
+        name: "ees"
+      }, {
+        $push: {
+          "snapshots": {date, supply: `${ees}`}
+        }
+      }),
+      mongo.$supplySnapshots.updateOne({
+        name: "ecr"
+      }, {
+        $push: {
+          "snapshots": {date, supply: `${supply}`}
+        }
+      }),
+      mongo.$supplySnapshots.updateOne({
+        name: "enrg"
+      }, {
+        $push: {
+          "snapshots": {date, supply: `${enrg}`}
+        }
+      })
+    ]);
+  }
 
   const byLevel = (await mongo.$players
     .find()
@@ -209,15 +224,24 @@ schedule("0 */24 * * *", async (): Promise<void> => {
     return {name, level, elo, experience, avatarId, bannerId, games};
   });
 
-  await mongo.$leaderboards.updateOne({}, {
-    $set: {level: byLevel, elo: byElo}
-  });
+  const leaderboards = await mongo.$leaderboards.findOne({});
+
+  if (leaderboards) {
+    await mongo.$leaderboards.updateOne({}, {
+      $set: {level: byLevel, elo: byElo}
+    });
+  } else {
+    await mongo.$leaderboards.insertOne({
+      level: byLevel,
+      elo: byElo
+    });
+  }
 
   for (let {name} of byLevel) {
     const $player = await mongo.$players.findOne({name});
 
     if ($player) {
-      const newValue = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`
+      const newValue = `${BigInt($player.rewards.ecr) + (1n * (10n ** 18n))}`
       $player.rewards.ecr = newValue;
       await mongo.$players.replaceOne({name}, $player);
     }

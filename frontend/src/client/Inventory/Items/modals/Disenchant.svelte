@@ -1,6 +1,6 @@
 <script lang="ts">
   import {ethersService, formService, soundService} from "services";
-  import {modalStore, inventoryStore} from "stores";
+  import {modalStore, inventoryStore, playerStore} from "stores";
   import {items} from "@som/shared/data";
   import { CurrencyComponent, InputComponent, FormSubmitComponent, FormComponent, ModalComponent, TableComponent} from "ui";
     import { onMount } from "svelte";
@@ -9,8 +9,6 @@
   const item = items.find((item) => item.id === id);
   const itemWallet = $inventoryStore.items.find((item) => item.id === BigInt(id));
   let eesPrice = 0n;
-
-  console.log(itemWallet);
   const formStore = formService.create({
     amount: ["", "item", itemWallet.balance],
   });
@@ -44,12 +42,6 @@
     }
   });
 
-  const getPrice = (): any => {
-    // const item = items.find((item) => item.id === id);
-    // if (item.type !== 2) { return 0; }
-    return 100;
-  }
-
   const onInput = (): void => {
     formService.validate(formStore);
 
@@ -65,9 +57,9 @@
   };
 
   const onSetMax = (): void => {
+    soundService.play("click");
     $formStore.fields.amount.value = `${receipt.owned}`;
     onInput();
-    soundService.play("click");
   };
 
   const onDisenchant = async (): Promise<void> => {
@@ -95,15 +87,57 @@
   };
 </script>
 
+<style>
+.commona {
+    color: rgb(var(--common));
+    text-shadow: 0px 2px 8px rgb(var(--common));
+  }
+
+  .uncommona {
+    color: rgb(var(--uncommon));
+    text-shadow: 0px 2px 8px rgb(var(--uncommon));
+  }
+
+  .rarea {
+    color: rgb(var(--rare));
+    text-shadow: 0px 2px 8px rgb(var(--rare));
+  }
+
+  .epica {
+    color: rgb(var(--epic));
+    text-shadow: 0px 2px 8px rgb(var(--epic));
+  }
+
+  .legendarya {
+    color: rgb(var(--legendary));
+    text-shadow: 0px 2px 8px rgb(var(--legendary));
+  }
+
+  .mythica {
+    color: rgb(var(--mythic));
+    text-shadow: 0px 2px 8px rgb(var(--mythic));
+  }
+</style>
+
 <ModalComponent>
-  <svelte:fragment slot="title">Disenchant {item?.name || ""}</svelte:fragment>
+  <svelte:fragment slot="title">Disenchant
+    <span
+      class:commona={item?.rarity === 0}
+      class:uncommona={item?.rarity === 1}
+      class:rarea={item?.rarity === 2}
+      class:epica={item?.rarity === 3}
+      class:legendarya={item?.rarity === 4}
+      class:mythica={item?.rarity === 5}>
+      {item?.name || ""}
+    </span></svelte:fragment>
 
   <svelte:fragment slot="info">
-    Disenchant items to obtain etheric essence.
+    Disenchant items to obtain Etheric Essence.
   </svelte:fragment>
 
   <svelte:fragment slot="content">
     <FormComponent on:submit="{onDisenchant}">
+
       <InputComponent
         label="Amount"
         error="{$formStore.fields.amount.error}"
@@ -113,23 +147,20 @@
 
       <TableComponent items="{[
         ["Balance", receipt.owned],
-        ["Remaining", receipt.remaining],
-        // ["EES per item", eesPrice, "ees"],
-        // ["EES reward", BigInt(receipt.totalReward), "ees"],
-        // ["EES balance", BigInt(receipt.newBalance), "ees"],
+        ["Remaining", receipt.remaining]
       ]}"/>
+
       <TableComponent items="{[
-        // ["Item balance", receipt.owned],
-        // ["Item remaining", receipt.remaining],
-        // ["EES per item", eesPrice, "ees"],
-        ["EES per item", eesPrice, "ees"],
-        ["EES total", BigInt(receipt.totalReward), "ees"],
-        ["New balance", BigInt(receipt.newBalance), "ees"],
+        ["Item reward", eesPrice, "ees"],
+        ["Total reward", BigInt(receipt.totalReward), "ees"],
+        ["Balance", BigInt($inventoryStore.ees), "ees"],
+        ["New balance", BigInt(receipt.newBalance), "ees"]
       ]}"/>
 
       <svelte:fragment slot="submit">
         <FormSubmitComponent {formStore}>DISENCHANT</FormSubmitComponent>
       </svelte:fragment>
+
     </FormComponent>
   </svelte:fragment>
 

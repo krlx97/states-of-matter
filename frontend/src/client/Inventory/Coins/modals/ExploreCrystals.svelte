@@ -13,39 +13,32 @@
   let supply = liquid + staked;
   let chartCanvas: HTMLCanvasElement;
   let int: NodeJS.Timeout;
+  let isNoDataYet = false;
 
   onMount((): void => {
     const ecrr = $snapshotsStore.find((s) => s.name === "ecr");
-    const labels = ecrr.snapshots.map(({date}) => new Date(date).toLocaleDateString());
-    const data = ecrr.snapshots.map(({supply}) => formatUnits(supply));
 
-    new Chart(chartCanvas, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Supply",
-            data,
-            borderColor: "rgb(121, 108, 255)"
-          }
-        ]
-      },
-      // options: {
-      //   scales: {
-      //     y: {
-      //       ticks: {
-      //         display: false
-      //       }
-      //     }
-      //   },
-      //   plugins: {
-      //     legend: {
-      //       display: false
-      //     }
-      //   }
-      // }
-    });
+    if (ecrr) {
+      const labels = ecrr.snapshots.map(({date}) => new Date(date).toLocaleDateString());
+      const data = ecrr.snapshots.map(({supply}) => formatUnits(supply));
+
+      new Chart(chartCanvas, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Supply",
+              data,
+              borderColor: "rgb(121, 108, 255)"
+            }
+          ]
+        }
+      });
+    } else {
+      isNoDataYet = true;
+      chartCanvas.style.display = "none";
+    }
 
     int = setInterval((): void => {
       staked = ($inventoryStore.total.enrg * (1n * POW + ((BigInt(Date.now()) - deployTimestamp) * REWARD_PER_MS))) / POW;
@@ -59,10 +52,20 @@
 
   $: items = [
     ["Supply", supply, "ecr"],
-    ["Crystals", liquid, "ecr"],
-    ["Energy", staked, "ecr"]
+    ["Etheric Crystals", liquid, "ecr"],
+    ["Etheric Energy", staked, "ecr"]
   ]
 </script>
+
+<style>
+  .center {
+    width: 640px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
 
 <ModalComponent width="640px">
   <svelte:fragment slot="title">Etheric Crystals</svelte:fragment>
@@ -78,6 +81,9 @@
 
   <svelte:fragment slot="content">
     <canvas bind:this="{chartCanvas}"></canvas>
+    {#if isNoDataYet}
+      <div class="center">There are no snapshots yet...</div>
+    {/if}
     <TableComponent {items}/>
   </svelte:fragment>
 </ModalComponent>

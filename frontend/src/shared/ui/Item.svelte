@@ -37,9 +37,9 @@
   .item {
     /* height: 180px; */
     width: 110px;
-    color: rgb(127, 127, 127);
-    background-color: rgb(31, 31, 31);
-    border: 1px solid rgb(127, 127, 127);
+    color: rgb(var(--white));
+    background-color: rgb(var(--dark-grey));
+    border: 1px solid rgb(var(--grey), var(--opacity-sm));
     border-radius: 8px;
     box-sizing: border-box;
     cursor: pointer;
@@ -68,41 +68,127 @@
     flex-direction: column;
     /* align-items: center; */
     justify-content: center;
-    font-size: var(--xs);
+    font-size: var(--sm);
   }
+
+/* 
+.rainbow-border:hover {
+	--angle: 0deg;
+	width: 110px;
+	border: 1px solid;
+	border-image: conic-gradient(from var(--angle), rgb(var(--common)), rgb(var(--uncommon)), rgb(var(--rare)), rgb(var(--epic)), rgb(var(--legendary)), rgb(var(--common))) 1;
+  border-radius: 8px;
+	animation: 2s rotate linear infinite;
+}
+
+@keyframes rotate {
+	to {
+		--angle: 360deg;
+	}
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+} */
+
+
+  /* .rainbow-border {
+  position: relative;
+  z-index: 1;
+  }
+  .rainbow-border::before {
+    content: "";
+    background: linear-gradient(
+      90deg,
+      #0ebeff,
+      #ffdd40,
+      #ae63e4,
+      #47cf73,
+      #0ebeff,
+      #ffdd40,
+      #ae63e4,
+      #47cf73
+    );
+    background-size: 200% 200%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -2;
+  }
+  .rainbow-border::after {
+    content: "";
+    background-color: inherit;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    margin: 5px;
+  }
+  .rainbow-border:hover::before {
+    animation: hover-rainbow-border 1.5s linear infinite;
+  } */
 
   .none:hover {
     border-color: rgb(255, 255, 255);
-    color: rgb(255, 255, 255);
+    /* color: rgb(255, 255, 255); */
   }
 
   .common:hover {
-    border-color: rgb(var(--common));
-    color: rgb(var(--common));
+    border-color: rgba(var(--common), var(--opacity-md));
+    /* color: rgb(var(--common)); */
   }
 
   .uncommon:hover {
-    border-color: rgb(var(--uncommon));
-    color: rgb(var(--uncommon));
+    border-color: rgba(var(--uncommon), var(--opacity-md));
+    /* color: rgb(var(--uncommon)); */
   }
 
   .rare:hover {
-    border-color: rgb(var(--rare));
-    color: rgb(var(--rare));
+    border-color: rgba(var(--rare), var(--opacity-md));
+    /* color: rgb(var(--rare)); */
   }
 
   .epic:hover {
-    border-color: rgb(var(--epic));
-    color: rgb(var(--epic));
+    border-color: rgba(var(--epic), var(--opacity-md));
+    /* color: rgb(var(--epic)); */
   }
 
   .legendary:hover {
-    border-color: rgb(var(--legendary));
-    color: rgb(var(--legendary));
+    border-color: rgba(var(--legendary), var(--opacity-md));
+    /* color: rgb(var(--legendary)); */
   }
 
   .mythic:hover {
-    border-color: rgb(var(--mythic));
+    border-color: rgba(var(--mythic), var(--opacity-md));
+    /* color: rgb(var(--mythic)); */
+  }
+  .commona {
+    color: rgb(var(--common));
+  }
+
+  .uncommona {
+    color: rgb(var(--uncommon));
+  }
+
+  .rarea {
+    color: rgb(var(--rare));
+  }
+
+  .epica {
+    color: rgb(var(--epic));
+  }
+
+  .legendarya {
+    color: rgb(var(--legendary));
+  }
+
+  .mythica {
     color: rgb(var(--mythic));
   }
 </style>
@@ -140,7 +226,12 @@
   {/if}
 
   <div class="item__title">
-    <div style="text-align: center;">{item.name}</div>
+    <div style="text-align: center;" class:commona={item.rarity === 0}
+  class:uncommona={item.rarity === 1}
+  class:rarea={item.rarity === 2}
+  class:epica={item.rarity === 3}
+  class:legendarya={item.rarity === 4}
+  class:mythica={item.rarity === 5}>{item.name}</div>
     <div>
       {#if item.rarity === 0}
         <div style="text-align: center;">

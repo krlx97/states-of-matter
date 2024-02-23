@@ -24,7 +24,8 @@ const heartOfSteel = (params: HeartOfSteel): Animations => {
     type: "DAMAGE",
     field,
     name: opponent.name,
-    increment: 3
+    increment: 3,
+    decrement: 0
   }];
 };
 

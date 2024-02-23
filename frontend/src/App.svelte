@@ -56,15 +56,16 @@
     position: relative;
     height: 900px;
     width: 1600px;
-    background-color: rgb(var(--dark-grey));
     overflow: hidden;
+    border: 1px solid rgba(var(--grey), 0.3);
+    border-radius: 8px;
     /* 1 for 1080p, 1.33 for 2k, 2 for 4k */
     /* transform: scale(1); */
   }
 </style>
 
 <div class="app-wrapper">
-  <div class="app">
+  <div class="app" id="app">
     {#if !$playerStore.name}
       <AuthComponent/>
     {:else if $playerStore.gameId > 0}

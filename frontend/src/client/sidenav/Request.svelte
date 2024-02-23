@@ -43,7 +43,9 @@
 <div class="request">
   <div>{name}</div>
   <div class="request__actions">
-    <ButtonComponent isIcon on:click="{onAcceptFriend}">✔</ButtonComponent>
-    <ButtonComponent isIcon on:click="{onDeclineFriend}">×</ButtonComponent>
+    <ButtonComponent isIcon on:click="{onAcceptFriend}">    <i class="fa-solid fa-check"></i>
+</ButtonComponent>
+    <ButtonComponent isIcon on:click="{onDeclineFriend}">    <i class="fa-solid fa-times"></i>
+</ButtonComponent>
   </div>
 </div>

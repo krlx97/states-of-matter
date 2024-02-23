@@ -13,25 +13,42 @@ interface Blaze {
   playerMinionField: MinionField;
 }
 
-const blaze = (params: Blaze): Animations => {
-  const {player, playerMinion, playerMinionField} = params;
+interface OnEndTurn {
+  player: GamePlayer;
+  playerMinionField: GameMinionCard;
+  blazeBuff: any;
+}
 
-  const blazeBuff = playerMinion.buffs.find(
-    (buff): boolean => buff.id === EffectId.BLAZE
-  );
+const blaze = {
+  onNormalSummon (params: Blaze): Animations {
+    const {player, playerMinion, playerMinionField} = params;
 
-  if (!blazeBuff) {
-    return [];
+    playerMinion.buffs.push({
+      id: EffectId.BLAZE,
+      data: {
+        hasAttackedTwice: true
+      }
+    });
+
+    return [{
+      type: "FLOATING_TEXT",
+      field: playerMinionField,
+      name: player.name,
+      text: "BLAZE"
+    }];
+  },
+  onEndTurn (params: OnEndTurn): Animations {
+    const {player, playerMinionField, blazeBuff} = params;
+
+    blazeBuff.data.hasAttackedTwice = false;
+
+    return [{
+      type: "FLOATING_TEXT",
+      field: playerMinionField,
+      text: "BLAZE",
+      name: player.name
+    }];
   }
-
-  blazeBuff.data.hasAttackedTwice = false;
-
-  return [{
-    type: "FLOATING_TEXT",
-    field: playerMinionField,
-    text: "BLAZE",
-    name: player.name
-  }];
 };
 
 export {blaze};

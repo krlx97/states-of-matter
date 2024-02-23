@@ -2,6 +2,8 @@ import {GameType, PlayerStatus, QueueId} from "@som/shared/enums";
 import {mongo, server} from "app";
 import {generateGame} from "./generateGame";
 import {generateGameView} from "./generateGameView";
+import { endTurn } from "./endTurn";
+import { endTurnTimeouts } from "./endTurnTimeouts";
 
 const startGame = async (
   id: number,
@@ -43,6 +45,11 @@ const startGame = async (
   const isInserted = await $games.insertOne(game);
 
   if (!isInserted.insertedId) { return; }
+
+  clearTimeout(endTurnTimeouts[game.id]);
+  endTurnTimeouts[game.id] = setTimeout(async (): Promise<void> => {
+    await endTurn(game.currentPlayer);
+  }, 30000);
 
   io.to($playerA.socketId).emit("startGame" as any, {
     playerA: {

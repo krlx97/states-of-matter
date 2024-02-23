@@ -2,7 +2,7 @@ import {isAddress, parseUnits} from "ethers";
 import {playerStore} from "stores";
 import {get, writable, type Writable} from "svelte/store";
 
-type Validator = "name" | "password" | "currency" | "item" | "address" | "craft" | "craft2";
+type Validator = "name" | "password" | "currency" | "item" | "address" | "craft" | "craft2" | "approval";
 
 type FormField = {
   value: string;
@@ -27,6 +27,7 @@ const isInvalidNumber = (value: string): boolean => !/^-?\d*[\.]?\d+$/.test(valu
 const isInvalidDecimals = (value: string): boolean => (value.split(".")[1] || []).length > 18;
 const isNoDecimals = (value: string): boolean => (value.split(".")[1] || []).length > 0;
 const isNegative = (value: bigint): boolean => value <= 0;
+const isLessThan0 = (value: bigint): boolean => value < 0;
 const isSufficientBalance = (balance: bigint, value: bigint): boolean => balance - value < 0;
 
 const validateName = (name: string): string => {
@@ -190,6 +191,28 @@ const validateCraft2 = (
   return "";
 };
 
+const validateApproval = (approval: bigint | undefined, value: string): string => {
+  if (isEmpty(value)) {
+    return "Mustn't be empty";
+  }
+
+  if (isInvalidNumber(value)) {
+    return "Invalid number format";
+  }
+
+  if (isInvalidDecimals(value)) {
+    return "Up to 18 decimal places allowed";
+  }
+
+  const amt = parseUnits(value);
+
+  if (isLessThan0(amt)) {
+    return "Can't be less than 0";
+  }
+
+  return "";
+};
+
 const create = <K extends string>(obj: Record<K, FieldData>): Writable<Form<K>> => {
   const fields = Object.keys(obj).reduce((acc, key) => {
     acc[key] = {
@@ -228,6 +251,8 @@ const validate = (formStore: Writable<any>): void => {
         field.error = validateCraft(field.balance, field.value, field.price);
       } else if (field.validator === "craft2") {
         field.error = validateCraft2(field.balance, field.balance2, field.value, field.price, field.price2);
+      } else if (field.validator === "approval") {
+        field.error = validateApproval(field.balance, field.value);
       }
     });
 

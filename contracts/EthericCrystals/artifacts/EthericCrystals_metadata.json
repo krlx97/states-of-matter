@@ -547,11 +547,11 @@
 			]
 		},
 		"contracts/EthericCrystals/EthericCrystals.sol": {
-			"keccak256": "0xe0117be431e5bbf21df92126a808ba49ec010389910a5dc022b122873f66f4e6",
+			"keccak256": "0xd82ce7ff19d3b67f01d64cfc9819443c304de6607c6cf3b1fffd49786ce364c7",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://305c3841a33bff510251e7d04a8669f6800b2945aee54e2f1789288d27959c61",
-				"dweb:/ipfs/QmcGzy96KP9vJP31wk8kUQnWgT4PbkQAseTsnhHBRyfLiP"
+				"bzz-raw://978ca6ecd92f1bcd84f955ba26348765484b53d213b2cde2dd6592af92da819b",
+				"dweb:/ipfs/QmZhSSwBHUr6PLiMx42ivTwZWQ8ETJ58LaNVkt4RGGm3A8"
 			]
 		}
 	},

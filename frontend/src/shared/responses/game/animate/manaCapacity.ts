@@ -8,15 +8,15 @@ const manaCapacity = (animation: any): void => {
   let start: number | undefined;
   let end: number | undefined;
   const player = get(playerStore);
-  const {type, increment, field, name} = animation;
+  const {increment, decrement, name} = animation;
 
-  setTimeout(() => {
+  // setTimeout(() => {
     const step = (timestamp: number): void => {
       if (!startTimestamp) {
         startTimestamp = timestamp;
       }
 
-      const progress = Math.min((timestamp - startTimestamp) / 400, 1);
+      const progress = Math.min((timestamp - startTimestamp) / 600, 1);
 
       gameStore.update((store) => {
         let minion;
@@ -29,7 +29,11 @@ const manaCapacity = (animation: any): void => {
 
         if (start === undefined && end === undefined) { // can be 0, so check for === undefined
           start = minion.mana.current;
-          end = increment > 0 ? minion.mana.current - increment : minion.mana.current + increment;
+          if (increment && !decrement) {
+            end = minion.mana.current + increment;
+          } else if (!increment && decrement) {
+            end = minion.mana.current - decrement;
+          }
         }
 
         const newCurrentManaCapacity = Math.floor(progress * (end - start) + start);
@@ -48,7 +52,7 @@ const manaCapacity = (animation: any): void => {
 
     requestAnimationFrame(step);
     soundService.play("attributeChange");
-  }, 400);
+  // }, 400);
 };
 
 export {manaCapacity};

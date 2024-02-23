@@ -24,27 +24,29 @@ import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
 };
 
 const keys = {
-  ethericEssence: "0xDeCD7574fa58b52Dc87dDDB3BD376228D54E78a1",
-  ethericCrystals: "0xf811f1AB4bfE4f58a703a0E32654a7789e7A9469",
-  ethericEnergy: "0x51d94d7F370DAD3971f54baAb4911acFedbCf984",
-  somTokens: "0xdF735A6a29a85E144623F8c6197b11134d4C11ae",
-  somGame: "0x3BDCc313b07cAeA90Fc5323749D13F086a4b62e0"
+  ethericEssence: "0xba69ddE1586be3Ab4E101C13f8f9d730082b5BE0",
+  ethericCrystals: "0x5ef70Dd1B3D4BA9D2509C665E63A0aDCbF3EA259",
+  ethericEnergy: "0x4cd0B057577770a5699Be8fefd399035be894F3d",
+  somTokens: "0xD0A76288A6b84059FAf5218AC2420251c6C5b5f8",
+  somGame: "0x90Acf3677114443AF72798a558d5bb56278eb743"
 };
 
-const init = async (address: string = ""): Promise<void> => {
+const init = async (address: string): Promise<void> => {
   if (window.ethereum) {
-    const provider = new BrowserProvider(window.ethereum);
-    const signer = new JsonRpcSigner(provider, address)
-    // const signer = await provider.getSigner();
-    // const network = await provider.getNetwork();
+    let provider = new BrowserProvider(window.ethereum);
+    let signer: JsonRpcSigner | undefined;
+
+    if (address.length) {
+      signer = new JsonRpcSigner(provider, address);
+    }
 
     ethersStore.update((store) => {
       store.contracts = {
-        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, signer),
-        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, signer),
-        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, signer),
-        somTokens: new Contract(keys.somTokens, SomTokens.abi, signer),
-        somGame: new Contract(keys.somGame, SomGame.abi, signer)
+        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, signer ? signer : provider),
+        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, signer ? signer : provider),
+        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, signer ? signer : provider),
+        somTokens: new Contract(keys.somTokens, SomTokens.abi, signer ? signer : provider),
+        somGame: new Contract(keys.somGame, SomGame.abi, signer ? signer : provider)
       };
 
       return store;
@@ -67,27 +69,26 @@ const init = async (address: string = ""): Promise<void> => {
 };
 
 const transact = async (
-  contractName: any,
+  contractName: keyof typeof keys,
   action: string,
-  params: any[]
+  params: Array<string | bigint>
 ): Promise<boolean> => {
-  const store = get(ethersStore);
-  const contract = store.contracts[contractName];
+  const $ethersStore = get(ethersStore);
+  const contract = $ethersStore.contracts[contractName];
 
   if (!contract) {
-    console.error("Metamask not connected.");
     return false;
   }
 
-  const tx = await contract[action](...params).catch(console.log);
+  const transaction = await contract[action](...params).catch(console.log);
 
-  if (!tx) {
+  if (!transaction) {
     return false;
   }
 
-  const fin = await tx.wait();
+  const receipt = await transaction.wait().catch(console.log);
 
-  if (!fin) {
+  if (!receipt) {
     return false;
   }
 
@@ -122,6 +123,15 @@ const reloadUser = async (): Promise<void> => {
   const {address, elo} = get(playerStore);
 
   if (address) {
+    const accounts = await window.ethereum?.request({
+      method: "eth_requestAccounts"
+    });
+
+    ethersStore.update((store) => {
+      store.accounts = accounts || [];
+      return store;
+    });
+
     const theItems = [];
 
     const itemIds = items
@@ -176,7 +186,7 @@ const reloadUser = async (): Promise<void> => {
           theItems.push({
             id: BigInt(id),
             balance: balance.balance,
-            supply: /*await somTokens["totalSupply(uint256)"](id)*/0n
+            supply: await somTokens["totalSupply(uint256)"](id)/*0n*/
           });
         }
       }
@@ -270,7 +280,7 @@ const reloadUser = async (): Promise<void> => {
           theItems.push({
             id: BigInt(id),
             balance: 0n,
-            supply: 0n
+            supply: await somTokens["totalSupply(uint256)"](id)
           });
         }
       }
@@ -296,6 +306,11 @@ const reloadUser = async (): Promise<void> => {
       items: theItems
     });
   }
+
+  ethersStore.update((store) => {
+    store.isLoaded = true;
+    return store;
+  });
 };
 
 const ethersService = {keys, init, transact, sign, reloadUser};

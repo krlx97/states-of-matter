@@ -44,6 +44,11 @@
     soundService.play("click");
     socketService.socket.emit("leaveQueue");
   };
+
+  const onDeckBuilder = (): void => {
+    soundService.play("click");
+
+  };
 </script>
 
 <style>
@@ -52,6 +57,8 @@
     height: 100%;
     width: 100%;
     display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .mode {
@@ -75,7 +82,7 @@
     z-index: 101;
   }
 
-  .casual:hover {
+  /* .casual:hover {
     background-color: rgba(0, 255, 0, 0.1);
   }
   .ranked:hover {
@@ -83,15 +90,23 @@
   }
   .custom:hover {
     background-color: rgba(128, 0, 255, 0.1);
-  }
+  } */
+  .big {font-size: var(--xl);}
 </style>
 
 <div class="modes">
   {#if !isDeckValid}
-    <TextComponent color="warn">
-      You must add 30 cards in your selected deck before you can play. Head over
-      to Deck Builder page and build your first deck.
-    </TextComponent>
+    <!-- <div style="display: flex; flex-direction: column; gap: 16px;"> -->
+      <TextComponent color="warn">
+        <span class="big">
+          You must add 30 cards in your selected deck before you can play. Head over
+          to Deck Builder page and build your first deck.
+        </span>
+      </TextComponent>
+      <!-- <div style="display: flex; justify-content: center;">
+        <ButtonComponent on:click="{onDeckBuilder}">DECK BUILDER</ButtonComponent>
+      </div> -->
+    <!-- </div> -->
   {:else}
     <div class="mode casual" class:isTutorial1>
       {#if isInCasualQueue}

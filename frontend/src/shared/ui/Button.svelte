@@ -12,12 +12,12 @@
     padding: 0 var(--lg) 0 calc(var(--lg) + 4px);
     height: 48px;
     background-color: rgb(var(--dark-grey));
-    border: 1px solid rgb(var(--grey));
+    border: 1px solid rgba(var(--grey), var(--opacity-sm));
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgb(var(--grey));
+    color: rgb(var(--white));
     font: 16px/1 "Nunito";
     letter-spacing: 4px;
     transition:
@@ -26,24 +26,22 @@
   }
 
   button:hover {
-    /* border-color: rgb(var(--white)); */
-    color: rgb(var(--white));
+    border-color: rgba(var(--white), var(--opacity-full));
     cursor: pointer;
   }
 
   button:focus {
-    /* border-color: rgb(var(--plasma)); */
-    color: rgb(var(--white));
+    border-color: rgb(var(--white));
     outline: 0;
   }
 
   button:disabled {
-    /* border-color: rgb(var(--grey)); */
-    cursor: not-allowed;
+    color: rgb(var(--grey));
   }
-  button:disabled:hover {
-    color: rgb(var(--solid));
 
+  button:disabled:hover {
+    border-color: rgba(var(--grey), var(--opacity-sm));
+    cursor: not-allowed;
   }
 
   .isIcon {

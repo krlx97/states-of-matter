@@ -11,7 +11,7 @@
 
   .deck__cards {
     position: absolute;
-    top: -48px;
+    bottom: -48px;
     left: 50%;
     width: 75%;
     padding: var(--sm);

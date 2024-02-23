@@ -1,16 +1,29 @@
 <script lang="ts">
+  import {onDestroy, onMount} from "svelte";
   import {cards, cardsView} from "@som/shared/data";
-  import {CardKlass, CardType} from "@som/shared/enums";
+  import {CardId, CardKlass, CardType} from "@som/shared/enums";
   import {modalService, soundService} from "services";
   import {notificationsStore, playerStore} from "stores";
   import {ClientCardComponent} from "ui";
   import CardLoreComponent from "./modals/CardLore.svelte";
+  import type {Unsubscriber} from "svelte/store";
 
   let card: any;
+  let isGrayscale = false;
   $: deck = $playerStore.decks[$playerStore.deckId];
 
   const onAddToDeck = (): void => {
     if (deck.cardsInDeck >= 30) {
+      return soundService.play("TAB");
+    }
+
+    if (card.id === CardId.FURY) {
+      notificationsStore.update((store) => {
+        const id = Math.random();
+        store.push({id, color: "warn", message: "Fury is temporarily disabled due to a game breaking bug..."});
+        return store;
+      });
+
       return soundService.play("TAB");
     }
 
@@ -21,7 +34,7 @@
     ) {
       notificationsStore.update((store) => {
         const id = Math.random();
-        store.push({id, color: "warn", message: `Can't add to deck, card is still in development...`});
+        store.push({id, color: "warn", message: "Can't add to deck, card is still in development..."});
         return store;
       });
 
@@ -122,6 +135,10 @@
 
     $playerStore.decks[$playerStore.deckId].cardsInDeck = $playerStore.decks[$playerStore.deckId].cards.reduce((acc, {amount}) => acc += amount, 0);
 
+    if (deckCard?.amount >= 2) {
+      isGrayscale = true;
+    }
+
     soundService.play("card");
   };
 
@@ -130,13 +147,35 @@
     soundService.play("click");
   };
 
+  let sub: Unsubscriber;
+
+  onMount((): void => {
+    const has = $playerStore.decks[$playerStore.deckId].cards.find((deckCard) => deckCard.id === card.id);
+    if (has && has.amount === 2) {
+      isGrayscale = true;
+    }
+
+    sub = playerStore.subscribe((store): void => {
+      const deckCard = store.decks[store.deckId].cards.find((deckCard) => deckCard.id === card.id)
+
+      if (deckCard && deckCard.amount >= 2) {
+        isGrayscale = true;
+      } else {
+        isGrayscale = false;
+      }
+    })
+  });
+
+  onDestroy(() => {sub()});
+
   export {card};
 </script>
 
 {#key $playerStore}
   <ClientCardComponent
-    isGlowing="{deck.klass === card.klass}"
+    {isGrayscale}
     {card}
+    isGlowing="{deck.klass === card.klass}"
     on:click="{onAddToDeck}"
     on:contextmenu="{onViewLore}"/>
 {/key}

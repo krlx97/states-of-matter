@@ -8,6 +8,7 @@ const generateGameView: GenerateGameView = ({
   type,
   currentPlayer,
   currentTurn,
+  endTurnTime,
   gameLogs,
   playerA,
   playerB
@@ -16,6 +17,7 @@ const generateGameView: GenerateGameView = ({
   type,
   currentPlayer,
   currentTurn,
+  endTurnTime,
   gameLogs,
   player: playerA.name === name ? {
     name: playerA.name,

@@ -18,7 +18,7 @@ const trapset = (animations: any) => {
       store.trapset.name = "";
       return store;
     });
-  }, 800);
+  }, 3000);
 };
 
 export {trapset};

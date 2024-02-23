@@ -20,7 +20,9 @@
 </style>
 
 {#if $formStore.isLoading}
-  <div class="spin">⟳</div>
+  <div style="height: 48px; display: flex; align-items: center; justify-content: center;">
+    <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+  </div>
 {:else}
   <ButtonComponent disabled="{$formStore.isDisabled}">
     <slot/>

@@ -169,7 +169,7 @@
   {/if}
 
   {#if minion}
-    <div in:scale="{{start: 8, duration: 400, opacity: 0}}">
+    <div in:scale="{{start: 8, duration: 300, opacity: 0}}">
       <CardComponent {isSelected} {isTargetable} card="{minion}" on:click="{onAttackSelect}"/>
     </div>
   {:else}

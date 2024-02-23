@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.20+commit.a1b79de6"
+		"version": "0.8.24+commit.e11b9ed9"
 	},
 	"language": "Solidity",
 	"output": {
@@ -547,11 +547,11 @@
 			]
 		},
 		"contracts/EthericEssence/EthericEssence.sol": {
-			"keccak256": "0x5d3ba6dca136f6c863385e480b0c35df9f784c465ea2565799c9a15086b45f6e",
+			"keccak256": "0xd8dfaa53e35744d2f2386c2fe45522bd0094d2611eba09580f58a3ede31714d5",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://ce99855cfab7c6b9e8fce9c4d732aa8657d0b72057361765444317cfd28b0fe5",
-				"dweb:/ipfs/QmfWBUzH9SsCD8Z1ppUskBGmcDpmPMJEJ6ZAV92N8dw14o"
+				"bzz-raw://fba0c2a2a344e7907759761d4a107e7969b08820a38499cea3c7859d38a6cdb9",
+				"dweb:/ipfs/QmQbQnnnA5QUAzx5rmjbBJS1gSa6aicrrjKdXKYJRL7H2e"
 			]
 		}
 	},

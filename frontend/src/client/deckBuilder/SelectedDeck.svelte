@@ -91,14 +91,15 @@
     }
 
     $playerStore.decks[$playerStore.deckId].cards = $playerStore.decks[$playerStore.deckId].cards.sort((a, b) => {
-      if (a.type === CardType.MINION && b.type === CardType.MINION) {
-        return sortAscending ? a.damage - b.damage : b.damage - a.damage;
-      } else if (a.type === CardType.MINION && b.type !== CardType.MINION) {
-        return 1;
+      if (a.type === CardType.MINION && b.type !== CardType.MINION) {
+        return -1; // Minions always come before magic/trap cards
       } else if (a.type !== CardType.MINION && b.type === CardType.MINION) {
-        return -1
+        return 1; // Magic/trap cards always come after minions
+      } else if (a.type === CardType.MINION && b.type === CardType.MINION) {
+        // Both are minions, sort based on damage
+        return sortAscending ? a.damage - b.damage : b.damage - a.damage;
       } else {
-        return 0;
+        return 0; // Cards other than minions are considered equal in terms of sorting
       }
     });
 
@@ -140,14 +141,15 @@
     }
 
     $playerStore.decks[$playerStore.deckId].cards = $playerStore.decks[$playerStore.deckId].cards.sort((a, b) => {
-      if (a.type === CardType.MINION && b.type === CardType.MINION) {
-        return sortAscending ? a.health - b.health : b.health - a.health;
-      } else if (a.type === CardType.MINION && b.type !== CardType.MINION) {
-        return 1;
+      if (a.type === CardType.MINION && b.type !== CardType.MINION) {
+        return -1; // Minions always come before magic/trap cards
       } else if (a.type !== CardType.MINION && b.type === CardType.MINION) {
-        return -1;
+        return 1; // Magic/trap cards always come after minions
+      } else if (a.type === CardType.MINION && b.type === CardType.MINION) {
+        // Both are minions, sort based on health
+        return sortAscending ? a.health - b.health : b.health - a.health;
       } else {
-        return 0;
+        return 0; // Cards other than minions are considered equal in terms of sorting
       }
     });
 
@@ -158,16 +160,22 @@
 <style>
   .selected-deck {
     padding: var(--sm);
+    /* padding-bottom: var(--xl); */
     display: flex;
     align-items: center;
     gap: var(--sm);
+    /* background-color: rgba(var(--dark-grey), var(--opacity-sm));
+    backdrop-filter: blur(var(--md)); */
+    /* border: 1px solid rgba(var(--grey), var(--opacity-sm)); */
+    /* border: 0 solid; */
+    border-radius: 8px;
     border: 0 solid;
     border-bottom-width: 1px;
     border-image: linear-gradient(
       90deg,
-      rgb(var(--dark-grey), 1) 0%,
-      rgb(var(--grey), 1) 50%,
-      rgb(var(--dark-grey), 1) 100%
+      rgb(var(--dark-grey)) 0%,
+      rgba(var(--grey), 0.3333) 50%,
+      rgb(var(--dark-grey)) 100%
     ) 1;
     font-size: var(--sm);
   }
@@ -233,34 +241,9 @@
 
   .abs {
     position: absolute;
-    bottom: 0;
-    left: 0;
-  }
-
-
-  .bar {
-    display: inline-block;
-    cursor: pointer;
-  }
-
-  .bar1, .bar2, .bar3 {
-    width: 16px;
-    height: 2px;
-    background-color: rgb(var(--white));
-    margin: 2px 0;
-    transition: 400ms;
-  }
-
-  .change .bar1 {transform: translate(0, 4px) rotate(-45deg);}
-  .change .bar2 {opacity: 0;}
-  .change .bar3 {transform: translate(0, -4px) rotate(45deg);}
-
-.arrow {
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    display: inline-block;
-    padding: 2px;
-    transform: rotate(45deg);
+    bottom: 0px;
+    left: 0px;
+    /* background-color: rgb(var(--dark-grey)); */
   }
 </style>
 
@@ -268,16 +251,12 @@
 
   <div class="selected-deck__imgg">
     <img class="imgg" src="images/items/sm/{selectedIcon.get(deck.klass)}.png" alt="Hero" height="48" width="48"/>
-    <div class="abs">
+    <!-- <div class="abs">
       <ButtonComponent isIcon on:click={() => {
         isMenuVisible = !isMenuVisible;
         soundService.play("click");
       }}>
-        <div class="bar" class:change="{isMenuVisible}">
-          <div class="bar1"></div>
-          <div class="bar2"></div>
-          <div class="bar3"></div>
-        </div>
+        <i class="fa-solid fa-{isMenuVisible ? "times" : "bars"}"></i>
       </ButtonComponent>
     </div>
     {#if isMenuVisible}
@@ -287,7 +266,7 @@
         ["Save", saveDeck],
         ["Switch", switchDeck]
       ]}/>
-    {/if}
+    {/if} -->
   </div>
 
   <div class="selected-deck__attrs">
@@ -306,19 +285,19 @@
           <LinkComponent color="damage" on:click="{onSortDamage}">
             {deck.average.damage.toFixed(2)}
             {#if currentSort === "Damage"}
-              <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+              <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
             {/if}
           </LinkComponent>
           <LinkComponent color="mana" on:click="{onSortManaCost}">
             {deck.average.manaCost.toFixed(2)}
             {#if currentSort === "Mana Cost"}
-              <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+              <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
             {/if}
           </LinkComponent>
           <LinkComponent color="health" on:click="{onSortHealth}">
             {deck.average.health.toFixed(2)}
             {#if currentSort === "Health"}
-              <div class="arrow" style:transform="{sortAscending ? "rotate(-135deg)" : "rotate(45deg)"}"></div>
+              <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
             {/if}
           </LinkComponent>
         </div>
@@ -347,6 +326,13 @@
     </div>
 
     <ProgressBarComponent {bars}/>
+
+    <div style="display: flex; justify-content: space-evenly; margin-top: 4px;">
+      <ButtonComponent isIcon on:click="{saveDeck}"><i class="fa-solid fa-floppy-disk"></i></ButtonComponent>
+      <ButtonComponent isIcon on:click="{clearDeck}"><i class="fa-solid fa-trash"></i></ButtonComponent>
+      <ButtonComponent isIcon on:click="{switchDeck}"><i class="fa-solid fa-repeat"></i></ButtonComponent>
+      <ButtonComponent isIcon on:click="{changeDeckName}"><i class="fa-solid fa-pen"></i></ButtonComponent>
+    </div>
   </div>
 
 </div>

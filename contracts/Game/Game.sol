@@ -12,26 +12,19 @@ contract Game {
 
   event Energize (uint256 ecrAmount, uint256 enrgAmount);
   event Solidify (uint256 ecrAmount, uint256 enrgAmount);
-  event UnlockChest (address indexed player, uint256 id);
-  event CraftItem (uint256 totalEes, uint256 totalEcr, uint256 id, uint256 amount);
+  event RandomItem (address indexed player, uint256 id);
+  event CraftItem (uint256 totalEes, uint256 id, uint256 amount);
   event DisenchantItem (uint256 totalEes, uint256 id, uint256 amount);
 
-  struct CraftPrice {
-    uint256 ees;
-    uint256 ecr;
-  }
-
-  mapping(Rarity => CraftPrice) public craftPrice;
+  mapping(Rarity => uint256) public craftPrice;
   mapping(Rarity => uint256) public disenchantReward;
   mapping(Rarity => uint256[]) private _chestItems;
   mapping(uint256 => Rarity) private _itemRarity;
 
   uint256 private constant POW = 10 ** 18;
-  uint256 private constant CHEST_ID = 1;
   address private immutable _adminAddress;
   uint256 public immutable deployTimestamp;
-
-  CraftPrice public craftChestPrice = CraftPrice(100 * POW, 100 * POW);
+  uint256 public randomSkinPrice = 100 * POW;
 
   EthericEssence public immutable eesToken;
   EthericCrystals public immutable ecrToken;
@@ -44,11 +37,11 @@ contract Game {
     enrgToken = new EthericEnergy(address(this));
     items = new Items(address(this));
 
-    craftPrice[Rarity.UNCOMMON] = CraftPrice(200 * POW, 200 * POW);
-    craftPrice[Rarity.RARE] = CraftPrice(800 * POW, 400 * POW);
-    craftPrice[Rarity.EPIC] = CraftPrice(3200 * POW, 600 * POW);
-    craftPrice[Rarity.LEGENDARY] = CraftPrice(12800 * POW, 800 * POW);
-    craftPrice[Rarity.MYTHIC] = CraftPrice(51200 * POW, 1000 * POW);
+    craftPrice[Rarity.UNCOMMON] = 200 * POW;
+    craftPrice[Rarity.RARE] = 800 * POW;
+    craftPrice[Rarity.EPIC] = 3200 * POW;
+    craftPrice[Rarity.LEGENDARY] = 12800 * POW;
+    craftPrice[Rarity.MYTHIC] = 51200 * POW;
 
     disenchantReward[Rarity.UNCOMMON] = 20 * POW;
     disenchantReward[Rarity.RARE] = 80 * POW;
@@ -92,7 +85,7 @@ contract Game {
 
   // ---------- ITEMS ----------
 
-  function unlockChest () external {
+  function randomItem () external {
     uint256 rarityRng = _randomNumber(1000); // 0-999
     Rarity rarity;
 
@@ -117,52 +110,56 @@ contract Game {
     uint256 amount = 1;
     bytes memory data = "";
 
-    items.burn(msg.sender, CHEST_ID, amount);
+    ecrToken.burnFrom(msg.sender, randomSkinPrice);
     items.mint(msg.sender, itemId, amount, data);
 
-    emit UnlockChest(msg.sender, itemId);
+    emit RandomItem(msg.sender, itemId);
   }
 
   function craftItem (uint256 id, uint256 amount) external {
-    CraftPrice memory price;
+    Rarity rarity = _itemRarity[id];
+    uint256 price = craftPrice[rarity];
 
-    if (id == CHEST_ID) {
-      price = craftChestPrice;
-    } else {
-      price = craftPrice[_itemRarity[id]];
-    }
+    require(price > 0, "Invalid item.");
 
-    require(price.ees > 0 && price.ecr > 0, "Invalid item.");
-
-    uint256 totalEes = price.ees * amount;
-    uint256 totalEcr = price.ecr * amount;
+    uint256 total = price * amount;
     bytes memory data = "";
 
-    eesToken.burnFrom(msg.sender, totalEes);
-    ecrToken.burnFrom(msg.sender, totalEcr);
+    eesToken.burnFrom(msg.sender, total);
     items.mint(msg.sender, id, amount, data);
 
-    emit CraftItem(totalEes, totalEcr, id, amount);
+    emit CraftItem(total, id, amount);
   }
 
   function disenchantItem (uint256 id, uint256 amount) external {
-    require(id != CHEST_ID, "Chests cannot be disenchanted.");
+    Rarity rarity = _itemRarity[id];
+    uint256 reward = disenchantReward[rarity];
 
-    uint256 reward = disenchantReward[_itemRarity[id]];
-    uint256 totalEes = reward * amount;
+    require(reward > 0, "Invalid item.");
 
-    eesToken.mint(msg.sender, totalEes);
+    uint256 total = reward * amount;
+
+    eesToken.mint(msg.sender, total);
     items.burn(msg.sender, id, amount);
 
-    emit DisenchantItem(totalEes, id, amount);
+    emit DisenchantItem(total, id, amount);
   }
 
   // ---------- A D M I N ----------
 
-  function addItem (uint256 id, Rarity rarity) external onlyAdmin {
-    require(id != CHEST_ID, "Chests cannot be added to the chest.");
-    _itemRarity[id] = rarity;
-    _chestItems[rarity].push(id);
+  function addItems (
+    uint256[] memory ids,
+    Rarity[] memory rarities
+  ) external onlyAdmin {
+    require(ids.length == rarities.length, "Lists need to be the same length");
+
+    for (uint256 i = 0; i < ids.length; i += 1) {
+      uint256 id = ids[i];
+      Rarity rarity = rarities[i];
+
+      _itemRarity[id] = rarity;
+      _chestItems[rarity].push(id);
+    }
   }
 
   function claimRewards (

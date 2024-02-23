@@ -8,51 +8,53 @@ interface Shieldwall {
   playerMinionField: MinionField;
 }
 
-const shieldwall = (params: Shieldwall): Animations => {
-  const {player, playerMinionField} = params;
-  const animations: Animations = [];
-  const fields = getAdjacentMinions(playerMinionField);
+const shieldwall = {
+  onNormalSummon (params: Shieldwall): Animations {
+    const {player, playerMinionField} = params;
+    const animations: Animations = [];
+    const fields = getAdjacentMinions(playerMinionField);
 
-  animations.push({
-    type: "FLOATING_TEXT",
-    field: playerMinionField,
-    name: player.name,
-    text: `SHIELDWALL`
-  });
+    animations.push({
+      type: "FLOATING_TEXT",
+      field: playerMinionField,
+      name: player.name,
+      text: `SHIELDWALL`
+    });
 
-  fields.forEach((field): void => {
-    const minion = player.field[field as keyof typeof player.field];
+    fields.forEach((field): void => {
+      const minion = player.field[field as keyof typeof player.field];
 
-    if (minion) {
-      const shieldBuff = minion.buffs.find(
-        (buff): boolean => buff.id === EffectId.SHIELD
-      );
+      if (minion) {
+        const shieldBuff = minion.buffs.find(
+          (buff): boolean => buff.id === EffectId.SHIELD
+        );
 
-      const unbreakableBuff = minion.buffs.find(
-        (buff): boolean => buff.id === EffectId.UNBREAKABLE
-      );
+        const unbreakableBuff = minion.buffs.find(
+          (buff): boolean => buff.id === EffectId.UNBREAKABLE
+        );
 
-      const amount = unbreakableBuff ? 2 : 1;
+        const amount = unbreakableBuff ? 2 : 1;
 
-      if (shieldBuff) {
-        shieldBuff.data.amount += amount;
-      } else {
-        minion.buffs.push({
-          id: EffectId.SHIELD,
-          data: {amount}
+        if (shieldBuff) {
+          shieldBuff.data.amount += amount;
+        } else {
+          minion.buffs.push({
+            id: EffectId.SHIELD,
+            data: {amount}
+          });
+        }
+
+        animations.push({
+          type: "FLOATING_TEXT",
+          field: field as keyof typeof player.field,
+          name: player.name,
+          text: `+${amount} Shield`
         });
       }
+    });
 
-      animations.push({
-        type: "FLOATING_TEXT",
-        field: field as keyof typeof player.field,
-        name: player.name,
-        text: `+${amount} Shield`
-      });
-    }
-  });
-
-  return animations;
+    return animations;
+  }
 };
 
 export {shieldwall};

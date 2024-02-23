@@ -9,7 +9,7 @@
   --damage: 255, 139, 0;
   --mana: 0, 175, 193;
 
-  --common: 255, 255, 255;
+  --common: 224, 224, 224;
   --uncommon: 30, 255, 0;
   --rare: 0, 112, 221;
   --epic: 163, 53, 238;
@@ -25,15 +25,21 @@
   --success: 96, 255, 24;
   --warn: 255, 32, 32;
 
-  --dark-grey: 31, 31, 31;
+  --dark-grey: 32, 32, 32;
   --grey: 127, 127, 127;
-  --white: 255, 255, 255;
+  --white: 224, 224, 224;
+  --black: 0, 0, 0;
 
   --xs: 12px;
   --sm: 14px;
   --md: 16px;
   --lg: 18px;
   --xl: 20px;
+
+  --opacity-transparent: 0;
+  --opacity-sm: 0.333;
+  --opacity-md: 0.666;
+  --opacity-full: 1;
 
   --card-height: 216px;
   --card-width: 144px;

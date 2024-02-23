@@ -20,13 +20,14 @@ const backstab = (params: Backstab): Animations => {
     name: opponent.name,
     text: "BACKSTAB"
   }, {
-    type: "MANA",
-    increment: -1,
-    field: "hero",
+    type: "MANA_CAPACITY",
+    increment: undefined,
+    decrement: 1,
     name: opponent.name
   }, {
     type: "DAMAGE",
     increment: 2,
+    decrement: undefined,
     field: playerMinionField,
     name: player.name
   }];

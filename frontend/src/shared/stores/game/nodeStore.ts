@@ -28,6 +28,10 @@ interface NodeStore {
     heroDamage: HTMLElement,
     graveyard: HTMLElement
   },
+  line: HTMLDivElement,
+  showLine: boolean,
+  lineCss: string;
+  lineX: number;
   magic: {
     trigger: boolean;
     card: GameTrapCard;
@@ -73,6 +77,10 @@ const nodeStore = writable<NodeStore>({
     hero: undefined,
     heroDamage: undefined
   },
+  line: undefined,
+  showLine: false,
+  lineCss: "",
+  lineX: 0,
   magic: {
     trigger: false,
     card: {} as GameTrapCard,

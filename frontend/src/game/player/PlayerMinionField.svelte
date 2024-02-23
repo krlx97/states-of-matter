@@ -1,10 +1,10 @@
 <script lang="ts">
   import {CardId, CardType} from "@som/shared/enums";
-  import {cards} from "@som/shared/data";
+  import {cardEffectNames, cards} from "@som/shared/data";
   import {socketService, soundService} from "services";
   import {floatingTextStore, gameStore, selectedCardStore, playerStore, nodeStore} from "stores";
   import FloatingText from "../FloatingText.svelte";
-  import {CardComponent} from "ui";
+  import {CardComponent, TextComponent} from "ui";
   import {onMount} from "svelte";
     import { scale } from "svelte/transition";
 
@@ -92,17 +92,10 @@
 <style>
   .field {
     position: relative;
-    height: calc(var(--card-height) + 2px);
-    width: calc(var(--card-width) + 2px);
+    height: calc(var(--card-height));
+    width: calc(var(--card-width));
     cursor: not-allowed;
-    background: linear-gradient(
-      90deg,
-      rgba(31, 31, 31, 0.25) 0%,
-      rgba(121, 108, 254, 0.5) 50%,
-      rgba(31, 31, 31, 0.25) 100%
-    );
     border-radius: 8px;
-    backdrop-filter: blur(2px);
   }
 
   .isSummonable {
@@ -154,10 +147,40 @@
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(31, 31, 31, 0.8);
-    border: 1px solid rgb(96, 133, 29);
+    background-color: rgba(var(--dark-grey), 0.8);
+    border: 1px solid rgba(var(--grey), 0.4);
     border-radius: 8px;
     text-transform: uppercase;
+    box-sizing: border-box;
+  }
+
+
+ .buffs {
+    position: absolute;
+    bottom: calc(100% + 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 144px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(47, 47, 47);
+    border-radius: 8px;
+    line-height: 1.25;
+  }
+
+  /* .buff {color: rgb(var(--green));}
+  .debuff {color: rgb(var(--red));} */
+  .canAttack {
+    position: absolute;
+    bottom: calc(100%);
+    left: -5%;
+    animation: pop 1s linear infinite alternate;
+  }
+
+  @keyframes pop {
+    from {transform: scale(1)}
+    to {transform: scale(1.5);}
   }
 </style>
 
@@ -169,12 +192,28 @@
   {/if}
 
   {#if minion}
+    {#if !minion.canAttack}
+      <div class="canAttack">💤</div>
+    {/if}
+    <div class="buffs">
+      {#each minion.buffs as buff}
+        <TextComponent color="success">
+          {cardEffectNames.get(buff.id)}
+          {#if buff.data}
+            ({Object.values(buff.data)})
+          {/if}
+        </TextComponent>
+      {/each}
+      {#each minion.debuffs as debuff}
+        <TextComponent color="warn">{cardEffectNames.get(debuff.id)}</TextComponent>
+      {/each}
+    </div>
     <div in:scale="{{start: 8, duration: 300, opacity: 0}}">
       <CardComponent {isSelected} {isTargetable} card="{minion}" on:click="{onAttackSelect}"/>
     </div>
   {:else}
-    <div class="field-empty" class:isSummonable on:click="{onPlayCard}">
-      {field}
+    <div class="field-empty" style="text-align: center;" class:isSummonable on:click="{onPlayCard}">
+      field {field}
     </div>
   {/if}
 

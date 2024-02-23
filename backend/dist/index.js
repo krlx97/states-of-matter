@@ -4484,13 +4484,28 @@ const playTrap = (socket, error) => {
     });
 };
 
+const surrender = (socket, error) => {
+    const socketId = socket.id;
+    socket.on("surrender", async () => {
+        const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
+        const animations = [];
+        if (!getGameData) {
+            return error(getGameError);
+        }
+        const { $game, player, opponent } = getGameData;
+        await gameHelpers.endGame($game.id, opponent.name, animations);
+        clearTimeout(endTurnTimeouts[$game.id]);
+    });
+};
+
 const game = [
     attackHero,
     attackMinion,
     endTurn,
     playMagic,
     playMinion,
-    playTrap
+    playTrap,
+    surrender
 ];
 
 const acceptFriend = (socket, error) => {

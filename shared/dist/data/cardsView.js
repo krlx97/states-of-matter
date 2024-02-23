@@ -186,11 +186,11 @@ const cardsView = [{
         id: CardId.BOEDICEA, // ----- SOLID -----
         name: "Boedicea",
         lore: `
-    Immortality in any form was deemed possible. Created from metal, earth and
-    stone, she stood waiting for somebody to breathe and to add soul to the
-    husk. When it finally came to pass, it was no human breath. It arrived
-    from the spirits of mineral kingdom, which she knew she was a part of. Now
-    she moves and defends immovable. You are from above, I am from below.
+    She understood it all. What once was unseen now is seen. To see inner
+    geography of her body meant understanding others. Thoughts navigate through
+    network of lymphatic rivers, bloodstreams and all that flows and oozes
+    inside and outside. Her body became smaller, not unlike that prophetess of
+    the Old. No longer I hear anything, except the music of the veins.
   `,
         effect: {
             name: "Eternal Aura",
@@ -377,7 +377,11 @@ const cardsView = [{
         id: CardId.LIQUID_HERO,
         name: "Liquid Hero",
         lore: `
-    Coming soon.
+    Immortality in form was deemed possible. Created from metal, earth and
+    stone, she stood waiting for somebody to breathe and to add soul to the
+    husk. When it finally came to pass, it was no human breathe, but that of the
+    vast mineral kingdom, which knew she was a part of it. Now she moves and
+    defends immovable. You are from above, I am from below.
   `,
         effect: {
             name: "Life Aura",
@@ -544,9 +548,17 @@ const cardsView = [{
     `
         },
     },
-    { id: CardId.GAS_HERO,
+    {
+        id: CardId.GAS_HERO,
         name: "Gas Hero",
-        lore: `Coming soon.`,
+        lore: `
+    He was, after all, just a human in the world where human was a word almost
+    forgotten. No longer finding his purpose after the Rapture, he wanted to
+    soar high and just watch over everything. If possible forever. After a long
+    struggle to change his body, body started to change itself, no longer
+    needing any machinery. Sylphs deemed hims as one of his own. Will I ever
+    touch the soil again, will I ever die?
+  `,
         effect: {
             name: "Toxic Aura",
             description: colorTooltip `
@@ -659,7 +671,14 @@ const cardsView = [{
     }, {
         id: CardId.PLASMA_HERO,
         name: "Plasma Hero",
-        lore: `Coming soon.`,
+        lore: `
+    Disfigured, disigruntled, dispossesed. For a long time he prayed that fiery
+    ghosts might take him away, for he was old and he could no longer bathe
+    himself in the glory of never ending warfare. They listened to him. His body
+    relentlessly used as a vehicle for those who had no body, which resulted in
+    many burns and many tears. Blood become plasma, his muscle and bone became
+    immune to the otherworldly. Did I ever feel better?
+  `,
         effect: {
             name: "Burning Aura",
             description: colorTooltip `

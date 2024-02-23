@@ -4,6 +4,7 @@ import {endTurn} from "./endTurn";
 import {playMagic} from "./playMagic";
 import {playMinion} from "./playMinion";
 import {playTrap} from "./playTrap";
+import {surrender} from "./surrender";
 
 const game = [
   attackHero,
@@ -11,7 +12,8 @@ const game = [
   endTurn,
   playMagic,
   playMinion,
-  playTrap
+  playTrap,
+  surrender
 ];
 
 export {game};

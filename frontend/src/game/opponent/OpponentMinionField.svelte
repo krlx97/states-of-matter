@@ -48,15 +48,14 @@
     height: calc(var(--card-height) + 2px);
     width: calc(var(--card-width) + 2px);
     cursor: not-allowed;
-    /* transition: transform 225ms ease-in-out; */
-    background: linear-gradient(
+    /* background: linear-gradient(
       90deg,
       rgba(31, 31, 31, 0.25) 0%,
       rgba(121, 108, 254, 0.5) 50%,
       rgba(31, 31, 31, 0.25) 100%
-    );
+    ); */
     border-radius: 8px;
-    backdrop-filter: blur(2px);
+    /* backdrop-filter: blur(2px); */
   }
 
   .damage-dealt {
@@ -85,10 +84,11 @@
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(31, 31, 31, 0.8);
-    border: 1px solid rgb(96, 133, 29);
+    background-color: rgba(var(--dark-grey), 0.8);
+    border: 1px solid rgba(var(--grey), 0.4);
     border-radius: 8px;
     text-transform: uppercase;
+    box-sizing: border-box;
   }
 </style>
 

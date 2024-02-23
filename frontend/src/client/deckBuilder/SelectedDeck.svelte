@@ -208,8 +208,10 @@
   .selected-deck__main__title {
     /* flex-grow: 1; */
     /* width: 100%; */
-    /* display: flex;
-    justify-content: space-between; */
+ 
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .selected-deck__info__actions {

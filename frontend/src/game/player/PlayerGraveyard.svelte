@@ -19,10 +19,13 @@
 
 <style>
   .graveyard {
+    height: var(--card-height);
+    width: var(--card-width);
     position: relative;
-    border: 1px solid rgb(var(--primary));
+    border: 1px solid rgba(var(--primary), 0.4);
     border-radius: 8px;
     z-index: 0;
+    box-sizing: border-box;
   }
 
   .graveyard-empty {

@@ -79,6 +79,7 @@
     <FloatingText field="hero"/>
   {/if}
   <CardComponent
+    {isAttackable}
     card="{$gameStore.opponent.field.hero}"
     on:click="{onAttackHero}"/>
   <div class="damage-dealt" bind:this={damageDealtElement}></div>

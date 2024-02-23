@@ -5,8 +5,9 @@
 <style>
   .deck {
     position: relative;
-    border: 2px solid rgb(var(--purple));
+    /* border: 2px solid rgb(var(--purple));
     border-radius: 8px;
+    box-sizing: border-box; */
   }
 
   .deck__cards {

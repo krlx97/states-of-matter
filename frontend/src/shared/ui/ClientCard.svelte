@@ -124,11 +124,6 @@
     top: 3px;
     right: 3px;
     z-index: 2;
-    transition: transform 333ms cubic-bezier(var(--ease-in-out-quad));
-  }
-
-  .card__klass:hover {
-    transform: translateY(-2px);
   }
 
   .card__klass__tooltip {
@@ -182,6 +177,10 @@
     bottom: 3px;
     right: 3px;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .card__mana--center {
@@ -196,14 +195,28 @@
     bottom: 3px;
     left: 3px;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .card__health__num {
-    position: absolute;
-    bottom: 5px;
-    left: 50%;
-    transform: translateX(-50%);
+    width: var(--md);
+    height: var(--md);
     font-size: var(--xs);
+    border: 1px solid rgba(var(--health), var(--opacity-sm));
+    background-color: rgb(var(--dark-grey));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card__damage__num {
+    border-color: rgba(var(--damage), var(--opacity-sm));
+  }
+  .card__mana__num {
+    border-color: rgba(var(--mana), var(--opacity-sm));
   }
 
   .card__damage {
@@ -212,6 +225,10 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .card__ability {
@@ -298,15 +315,15 @@
 
   <div class="card__klass" bind:this="{klassElement}" on:click|stopPropagation={onToggleKlassTooltip}>
     {#if card.klass === CardKlass.SOLID}
-      <img src="images/card/{CardKlass.SOLID}.png" alt="Solid"/>
+      <img src="images/card/solid.png" alt="Solid"/>
     {:else if card.klass === CardKlass.LIQUID}
-      <img src="images/card/{CardKlass.LIQUID}.png" alt="Liquid"/>
+      <img src="images/card/liquid.png" alt="Liquid"/>
     {:else if card.klass === CardKlass.GAS}
-      <img src="images/card/{CardKlass.GAS}.png" alt="Gas"/>
+      <img src="images/card/gas.png" alt="Gas"/>
     {:else if card.klass === CardKlass.PLASMA}
-      <img src="images/card/{CardKlass.PLASMA}.png" alt="Plasma"/>
+      <img src="images/card/plasma.png" alt="Plasma"/>
     {:else}
-      <img src="images/card/{CardKlass.NEUTRAL}.png" alt="Neutral"/>
+      <img src="images/card/neutral.png" alt="Neutral"/>
     {/if}
   </div>
 
@@ -363,44 +380,44 @@
       {#if card.ability === 0}
         <img src="images/card/fortify.png" alt="Fortify"/>
       {:else if card.ability === 1}
-        <img src="images/card/heal.png" alt="Rejuvenate"/>
+        <img src="images/card/rejuvenate.png" alt="Rejuvenate"/>
       {:else if card.ability === 2}
         <img src="images/card/neurotoxin.png" alt="Neurotoxin"/>
       {:else}
-        <img src="images/card/corruption.png" alt="Electrocute"/>
+        <img src="images/card/electrocute.png" alt="Electrocute"/>
       {/if}
     </div>
 
     <div class="card__mana">
-      <img src="images/card/mana.png" alt="Mana"/>
-      <div class="card__health__num">{card.mana}</div>
+      <img src="images/card/mana-capacity.png" alt="Mana capacity"/>
+      <div class="card__health__num card__mana__num">{card.mana}</div>
       <div class="card__mana__tooltip">Mana capacity</div>
     </div>
     <div class="card__health">
       <img src="images/card/health.png" alt="Health"/>
-      <div class="card__health__num">{card.health}</div>
-      <div class="card__health__tooltip">Health</div>
+      <div class="card__health__num card__health__num">{card.health}</div>
+      <!-- <div class="card__health__tooltip">Health</div> -->
     </div>
   {:else if card.type === CardType.MINION}
     <div class="card__health">
       <img src="images/card/health.png" alt="Health"/>
-      <div class="card__health__num">{card.health}</div>
+      <div class="card__health__num card__health__num">{card.health}</div>
       <div class="card__health__tooltip">Health</div>
     </div>
     <div class="card__damage">
       <img src="images/card/damage.png" alt="Damage"/>
-      <div class="card__health__num">{card.damage}</div>
+      <div class="card__health__num card__damage__num">{card.damage}</div>
       <div class="card__damage__tooltip">Damage</div>
     </div>
     <div class="card__mana">
-      <img src="images/card/manacost.png" alt="Mana cost"/>
-      <div class="card__health__num">{card.manaCost}</div>
+      <img src="images/card/mana-cost.png" alt="Mana cost"/>
+      <div class="card__health__num card__mana__num">{card.manaCost}</div>
       <div class="card__mana__tooltip">Mana cost</div>
     </div>
   {:else}
     <div class="card__mana card__mana--center">
-      <img src="images/card/manacost.png" alt="Mana cost"/>
-      <div class="card__health__num">{card.manaCost}</div>
+      <img src="images/card/mana-cost.png" alt="Mana cost"/>
+      <div class="card__health__num card__mana__num">{card.manaCost}</div>
       <div class="card__mana__tooltip">Mana cost</div>
     </div>
   {/if}

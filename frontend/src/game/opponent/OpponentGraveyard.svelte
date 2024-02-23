@@ -20,9 +20,10 @@
 <style>
   .graveyard {
     position: relative;
-    border: 1px solid rgb(var(--primary));
-    border-radius: 8px;
+    /* border: 1px solid rgb(var(--primary));
+    border-radius: 8px; */
     z-index: 0;
+    /* box-sizing: border-box; */
   }
 
   .graveyard-empty {

@@ -1,8 +1,8 @@
 import {GameType, PlayerStatus} from "@som/shared/enums";
 import { Animations } from "@som/shared/types/game";
 import {mongo, server} from "app";
+import { calculateEloPointsForPlayers } from "./eloCalculations";
 
-const sleep = (waitTimeInMs: number) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
 const endGame = async (gameId: number, winnerName: string, animations: Animations): Promise<void> => {
   const {$games, $players} = mongo;
@@ -123,8 +123,10 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     if ($game.type === GameType.RANKED) {
       $playerA.games.ranked.won += 1;
       $playerB.games.ranked.lost += 1;
-      $playerA.elo += 20;
-      $playerB.elo -= 20;
+
+      const { eloPlayerA, eloPlayerB } = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerA');
+      $playerA.elo += eloPlayerA;
+      $playerB.elo -= eloPlayerB;
     }
 
     const $playerAReplace = await $players.replaceOne({
@@ -270,8 +272,10 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     if ($game.type === GameType.RANKED) {
       $playerB.games.ranked.won += 1;
       $playerA.games.ranked.lost += 1;
-      $playerB.elo += 20;
-      $playerA.elo -= 20;
+      
+      const { eloPlayerA, eloPlayerB } = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerB');
+      $playerA.elo -= eloPlayerA;
+      $playerB.elo += eloPlayerB;
     }
 
     const $playerBeplace = await $players.replaceOne({

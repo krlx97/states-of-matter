@@ -1,6 +1,6 @@
 import {GameType, PlayerStatus, QueueId} from "@som/shared/enums";
 import {mongo} from "app";
-import {gameHelpers} from "helpers";
+import {gameHelpers, playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const joinQueue: SocketRequest = (socket, error): void => {
@@ -34,6 +34,10 @@ const joinQueue: SocketRequest = (socket, error): void => {
 
     if ($player.gamePopupId) {
       return error("Can't join queue while in game popup.");
+    }
+
+    if (!playerHelpers.isDeckValid($player.decks[$player.deckId])) {
+      return error("Please save or create your deck first.");
     }
 
     const {name, level, elo} = $player;

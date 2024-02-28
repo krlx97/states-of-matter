@@ -1,58 +1,66 @@
-import type { GameMinionCard } from "@som/shared/types/mongo";
-import { soundService } from "services";
-import { gameStore, playerStore } from "stores";
-import { get } from "svelte/store";
+import {get} from "svelte/store";
+import {soundService} from "services";
+import {gameStore, isAnimating, playerStore} from "stores";
+import type {GameMinionCard, MinionField} from "@som/shared/types/mongo";
 
 const damage = (animation: any): void => {
-  let startTimestamp: number;
-  let start: number | undefined;
-  let end: number | undefined;
-  const player = get(playerStore);
+  isAnimating.set(true);
+
+  const $player = get(playerStore);
   const {increment, decrement, field, name} = animation;
 
-  // setTimeout(() => {
-    const step = (timestamp: number): void => {
-      if (!startTimestamp) {
-        startTimestamp = timestamp;
+  let startTimestamp: number;
+  let start: number;
+  let end: number;
+
+  const attributeAnimation = (timestamp: number): void => {
+    if (startTimestamp === undefined) {
+      startTimestamp = timestamp;
+    }
+
+    const progress = Math.min((timestamp - startTimestamp) / 666, 1);
+
+    gameStore.update((store) => {
+      let minion: GameMinionCard | undefined;
+
+      if (name === $player.name) {
+        minion = store.player.field[field as MinionField];
+      } else {
+        minion = store.opponent.field[field as MinionField];
       }
 
-      const progress = Math.min((timestamp - startTimestamp) / 600, 1);
-
-      gameStore.update((store) => {
-        let minion: GameMinionCard;
-
-        if (name === player.name) {
-          minion = store.player.field[field];
-        } else {
-          minion = store.opponent.field[field];
-        }
-
-        if (start === undefined && end === undefined) { // can be 0, so check for === undefined
-          start = minion.damage.current;
-          if (increment && !decrement) {
-            end = minion.damage.current + increment;
-          } else if (!increment && decrement) {
-            end = minion.damage.current - decrement;
-          }
-        }
-
-        const newCurrentDamage = Math.floor(progress * (end - start) + start);
-
-        if (minion.damage.current !== newCurrentDamage) {
-          minion.damage.current = newCurrentDamage;
-        }
-
+      if (!minion) {
         return store;
-      });
-
-      if (progress < 1) {
-        requestAnimationFrame(step);
       }
-    };
 
-    requestAnimationFrame(step);
-    soundService.play("attributeChange");
-  // }, 400);
+      if (start === undefined) {
+        start = minion.damage.current;
+      }
+
+      if (end === undefined) {
+        end = increment ?
+          minion.damage.current + increment :
+          minion.damage.current - decrement;
+      }
+
+      const current = Math.floor(progress * (end - start) + start);
+
+      if (minion.damage.current !== current) {
+        minion.damage.current = current;
+      }
+
+      return store;
+    });
+
+    if (progress < 1) {
+      requestAnimationFrame(attributeAnimation);
+    } else {
+      isAnimating.set(false);
+    }
+  };
+
+  soundService.play("attributeChange");
+  requestAnimationFrame(attributeAnimation);
 };
 
 export {damage};

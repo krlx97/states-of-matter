@@ -94,7 +94,7 @@ box-sizing: border-box;
   {#each $gameStore.gameLogs as log}
     {#if log.type === LogType.SUMMON}
       <div class="battle-log">
-        <img class="battle-log__img" src="images/items/sm/10{log.minionId}00.png" alt="Card"/>
+        <img class="battle-log__img" src="images/items/sm/10{log.minionId}0.png" alt="Card"/>
         <div class="battle-log__symbol">
           <i
             class="fa-solid fa-khanda fa-fw"
@@ -122,7 +122,7 @@ box-sizing: border-box;
       <div class="battle-log">
         <img
           class="battle-log__img"
-          src="images/items/sm/10{log.magicId}00.png"
+          src="images/items/sm/10{log.magicId}0.png"
           alt="Card"
         />
         <div class="battle-log__symbol">

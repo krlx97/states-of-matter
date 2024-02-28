@@ -18,6 +18,7 @@ const declineGame = (): void => {
       store.playersAccepted = 0;
       return store;
     });
+
     notificationsStore.update((store) => {
       const id = Math.random();
       store.push({id, color: "warn", message: "Match has been declined. You have been removed from the queue."});

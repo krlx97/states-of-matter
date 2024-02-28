@@ -58,6 +58,10 @@
   .orange {
     background-color: rgb(255, 139, 0);
   }
+
+  .primary {
+    background-color: rgb(var(--primary));
+  }
 </style>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -85,6 +89,7 @@
         class:blue={bar.color === "blue"}
         class:purple={bar.color === "purple"}
         class:red={bar.color === "red"}
+        class:primary={bar.color === "primary"}
         class:orange={bar.color === "orange"}
         class:bronze={bar.color === "Bronze"}
         class:silver={bar.color === "Silver"}

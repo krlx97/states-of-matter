@@ -10,6 +10,7 @@ const joinLobby: SocketRequest = (socket, error): void => {
 
   socket.on("joinLobby", async (params) => {
     const {id} = params;
+
     const [$player, $lobby] = await Promise.all([
       $players.findOne({socketId}),
       $lobbies.findOne({id})
@@ -72,11 +73,12 @@ const joinLobby: SocketRequest = (socket, error): void => {
       return error("Lobby host not found.");
     }
 
-    const {host, challengee} = $lobbyUpdate;
-    const lobby: LobbyView = {id, host, challengee};
+    const {host, challengee, messages} = $lobbyUpdate;
+    const lobby: LobbyView = {id, host, challengee, messages};
 
     socket.emit("joinLobbySender", {lobby});
     server.io.to($playerHost.socketId).emit("joinLobbyReceiver", {challengee});
+    server.io.emit("updateFriend", {name, status: PlayerStatus.IN_LOBBY});
   });
 };
 

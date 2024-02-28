@@ -5,6 +5,7 @@ import {playMagic} from "./playMagic";
 import {playMinion} from "./playMinion";
 import {playTrap} from "./playTrap";
 import {surrender} from "./surrender";
+import {useAbility} from "./useAbility";
 
 const game = [
   attackHero,
@@ -13,7 +14,8 @@ const game = [
   playMagic,
   playMinion,
   playTrap,
-  surrender
+  surrender,
+  useAbility
 ];
 
 export {game};

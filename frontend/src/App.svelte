@@ -26,18 +26,31 @@
       return;
     }
 
+    const {address} = $playerStore;
+
     ethereum.on("accountsChanged", async (accounts) => {
       $ethersStore.accounts = accounts;
+
+      await ethersService.init(address);
+      await ethersService.reloadUser();
     });
 
     ethereum.on("chainChanged", async (chainId): Promise<void> => {
       $ethersStore.chainId = BigInt(chainId);
+
+      await ethersService.init(address);
+      await ethersService.reloadUser();
     });
+
+    const accounts = await window.ethereum?.request({
+      method: "eth_accounts"
+    })
 
     const chainId = await ethereum.request({
       method: "eth_chainId"
     });
 
+    $ethersStore.accounts = accounts;
     $ethersStore.chainId = BigInt(chainId);
   });
 </script>

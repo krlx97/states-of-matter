@@ -25,29 +25,13 @@ const addFriend: SocketRequest = (socket, error): void => {
       return error("You can't add yourself as a friend.");
     }
 
-    if ($playerReceiver.social.blocked.includes($playerSender.name)) {
-      return error("This player has blocked you.");
-    }
-
-    if ($playerSender.social.blocked.includes(name)) {
-      return error("You have blocked this player.");
-    }
-
-    if ($playerReceiver.social.requests.includes($playerSender.name)) {
-      return error("You have already sent the request to this player.");
-    }
-
-    if ($playerSender.social.requests.includes(name)) {
-      return error("This player has already sent you the request.");
-    }
-
-    if ($playerSender.social.friends.includes(name)) {
+    if ($playerSender.friends.includes(name)) {
       return error("This player is already your friend.");
     }
 
-    const $playerUpdate = await $players.updateOne({name}, {
+    const $playerUpdate = await $players.updateOne({socketId}, {
       $push: {
-        "social.requests": $playerSender.name
+        friends: name
       }
     });
 
@@ -55,14 +39,24 @@ const addFriend: SocketRequest = (socket, error): void => {
       return error("Error updating player.");
     }
 
-    socket.emit("notification", {
-      color: "success",
-      message: "Friend request sent."
+    socket.emit("addFriendSender", {
+      isMutual: $playerReceiver.friends.includes($playerSender.name),
+      name: $playerReceiver.name,
+      avatarId: $playerReceiver.avatarId,
+      bannerId: $playerReceiver.bannerId,
+      experience: $playerReceiver.experience,
+      level: $playerReceiver.level,
+      elo: $playerReceiver.elo,
+      status: $playerReceiver.status,
+      games: $playerReceiver.games,
     });
 
-    server.io.to($playerReceiver.socketId).emit("addFriend", {
-      name: $playerSender.name
-    });
+    if ($playerReceiver.friends.includes($playerSender.name)) {
+      server.io.to($playerReceiver.socketId).emit("addFriendReceiver", {
+        // isMutual: $playerSender.friends.includes($playerReceiver.name),
+        name: $playerSender.name
+      });
+    }
   });
 };
 

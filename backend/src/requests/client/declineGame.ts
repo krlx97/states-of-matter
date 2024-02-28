@@ -62,6 +62,9 @@ const declineGame: SocketRequest = (socket, error): void => {
       $playerA.socketId,
       $playerB.socketId
     ]).emit("declineGame");
+
+    server.io.emit("updateFriend", {name: $playerA.name, status: PlayerStatus.ONLINE});
+    server.io.emit("updateFriend", {name: $playerB.name, status: PlayerStatus.ONLINE});
   });
 };
 

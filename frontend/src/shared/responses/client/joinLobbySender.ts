@@ -17,7 +17,6 @@ const joinLobbySender = (): void => {
     });
 
     modalService.close();
-    socket.emit("updateFriend");
   });
 };
 

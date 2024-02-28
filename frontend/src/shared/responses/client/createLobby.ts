@@ -3,9 +3,7 @@ import {socketService} from "services";
 import {lobbyStore, playerStore} from "stores";
 
 const createLobby = (): void => {
-  const {socket} = socketService;
-
-  socket.on("createLobby", (params): void => {
+  socketService.socket.on("createLobby", (params): void => {
     const {lobby} = params;
 
     lobbyStore.set(lobby);
@@ -15,8 +13,6 @@ const createLobby = (): void => {
       store.lobbyId = lobby.id;
       return store;
     });
-
-    socket.emit("updateFriend");
   });
 };
 

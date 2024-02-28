@@ -26,7 +26,8 @@ const lobbyStore = writable<LobbyView>({
       casual: {won: 0, lost: 0},
       ranked: {won: 0, lost: 0}
     }
-  }
+  },
+  messages: [],
 });
 
 export {lobbyStore};

@@ -1,6 +1,6 @@
 <script lang="ts">
   import {formService, modalService, soundService} from "services";
-  import {playerStore} from "stores";
+  import {deckCache, playerStore} from "stores";
 
   import {
     ButtonComponent,
@@ -8,9 +8,10 @@
     InputComponent,
     ModalComponent
   } from "ui";
+    import { isDeckSame } from "../canSave";
 
   const formStore = formService.create({
-    name: ["", "name"]
+    name: [$playerStore.decks[$playerStore.deckId].name, "name"]
   });
 
   const onInput = (): void => {
@@ -19,6 +20,8 @@
 
   const onSubmit = (): void => {
     $playerStore.decks[$playerStore.deckId].name = $formStore.fields.name.value;
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
+
     modalService.close();
     soundService.play("click");
   };

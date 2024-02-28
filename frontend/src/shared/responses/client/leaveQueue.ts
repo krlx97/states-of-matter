@@ -23,8 +23,6 @@ const leaveQueue = (): void => {
       store.queueId = 0;
       return store;
     });
-
-    socket.emit("updateFriend");
   });
 };
 

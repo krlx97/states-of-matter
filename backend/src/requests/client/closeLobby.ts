@@ -65,6 +65,7 @@ const closeLobby: SocketRequest = (socket, error): void => {
     }
 
     socket.emit("closeLobby");
+    server.io.emit("updateFriend", {name, status: PlayerStatus.ONLINE});
 
     if (challengee) {
       const $challengee = await $players.findOneAndUpdate({
@@ -83,6 +84,7 @@ const closeLobby: SocketRequest = (socket, error): void => {
       }
 
       server.io.to($challengee.socketId).emit("closeLobby");
+      server.io.emit("updateFriend", {name: challengee.name, status: PlayerStatus.ONLINE});
     }
   });
 };

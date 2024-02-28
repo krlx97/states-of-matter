@@ -9,21 +9,23 @@ import { createServer } from 'http';
 import express from 'express';
 import { Server } from 'socket.io';
 import jsonwebtoken from 'jsonwebtoken';
-import { EffectId, CardType, PlayerStatus, GameType, QueueId, CardKlass, LogType } from '@som/shared/enums';
+import { EffectId, CardType, CardKlass, PlayerStatus, GameType, QueueId, LogType, Ability } from '@som/shared/enums';
 import { randomInt } from 'crypto';
 import { cards, cardsView } from '@som/shared/data';
 import { compare, hash } from 'bcrypt';
 import { schedule } from 'node-cron';
 import path from 'path';
 
-const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
+const provider = new JsonRpcProvider("https://testnet.telos.net/evm"
+// "http://localhost:8545"
+);
 const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
 const keys = {
-    ethericEssence: "0xba69ddE1586be3Ab4E101C13f8f9d730082b5BE0",
-    ethericCrystals: "0x5ef70Dd1B3D4BA9D2509C665E63A0aDCbF3EA259",
-    ethericEnergy: "0x4cd0B057577770a5699Be8fefd399035be894F3d",
-    somTokens: "0xD0A76288A6b84059FAf5218AC2420251c6C5b5f8",
-    somGame: "0x90Acf3677114443AF72798a558d5bb56278eb743"
+    ethericEssence: "0xD2c7143A714573f767a9E8acF64315a6Ef418231",
+    ethericCrystals: "0xd393F4A7a9b2937fb8cb30Ae3e03866755c37Ba3",
+    ethericEnergy: "0xa151F99db0d89B9d1D568e56fcE5d7ac84355A5E",
+    somTokens: "0xA857C3e9770dC18ee6a022691cAA62f3Afa777E1",
+    somGame: "0x1dfF35052F1FE01EdB2d767D9e8F644B9c271108"
 };
 const ethericEssence = new Contract(keys.ethericEssence, EthericEssence.abi, signer);
 const ethericCrystals = new Contract(keys.ethericCrystals, EthericCrystals.abi, signer);
@@ -1605,6 +1607,18 @@ const buildDeck = (deck) => {
                     default: manaCost
                 } };
         }
+        if (deck.klass === CardKlass.SOLID && gameCard.klass === CardKlass.SOLID) {
+            gameCard.manaCost.current -= 1;
+        }
+        else if (deck.klass === CardKlass.LIQUID && gameCard.klass === CardKlass.LIQUID) {
+            gameCard.manaCost.current -= 1;
+        }
+        else if (deck.klass === CardKlass.GAS && gameCard.klass === CardKlass.GAS) {
+            gameCard.manaCost.current -= 1;
+        }
+        else if (deck.klass === CardKlass.PLASMA && gameCard.klass === CardKlass.PLASMA) {
+            gameCard.manaCost.current -= 1;
+        }
         gameDeck.push(gameCard);
         gid += 1;
         if (deckCard.amount > 1) {
@@ -1723,65 +1737,81 @@ const endGame = async (gameId, winnerName, animations) => {
             $playerB.tasks.daily = true;
             playerBDaily = true;
         }
-        if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
-            const XP_REQUIRED = 1000;
-            const POW = 10n ** 18n;
-            $playerA.experience += 110 + $game.currentTurn;
-            $playerB.experience += 90 + $game.currentTurn;
-            if ($playerA.experience >= XP_REQUIRED) {
-                const remaining = $playerA.experience - XP_REQUIRED;
-                $playerA.level += 1;
-                $playerA.experience = remaining;
-                playerAEesReward = 1n * POW;
-                if ($playerA.level % 2 === 0) {
-                    playerAEesReward += 2n * POW;
-                }
-                if ($playerA.level % 4 === 0) {
-                    playerAEesReward += 4n * POW;
-                }
-                if ($playerA.level % 8 === 0) {
-                    playerAEesReward += 8n * POW;
-                }
-                if ($playerA.level % 16 === 0) {
-                    playerAEesReward += 16n * POW;
-                }
-                if ($playerA.level % 32 === 0) {
-                    playerAEesReward += 32n * POW;
-                }
-                if ($playerA.level % 64 === 0) {
-                    playerAEesReward += 64n * POW;
-                }
-                let currentEes = BigInt($playerA.rewards.ees);
-                let newEes = currentEes + playerAEesReward;
-                $playerA.rewards.ees = newEes.toString();
+        let aXp = 0;
+        let bXp = 0;
+        if ($game.type === GameType.CUSTOM) {
+            aXp = 30 + $game.currentTurn;
+            bXp = 26 + $game.currentTurn;
+        }
+        if ($game.type === GameType.CASUAL) {
+            aXp = 90 + $game.currentTurn;
+            bXp = 78 + $game.currentTurn;
+        }
+        if ($game.type === GameType.RANKED) {
+            aXp = 60 + $game.currentTurn;
+            bXp = 54 + $game.currentTurn;
+        }
+        const XP_REQUIRED = 1000;
+        const POW = 10n ** 18n;
+        $playerA.experience += aXp;
+        $playerB.experience += bXp;
+        if ($playerA.experience >= XP_REQUIRED) {
+            const remaining = $playerA.experience - XP_REQUIRED;
+            $playerA.level += 1;
+            $playerA.experience = remaining;
+            playerAEesReward = 1n * POW;
+            if ($playerA.level % 2 === 0) {
+                playerAEesReward += 2n * POW;
             }
-            if ($playerB.experience >= XP_REQUIRED) {
-                const rem = $playerB.experience - XP_REQUIRED;
-                $playerB.level += 1;
-                $playerB.experience = rem;
-                playerBEesReward = 1n * POW;
-                if ($playerB.level % 2 === 0) {
-                    playerBEesReward += 2n * POW;
-                }
-                if ($playerB.level % 4 === 0) {
-                    playerBEesReward += 4n * POW;
-                }
-                if ($playerB.level % 8 === 0) {
-                    playerBEesReward += 8n * POW;
-                }
-                if ($playerB.level % 16 === 0) {
-                    playerBEesReward += 16n * POW;
-                }
-                if ($playerB.level % 32 === 0) {
-                    playerBEesReward += 32n * POW;
-                }
-                if ($playerB.level % 64 === 0) {
-                    playerBEesReward += 64n * POW;
-                }
-                let currentEes = BigInt($playerB.rewards.ees);
-                let newEes = currentEes + playerBEesReward;
-                $playerB.rewards.ees = newEes.toString();
+            if ($playerA.level % 4 === 0) {
+                playerAEesReward += 4n * POW;
             }
+            if ($playerA.level % 8 === 0) {
+                playerAEesReward += 8n * POW;
+            }
+            if ($playerA.level % 16 === 0) {
+                playerAEesReward += 16n * POW;
+            }
+            if ($playerA.level % 32 === 0) {
+                playerAEesReward += 32n * POW;
+            }
+            if ($playerA.level % 64 === 0) {
+                playerAEesReward += 64n * POW;
+            }
+            let currentEes = BigInt($playerA.rewards.ees);
+            let newEes = currentEes + playerAEesReward;
+            $playerA.rewards.ees = newEes.toString();
+        }
+        if ($playerB.experience >= XP_REQUIRED) {
+            const rem = $playerB.experience - XP_REQUIRED;
+            $playerB.level += 1;
+            $playerB.experience = rem;
+            playerBEesReward = 1n * POW;
+            if ($playerB.level % 2 === 0) {
+                playerBEesReward += 2n * POW;
+            }
+            if ($playerB.level % 4 === 0) {
+                playerBEesReward += 4n * POW;
+            }
+            if ($playerB.level % 8 === 0) {
+                playerBEesReward += 8n * POW;
+            }
+            if ($playerB.level % 16 === 0) {
+                playerBEesReward += 16n * POW;
+            }
+            if ($playerB.level % 32 === 0) {
+                playerBEesReward += 32n * POW;
+            }
+            if ($playerB.level % 64 === 0) {
+                playerBEesReward += 64n * POW;
+            }
+            let currentEes = BigInt($playerB.rewards.ees);
+            let newEes = currentEes + playerBEesReward;
+            $playerB.rewards.ees = newEes.toString();
+        }
+        if ($game.type === GameType.CUSTOM) {
+            $playerA.games.custom.won += 1;
+            $playerB.games.custom.lost += 1;
         }
         if ($game.type === GameType.CASUAL) {
             $playerA.games.casual.won += 1;
@@ -1802,7 +1832,7 @@ const endGame = async (gameId, winnerName, animations) => {
         io.to($playerA.socketId).emit("gameEnded", {
             isWinner: true,
             gameType: $game.type,
-            experience: 110 + $game.currentTurn,
+            experience: aXp,
             elo: $game.type === GameType.RANKED ? 20 : 0,
             eesReward: playerAEesReward.toString(),
             playerDaily: playerADaily,
@@ -1811,11 +1841,27 @@ const endGame = async (gameId, winnerName, animations) => {
         io.to($playerB.socketId).emit("gameEnded", {
             isWinner: false,
             gameType: $game.type,
-            experience: 90 + $game.currentTurn,
+            experience: bXp,
             elo: $game.type === GameType.RANKED ? -20 : 0,
             eesReward: playerBEesReward.toString(),
             playerDaily: playerBDaily,
             animations
+        });
+        server.io.emit("updateFriend", {
+            name: $playerA.name,
+            status: $playerA.status,
+            experience: $playerA.experience,
+            level: $playerA.level,
+            elo: $playerA.elo,
+            games: $playerA.games
+        });
+        server.io.emit("updateFriend", {
+            name: $playerB.name,
+            status: $playerB.status,
+            experience: $playerB.experience,
+            level: $playerB.level,
+            elo: $playerB.elo,
+            games: $playerB.games
         });
     }
     else if (winnerName === playerB.name) {
@@ -1847,71 +1893,87 @@ const endGame = async (gameId, winnerName, animations) => {
             $playerA.tasks.daily = true;
             playerADaily = true;
         }
-        if ($game.type === GameType.CASUAL || $game.type === GameType.RANKED) {
-            const XP_REQUIRED = 1000;
-            const POW = 10n ** 18n;
-            $playerB.experience += 110 + $game.currentTurn;
-            $playerA.experience += 90 + $game.currentTurn;
-            if ($playerB.experience >= XP_REQUIRED) {
-                const remaining = $playerB.experience - XP_REQUIRED;
-                $playerB.level += 1;
-                $playerB.experience = remaining;
-                playerBEesReward = 1n * POW;
-                if ($playerB.level % 2 === 0) {
-                    playerBEesReward += 2n * POW;
-                }
-                if ($playerB.level % 4 === 0) {
-                    playerBEesReward += 4n * POW;
-                }
-                if ($playerB.level % 8 === 0) {
-                    playerBEesReward += 8n * POW;
-                }
-                if ($playerB.level % 16 === 0) {
-                    playerBEesReward += 16n * POW;
-                }
-                if ($playerB.level % 32 === 0) {
-                    playerBEesReward += 32n * POW;
-                }
-                if ($playerB.level % 64 === 0) {
-                    playerBEesReward += 64n * POW;
-                }
-                let currentEes = BigInt($playerB.rewards.ees);
-                let newEes = currentEes + playerBEesReward;
-                $playerB.rewards.ees = newEes.toString();
-            }
-            if ($playerA.experience >= XP_REQUIRED) {
-                const remaining = $playerA.experience - XP_REQUIRED;
-                $playerA.level += 1;
-                $playerA.experience = remaining;
-                playerAEesReward = 1n * POW;
-                if ($playerA.level % 2 === 0) {
-                    playerAEesReward += 2n * POW;
-                }
-                if ($playerA.level % 4 === 0) {
-                    playerAEesReward += 4n * POW;
-                }
-                if ($playerA.level % 8 === 0) {
-                    playerAEesReward += 8n * POW;
-                }
-                if ($playerA.level % 16 === 0) {
-                    playerAEesReward += 16n * POW;
-                }
-                if ($playerA.level % 32 === 0) {
-                    playerAEesReward += 32n * POW;
-                }
-                if ($playerA.level % 64 === 0) {
-                    playerAEesReward += 64n * POW;
-                }
-                let currentEes = BigInt($playerA.rewards.ees);
-                let newEes = currentEes + playerAEesReward;
-                $playerA.rewards.ees = newEes.toString();
-            }
+        let aXp = 0;
+        let bXp = 0;
+        if ($game.type === GameType.CUSTOM) {
+            bXp = 30 + $game.currentTurn;
+            aXp = 26 + $game.currentTurn;
         }
         if ($game.type === GameType.CASUAL) {
+            bXp = 90 + $game.currentTurn;
+            aXp = 78 + $game.currentTurn;
+        }
+        if ($game.type === GameType.RANKED) {
+            bXp = 60 + $game.currentTurn;
+            aXp = 54 + $game.currentTurn;
+        }
+        const XP_REQUIRED = 1000;
+        const POW = 10n ** 18n;
+        $playerB.experience += bXp;
+        $playerA.experience += aXp;
+        if ($playerB.experience >= XP_REQUIRED) {
+            const remaining = $playerB.experience - XP_REQUIRED;
+            $playerB.level += 1;
+            $playerB.experience = remaining;
+            playerBEesReward = 1n * POW;
+            if ($playerB.level % 2 === 0) {
+                playerBEesReward += 2n * POW;
+            }
+            if ($playerB.level % 4 === 0) {
+                playerBEesReward += 4n * POW;
+            }
+            if ($playerB.level % 8 === 0) {
+                playerBEesReward += 8n * POW;
+            }
+            if ($playerB.level % 16 === 0) {
+                playerBEesReward += 16n * POW;
+            }
+            if ($playerB.level % 32 === 0) {
+                playerBEesReward += 32n * POW;
+            }
+            if ($playerB.level % 64 === 0) {
+                playerBEesReward += 64n * POW;
+            }
+            let currentEes = BigInt($playerB.rewards.ees);
+            let newEes = currentEes + playerBEesReward;
+            $playerB.rewards.ees = newEes.toString();
+        }
+        if ($playerA.experience >= XP_REQUIRED) {
+            const remaining = $playerA.experience - XP_REQUIRED;
+            $playerA.level += 1;
+            $playerA.experience = remaining;
+            playerAEesReward = 1n * POW;
+            if ($playerA.level % 2 === 0) {
+                playerAEesReward += 2n * POW;
+            }
+            if ($playerA.level % 4 === 0) {
+                playerAEesReward += 4n * POW;
+            }
+            if ($playerA.level % 8 === 0) {
+                playerAEesReward += 8n * POW;
+            }
+            if ($playerA.level % 16 === 0) {
+                playerAEesReward += 16n * POW;
+            }
+            if ($playerA.level % 32 === 0) {
+                playerAEesReward += 32n * POW;
+            }
+            if ($playerA.level % 64 === 0) {
+                playerAEesReward += 64n * POW;
+            }
+            let currentEes = BigInt($playerA.rewards.ees);
+            let newEes = currentEes + playerAEesReward;
+            $playerA.rewards.ees = newEes.toString();
+        }
+        if ($game.type === GameType.CUSTOM) {
+            $playerB.games.custom.won += 1;
+            $playerA.games.custom.lost += 1;
+        }
+        else if ($game.type === GameType.CASUAL) {
             $playerB.games.casual.won += 1;
             $playerA.games.casual.lost += 1;
         }
-        if ($game.type === GameType.RANKED) {
+        else if ($game.type === GameType.RANKED) {
             $playerB.games.ranked.won += 1;
             $playerA.games.ranked.lost += 1;
             $playerB.elo += 20;
@@ -1926,7 +1988,7 @@ const endGame = async (gameId, winnerName, animations) => {
         io.to($playerB.socketId).emit("gameEnded", {
             isWinner: true,
             gameType: $game.type,
-            experience: 110 + $game.currentTurn,
+            experience: bXp,
             elo: $game.type === GameType.RANKED ? 20 : 0,
             playerDaily: playerBDaily,
             eesReward: playerBEesReward.toString(),
@@ -1935,11 +1997,27 @@ const endGame = async (gameId, winnerName, animations) => {
         io.to($playerA.socketId).emit("gameEnded", {
             isWinner: false,
             gameType: $game.type,
-            experience: 90 + $game.currentTurn,
+            experience: aXp,
             elo: $game.type === GameType.RANKED ? -20 : 0,
             playerDaily: playerADaily,
             eesReward: playerAEesReward.toString(),
             animations
+        });
+        server.io.emit("updateFriend", {
+            name: $playerB.name,
+            status: $playerB.status,
+            experience: $playerB.experience,
+            level: $playerB.level,
+            elo: $playerB.elo,
+            games: $playerB.games
+        });
+        server.io.emit("updateFriend", {
+            name: $playerA.name,
+            status: $playerA.status,
+            experience: $playerA.experience,
+            level: $playerA.level,
+            elo: $playerA.elo,
+            games: $playerA.games
         });
     }
     delete endTurnTimeouts[gameId];
@@ -2222,7 +2300,26 @@ const endTurn$1 = async (name) => {
         howMuchMana = 10;
     }
     const manaDelta = howMuchMana - player.field.hero.mana.current;
+    const neurotoxinDebuff = player.field.hero.debuffs.find((debuff) => debuff.id === EffectId.NEUROTOXIN);
     player.field.hero.mana.current = howMuchMana;
+    if (neurotoxinDebuff) {
+        player.field.hero.health.current -= 1;
+        animations.push({
+            type: "FLOATING_TEXT",
+            name: player.name,
+            field: "hero",
+            text: "Neurotoxin"
+        }, {
+            type: "HEALTH",
+            name: player.name,
+            field: "hero",
+            increment: undefined,
+            decrement: 1
+        });
+        if (await isGameOver($game, animations)) {
+            return;
+        }
+    }
     animations.push({
         type: "END_TURN",
         name: player.name
@@ -2241,6 +2338,7 @@ const endTurn$1 = async (name) => {
         minion.canAttack = true;
         const blazeBuff = minion.buffs.find((buff) => buff.id === EffectId.BLAZE);
         const regenerationBuff = minion.buffs.find((buff) => buff.id === EffectId.REGENERATION);
+        const neurotoxinDebuff = minion.debuffs.find((debuff) => debuff.id === EffectId.NEUROTOXIN);
         if (blazeBuff) {
             animations.push(...blaze.onEndTurn({
                 player,
@@ -2250,6 +2348,18 @@ const endTurn$1 = async (name) => {
         }
         if (regenerationBuff) {
             animations.push(...regeneration({ player }));
+        }
+        if (neurotoxinDebuff) {
+            animations.push({
+                type: "FLOATING_TEXT",
+                name: player.name,
+                field,
+                text: "Neurotoxin"
+            });
+            animations.push(...deductHealth(player, minion, 1, field));
+            if (minion.health.current <= 0) {
+                animations.push(...moveToGraveyard(player, minion, field));
+            }
         }
     });
     $game.endTurnTime = Date.now() + 90000;
@@ -2342,6 +2452,8 @@ const startGame = async (id, type, playerA, playerB) => {
         },
         game: generateGameView(game, $playerB.name)
     });
+    server.io.emit("updateFriend", { name: $playerA.name, status: PlayerStatus.IN_GAME });
+    server.io.emit("updateFriend", { name: $playerB.name, status: PlayerStatus.IN_GAME });
 };
 
 const gameHelpers = {
@@ -2368,7 +2480,11 @@ const gameHelpers = {
 };
 
 const authenticate$1 = async (socketId, name) => {
-    const { $chats, $games, $lobbies, $players } = mongo;
+    const { $games, $lobbies, $players, $leaderboards } = mongo;
+    let leaderboards = await $leaderboards.findOne({});
+    if (!leaderboards) {
+        leaderboards = { byLevel: [], byElo: [] };
+    }
     const $player = await $players.findOneAndUpdate({ name }, [{
             $set: {
                 socketId,
@@ -2404,8 +2520,8 @@ const authenticate$1 = async (socketId, name) => {
         if (!$lobby) {
             return [undefined, "You are currently in a lobby that cannot be found."];
         }
-        const { host, challengee } = $lobby;
-        lobbyView = { id, host, challengee };
+        const { host, challengee, messages } = $lobby;
+        lobbyView = { id, host, challengee, messages };
     }
     if (gameId) {
         const id = gameId;
@@ -2416,25 +2532,15 @@ const authenticate$1 = async (socketId, name) => {
         gameView = gameHelpers.generateGameView($game, $player.name);
     }
     const friendsView = [];
-    for (const name of $player.social.friends) {
-        const [friend, chat] = await Promise.all([
-            $players.findOne({ name }),
-            $chats.findOne({
-                players: {
-                    $all: [$player.name, name]
-                }
-            })
-        ]);
-        if (friend && chat) {
-            const { avatarId, bannerId, experience, level, elo, status, games } = friend;
-            const { lastSender, unseen, messages } = chat;
-            friendsView.push({
-                name, avatarId, bannerId, experience, level, elo, status, games, chat: {
-                    lastSender,
-                    unseen,
-                    messages
-                }
-            });
+    let mutualFriends = [];
+    for (const name of $player.friends) {
+        const $friend = await $players.findOne({ name });
+        if ($friend) {
+            if ($friend.friends.includes($player.name)) {
+                mutualFriends.push(name);
+            }
+            const { avatarId, bannerId, experience, level, elo, status, games } = $friend;
+            friendsView.push({ name, avatarId, bannerId, experience, level, elo, status, games });
         }
     }
     const playerView = {
@@ -2453,11 +2559,8 @@ const authenticate$1 = async (socketId, name) => {
         lobbyId: $player.lobbyId,
         gameId: $player.gameId,
         gamePopupId: $player.gamePopupId,
-        social: {
-            friends: friendsView,
-            requests: $player.social.requests,
-            blocked: $player.social.blocked
-        },
+        friends: friendsView,
+        mutualFriends,
         games: $player.games,
         decks: $player.decks.map((deck) => ({
             id: deck.id,
@@ -2581,7 +2684,7 @@ const authenticate$1 = async (socketId, name) => {
         rewards: $player.rewards
     };
     const snapshots = await mongo.$supplySnapshots.find().toArray();
-    return [{ lobbyView, gameView, playerView, snapshots }, ""];
+    return [{ lobbyView, gameView, playerView, snapshots, leaderboards }, ""];
 };
 
 const getSocketIds = async (players) => {
@@ -2618,23 +2721,20 @@ const playerTemplate = (name, passwordHash, address) => ({
     status: PlayerStatus.OFFLINE,
     experience: 0,
     level: 1,
-    elo: 500,
-    avatarId: 1000,
-    bannerId: 2000,
+    elo: 400,
+    avatarId: 100,
+    bannerId: 200,
     deckId: 0, // should be called deckIndex, because this is actually index.
     queueId: QueueId.NONE,
     lobbyId: 0,
     gameId: 0,
     gamePopupId: 0,
     games: {
+        custom: { won: 0, lost: 0 },
         casual: { won: 0, lost: 0 },
         ranked: { won: 0, lost: 0 }
     },
-    social: {
-        friends: [],
-        requests: [],
-        blocked: []
-    },
+    friends: [],
     tasks: {
         daily: false,
         dailyAlternative: 0,
@@ -2658,7 +2758,7 @@ const playerTemplate = (name, passwordHash, address) => ({
     ],
     skins: cards.map((card) => ({
         cardId: card.id,
-        skinId: parseInt(`1${card.id > 99 ? `${card.id}` : `0${card.id}`}00`)
+        skinId: parseInt(`1${card.id > 99 ? `${card.id}` : `0${card.id}`}0`)
     }))
 });
 
@@ -2675,6 +2775,7 @@ const authenticate = (socket, error) => {
             return error(errorMessage);
         }
         socket.emit("signin", { ...data, token: undefined });
+        server.io.emit("updateFriend", { name, status: PlayerStatus.ONLINE });
     });
 };
 
@@ -2693,9 +2794,8 @@ const disconnect = (socket, error) => {
         if (!$playerUpdate) {
             return error("Error updating player.");
         }
-        const { name, status, social } = $playerUpdate;
-        const socketIds = await playerHelpers.getSocketIds(social.friends);
-        server.io.to(socketIds).emit("updateFriend", { name, status });
+        const { name, status } = $playerUpdate;
+        server.io.emit("updateFriend", { name, status });
     });
 };
 
@@ -2745,6 +2845,7 @@ const signinMetamask = (socket, error) => {
             return error(errorMessage);
         }
         socket.emit("signin", { ...data, token });
+        server.io.emit("updateFriend", { name, status: PlayerStatus.ONLINE });
     });
 };
 
@@ -2772,6 +2873,7 @@ const signinPassword = (socket, error) => {
             return error(errorMessage);
         }
         socket.emit("signin", { ...data, token });
+        server.io.emit("updateFriend", { name, status: PlayerStatus.ONLINE });
     });
 };
 
@@ -2981,6 +3083,7 @@ const closeLobby = (socket, error) => {
             return error("Error updating challengee.");
         }
         socket.emit("closeLobby");
+        server.io.emit("updateFriend", { name, status: PlayerStatus.ONLINE });
         if (challengee) {
             const $challengee = await $players.findOneAndUpdate({
                 name: challengee.name
@@ -2996,6 +3099,7 @@ const closeLobby = (socket, error) => {
                 return error("Error updating challengee.");
             }
             server.io.to($challengee.socketId).emit("closeLobby");
+            server.io.emit("updateFriend", { name: challengee.name, status: PlayerStatus.ONLINE });
         }
     });
 };
@@ -3011,29 +3115,28 @@ const createLobby = (socket, error) => {
         if ($player.lobbyId) {
             return error("Already in a lobby.");
         }
-        if ($player.gameId) {
-            return error("Can't make a lobby while in game.");
-        }
         if ($player.queueId) {
             return error("Can't make a lobby while in queue.");
+        }
+        if ($player.gameId) {
+            return error("Can't make a lobby while in game.");
         }
         if (!playerHelpers.isDeckValid($player.decks[$player.deckId])) {
             return error("Invalid deck.");
         }
         const { name, experience, level, elo, avatarId, bannerId, games } = $player;
-        const id = randomInt(1, 1000000001);
+        const lobbyId = randomInt(1, 1000000001);
+        const status = PlayerStatus.IN_LOBBY;
         const lobby = {
-            id,
+            id: lobbyId,
             host: { name, experience, level, elo, avatarId, bannerId, games },
-            challengee: undefined
+            challengee: undefined,
+            messages: []
         };
         const [$lobbyInsert, $playerUpdate] = await Promise.all([
             $lobbies.insertOne(lobby),
             $players.updateOne({ socketId }, {
-                $set: {
-                    lobbyId: id,
-                    status: PlayerStatus.IN_LOBBY
-                }
+                $set: { lobbyId, status }
             })
         ]);
         if (!$lobbyInsert.insertedId) {
@@ -3043,6 +3146,7 @@ const createLobby = (socket, error) => {
             return error("Error updating player.");
         }
         socket.emit("createLobby", { lobby });
+        server.io.emit("updateFriend", { name, status });
     });
 };
 
@@ -3097,27 +3201,8 @@ const declineGame = (socket, error) => {
             $playerA.socketId,
             $playerB.socketId
         ]).emit("declineGame");
-    });
-};
-
-const defaultSkin = (socket, error) => {
-    const socketId = socket.id;
-    const { $players } = mongo;
-    socket.on("defaultSkin", async (params) => {
-        const $player = await $players.findOne({ socketId });
-        if (!$player) {
-            return error("Player not found, try relogging.");
-        }
-        const { cardId } = params;
-        const $playerUpdate = await $players.updateOne({ socketId }, {
-            $pull: {
-                skins: { cardId }
-            }
-        });
-        if (!$playerUpdate.modifiedCount) {
-            return error("Failed to set default skin");
-        }
-        socket.emit("defaultSkin", { cardId });
+        server.io.emit("updateFriend", { name: $playerA.name, status: PlayerStatus.ONLINE });
+        server.io.emit("updateFriend", { name: $playerB.name, status: PlayerStatus.ONLINE });
     });
 };
 
@@ -3140,26 +3225,6 @@ const finishTutorial = (socket, error) => {
             return error("Failed to update player.");
         }
         socket.emit("finishTutorial", { tutorial });
-    });
-};
-
-/**
-  * Call the below functionality once per hour / day, sort & store in mongodb.
-  * On signin event query the mongodb for sorted leaderboards and emit.
-  * Frontend should be able to re-query on leaderboards change (emit to all?).
-  * This event should then be removed.
-**/
-const getLeaderboards = (socket, error) => {
-    const { $leaderboards } = mongo;
-    socket.on("getLeaderboards", async () => {
-        const $ = await $leaderboards.findOne({});
-        if (!$) {
-            socket.emit("getLeaderboards", { byLevel: [], byElo: [] });
-        }
-        else {
-            const { level, elo } = $;
-            socket.emit("getLeaderboards", { byLevel: level, byElo: elo });
-        }
     });
 };
 
@@ -3218,10 +3283,11 @@ const joinLobby = (socket, error) => {
         if (!$playerHost) {
             return error("Lobby host not found.");
         }
-        const { host, challengee } = $lobbyUpdate;
-        const lobby = { id, host, challengee };
+        const { host, challengee, messages } = $lobbyUpdate;
+        const lobby = { id, host, challengee, messages };
         socket.emit("joinLobbySender", { lobby });
         server.io.to($playerHost.socketId).emit("joinLobbyReceiver", { challengee });
+        server.io.emit("updateFriend", { name, status: PlayerStatus.IN_LOBBY });
     });
 };
 
@@ -3275,6 +3341,7 @@ const joinQueue = (socket, error) => {
                         return error("Failed removing player from queue after match found.");
                     }
                     await gameHelpers.gamePopup(GameType.CASUAL, opponent.name, name);
+                    server.io.emit("updateFriend", { name, status: PlayerStatus.IN_QUEUE });
                     return;
                 }
             }
@@ -3284,6 +3351,9 @@ const joinQueue = (socket, error) => {
             }
         }
         else if (queueId === QueueId.RANKED) {
+            if ($player.elo < 20 || $player.level < 10) {
+                return error("You can't join ranked queue right now.");
+            }
             const opponents = await $rankedQueuePlayers.find().toArray();
             for (const opponent of opponents) {
                 if (opponent.elo < elo - 11250 || opponent.elo < elo + 11250) {
@@ -3308,6 +3378,7 @@ const joinQueue = (socket, error) => {
                         return error("Failed removing player from queue after match found.");
                     }
                     await gameHelpers.gamePopup(GameType.RANKED, opponent.name, name);
+                    server.io.emit("updateFriend", { name, status: PlayerStatus.IN_QUEUE });
                     return;
                 }
             }
@@ -3326,6 +3397,7 @@ const joinQueue = (socket, error) => {
             return error("Error updating player.");
         }
         socket.emit("joinQueue", { queueId });
+        server.io.emit("updateFriend", { name, status: PlayerStatus.IN_QUEUE });
     });
 };
 
@@ -3375,6 +3447,7 @@ const leaveLobby = (socket, error) => {
         }
         socket.emit("leaveLobbySender");
         server.io.to($playerHost.socketId).emit("leaveLobbyReceiver");
+        server.io.emit("updateFriend", { name: $player.name, status: PlayerStatus.ONLINE });
     });
 };
 
@@ -3419,6 +3492,7 @@ const leaveQueue = (socket, error) => {
             }
         }
         socket.emit("leaveQueue");
+        server.io.emit("updateFriend", { name, status: PlayerStatus.ONLINE });
     });
 };
 
@@ -3462,12 +3536,9 @@ const saveDeck = (socket, error) => {
             }
         });
         if (!$playerUpdate.modifiedCount) {
-            return error("Error saving deck (Most likely you made no changes to it).");
+            return error("Error updating player.");
         }
-        socket.emit("notification", {
-            color: "success",
-            message: "Deck saved successfully."
-        });
+        socket.emit("saveDeck", { deck });
     });
 };
 
@@ -3558,9 +3629,7 @@ const client = [
     closeLobby,
     createLobby,
     declineGame,
-    defaultSkin,
     finishTutorial,
-    getLeaderboards,
     joinLobby,
     joinQueue,
     leaveLobby,
@@ -3957,17 +4026,6 @@ const endTurn = (socket, error) => {
         if (!getGameData) {
             return error(getGameError);
         }
-        // const {$game, player, opponent} = getGameData;
-        // await gameHelpers.endTurn({$game, player, opponent});
-        // setTimeout(async () => {
-        //   await gameHelpers.endTurn({
-        //     $game,
-        //     player: opponent,
-        //     opponent: player
-        //   });
-        //   await gameHelpers.attackMinionSave($game, animations, true);
-        // }, 20000);
-        // await gameHelpers.attackMinionSave($game, animations, true);
         const { $game, player, opponent } = getGameData;
         if (player.hand.length > 6) {
             const toRemove = player.hand.splice(0, player.hand.length - 6);
@@ -3999,7 +4057,26 @@ const endTurn = (socket, error) => {
             howMuchMana = 10;
         }
         const manaDelta = howMuchMana - player.field.hero.mana.current;
+        const neurotoxinDebuff = player.field.hero.debuffs.find((debuff) => debuff.id === EffectId.NEUROTOXIN);
         player.field.hero.mana.current = howMuchMana;
+        if (neurotoxinDebuff) {
+            player.field.hero.health.current -= 1;
+            animations.push({
+                type: "FLOATING_TEXT",
+                name: player.name,
+                field: "hero",
+                text: "Neurotoxin"
+            }, {
+                type: "HEALTH",
+                name: player.name,
+                field: "hero",
+                increment: undefined,
+                decrement: 1
+            });
+            if (await gameHelpers.isGameOver($game, animations)) {
+                return;
+            }
+        }
         animations.push({
             type: "END_TURN",
             name: player.name
@@ -4018,6 +4095,7 @@ const endTurn = (socket, error) => {
             minion.canAttack = true;
             const blazeBuff = minion.buffs.find((buff) => buff.id === EffectId.BLAZE);
             const regenerationBuff = minion.buffs.find((buff) => buff.id === EffectId.REGENERATION);
+            const neurotoxinDebuff = minion.debuffs.find((debuff) => debuff.id === EffectId.NEUROTOXIN);
             if (blazeBuff) {
                 animations.push(...gameHelpers.effect.blaze.onEndTurn({
                     player,
@@ -4027,6 +4105,12 @@ const endTurn = (socket, error) => {
             }
             if (regenerationBuff) {
                 animations.push(...gameHelpers.effect.regeneration({ player }));
+            }
+            if (neurotoxinDebuff) {
+                animations.push(...gameHelpers.deductHealth(player, minion, 1, field));
+                if (minion.health.current <= 0) {
+                    animations.push(...gameHelpers.moveToGraveyard(player, minion, field));
+                }
             }
         });
         $game.endTurnTime = Date.now() + 90000;
@@ -4498,6 +4582,157 @@ const surrender = (socket, error) => {
     });
 };
 
+const useAbility = (socket, error) => {
+    const socketId = socket.id;
+    socket.on("useAbility", async (params) => {
+        const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
+        const animations = [];
+        if (!getGameData) {
+            return error(getGameError);
+        }
+        const { $game, player, opponent } = getGameData;
+        const { name, hand, trap, field } = player;
+        const { target } = params;
+        const hero = field.hero;
+        if (hero.ability === Ability.FORTIFY) {
+            const minion = player.field[target];
+            if (hero.mana.current < 5) {
+                return error("Not enough mana.");
+            }
+            if (!minion) {
+                return error("No minion on the field.");
+            }
+            player.field.hero.mana.current -= 5;
+            animations.push({
+                type: "MANA_CAPACITY",
+                name: player.name,
+                increment: undefined,
+                decrement: 5
+            });
+            const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
+            if (shieldBuff) {
+                shieldBuff.data.amount += 1;
+            }
+            else {
+                minion.buffs.push({
+                    id: EffectId.SHIELD,
+                    data: { amount: 1 }
+                });
+            }
+            animations.push({
+                type: "FLOATING_TEXT",
+                name: player.name,
+                field: target,
+                text: "+1 Shield"
+            });
+        }
+        else if (hero.ability === Ability.HEAL) {
+            const minion = player.field[target];
+            if (hero.mana.current < 5) {
+                return error("Not enough mana.");
+            }
+            if (!minion) {
+                return error("No minion on the field.");
+            }
+            player.field.hero.mana.current -= 5;
+            minion.health.current += 1;
+            animations.push({
+                type: "MANA_CAPACITY",
+                name: player.name,
+                increment: undefined,
+                decrement: 5
+            }, {
+                type: "FLOATING_TEXT",
+                name: player.name,
+                field: target,
+                text: "Rejuvenate"
+            }, {
+                type: "HEALTH",
+                field: target,
+                name: player.name,
+                increment: 1,
+                decrement: undefined
+            });
+        }
+        else if (hero.ability === Ability.NEUROTOXIN) {
+            const minion = opponent.field[target];
+            if (hero.mana.current < 5) {
+                return error("Not enough mana.");
+            }
+            if (!minion) {
+                return error("No minion on the field.");
+            }
+            player.field.hero.mana.current -= 5;
+            const neurotoxinBuff = minion.debuffs.find((debuff) => debuff.id === EffectId.NEUROTOXIN);
+            if (neurotoxinBuff) {
+                return error("Target already infected.");
+            }
+            minion.debuffs.push({
+                id: EffectId.NEUROTOXIN, data: {}
+            });
+            animations.push({
+                type: "MANA_CAPACITY",
+                name: player.name,
+                increment: undefined,
+                decrement: 5
+            });
+            animations.push({
+                type: "FLOATING_TEXT",
+                name: opponent.name,
+                field: target,
+                text: "Neurotoxin"
+            });
+        }
+        else if (hero.ability === Ability.OVERCHARGE) {
+            const minion = opponent.field[target];
+            if (player.field.hero.mana.current < 5) {
+                return error("Not enough mana.");
+            }
+            if (!minion) {
+                return error("No minion on the field.");
+            }
+            player.field.hero.mana.current -= 5;
+            animations.push({
+                type: "MANA_CAPACITY",
+                name: player.name,
+                increment: undefined,
+                decrement: 5
+            });
+            if (minion.type === CardType.MINION) {
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    name: opponent.name,
+                    field: target,
+                    text: "Electrocute"
+                });
+                animations.push(...gameHelpers.deductHealth(opponent, minion, 2, target));
+                if (minion.health.current <= 0) {
+                    animations.push(...gameHelpers.moveToGraveyard(opponent, minion, target));
+                }
+            }
+            else {
+                minion.health.current -= 2;
+                if (await gameHelpers.isGameOver($game, animations)) {
+                    return;
+                }
+                animations.push({
+                    type: "FLOATING_TEXT",
+                    name: opponent.name,
+                    field: "hero",
+                    text: "Electrocute"
+                }, {
+                    type: "HEALTH",
+                    name: opponent.name,
+                    field: target,
+                    increment: undefined,
+                    decrement: 2
+                });
+            }
+        }
+        await gameHelpers.attackMinionSave($game, animations);
+    });
+};
+
 const game = [
     attackHero,
     attackMinion,
@@ -4505,69 +4740,9 @@ const game = [
     playMagic,
     playMinion,
     playTrap,
-    surrender
+    surrender,
+    useAbility
 ];
-
-const acceptFriend = (socket, error) => {
-    const socketId = socket.id;
-    const { $chats, $players } = mongo;
-    socket.on("acceptFriend", async (params) => {
-        const { name } = params;
-        const $playerSenderUpdate = await $players.findOneAndUpdate({ socketId }, {
-            $pull: {
-                "social.requests": name
-            },
-            $push: {
-                "social.friends": name
-            }
-        }, {
-            returnDocument: "after"
-        });
-        if (!$playerSenderUpdate) {
-            return error("Error updating sender.");
-        }
-        const $playerReceiverUpdate = await $players.findOneAndUpdate({ name }, {
-            $push: {
-                "social.friends": $playerSenderUpdate.name
-            }
-        }, {
-            returnDocument: "after"
-        });
-        if (!$playerReceiverUpdate) {
-            return error("Error updating receiver.");
-        }
-        const $chatInsert = await $chats.insertOne({
-            players: [$playerSenderUpdate.name, $playerReceiverUpdate.name],
-            lastSender: $playerSenderUpdate.name,
-            unseen: 0,
-            messages: []
-        });
-        if (!$chatInsert.insertedId) {
-            return error("Error inserting chat.");
-        }
-        socket.emit("acceptFriendSender", {
-            name: $playerReceiverUpdate.name,
-            avatarId: $playerReceiverUpdate.avatarId,
-            bannerId: $playerReceiverUpdate.bannerId,
-            experience: $playerReceiverUpdate.experience,
-            level: $playerReceiverUpdate.level,
-            elo: $playerReceiverUpdate.elo,
-            status: $playerReceiverUpdate.status,
-            games: $playerReceiverUpdate.games,
-            lastSender: $playerSenderUpdate.name
-        });
-        server.io.to($playerReceiverUpdate.socketId).emit("acceptFriendReceiver", {
-            name: $playerSenderUpdate.name,
-            avatarId: $playerSenderUpdate.avatarId,
-            bannerId: $playerSenderUpdate.bannerId,
-            experience: $playerSenderUpdate.experience,
-            level: $playerSenderUpdate.level,
-            elo: $playerSenderUpdate.elo,
-            status: $playerSenderUpdate.status,
-            games: $playerSenderUpdate.games,
-        });
-    });
-};
 
 const addFriend = (socket, error) => {
     const socketId = socket.id;
@@ -4587,138 +4762,40 @@ const addFriend = (socket, error) => {
         if ($playerSender.name === name) {
             return error("You can't add yourself as a friend.");
         }
-        if ($playerReceiver.social.blocked.includes($playerSender.name)) {
-            return error("This player has blocked you.");
-        }
-        if ($playerSender.social.blocked.includes(name)) {
-            return error("You have blocked this player.");
-        }
-        if ($playerReceiver.social.requests.includes($playerSender.name)) {
-            return error("You have already sent the request to this player.");
-        }
-        if ($playerSender.social.requests.includes(name)) {
-            return error("This player has already sent you the request.");
-        }
-        if ($playerSender.social.friends.includes(name)) {
+        if ($playerSender.friends.includes(name)) {
             return error("This player is already your friend.");
         }
-        const $playerUpdate = await $players.updateOne({ name }, {
+        const $playerUpdate = await $players.updateOne({ socketId }, {
             $push: {
-                "social.requests": $playerSender.name
+                friends: name
             }
         });
         if (!$playerUpdate.modifiedCount) {
             return error("Error updating player.");
         }
-        socket.emit("notification", {
-            color: "success",
-            message: "Friend request sent."
+        socket.emit("addFriendSender", {
+            isMutual: $playerReceiver.friends.includes($playerSender.name),
+            name: $playerReceiver.name,
+            avatarId: $playerReceiver.avatarId,
+            bannerId: $playerReceiver.bannerId,
+            experience: $playerReceiver.experience,
+            level: $playerReceiver.level,
+            elo: $playerReceiver.elo,
+            status: $playerReceiver.status,
+            games: $playerReceiver.games,
         });
-        server.io.to($playerReceiver.socketId).emit("addFriend", {
-            name: $playerSender.name
-        });
-    });
-};
-
-const blockFriend = (socket, error) => {
-    const socketId = socket.id;
-    const { $chats, $players } = mongo;
-    socket.on("blockFriend", async (params) => {
-        const { name } = params;
-        const $playerSenderUpdate = await $players.findOneAndUpdate({ socketId }, {
-            $pull: {
-                "social.friends": name
-            },
-            $push: {
-                "social.blocked": name
-            }
-        });
-        if (!$playerSenderUpdate) {
-            return error("Sender not found.");
+        if ($playerReceiver.friends.includes($playerSender.name)) {
+            server.io.to($playerReceiver.socketId).emit("addFriendReceiver", {
+                // isMutual: $playerSender.friends.includes($playerReceiver.name),
+                name: $playerSender.name
+            });
         }
-        const $playerReceiverUpdate = await $players.findOneAndUpdate({ name }, {
-            $pull: {
-                "social.friends": $playerSenderUpdate.name
-            }
-        });
-        if (!$playerReceiverUpdate) {
-            return error("Receiver not found.");
-        }
-        const $chatDelete = await $chats.deleteOne({
-            players: {
-                $all: [$playerSenderUpdate.name, name]
-            }
-        });
-        if (!$chatDelete.deletedCount) {
-            return error("Error deleting chat.");
-        }
-        socket.emit("blockFriendSender", { name });
-        server.io.to($playerReceiverUpdate.socketId).emit("blockFriendReceiver", {
-            name: $playerSenderUpdate.name
-        });
-    });
-};
-
-const declineFriend = (socket, error) => {
-    const socketId = socket.id;
-    const { $players } = mongo;
-    socket.on("declineFriend", async (params) => {
-        const { name } = params;
-        const $player = await $players.findOne({ socketId });
-        if (!$player) {
-            return error("Player not found, try relogging.");
-        }
-        const $playerUpdate = await $players.updateOne({
-            name: $player.name
-        }, {
-            $pull: {
-                "social.requests": name
-            }
-        });
-        if (!$playerUpdate.modifiedCount) {
-            return error("Failed to update account.");
-        }
-        socket.emit("declineFriend", { name });
-    });
-};
-
-const readChatMessages = (socket, error) => {
-    const socketId = socket.id;
-    const { $chats, $players } = mongo;
-    socket.on("readChatMessages", async (params) => {
-        const { name } = params;
-        const [$playerSender, $playerReceiver] = await Promise.all([
-            $players.findOne({ socketId }),
-            $players.findOne({ name })
-        ]);
-        if (!$playerSender) {
-            return error("Player not found.");
-        }
-        if (!$playerReceiver) {
-            return error("Receiver not found.");
-        }
-        const $chatUpdate = await $chats.updateOne({
-            players: {
-                $all: [$playerSender.name, name]
-            }
-        }, {
-            $set: {
-                unseen: 0
-            }
-        });
-        if (!$chatUpdate) {
-            return error("Error updating chat.");
-        }
-        socket.emit("readChatMessages", { name });
-        server.io.to($playerReceiver.socketId).emit("readChatMessages", {
-            name: $playerSender.name
-        });
     });
 };
 
 const removeFriend = (socket, error) => {
     const socketId = socket.id;
-    const { $chats, $players } = mongo;
+    const { $players } = mongo;
     socket.on("removeFriend", async (params) => {
         const { name } = params;
         const [$playerSender, $playerReceiver] = await Promise.all([
@@ -4731,37 +4808,17 @@ const removeFriend = (socket, error) => {
         if (!$playerReceiver) {
             return error("Player receiver not found.");
         }
-        const [$playerSenderUpdate, $playerReceiverUpdate, $chatDelete] = await Promise.all([
-            $players.findOneAndUpdate({
-                name: $playerSender.name
-            }, {
-                $pull: {
-                    "social.friends": name
-                }
-            }, {
-                returnDocument: "after"
-            }),
-            $players.findOneAndUpdate({ name }, {
-                $pull: {
-                    "social.friends": $playerSender.name
-                }
-            }, {
-                returnDocument: "after"
-            }),
-            $chats.deleteOne({
-                players: {
-                    $all: [name, $playerSender.name]
-                }
-            })
-        ]);
+        const $playerSenderUpdate = await $players.findOneAndUpdate({
+            name: $playerSender.name
+        }, {
+            $pull: {
+                friends: name
+            }
+        }, {
+            returnDocument: "after"
+        });
         if (!$playerSenderUpdate) {
             return error("Account sender not found.");
-        }
-        if (!$playerReceiverUpdate) {
-            return error("Account receiver not found.");
-        }
-        if (!$chatDelete.deletedCount) {
-            return error("Failed to delete chat.");
         }
         socket.emit("removeFriendSender", { name });
         server.io.to($playerReceiver.socketId).emit("removeFriendReceiver", {
@@ -4772,65 +4829,75 @@ const removeFriend = (socket, error) => {
 
 const sendChatMessage = (socket, error) => {
     const socketId = socket.id;
-    const { $players, $chats } = mongo;
+    const { $players, $chats, $lobbies } = mongo;
     socket.on("sendChatMessage", async (params) => {
         const { receiver, text } = params;
-        if (text.length > 256) {
+        if (text.length > 64) {
             return error("Message too long.");
         }
-        const [$playerSender, $playerReceiver] = await Promise.all([
+        const [$playerSender] = await Promise.all([
             $players.findOne({ socketId }),
-            $players.findOne({
-                name: receiver
-            })
+            // $players.findOne({
+            //   name: receiver
+            // })
         ]);
         if (!$playerSender) {
             return error("Player sender not found, try relogging.");
         }
-        if (!$playerReceiver) {
-            return error("Player receiver not found, try relogging.");
+        // if (!$playerReceiver) {
+        //   return error("Player receiver not found, try relogging.");
+        // }
+        if (!$playerSender.lobbyId) {
+            return error("You're not in a lobby.");
         }
-        if (!$playerSender.social.friends.includes(receiver)) {
-            return error("This user isn't your friend.");
-        }
-        const $chat = await $chats.findOne({
-            players: {
-                $all: [$playerSender.name, receiver]
-            }
+        const $lobby = await $lobbies.findOne({
+            id: $playerSender.lobbyId
         });
-        if (!$chat) {
-            return error("Chat not found.");
+        if (!$lobby) {
+            return error("Lobby not found.");
         }
         const date = Date.now();
-        if ($chat.lastSender === $playerSender.name) {
-            $chat.unseen += 1;
-        }
-        else {
-            $chat.lastSender = $playerSender.name;
-            $chat.unseen = 1;
-        }
-        $chat.messages.push({
+        $lobby.messages.push({
             name: $playerSender.name,
             text,
             date
         });
-        if ($chat.messages.length > 100) {
-            $chat.messages.shift();
+        if ($lobby.messages.length > 10) {
+            $lobby.messages.shift();
         }
-        const $chatReplace = await $chats.replaceOne({
-            players: {
-                $all: [$playerSender.name, receiver]
+        const $lobbyReplace = await $lobbies.updateOne({
+            id: $playerSender.lobbyId
+        }, {
+            $set: {
+                messages: $lobby.messages
             }
-        }, $chat);
-        if (!$chatReplace.modifiedCount) {
+        });
+        if (!$lobbyReplace.modifiedCount) {
             return error("Error updating chat.");
         }
         const sender = $playerSender.name;
-        socket.emit("sendChatMessageSender", { sender, receiver, text, date });
-        server
-            .io
-            .to($playerReceiver.socketId)
-            .emit("sendChatMessageReceiver", { sender, text, date });
+        let b;
+        const a = await $players.findOne({ name: $lobby.host.name });
+        if (!a) {
+            return;
+        }
+        if ($lobby.challengee) {
+            b = await $players.findOne({ name: $lobby.challengee.name });
+        }
+        // let socketIds;
+        // if (b) {
+        //   socketIds = getSocketIds([a.socketId, b.socketId]);
+        // } else {
+        //   socketIds = getSocketIds([a.socketId]);
+        // }
+        server.io.to([a.socketId, b.socketId]).emit("sendChatMessageSender", { sender, text, date });
+        // socket.emit("sendChatMessageSender", {sender, text, date});
+        // if ($lobby.challengee) {
+        // }
+        // server
+        //   .io
+        //   .to($playerReceiver.socketId)
+        //   .emit("sendChatMessageReceiver", {sender, text, date});
     });
 };
 
@@ -4839,20 +4906,20 @@ const setAvatar = (socket, error) => {
     const { $players } = mongo;
     socket.on("setAvatar", async (params) => {
         const { avatarId } = params;
-        if (avatarId < 1000 || avatarId > 1999) {
+        if (avatarId < 100 || avatarId > 199) {
             return error("Invalid avatar.");
         }
         const $player = await $players.findOne({ socketId });
         if (!$player) {
             return error("Player not found.");
         }
-        if (avatarId === 1001 && $player.elo < 250) {
+        if (avatarId === 101 && $player.elo < 600) {
             return error("Can't select this avatar.");
         }
-        if (avatarId === 1002 && $player.elo < 500) {
+        if (avatarId === 102 && $player.elo < 800) {
             return error("Can't select this avatar.");
         }
-        if (avatarId === 1003 && $player.elo < 750) {
+        if (avatarId === 103 && $player.elo < 1000) {
             return error("Can't select this avatar.");
         }
         const $playerUpdate = await $players.findOneAndUpdate({ socketId }, {
@@ -4863,10 +4930,9 @@ const setAvatar = (socket, error) => {
         if (!$playerUpdate) {
             return error("Failed to update player.");
         }
-        const { name, social } = $playerUpdate;
-        const socketIds = await playerHelpers.getSocketIds(social.friends);
+        const { name } = $playerUpdate;
         socket.emit("updatePlayer", { avatarId });
-        server.io.to(socketIds).emit("updateFriend", { name, avatarId });
+        server.io.emit("updateFriend", { name, avatarId });
     });
 };
 
@@ -4875,10 +4941,22 @@ const setBanner = (socket, error) => {
     const { $players } = mongo;
     socket.on("setBanner", async (params) => {
         const { bannerId } = params;
-        if (bannerId < 2000 || bannerId > 2999) {
+        if (bannerId < 200 || bannerId > 299) {
             return error("Invalid banner.");
         }
-        // check whether player owns the avatar here!
+        const $player = await $players.findOne({ socketId });
+        if (!$player) {
+            return error("Player not found.");
+        }
+        if (bannerId === 201 && $player.elo < 600) {
+            return error("Can't select this avatar.");
+        }
+        if (bannerId === 202 && $player.elo < 800) {
+            return error("Can't select this avatar.");
+        }
+        if (bannerId === 203 && $player.elo < 1000) {
+            return error("Can't select this avatar.");
+        }
         const $playerUpdate = await $players.findOneAndUpdate({ socketId }, {
             $set: { bannerId }
         }, {
@@ -4887,58 +4965,18 @@ const setBanner = (socket, error) => {
         if (!$playerUpdate) {
             return error("Failed to update player.");
         }
-        const { name, social } = $playerUpdate;
-        const socketIds = await playerHelpers.getSocketIds(social.friends);
+        const { name } = $playerUpdate;
         socket.emit("updatePlayer", { bannerId });
-        server.io.to(socketIds).emit("updateFriend", { name, bannerId });
-    });
-};
-
-const unblockFriend = (socket, error) => {
-    const socketId = socket.id;
-    const { $players } = mongo;
-    socket.on("unblockFriend", async (params) => {
-        const { name } = params;
-        const $playerUpdate = await $players.updateOne({ socketId }, {
-            $pull: {
-                "social.blocked": name
-            }
-        });
-        if (!$playerUpdate.modifiedCount) {
-            return error("Failed to update player.");
-        }
-        socket.emit("unblockFriend", { name });
-    });
-};
-
-const updateFriend = (socket, error) => {
-    const socketId = socket.id;
-    const { $players } = mongo;
-    socket.on("updateFriend", async () => {
-        const $player = await $players.findOne({ socketId });
-        if (!$player) {
-            return error("Player not found.");
-        }
-        const { name, avatarId, bannerId, elo, level, experience, status, games } = $player;
-        const friends = await playerHelpers.getSocketIds($player.social.friends);
-        if (friends.length) {
-            server.io.to(friends).emit("updateFriend", { name, avatarId, bannerId, elo, level, experience, status, games });
-        }
+        server.io.emit("updateFriend", { name, bannerId });
     });
 };
 
 const sidenav = [
-    acceptFriend,
     addFriend,
-    blockFriend,
-    declineFriend,
-    readChatMessages,
     removeFriend,
     sendChatMessage,
     setAvatar,
-    setBanner,
-    unblockFriend,
-    updateFriend
+    setBanner
 ];
 
 const requests = [...auth, ...client, ...game, ...sidenav];
@@ -5013,7 +5051,7 @@ server.io.on("connection", (socket) => {
     });
 });
 server.http.listen(process.env.PORT || 4201);
-schedule("0 */6 * * *", async () => {
+schedule("0 */1 * * *", async () => {
     for await (let $player of mongo.$players.find()) {
         if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
             $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
@@ -5028,16 +5066,19 @@ schedule("0 */6 * * *", async () => {
         }
         $player.tasks.daily = false;
         $player.tasks.dailyAlternative = 0;
-        if ($player.elo > 250) {
+        if ($player.elo > 400) {
             $player.elo -= 1;
         }
-        if ($player.elo >= 250) { // silver
+        else if ($player.elo < 400) {
+            $player.elo += 1;
+        }
+        if ($player.elo >= 600) { // silver
             $player.rewards.ees = `${BigInt($player.rewards.ees) + 1n * 10n ** 18n}`;
         }
-        else if ($player.elo >= 500) { // gold
+        else if ($player.elo >= 800) { // gold
             $player.rewards.ees = `${BigInt($player.rewards.ees) + 3n * 10n ** 18n}`;
         }
-        else if ($player.elo >= 750) { // master
+        else if ($player.elo >= 1000) { // master
             $player.rewards.ees = `${BigInt($player.rewards.ees) + 5n * 10n ** 18n}`;
         }
         await mongo.$players.replaceOne({ name: $player.name }, $player);

@@ -1,6 +1,8 @@
 import jsonwebtoken from "jsonwebtoken";
 import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
+import { PlayerStatus } from "@som/shared/enums";
+import { server } from "app";
 
 const authenticate: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
@@ -16,6 +18,7 @@ const authenticate: SocketRequest = (socket, error): void => {
     }
 
     socket.emit("signin", {...data, token: undefined});
+    server.io.emit("updateFriend", {name, status: PlayerStatus.ONLINE});
   });
 };
 

@@ -1,6 +1,6 @@
 import {randomInt} from "crypto";
 import {PlayerStatus} from "@som/shared/enums";
-import {mongo} from "app";
+import {mongo, server} from "app";
 import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 import type {LobbyView} from "@som/shared/types/views";
@@ -20,12 +20,12 @@ const createLobby: SocketRequest = (socket, error): void => {
       return error("Already in a lobby.");
     }
 
-    if ($player.gameId) {
-      return error("Can't make a lobby while in game.");
-    }
-
     if ($player.queueId) {
       return error("Can't make a lobby while in queue.");
+    }
+
+    if ($player.gameId) {
+      return error("Can't make a lobby while in game.");
     }
 
     if (!playerHelpers.isDeckValid($player.decks[$player.deckId])) {
@@ -33,21 +33,20 @@ const createLobby: SocketRequest = (socket, error): void => {
     }
 
     const {name, experience, level, elo, avatarId, bannerId, games} = $player;
-    const id = randomInt(1, 1000000001);
+    const lobbyId = randomInt(1, 1000000001);
+    const status = PlayerStatus.IN_LOBBY;
 
     const lobby: LobbyView = {
-      id,
+      id: lobbyId,
       host: {name, experience, level, elo, avatarId, bannerId, games},
-      challengee: undefined
+      challengee: undefined,
+      messages: []
     }
 
     const [$lobbyInsert, $playerUpdate] = await Promise.all([
       $lobbies.insertOne(lobby),
       $players.updateOne({socketId}, {
-        $set: {
-          lobbyId: id,
-          status: PlayerStatus.IN_LOBBY
-        }
+        $set: {lobbyId, status}
       })
     ]);
 
@@ -60,6 +59,7 @@ const createLobby: SocketRequest = (socket, error): void => {
     }
 
     socket.emit("createLobby", {lobby});
+    server.io.emit("updateFriend", {name, status});
   });
 };
 

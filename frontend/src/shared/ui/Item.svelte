@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte";
   import {TextComponent} from "ui";
-    import { inventoryStore } from "stores";
+  import { inventoryStore } from "stores";
 
   let item: any;
   let shardElement: HTMLDivElement;
@@ -26,7 +26,7 @@
   };
 
   onMount((): void => {
-    invitem = $inventoryStore.items.find((i) => i.id === BigInt(item.id));
+    invitem = $inventoryStore.items.find((i) => i.id === BigInt(item.id)) || {id: 0n, balance: 0n, supply: 0n};
     shardElementRect = shardElement.getBoundingClientRect();
   });
 
@@ -240,9 +240,9 @@
         </TextComponent>
         </div>
       {:else}
-        <div style="width: 100%; display: flex; justify-content: space-between;">
+        <div style="width: 100%; display: flex; justify-content: center;">
           <div>{invitem.balance}</div>
-          <div>{invitem.supply}</div>
+          <!-- <div>{invitem.supply}</div> -->
         </div>
       {/if}
     </div>

@@ -11,8 +11,6 @@ const endGame = (): void => {
       player.gameId = 0;
       return player;
     });
-
-    socket.emit("updateFriend");
   });
 };
 

@@ -29,8 +29,6 @@ const startGame = (): void => {
       });
 
       gameStore.set(game);
-
-      socket.emit("updateFriend");
     }, 400);
 
     const endTurnTime = game.endTurnTime;

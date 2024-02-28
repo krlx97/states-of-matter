@@ -10,30 +10,28 @@
 
 <style>
   .deck {
-    height: var(--card-height);
-    width: var(--card-width);
     position: relative;
-    border: 1px solid rgba(var(--primary), 0.4);
-    box-sizing: border-box;
-    border-radius: 8px;
-    /* overflow: hidden; */
   }
 
   .deck__cards {
     position: absolute;
-    top: -48px;
+    top: -36px;
     left: 50%;
     width: 75%;
-    padding: var(--sm);
-    background-color: rgb(31, 31, 31);
+    padding: 4px var(--xs);
+    background-color: rgb(var(--dark-grey));
     border-radius: 8px;
     box-sizing: border-box;
     text-align: center;
     transform: translateX(-50%);
+    font-size: var(--xs);
   }
 </style>
 
 <div class="deck" on:click="{onSurrender}">
-  <img src="images/card/card-back.png" alt="Deck" height="214" width="142"/>
-  <div class="deck__cards">{$gameStore.player.deck} / 30</div>
+  <img src="images/card/card-back.png" alt="Deck"/>
+  <div class="deck__cards">
+    Deck<br/>
+    {$gameStore.player.deck} / 30
+  </div>
 </div>

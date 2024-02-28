@@ -1,10 +1,11 @@
 <script lang="ts">
   import {QueueId} from "@som/shared/enums";
   import {modalService, socketService, soundService} from "services";
-  import {playerStore, tutorialStore, queueStore} from "stores";
+  import {playerStore, tutorialStore, queueStore, deckCache} from "stores";
   import {ButtonComponent, TextComponent} from "ui";
   import JoinLobbyComponent from "./modals/JoinLobby.svelte";
   import GameEnded from "./modals/GameEnded.svelte";
+    import { isDeckSame } from "../DeckBuilder/canSave";
   // import GameEndedComponent from "./modals/GameEnded.svelte";
 
   $: isInCasualQueue = $playerStore.queueId === QueueId.CASUAL;
@@ -13,6 +14,8 @@
   $: isTutorial2 = $tutorialStore.name === "play" && $tutorialStore.currentStep === 1;
   $: isTutorial3 = $tutorialStore.name === "play" && $tutorialStore.currentStep === 2;
   $: isDeckValid = $playerStore.decks[$playerStore.deckId].cardsInDeck === 30;
+
+  const isntSame = isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId], true)
 
   const onMakeLobby = (): void => {
     soundService.play("click");
@@ -82,84 +85,90 @@
     z-index: 101;
   }
 
-  /* .casual:hover {
-    background-color: rgba(0, 255, 0, 0.1);
+  .abs {
+    position: absolute;
+    top: 25%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    text-align: center;
   }
-  .ranked:hover {
-    background-color: rgba(255, 0, 0, 0.1);
-  }
-  .custom:hover {
-    background-color: rgba(128, 0, 255, 0.1);
-  } */
-  .big {font-size: var(--xl);}
 </style>
 
 <div class="modes">
   {#if !isDeckValid}
-    <!-- <div style="display: flex; flex-direction: column; gap: 16px;"> -->
-      <TextComponent color="warn">
-        <span class="big">
-          You must add 30 cards in your selected deck before you can play. Head over
-          to Deck Builder page and build your first deck.
-        </span>
+    <div class="abs">
+      <TextComponent color="warn" size="xl">
+        You must add 30 cards in your selected deck before you can play. Head over
+        to Deck Builder page and build your deck.
       </TextComponent>
-      <!-- <div style="display: flex; justify-content: center;">
-        <ButtonComponent on:click="{onDeckBuilder}">DECK BUILDER</ButtonComponent>
-      </div> -->
-    <!-- </div> -->
-  {:else}
-    <div class="mode casual" class:isTutorial1>
-      {#if isInCasualQueue}
-        <h2>Queue time: {$queueStore.timeInQueue}</h2>
-      {:else}
-        <h2>NORMAL</h2>
-      {/if}
-      <div class="mode__actions">
-        {#if isInCasualQueue}
-          <ButtonComponent on:click="{onLeaveQueue}">LEAVE</ButtonComponent>
-        {:else}
-          <ButtonComponent
-            on:click={onJoinCasualQueue}
-            disabled={isInRankedQueue || !isDeckValid || isTutorial1}>
-            PLAY
-          </ButtonComponent>
-        {/if}
-      </div>
     </div>
-
-    <div class="mode ranked" class:isTutorial2>
-      {#if isInRankedQueue}
-        <h2>Queue time: {$queueStore.timeInQueue}</h2>
-      {:else}
-        <h2>RANKED</h2>
-      {/if}
-      <div class="mode__actions">
-        {#if isInRankedQueue}
-          <ButtonComponent on:click="{onLeaveQueue}">LEAVE</ButtonComponent>
-        {:else}
-          <ButtonComponent
-            on:click="{onJoinRankedQueue}"
-            disabled="{isInCasualQueue || !isDeckValid || isTutorial2}">
-            PLAY
-          </ButtonComponent>
-        {/if}
-      </div>
-    </div>
-
-    <div class="mode custom" class:isTutorial3>
-      <h2>CUSTOM LOBBY</h2>
-      <div class="mode__actions">
-        <ButtonComponent
-          on:click="{onMakeLobby}"
-          disabled="{isInCasualQueue || isInRankedQueue || !isDeckValid || isTutorial3}">
-          CREATE
-        </ButtonComponent>
-        <ButtonComponent
-          on:click="{onJoinLobby}"
-          disabled="{isInCasualQueue || isInRankedQueue || !isDeckValid || isTutorial3}">
-          JOIN
-        </ButtonComponent>
-      </div>
+  {:else if isntSame}
+    <div class="abs">
+      <TextComponent color="warn" size="xl">
+        Your selected deck differs from the one you last saved. Please save your
+        deck before joining a game.
+      </TextComponent>
     </div>
   {/if}
+
+  <div class="mode casual" class:isTutorial1>
+    {#if isInCasualQueue}
+      <h2>Queue time: {$queueStore.timeInQueue}</h2>
+    {:else}
+      <h2>NORMAL</h2>
+    {/if}
+    <div class="mode__actions">
+      {#if isInCasualQueue}
+        <ButtonComponent on:click="{onLeaveQueue}">LEAVE</ButtonComponent>
+      {:else}
+        <ButtonComponent
+          on:click={onJoinCasualQueue}
+          disabled={isInRankedQueue || !isDeckValid || isTutorial1}>
+          PLAY
+        </ButtonComponent>
+      {/if}
+    </div>
+  </div>
+
+  <div class="mode ranked" class:isTutorial2>
+    {#if isInRankedQueue}
+      <h2>Queue time: {$queueStore.timeInQueue}</h2>
+    {:else}
+      <h2>RANKED</h2>
+      {#if $playerStore.elo < 20}
+        <TextComponent color="warn" size="sm">You must have at least 20 elo to play ranked</TextComponent>
+      {:else if $playerStore.level < 10}
+        <TextComponent color="warn" size="sm">You must be at least level 10 to play ranked</TextComponent>
+      {/if}
+    {/if}
+    <div class="mode__actions">
+      {#if isInRankedQueue}
+        <ButtonComponent on:click="{onLeaveQueue}">LEAVE</ButtonComponent>
+      {:else}
+        <ButtonComponent
+          on:click="{onJoinRankedQueue}"
+          disabled="{isInCasualQueue || !isDeckValid || isTutorial2 || $playerStore.elo < 20 || $playerStore.level < 10}">
+          PLAY
+        </ButtonComponent>
+      {/if}
+    </div>
+  </div>
+
+  <div class="mode custom" class:isTutorial3>
+    <h2>CUSTOM LOBBY</h2>
+    <div class="mode__actions">
+      <ButtonComponent
+        on:click="{onMakeLobby}"
+        disabled="{isInCasualQueue || isInRankedQueue || !isDeckValid || isTutorial3}">
+        CREATE
+      </ButtonComponent>
+      <ButtonComponent
+        on:click="{onJoinLobby}"
+        disabled="{isInCasualQueue || isInRankedQueue || !isDeckValid || isTutorial3}">
+        JOIN
+      </ButtonComponent>
+    </div>
+  </div>
+
 </div>

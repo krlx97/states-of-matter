@@ -1,68 +1,87 @@
-import {create_in_transition} from "svelte/internal";
 import {soundService} from "services";
 import {get} from "svelte/store";
-import {gameStore, nodeStore, playerStore} from "stores";
+import {gameStore, isAnimating, nodeStore, playerStore} from "stores";
 
 const death = (animation: any): void => {
-  const nodes = get(nodeStore);
-  const player = get(playerStore);
+  isAnimating.set(true);
+
   const {field, name} = animation;
+  const $node = get(nodeStore);
+  const $player = get(playerStore);
+  const duration = 1333;
+
   let graveRect: DOMRect;
   let cardRect: DOMRect;
   let isPlayer: boolean;
-  let elem: HTMLElement;
+  let card: HTMLElement;
+  let startTime = performance.now();
 
-  if (name === player.name) {
-    elem = nodes.player[field];
-    graveRect = nodes.player.graveyard.getBoundingClientRect();
-    cardRect = nodes.player[field].getBoundingClientRect();
+  if (name === $player.name) {
+    card = $node.player[field];
+    graveRect = $node.player.graveyard.getBoundingClientRect();
+    cardRect = $node.player[field].getBoundingClientRect();
     isPlayer = true;
   } else {
-    elem = nodes.opponent[field];
-    graveRect = nodes.opponent.graveyard.getBoundingClientRect();
-    cardRect = nodes.opponent[field].getBoundingClientRect();
+    card = $node.opponent[field];
+    graveRect = $node.opponent.graveyard.getBoundingClientRect();
+    cardRect = $node.opponent[field].getBoundingClientRect();
     isPlayer = false;
   }
 
+  const flyToGraveyard = (currentTime: number): void => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // const opacity = progress <= 0.666 ? 1 : 1 - ((progress - 0.666) / 0.333);
 
-  create_in_transition(elem, () => {
-    return {
-      duration: 900,
-      css (t) {
-        if (isPlayer) {
-          return `
-            transform: translateX(-${t * (cardRect.left - graveRect.left)}px);
-          `;
-        } else {
-          const distance = graveRect.left - cardRect.left;
-          // For the opponent, we need to mirror the translation, so we negate the distance
-          const translationX = distance * t;
+    // card.style.zIndex = "100";
 
-          // Apply the translation
-          // card.style.transform = `translateX(${translationX}px)`;
-          return `
-            transform: translateX(${translationX}px);
-          `;
-        }
-      }
-    };
-  }, {}).start();
+    // if (isPlayer) {
+    //   card.style.transform = `translateX(-${progress * (cardRect.left - graveRect.left)}px)`;
+    // } else {
+    //   const distance = graveRect.left - cardRect.left;
+    //   const translationX = distance * progress;
+    //   card.style.transform = `translateX(${translationX}px)`;
+    // }
 
-  setTimeout(() => {
-    gameStore.update((store) => {
+    // card.style.opacity = `${opacity}`;
+    if (progress <= 1) {
       if (isPlayer) {
-        store.player.graveyard.push(store.player.field[field]);
-        store.player.field[field] = undefined;
+        card.style.transform = `translateX(-${(progress / 1) * (cardRect.left - graveRect.left)}px)`;
       } else {
-        store.opponent.graveyard.push(store.opponent.field[field]);
-        store.opponent.field[field] = undefined;
+        const distance = graveRect.left - cardRect.left;
+        const translationX = (distance / 1) * progress;
+        card.style.transform = `translateX(${translationX}px)`;
       }
+    } else {
+      // Fade-out animation
+      const fadeStartTime = startTime + (1 * duration);
+      const fadeElapsed = currentTime - fadeStartTime;
+      const fadeProgress = Math.min(fadeElapsed / (0.333 * duration), 1);
+      const opacity = 1 - fadeProgress;
+      card.style.opacity = opacity.toString();
+    }
 
-      return store;
-    });
-  }, 890);
+    if (progress < 1) {
+      requestAnimationFrame(flyToGraveyard);
+    } else {
+      gameStore.update((store) => {
+        if (isPlayer) {
+          store.player.graveyard.push(store.player.field[field]);
+          store.player.field[field] = undefined;
+        } else {
+          store.opponent.graveyard.push(store.opponent.field[field]);
+          store.opponent.field[field] = undefined;
+        }
+
+        return store;
+      });
+
+      isAnimating.set(false);
+    }
+  };
 
   soundService.play("death");
+  requestAnimationFrame(flyToGraveyard);
 };
 
 export {death};

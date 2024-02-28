@@ -3,9 +3,8 @@
   import {modalService, socketService} from "services";
   import {gameStore, selectedCardStore, playerStore} from "stores";
   import {CardComponent} from "ui";
+  import EffectSelect from "../modals/EffectSelect.svelte";
   import type {GameMagicCard, GameMinionCard, GameTrapCard} from "@som/shared/types/mongo";
-    import EffectSelect from "../modals/EffectSelect.svelte";
-    import { slide } from "svelte/transition";
 
   const {socket} = socketService;
   let card: GameMagicCard | GameMinionCard | GameTrapCard;
@@ -22,31 +21,31 @@
       $selectedCardStore.field = undefined;
     }
 
-    if (type === CardType.MAGIC) {
-      if (card.id === CardId.GRAVECALL) {
-        $selectedCardStore.hand = card;
-        modalService.open(EffectSelect);
-      }
+    if ($selectedCardStore.hand && $selectedCardStore.hand.gid === card.gid) {
+      $selectedCardStore.hand = undefined;
+    } else {
+      if (type === CardType.MAGIC) {
+        if (card.id === CardId.GRAVECALL) {
+          $selectedCardStore.hand = card;
+          modalService.open(EffectSelect);
+        }
 
-      if (card.id === CardId.CROSS) {
-        $selectedCardStore.hand = card;
-      }
+        if (card.id === CardId.CROSS) {
+          $selectedCardStore.hand = card;
+        }
 
-      if (card.id === CardId.GAMBIT || card.id === CardId.ANVIL || card.id === CardId.PACT) {
-        socket.emit("playMagic", {gid});
-      }
+        if (card.id === CardId.GAMBIT || card.id === CardId.ANVIL || card.id === CardId.PACT) {
+          socket.emit("playMagic", {gid});
+        }
 
-      if (card.id === CardId.QUICK_SAND) {
+        if (card.id === CardId.QUICK_SAND) {
+          $selectedCardStore.hand = card;
+        }
+      } else if (type === CardType.MINION) {
         $selectedCardStore.hand = card;
+      } else if (type === CardType.TRAP) {
+        socket.emit("playTrap", {gid});
       }
-    } else if (type === CardType.MINION) {
-      if ($selectedCardStore.hand && $selectedCardStore.hand.gid === card.gid) {
-        $selectedCardStore.hand = undefined;
-      } else {
-        $selectedCardStore.hand = card;
-      }
-    } else if (type === CardType.TRAP) {
-      socket.emit("playTrap", {gid});
     }
   };
 

@@ -26,7 +26,8 @@ interface Player extends Document {
   gamePopupId: number;
   gameId: number;
   deckId: number;
-  social: PlayerSocial;
+  // social: PlayerSocial;
+  friends: Array<string>;
   games: PlayerGames;
   decks: PlayerDecks;
   skins: PlayerSkins;

@@ -24,11 +24,11 @@ import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
 };
 
 const keys = {
-  ethericEssence: "0xba69ddE1586be3Ab4E101C13f8f9d730082b5BE0",
-  ethericCrystals: "0x5ef70Dd1B3D4BA9D2509C665E63A0aDCbF3EA259",
-  ethericEnergy: "0x4cd0B057577770a5699Be8fefd399035be894F3d",
-  somTokens: "0xD0A76288A6b84059FAf5218AC2420251c6C5b5f8",
-  somGame: "0x90Acf3677114443AF72798a558d5bb56278eb743"
+  ethericEssence: "0xD2c7143A714573f767a9E8acF64315a6Ef418231",
+  ethericCrystals: "0xd393F4A7a9b2937fb8cb30Ae3e03866755c37Ba3",
+  ethericEnergy: "0xa151F99db0d89B9d1D568e56fcE5d7ac84355A5E",
+  somTokens: "0xA857C3e9770dC18ee6a022691cAA62f3Afa777E1",
+  somGame: "0x1dfF35052F1FE01EdB2d767D9e8F644B9c271108"
 };
 
 const init = async (address: string): Promise<void> => {
@@ -120,12 +120,32 @@ const reloadUser = async (): Promise<void> => {
     somGame
   } = get(ethersStore).contracts;
 
+  const $ethersStore = get(ethersStore);
   const {address, elo} = get(playerStore);
+
+  if ($ethersStore.chainId !== /*1337n*/41n) {
+    ethersStore.update((store) => {
+      store.isLoaded = true;
+      return store;
+    });
+
+    return;
+  }
 
   if (address) {
     const accounts = await window.ethereum?.request({
-      method: "eth_requestAccounts"
-    });
+      method: "eth_accounts"
+    })
+
+    if (!accounts.length) {
+      ethersStore.update((store) => {
+        store.accounts = [];
+        store.isLoaded = true;
+        return store;
+      });
+
+      return;
+    }
 
     ethersStore.update((store) => {
       store.accounts = accounts || [];
@@ -149,28 +169,28 @@ const reloadUser = async (): Promise<void> => {
     for (const item of items) {
       const {id, rarity} = item;
 
-      if (id === 1000 || id === 2000) { // bronze
+      if (id === 100 || id === 200) { // bronze
         theItems.push({
           id: BigInt(id),
           balance: 1n,
           supply: 0n
         });
-      } else if (id === 1001 || id === 2001) { // silver
+      } else if (id === 101 || id === 201) { // silver
         theItems.push({
           id: BigInt(id),
-          balance: elo >= 250 ? 1n : 0n,
+          balance: elo >= 600 ? 1n : 0n,
           supply: 0n
         });
-      } else if (id === 1002 || id === 2002) { // gold
+      } else if (id === 102 || id === 202) { // gold
         theItems.push({
           id: BigInt(id),
-          balance: elo >= 500 ? 1n : 0n,
+          balance: elo >= 800 ? 1n : 0n,
           supply: 0n
         });
-      } else if (id === 1003 || id === 2003) { // master
+      } else if (id === 103 || id === 203) { // master
         theItems.push({
           id: BigInt(id),
-          balance: elo >= 750 ? 1n : 0n,
+          balance: elo >= 1000 ? 1n : 0n,
           supply: 0n
         });
       } else {
@@ -186,7 +206,7 @@ const reloadUser = async (): Promise<void> => {
           theItems.push({
             id: BigInt(id),
             balance: balance.balance,
-            supply: await somTokens["totalSupply(uint256)"](id)/*0n*/
+            supply: /*await somTokens["totalSupply(uint256)"](id)*/0n
           });
         }
       }
@@ -245,28 +265,28 @@ const reloadUser = async (): Promise<void> => {
     for (const item of items) {
       const {id} = item;
 
-      if (id === 1000 || id === 2000) { // bronze
+      if (id === 100 || id === 200) { // bronze
         theItems.push({
           id: BigInt(id),
           balance: 1n,
           supply: 0n
         });
-      } else if (id === 1001 || id === 2001) { // silver
+      } else if (id === 101 || id === 201) { // silver
         theItems.push({
           id: BigInt(id),
-          balance: elo >= 250 ? 1n : 0n,
+          balance: elo >= 600 ? 1n : 0n,
           supply: 0n
         });
-      } else if (id === 1002 || id === 2002) { // gold
+      } else if (id === 102 || id === 202) { // gold
         theItems.push({
           id: BigInt(id),
-          balance: elo >= 500 ? 1n : 0n,
+          balance: elo >= 800 ? 1n : 0n,
           supply: 0n
         });
-      } else if (id === 1003 || id === 2003) { // master
+      } else if (id === 103 || id === 203) { // master
         theItems.push({
           id: BigInt(id),
-          balance: elo >= 750 ? 1n : 0n,
+          balance: elo >= 1000 ? 1n : 0n,
           supply: 0n
         });
       } else {
@@ -280,7 +300,7 @@ const reloadUser = async (): Promise<void> => {
           theItems.push({
             id: BigInt(id),
             balance: 0n,
-            supply: await somTokens["totalSupply(uint256)"](id)
+            supply: /*await somTokens["totalSupply(uint256)"](id)*/0n
           });
         }
       }

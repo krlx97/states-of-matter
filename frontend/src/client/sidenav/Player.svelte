@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {PlayerStatus, QueueId} from "@som/shared/enums";
+  import {GameType, PlayerStatus, QueueId} from "@som/shared/enums";
   import {modalService, socketService, soundService} from "services";
   import {gameStore, lobbyStore, playerStore} from "stores";
   import {PlayerFrameComponent} from "ui";
@@ -55,13 +55,11 @@
       gamePopupId: 0,
       games: {
         casual: {won: 0, lost: 0},
-        ranked: {won: 0, lost: 0}
+        ranked: {won: 0, lost: 0},
+        custom: {won: 0, lost: 0}
       },
-      social: {
-        friends: [],
-        requests: [],
-        blocked: []
-      },
+      friends: [],
+      mutualFriends: [],
       tasks: {
         daily: false,
         weekly: 0,
@@ -83,6 +81,7 @@
 
     lobbyStore.set({
       id: 0,
+      messages: [],
       host: {
         name: "",
         experience: 0,
@@ -90,7 +89,7 @@
         elo: 0,
         avatarId: 0,
         bannerId: 0,
-        games: {casual: {won: 0, lost: 0}, ranked: {won: 0, lost: 0}}
+        games: {casual: {won: 0, lost: 0}, ranked: {won: 0, lost: 0}, custom: {won: 0, lost: 0}},
       },
       challengee: {
         name: "",
@@ -99,7 +98,7 @@
         elo: 0,
         avatarId: 0,
         bannerId: 0,
-        games: {casual: {won: 0, lost: 0}, ranked: {won: 0, lost: 0}}
+        games: {casual: {won: 0, lost: 0}, ranked: {won: 0, lost: 0}, custom: {won: 0, lost: 0}},
       }
     });
 
@@ -113,67 +112,57 @@
         name: "",
         field: {
           hero: {
+            id: 50,
             gid: 0,
-            id: 0,
             type: 0,
-            name: "",
             klass: 0,
-            health: 0,
-            maxHealth: 0,
-            mana: 0,
-            maxMana: 0,
-            ability: 0
-            ,effect: 0,
+            health: {current: 0, default: 0},
+            mana: {current: 0, default: 0},
+            ability: 0,
+            effect: 0,
             buffs: [],
             debuffs: []
           },
-
-          a: undefined, b: undefined, c: undefined, d: undefined},
+          a: undefined,
+          b: undefined,
+          c: undefined,
+          d: undefined
+        },
         trap: undefined,
         deck: 0,
         hand: [],
         graveyard: [],
-        selectedSkins: {
-          avatars: [],
-          border: 0,
-          back: 0
-        }
+        skins: []
       },
       opponent: {
         name: "",
         field: {
           hero: {
+            id: 50,
             gid: 0,
-            id: 0,
             type: 0,
-            name: "",
             klass: 0,
-            health: 0,
-            maxHealth: 0,
-            mana: 0,
-            maxMana: 0,
-            ability: 0
-            ,effect: 0,
+            health: {current: 0, default: 0},
+            mana: {current: 0, default: 0},
+            ability: 0,
+            effect: 0,
             buffs: [],
             debuffs: []
           },
-
-          a: undefined, b: undefined, c: undefined, d: undefined},
+          a: undefined,
+          b: undefined,
+          c: undefined,
+          d: undefined
+        },
         trap: false,
         deck: 0,
         hand: 0,
         graveyard: [],
-        selectedSkins: {
-          avatars: [],
-          border: 0,
-          back: 0
-        }
+        skins: []
       }
     });
 
     socketService.socket.disconnect();
-
-    // location.reload();
   };
 
   const actions = [

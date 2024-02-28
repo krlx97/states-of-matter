@@ -27,11 +27,11 @@
 
     $formStore.isLoading = true;
 
-    if ($inventoryStore.approvals.ecr < price + 1n) {
+    if ($inventoryStore.approvals.ecr < price) {
       const isConfirmed = await ethersService.transact(
         "ethericCrystals",
         "approve",
-        [ethersService.keys.somGame, price + 1n]
+        [ethersService.keys.somGame, price]
       );
 
       if (!isConfirmed) {

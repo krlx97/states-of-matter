@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte";
-  import Chart from "chart.js/auto";
+  import {Chart} from "chart.js";
   import {formatUnits} from "ethers";
   import {inventoryStore, snapshotsStore} from "stores";
   import {ModalComponent, TableComponent} from "ui";
@@ -13,7 +13,10 @@
   let supply = liquid + staked;
   let chartCanvas: HTMLCanvasElement;
   let int: NodeJS.Timeout;
+  let int2: NodeJS.Timeout;
   let isNoDataYet = false;
+  let c: Chart;
+  let xxx = false;
 
   onMount((): void => {
     const ecrr = $snapshotsStore.find((s) => s.name === "ecr");
@@ -22,19 +25,40 @@
       const labels = ecrr.snapshots.map(({date}) => new Date(date).toLocaleDateString());
       const data = ecrr.snapshots.map(({supply}) => formatUnits(supply));
 
-      new Chart(chartCanvas, {
+      c = new Chart(chartCanvas, {
         type: "line",
         data: {
           labels,
-          datasets: [
-            {
-              label: "Supply",
-              data,
-              borderColor: "rgb(121, 108, 255)"
-            }
-          ]
+          datasets: [{
+            label: "Supply",
+            data,
+            borderColor: "rgb(121, 108, 255)"
+          }]
         }
       });
+
+      c.data.labels.push(new Date().toLocaleDateString());
+      c.data.datasets[0].data.push(formatUnits(supply));
+
+      int2 = setInterval(() => {
+        c.data.labels[c.data.labels.length - 1] = (new Date().toLocaleDateString());
+        c.data.datasets[0].data[c.data.datasets[0].data.length - 1] = (formatUnits(supply));
+        // if (!xxx) {
+        //   c.data.labels.push(new Date().toLocaleDateString());
+        //   // c.data.datasets.forEach((dataset) => {
+        //   //     dataset.data.push(newData);
+        //   // });
+        //   c.data.datasets[0].data.push(formatUnits(supply));
+        //   xxx = true;
+        // } else {
+        //   c.data.labels.pop();
+        //   c.data.datasets.pop();
+        //   c.data.labels?.push(new Date().toLocaleDateString());
+        //   c.data.datasets[0].data.push(formatUnits(supply));
+        // }
+
+        c.update("none");
+      }, 1000);
     } else {
       isNoDataYet = true;
       chartCanvas.style.display = "none";
@@ -43,11 +67,12 @@
     int = setInterval((): void => {
       staked = ($inventoryStore.total.enrg * (1n * POW + ((BigInt(Date.now()) - deployTimestamp) * REWARD_PER_MS))) / POW;
       supply = liquid + staked;
-    }, 1);
+    }, 10);
   });
 
   onDestroy((): void => {
     clearInterval(int);
+    clearInterval(int2);
   });
 
   $: items = [

@@ -2,15 +2,18 @@
   import {fly, scale} from "svelte/transition";
   import {CardId, CardKlass, CardType} from "@som/shared/enums";
   import {soundService} from "services";
-  import {notificationsStore, playerStore} from "stores";
+  import {deckCache, notificationsStore, playerStore} from "stores";
   import {TextComponent} from "ui";
-  import type {PlayerDeckCardView} from "@som/shared/types/views";
+  import type {PlayerDeckCardView, PlayerDeckView} from "@som/shared/types/views";
     import { cards, cardsView } from "@som/shared/data";
     import { onMount } from "svelte";
+    import { isDeckSame } from "./canSave";
+    import { get } from "svelte/store";
 
   let deckCard: PlayerDeckCardView;
   $: deck = $playerStore.decks[$playerStore.deckId];
   let cardView = cardsView.find(({id}): boolean => deckCard.id === id);
+
 
   const onRemoveFromDeck = (): void => {
     const x = $playerStore.decks[$playerStore.deckId].cards.find((x) => x.id === deckCard.id);
@@ -95,6 +98,8 @@
     } else if (klass === CardKlass.PLASMA) {
       $playerStore.decks[$playerStore.deckId].attribute.plasma -= 1;
     }
+
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
 
     soundService.play("card");
   };
@@ -198,13 +203,8 @@
 
     $playerStore.decks[$playerStore.deckId].cardsInDeck = $playerStore.decks[$playerStore.deckId].cards.reduce((acc, {amount}) => acc += amount, 0);
 
-    // if (deckCard?.amount >= 2) {
-    //   isGrayscale = true;
-    // }
-    // const has = $playerStore.decks[$playerStore.deckId].cards.find((deckCard) => deckCard.id === card.id);
-    // if (has && has.amount === 2) {
-    //   isGrayscale = true;
-    // }
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
+
     soundService.play("card");
   };
 
@@ -296,7 +296,7 @@
 
   <img
     class="deck-card__img"
-    src="images/items/sm/1{deckCard.id < 100 ? `0${deckCard.id}` : deckCard.id}00.png"
+    src="images/items/sm/1{deckCard.id < 100 ? `0${deckCard.id}` : deckCard.id}0.png"
     alt="{deckCard.name}" height="32" width="32"/>
 
   <div class="deck-card__name">

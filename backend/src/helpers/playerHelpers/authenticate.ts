@@ -20,7 +20,12 @@ const authenticate = async (
   socketId: string,
   name: string
 ): Promise<[AuthData | undefined, string]> => {
-  const {$chats, $games, $lobbies, $players} = mongo;
+  const {$games, $lobbies, $players, $leaderboards} = mongo;
+  let leaderboards = await $leaderboards.findOne({});
+
+  if (!leaderboards) {
+    leaderboards = {byLevel: [], byElo: []};
+  }
 
   const $player = await $players.findOneAndUpdate({name}, [{
     $set: {
@@ -62,8 +67,8 @@ const authenticate = async (
       return [undefined, "You are currently in a lobby that cannot be found."];
     }
 
-    const {host, challengee} = $lobby;
-    lobbyView = {id, host, challengee};
+    const {host, challengee, messages} = $lobby;
+    lobbyView = {id, host, challengee, messages};
   }
 
   if (gameId) {
@@ -78,28 +83,18 @@ const authenticate = async (
   }
 
   const friendsView: PlayerSocialFriendsView = [];
+  let mutualFriends = [];
 
-  for (const name of $player.social.friends) {
-    const [friend, chat] = await Promise.all([
-      $players.findOne({name}),
-      $chats.findOne({
-        players: {
-          $all: [$player.name, name]
-        }
-      })
-    ]);
+  for (const name of $player.friends) {
+    const $friend = await $players.findOne({name});
 
-    if (friend && chat) {
-      const {avatarId, bannerId, experience, level, elo, status, games} = friend;
-      const {lastSender, unseen, messages} = chat;
+    if ($friend) {
+      if ($friend.friends.includes($player.name)) {
+        mutualFriends.push(name);
+      }
 
-      friendsView.push({
-        name, avatarId, bannerId, experience, level, elo, status, games, chat: {
-          lastSender,
-          unseen,
-          messages
-        }
-      });
+      const {avatarId, bannerId, experience, level, elo, status, games} = $friend;
+      friendsView.push({name, avatarId, bannerId, experience, level, elo, status, games});
     }
   }
 
@@ -119,11 +114,8 @@ const authenticate = async (
     lobbyId: $player.lobbyId,
     gameId: $player.gameId,
     gamePopupId: $player.gamePopupId,
-    social: {
-      friends: friendsView,
-      requests: $player.social.requests,
-      blocked: $player.social.blocked
-    },
+    friends: friendsView,
+    mutualFriends,
     games: $player.games,
     decks: $player.decks.map((deck) => ({
       id: deck.id,
@@ -279,7 +271,7 @@ const authenticate = async (
 
   const snapshots = await mongo.$supplySnapshots.find().toArray();
 
-  return [{lobbyView, gameView, playerView, snapshots}, ""];
+  return [{lobbyView, gameView, playerView, snapshots, leaderboards}, ""];
 };
 
 export {authenticate};

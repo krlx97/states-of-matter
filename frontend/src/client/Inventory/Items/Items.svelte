@@ -5,14 +5,15 @@
     import { modalService, soundService } from "services";
     import Unlock from "./modals/Unlock.svelte";
     import { inventoryStore } from "stores";
+    import { onDestroy, onMount } from "svelte";
 
 const inDevelopment = [
-    111300, 111400, 111500, 111600, 111700, 111800,
-    113000, 113100, 113200, 114000, 114100, 114200,
-    116300, 116400, 116500, 116600, 116700, 116800,
-    118000, 118100, 118200, 119000, 119100, 119200,
-    121300, 121400, 121500, 121600, 121700, 121800,
-    123000, 123100, 123200, 124000, 124100, 124200
+    11130, 11140, 11150, 11160, 11170, 11180,
+    11300, 11310, 11320, 11400, 11410, 11420,
+    11630, 11640, 11650, 11660, 11670, 11680,
+    11800, 11810, 11820, 11900, 11910, 11920,
+    12130, 12140, 12150, 12160, 12170, 12180,
+    12300, 12310, 12320, 12400, 12410, 12420
   ];
   let currentSort = "Initial";
   let sortAscending = true;
@@ -151,6 +152,17 @@ const inDevelopment = [
   const onRandomItem = (): void => {
     modalService.open(Unlock);
   };
+
+  let unsub;
+  onMount(() => {
+    unsub = inventoryStore.subscribe((store) => {
+      onFilterItems();
+    });
+  });
+
+  onDestroy(() => {
+    unsub();
+  });
 </script>
 
 <style>

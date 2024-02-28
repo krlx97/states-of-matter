@@ -13,7 +13,7 @@
   }
 
   .cards::-webkit-scrollbar {
-    height: 8px;
+    height: 4px;
   }
 
   .cards::-webkit-scrollbar-track {
@@ -31,7 +31,9 @@
 <ModalComponent width="664px">
   <div class="cards">
     {#each $modalStore.data as card}
-      <CardComponent {card}/>
+      <div>
+        <CardComponent {card}/>
+      </div>
     {/each}
   </div>
 </ModalComponent>

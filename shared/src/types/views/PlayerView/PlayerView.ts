@@ -10,6 +10,7 @@ import type {
 } from "../../mongo/index.js";
 
 import type {PlayerStatus, QueueId} from "../../../enums/index.js";
+import type { PlayerSocialFriendsView } from "./PlayerSocialFriendsView.js";
 
 interface PlayerView {
   name: string;
@@ -27,7 +28,8 @@ interface PlayerView {
   gamePopupId: number;
   gameId: number;
   deckId: number;
-  social: PlayerSocialView;
+  friends: PlayerSocialFriendsView;
+  mutualFriends: Array<string>;
   games: PlayerGames;
   decks: Array<PlayerDeckView>;
   skins: PlayerSkins;

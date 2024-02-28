@@ -7,6 +7,9 @@ import { endTurnTimeouts } from "./endTurnTimeouts";
 import { EffectId } from "@som/shared/enums";
 import { blaze } from "./effect/blaze";
 import { regeneration } from "./effect/regeneration";
+import { deductHealth } from "./deductHealth";
+import { moveToGraveyard } from "./moveToGraveyard";
+import { isGameOver } from "./isGameOver";
 
 const endTurn = async (name: string): Promise<any> => {
   const $player = await mongo.$players.findOne({name});
@@ -54,7 +57,31 @@ const endTurn = async (name: string): Promise<any> => {
   }
 
   const manaDelta = howMuchMana - player.field.hero.mana.current;
+  const neurotoxinDebuff = player.field.hero.debuffs.find(
+    (debuff): boolean => debuff.id === EffectId.NEUROTOXIN
+  );
   player.field.hero.mana.current = howMuchMana;
+
+  if (neurotoxinDebuff) {
+    player.field.hero.health.current -= 1;
+
+    animations.push({
+      type: "FLOATING_TEXT",
+      name: player.name,
+      field: "hero",
+      text: "Neurotoxin"
+    }, {
+      type: "HEALTH",
+      name: player.name,
+      field: "hero",
+      increment: undefined,
+      decrement: 1
+    });
+
+    if (await isGameOver($game, animations)) {
+      return;
+    }
+  }
 
   animations.push({
     type: "END_TURN",
@@ -85,6 +112,10 @@ const endTurn = async (name: string): Promise<any> => {
       (buff): boolean => buff.id === EffectId.REGENERATION
     )
 
+    const neurotoxinDebuff = minion.debuffs.find(
+      (debuff): boolean => debuff.id === EffectId.NEUROTOXIN
+    );
+
     if (blazeBuff) {
       animations.push(...blaze.onEndTurn({
         player,
@@ -95,6 +126,21 @@ const endTurn = async (name: string): Promise<any> => {
 
     if (regenerationBuff) {
       animations.push(...regeneration({player}));
+    }
+
+    if (neurotoxinDebuff) {
+      animations.push({
+        type: "FLOATING_TEXT",
+        name: player.name,
+        field,
+        text: "Neurotoxin"
+      });
+
+      animations.push(...deductHealth(player, minion, 1, field));
+
+      if (minion.health.current <= 0) {
+        animations.push(...moveToGraveyard(player, minion, field));
+      }
     }
   });
 

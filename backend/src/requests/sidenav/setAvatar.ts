@@ -9,7 +9,7 @@ const setAvatar: SocketRequest = (socket, error): void => {
   socket.on("setAvatar", async (params) => {
     const {avatarId} = params;
 
-    if (avatarId < 1000 || avatarId > 1999) {
+    if (avatarId < 100 || avatarId > 199) {
       return error("Invalid avatar.");
     }
 
@@ -19,15 +19,15 @@ const setAvatar: SocketRequest = (socket, error): void => {
       return error("Player not found.");
     }
 
-    if (avatarId === 1001 && $player.elo < 250) {
+    if (avatarId === 101 && $player.elo < 600) {
       return error("Can't select this avatar.");
     }
 
-    if (avatarId === 1002 && $player.elo < 500) {
+    if (avatarId === 102 && $player.elo < 800) {
       return error("Can't select this avatar.");
     }
 
-    if (avatarId === 1003 && $player.elo < 750) {
+    if (avatarId === 103 && $player.elo < 1000) {
       return error("Can't select this avatar.");
     }
 
@@ -41,11 +41,10 @@ const setAvatar: SocketRequest = (socket, error): void => {
       return error("Failed to update player.");
     }
 
-    const {name, social} = $playerUpdate;
-    const socketIds = await playerHelpers.getSocketIds(social.friends);
+    const {name} = $playerUpdate;
 
     socket.emit("updatePlayer", {avatarId});
-    server.io.to(socketIds).emit("updateFriend", {name, avatarId});
+    server.io.emit("updateFriend", {name, avatarId});
   });
 };
 

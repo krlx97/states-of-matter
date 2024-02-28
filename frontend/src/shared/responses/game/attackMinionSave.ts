@@ -6,7 +6,6 @@ import type {Field, MinionField} from "@som/shared/types/mongo";
 
 let i = 0;
 const TURN_DURATION_MS = 90000;
-const animationDuration = 1500;
 let latestGameState: any;
 
 function updateConnectingLine(attackerField: Field, defenderField: Field) {
@@ -105,57 +104,38 @@ function updateConnectingLine(attackerField: Field, defenderField: Field) {
     store.lineX = x;
     store.lineCss = `transform: ${transform}; height: ${height}`;
     store.showLine = true;
+
     return store;
   });
 
-  setTimeout(() => {
+  setTimeout((): void => {
     nodeStore.update((store) => {
       store.showLine = false;
       return store;
     });
-  }, 600);
-
-  // line.style.transform = transform;
-  // line.style.height = height;
+  }, 666);
 }
 
 const animy = (animation: any) => {
   let {type} = animation;
 
   if (type === "DAMAGE") {
-    isAnimating.set(true);
     animate.damage(animation);
-    setTimeout(() => {isAnimating.set(false);}, 600);
   } else if (type === "HEALTH") {
-    isAnimating.set(true);
     animate.health(animation);
-    setTimeout(() => {isAnimating.set(false);}, 600);
   } else if (type === "MANA_CAPACITY") {
-    isAnimating.set(true);
     animate.manaCapacity(animation);
-    setTimeout(() => {isAnimating.set(false);}, 600);
   } else if (type === "DEATH") {
-    isAnimating.set(true);
     animate.death(animation);
-    setTimeout(() => {isAnimating.set(false);}, 900);
   } else if (type === "FLOATING_TEXT") {
-    isAnimating.set(true);
     animate.floatingText(animation);
-    setTimeout(() => {isAnimating.set(false);}, 900);
   } else if (type === "SUMMON") {
-    isAnimating.set(true);
     animate.summon(animation);
-    setTimeout(() => {isAnimating.set(false);}, 300);
   } else if (type === "TRAP") {
-    isAnimating.set(true);
     animate.trap(animation);
-    setTimeout(() => {isAnimating.set(false);}, 3000);
   } else if (type === "MAGIC") {
-    isAnimating.set(true);
     animate.magic(animation);
-    setTimeout(() => {isAnimating.set(false);}, 3000);
   } else if (type === "SHAKE") {
-    isAnimating.set(true);
     if (get(playerStore).name === animation.playerA) {
       updateConnectingLine(animation.playerAField, animation.playerBField);
     } else {
@@ -163,15 +143,10 @@ const animy = (animation: any) => {
     }
     animate.shake({damageTaken: animation.playerANumber, field: animation.playerAField, name: animation.playerA});
     animate.shake({damageTaken: animation.playerBNumber, field: animation.playerBField, name: animation.playerB});
-    setTimeout(() => {isAnimating.set(false);}, 600);
   } else if (type === "TRAP_SET") {
-    isAnimating.set(true);
     animate.trapset(animation);
-    setTimeout(() => {isAnimating.set(false);}, 3000);
   } else if (type === "END_TURN") {
-    isAnimating.set(true);
     animate.endTurn(animation);
-    setTimeout(() => {isAnimating.set(false);}, 1200);
   }
 };
 
@@ -212,29 +187,41 @@ const attackMinionSave = (): void => {
     });
 
     if (!intervals[1]) {
-      intervals[1] = setInterval(() => {
-        if (get(isAnimating)) { return; }
+      intervals[1] = setInterval((): void => {
+        const $isAnimating = get(isAnimating);
 
-        let $animationsQueue = get(animationsQueue);
+        if ($isAnimating) {
+          return;
+        }
 
-        animy($animationsQueue[i]);
+        const $animationsQueue = get(animationsQueue);
 
-        i += 1;
+        if ($animationsQueue.length < 1) {
+          return;
+        }
 
         if (i >= $animationsQueue.length) {
-          i = 0;
+          if ($isAnimating) {
+            return;
+          }
+
+          selectedCardStore.update((store) => {
+            store.field = undefined;
+            store.graveyard = undefined;
+            store.hand = undefined;
+            return store;
+          });
+
           animationsQueue.set([]);
-          // get rid of this? animations could change game state, and some
-          // already do... just make sure theres no desync
-          isAnimating.set(false);
-          setTimeout(() => {
-            gameStore.set(latestGameState);
-            latestGameState = undefined;
-          }, 1000);
-          clearInterval(intervals[1]);
-          intervals[1] = undefined;
+          gameStore.set(latestGameState);
+
+          latestGameState = undefined;
+          i = 0;
+        } else {
+          animy($animationsQueue[i]);
+          i += 1;
         }
-      }, 100);
+      }, 10);
     }
   });
 };

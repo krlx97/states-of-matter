@@ -1,4 +1,4 @@
-import type { ChatMessage, PlayerGames } from "types/mongo/index.js";
+import type { PlayerGames } from "types/mongo/index.js";
 interface PlayerSocialFriendView {
     name: string;
     avatarId: number;
@@ -8,10 +8,5 @@ interface PlayerSocialFriendView {
     elo: number;
     status: number;
     games: PlayerGames;
-    chat: {
-        lastSender: string;
-        unseen: number;
-        messages: Array<ChatMessage>;
-    };
 }
 export type { PlayerSocialFriendView };

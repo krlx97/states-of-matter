@@ -1,23 +1,31 @@
 import {ethersService, socketService} from "services";
-import {lobbyStore, gameStore, playerStore, snapshotsStore, intervalsStore, nodeStore, intervals} from "stores";
+import {lobbyStore, gameStore, playerStore, snapshotsStore, intervalsStore, nodeStore, intervals, deckCache, leaderboardsStore, ethersStore} from "stores";
 import { get } from "svelte/store";
 
-const TURN_DURATION_MS = 30000;
+const TURN_DURATION_MS = 90000;
 
 const signin = (): void => {
   const {socket} = socketService;
 
   socket.on("signin", async (params) => {
-    const {playerView, lobbyView, gameView, snapshots, token} = params;
+    const {playerView, lobbyView, gameView, snapshots, leaderboards, token} = params;
 
     if (token) {
       localStorage.setItem("jsonwebtoken", token);
     }
 
     snapshotsStore.set(snapshots);
+    leaderboardsStore.set(leaderboards);
     playerStore.set(playerView);
 
-    await ethersService.init(playerView.address);
+    const deepCopy = JSON.parse(JSON.stringify(playerView.decks[playerView.deckId]));
+    deckCache.set(deepCopy);
+
+    const $ethersStore = get(ethersStore);
+
+    if ($ethersStore.chainId === /*1337n*/41n && $ethersStore.accounts.length) {
+      await ethersService.init(playerView.address);
+    }
     await ethersService.reloadUser();
 
     if (lobbyView) {
@@ -44,8 +52,6 @@ const signin = (): void => {
         }
       }, 1000 / 60);
     }
-
-    socket.emit("updateFriend");
   });
 };
 

@@ -2,6 +2,7 @@
   import {onMount} from "svelte";
   import {floatingTextStore} from "stores";
   import type {Field} from "@som/shared/types/mongo";
+    import { fly } from "svelte/transition";
 
   let floatingText: HTMLDivElement;
   let field: Field;
@@ -42,8 +43,8 @@
     position: absolute;
     width: calc(var(--card-width) - 32px);
     height: 16px;
-    bottom: 0;
-    left: 16px;
+    /* bottom: 0;
+    left: 16px; */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,10 +57,12 @@
   }
 </style>
 
-<div class="floating-text" bind:this={floatingText}>
-  {#if isOpponent}
+{#if isOpponent && $floatingTextStore.opponent[field]}
+  <div class="floating-text" in:fly={{y: 256, duration: 1000}}>
     {@html $floatingTextStore.opponent[field]}
-  {:else}
+  </div>
+{:else if !isOpponent && $floatingTextStore.player[field]}
+  <div class="floating-text" in:fly={{y: 256, duration: 1000}}>
     {@html $floatingTextStore.player[field]}
-  {/if}
-</div>
+  </div>
+{/if}

@@ -5,26 +5,27 @@
 <style>
   .deck {
     position: relative;
-    /* border: 2px solid rgb(var(--purple));
-    border-radius: 8px;
-    box-sizing: border-box; */
   }
 
   .deck__cards {
     position: absolute;
-    bottom: -48px;
+    bottom: -36px;
     left: 50%;
     width: 75%;
-    padding: var(--sm);
-    background-color: rgb(31, 31, 31);
+    padding: 4px var(--xs);
+    background-color: rgb(var(--dark-grey));
     border-radius: 8px;
     box-sizing: border-box;
     text-align: center;
     transform: translateX(-50%);
+    font-size: var(--xs);
   }
 </style>
 
 <div class="deck">
   <img src="images/card/card-back.png" alt="Deck"/>
-  <div class="deck__cards">{$gameStore.opponent.deck} / 30</div>
+  <div class="deck__cards">
+    Deck<br/>
+    {$gameStore.opponent.deck} / 30
+  </div>
 </div>

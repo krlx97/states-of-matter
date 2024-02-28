@@ -1,5 +1,5 @@
 import {GameType, PlayerStatus, QueueId} from "@som/shared/enums";
-import {mongo} from "app";
+import {mongo, server} from "app";
 import {gameHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
@@ -66,6 +66,7 @@ const joinQueue: SocketRequest = (socket, error): void => {
           }
 
           await gameHelpers.gamePopup(GameType.CASUAL, opponent.name, name);
+          server.io.emit("updateFriend", {name, status: PlayerStatus.IN_QUEUE});
 
           return;
         }
@@ -77,6 +78,10 @@ const joinQueue: SocketRequest = (socket, error): void => {
         return error("Failed to insert player in the queue.");
       }
     } else if (queueId === QueueId.RANKED) {
+      if ($player.elo < 20 || $player.level < 10) {
+        return error("You can't join ranked queue right now.");
+      }
+
       const opponents = await $rankedQueuePlayers.find().toArray();
 
       for (const opponent of opponents) {
@@ -104,6 +109,7 @@ const joinQueue: SocketRequest = (socket, error): void => {
           }
 
           await gameHelpers.gamePopup(GameType.RANKED, opponent.name, name);
+          server.io.emit("updateFriend", {name, status: PlayerStatus.IN_QUEUE});
 
           return;
         }
@@ -121,13 +127,14 @@ const joinQueue: SocketRequest = (socket, error): void => {
         status: PlayerStatus.IN_QUEUE,
         queueId
       }
-    })
+    });
 
     if (!$playerUpdate.modifiedCount) {
       return error("Error updating player.");
     }
 
     socket.emit("joinQueue", {queueId});
+    server.io.emit("updateFriend", {name, status: PlayerStatus.IN_QUEUE});
   });
 };
 

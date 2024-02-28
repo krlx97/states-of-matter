@@ -2,9 +2,7 @@ import {acceptGame} from "./acceptGame";
 import {closeLobby} from "./closeLobby";
 import {createLobby} from "./createLobby";
 import {declineGame} from "./declineGame";
-import {defaultSkin} from "./defaultSkin";
 import {finishTutorial} from "./finishTutorial";
-import {getLeaderboards} from "./getLeaderboards";
 import {joinLobby} from "./joinLobby";
 import {joinQueue} from "./joinQueue";
 import {leaveLobby} from "./leaveLobby";
@@ -19,9 +17,7 @@ const client = [
   closeLobby,
   createLobby,
   declineGame,
-  defaultSkin,
   finishTutorial,
-  getLeaderboards,
   joinLobby,
   joinQueue,
   leaveLobby,

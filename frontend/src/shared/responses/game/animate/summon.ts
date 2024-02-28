@@ -1,8 +1,10 @@
 import {soundService} from "services";
-import {gameStore} from "stores";
+import {gameStore, isAnimating} from "stores";
 import { EffectId } from "@som/shared/enums";
 
 const summon = (animation: any): void => {
+  isAnimating.set(true);
+
   const {name, field, minion, necromancyFixPositive} = animation;
 
   // fix for necromancy animations
@@ -27,6 +29,10 @@ const summon = (animation: any): void => {
 
     return store;
   });
+
+  setTimeout((): void => {
+    isAnimating.set(false);
+  }, 343);
 
   soundService.play("summon");
 };

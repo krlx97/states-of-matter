@@ -1,12 +1,11 @@
 <script lang="ts">
-  import {CardId, CardType} from "@som/shared/enums";
+  import {Ability, CardId, CardType} from "@som/shared/enums";
   import {cardEffectNames, cards} from "@som/shared/data";
   import {socketService, soundService} from "services";
   import {floatingTextStore, gameStore, selectedCardStore, playerStore, nodeStore} from "stores";
-  import FloatingText from "../FloatingText.svelte";
   import {CardComponent, TextComponent} from "ui";
   import {onMount} from "svelte";
-    import { scale } from "svelte/transition";
+  import { fade, fly, scale } from "svelte/transition";
 
   const {socket} = socketService;
 
@@ -24,16 +23,17 @@
     $selectedCardStore.hand && $selectedCardStore.hand.id === CardId.GRAVECALL &&
     $selectedCardStore.graveyard && $selectedCardStore.graveyard.type === CardType.MINION);
 
-  $: isTargetable = $selectedCardStore.hand &&
-    $selectedCardStore.hand.id === CardId.QUICK_SAND;
-
   $: isCurrentPlayer = $gameStore.currentPlayer === $playerStore.name;
-  $: minion = $gameStore.player.field[field];
+  $: card = $gameStore.player.field[field];
 
-  const onPlayCard = (): void => {
-    if (!isCurrentPlayer) { return; }
-    if (!$selectedCardStore.hand.gid) { return; }
-    // if ($selectedCardStore.hand.type !== CardType.MINION) { return; }
+  $: isTargetable =
+    ($selectedCardStore.hand && $selectedCardStore.hand.id === CardId.QUICK_SAND) ||
+    ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.FORTIFY || $gameStore.player.field.hero.ability === Ability.HEAL));
+
+  const onEmptyFieldClick = (): void => {
+    if (!isCurrentPlayer) {
+      return;
+    }
 
     if ($selectedCardStore.field !== undefined) {
       $selectedCardStore.field = undefined;
@@ -51,6 +51,8 @@
         target: $selectedCardStore.graveyard.gid
       });
     } else {
+    if (!$selectedCardStore.hand.gid) { return; }
+
       const {gid} = $selectedCardStore.hand;
       socket.emit("playMinion", {field, gid});
     }
@@ -58,12 +60,16 @@
     $selectedCardStore.hand = undefined;
   };
 
-  const onAttackSelect = (): void => {
+  const onMinionFieldClick = (): void => {
     if (!isCurrentPlayer) {
       return;
     }
 
-    if (
+    if ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.FORTIFY || $gameStore.player.field.hero.ability === Ability.HEAL)) {
+      socket.emit("useAbility" as any, {
+        target: field
+      });
+    } else if (
       $selectedCardStore.hand &&
       $selectedCardStore.hand.id === CardId.QUICK_SAND
     ) {
@@ -76,15 +82,20 @@
       $selectedCardStore.field = undefined;
     } else if ($selectedCardStore.hand) {
       $selectedCardStore.hand = undefined;
+      $selectedCardStore.field = field;
     } else {
       $selectedCardStore.field = field;
     }
   };
 
   onMount((): void => {
-    $nodeStore.player[field] = fieldElement;
+    // $nodeStore.player[field] = fieldElement;
     $nodeStore.player[`${field}Damage`] = damageDealtElement;
   });
+
+  const summon = (eleme) => {
+    $nodeStore.player[field] = eleme;
+  };
 
   export {field};
 </script>
@@ -92,8 +103,9 @@
 <style>
   .field {
     position: relative;
-    height: calc(var(--card-height));
-    width: calc(var(--card-width));
+    height: calc(var(--card-height) + 2px);
+    width: calc(var(--card-width) + 2px);
+    background-color: rgba(var(--dark-grey), 0.666);
     cursor: not-allowed;
     border-radius: 8px;
   }
@@ -101,24 +113,30 @@
   .isSummonable {
     position: relative;
     cursor: pointer;
+    animation: borderGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
   }
 
   .isSummonable::after {
     content: "";
     position: absolute;
-    border-radius: 8px;
     top: 0;
     left: 0;
-    width: 100%;
     height: 100%;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 16px 1px rgb(var(--success));
     opacity: 0;
-    box-shadow: 0 0 8px 4px rgb(var(--health));
-    animation: isSummonableGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+    animation: shadowGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
   }
 
-  @keyframes isSummonableGlow {
+  @keyframes shadowGlow {
     from {opacity: 0;}
     to {opacity: 1;}
+  }
+
+  @keyframes borderGlow {
+    from {border-color: rgba(var(--grey), 0.333);}
+    to {border-color: rgba(var(--success), 0.666);}
   }
 
   .damage-dealt {
@@ -126,7 +144,7 @@
     top: 0;
     height: 100%;
     width: 100%;
-    background-color: rgba(31, 31, 31, 0.8);
+    background-color: rgba(var(--dark-grey), 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -138,22 +156,13 @@
   }
 
   .field-empty {
-    height: var(--card-height);
-    width: var(--card-width);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(var(--dark-grey), 0.8);
-    border: 1px solid rgba(var(--grey), 0.4);
+    height: 100%;
+    width: 100%;
+    border: 1px solid rgba(var(--grey), 0.333);
     border-radius: 8px;
-    text-transform: uppercase;
     box-sizing: border-box;
   }
-
 
  .buffs {
     position: absolute;
@@ -169,8 +178,6 @@
     line-height: 1.25;
   }
 
-  /* .buff {color: rgb(var(--green));}
-  .debuff {color: rgb(var(--red));} */
   .canAttack {
     position: absolute;
     bottom: calc(100%);
@@ -182,40 +189,78 @@
     from {transform: scale(1)}
     to {transform: scale(1.5);}
   }
+
+
+  .floating-text {
+    position: absolute;
+    width: calc(var(--card-width) - 32px);
+    height: 16px;
+    bottom: calc(64px + 24px);
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(var(--dark-grey));
+    border: 1px solid rgb(var(--grey));
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: var(--xs);
+    transform: translateX(-50%);
+    z-index: 1000;
+  }
+
+  /* .kard {
+    position: absolute;
+    top: 0;
+    left: 0;
+  } */
 </style>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="field" bind:this="{fieldElement}">
-  {#if $floatingTextStore.player[field]}
-    <FloatingText {field}/>
-  {/if}
-
-  {#if minion}
-    {#if !minion.canAttack}
-      <div class="canAttack">💤</div>
-    {/if}
-    <div class="buffs">
-      {#each minion.buffs as buff}
-        <TextComponent color="success">
-          {cardEffectNames.get(buff.id)}
-          {#if buff.data}
-            ({Object.values(buff.data)})
-          {/if}
-        </TextComponent>
-      {/each}
-      {#each minion.debuffs as debuff}
-        <TextComponent color="warn">{cardEffectNames.get(debuff.id)}</TextComponent>
-      {/each}
-    </div>
-    <div in:scale="{{start: 8, duration: 300, opacity: 0}}">
-      <CardComponent {isSelected} {isTargetable} card="{minion}" on:click="{onAttackSelect}"/>
-    </div>
-  {:else}
-    <div class="field-empty" style="text-align: center;" class:isSummonable on:click="{onPlayCard}">
-      field {field}
-    </div>
-  {/if}
 
   <div class="damage-dealt" bind:this="{damageDealtElement}"></div>
+
+  {#if card}
+    {#if $floatingTextStore.player[field]}
+      <div class="floating-text" in:fly={{y: 64, duration: 1000, opacity: 1}}>
+        {$floatingTextStore.player[field]}
+      </div>
+    {/if}
+
+    {#if !card.canAttack}
+      <div class="canAttack">💤</div>
+    {/if}
+
+    <div class="buffs">
+      {#each card.buffs as {id, data}}
+        <TextComponent color="success">
+          {cardEffectNames.get(id)} {#if data}({Object.values(data)}){/if}
+        </TextComponent>
+      {/each}
+      {#each card.debuffs as {id, data}}
+        <TextComponent color="warn">
+          {cardEffectNames.get(id)} {#if data}({Object.values(data)}){/if}
+        </TextComponent>
+      {/each}
+    </div>
+
+    <div use:summon in:scale="{{duration: 333, opacity: 0, start: 4}}">
+      <!-- out:fade="{{duration: 333}}" -->
+      <CardComponent
+        {isSelected}
+        isFriendlyTargetable={isTargetable}
+        {card}
+        on:click="{onMinionFieldClick}"/>
+    </div>
+
+  {:else}
+    <div
+      class="field-empty"
+      class:isSummonable
+      on:click="{onEmptyFieldClick}">
+    </div>
+  {/if}
+
 </div>

@@ -118,7 +118,7 @@
       {/if}
     </div>
 
-    {#if gameType === GameType.CASUAL || gameType === GameType.RANKED}
+    <!-- {#if gameType === GameType.CASUAL || gameType === GameType.RANKED} -->
       <div>gained {experience} experience</div>
       {#if gameType === GameType.RANKED}
         <div>{isWinner ? "gained" : "lost"} {Math.abs(elo)} elo</div>
@@ -132,7 +132,7 @@
           + <CurrencyComponent iconSize="sm" name="ees" number="{eesReward}"/>
         </div>
       {/if}
-    {/if}
+    <!-- {/if} -->
 
     {#key $playerStore.experience || $playerStore.elo}
       <PlayerFrameComponent

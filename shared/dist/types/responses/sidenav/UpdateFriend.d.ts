@@ -1,3 +1,4 @@
+import type { PlayerGames } from "../../mongo/Player/PlayerGames.js";
 interface UpdateFriend {
     name: string;
     avatarId?: number;
@@ -6,5 +7,6 @@ interface UpdateFriend {
     level?: number;
     elo?: number;
     status?: number;
+    games?: PlayerGames;
 }
 export type { UpdateFriend };

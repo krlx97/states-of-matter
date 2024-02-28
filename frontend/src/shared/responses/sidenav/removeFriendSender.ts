@@ -7,7 +7,7 @@ const removeFriendSender = (): void => {
     const {name} = params;
 
     playerStore.update((store) => {
-      const {friends} = store.social;
+      const {friends} = store;
       const friend = friends.find((friend): boolean => friend.name === name);
 
       if (!friend) {
@@ -18,20 +18,12 @@ const removeFriendSender = (): void => {
 
       friends.splice(i, 1);
 
+      if (store.mutualFriends.includes(name)) {
+        store.mutualFriends.splice(store.mutualFriends.indexOf(name), 1);
+      }
+
       return store;
     });
-
-    if (get(chatStore).name === name) {
-      chatStore.update((store) => {
-        store = {
-          name: "",
-          isOpen: false,
-          messages: []
-        };
-
-        return store;
-      });
-    }
 
     modalService.close();
   });

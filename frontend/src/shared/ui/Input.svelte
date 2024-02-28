@@ -57,8 +57,6 @@
     color: rgb(127, 127, 127);
   }
 
-  
-
   .input:hover {
     border-color: white;
   }
@@ -76,7 +74,7 @@
     transform: translateY(-24px);
   }
 
-.input-invalid {
+  .input-invalid {
     border-color: rgb(var(--warn));
   }
   .input-invalid:hover {
@@ -84,6 +82,16 @@
   }
   .input-invalid:focus {
     border-color: rgb(var(--warn));
+    outline: 0;
+  }
+  .input-valid {
+    border-color: rgb(var(--success));
+  }
+  .input-valid:hover {
+    border-color: rgb(var(--success));
+  }
+  .input-valid:focus {
+    border-color: rgb(var(--success));
     outline: 0;
   }
 
@@ -159,7 +167,16 @@
 
 {#if type === "text"}
   <div class="form__field">
-    <input class="input" class:input-invalid="{error}" {id} {disabled} placeholder=" " bind:value on:input on:click="{onClick}"/>
+    <input
+      {id}
+      {disabled}
+      class="input"
+      class:input-invalid="{error}"
+      class:input-valid="{!error && value}"
+      placeholder=" "
+      bind:value
+      on:input
+      on:click="{onClick}"/>
     <label class="label" for="{id}">{label}</label>
     <img src="images/currencies/sm/{icon}.png" {alt}/>
     <div class="form__field__more">

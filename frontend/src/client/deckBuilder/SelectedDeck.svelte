@@ -1,16 +1,26 @@
 <script lang="ts">
   import {createEventDispatcher} from "svelte";
   import {modalService, socketService, soundService} from "services";
-  import {playerStore} from "stores";
+  import {deckCache, playerStore} from "stores";
   import {ButtonComponent, LinkComponent, MenuComponent, ProgressBarComponent, TextComponent} from "ui";
   import ChangeDeckNameComponent from "./modals/ChangeDeckName.svelte";
-    import { CardType } from "@som/shared/enums";
+  import { CardType } from "@som/shared/enums";
+  import { canSave, isDeckSame } from "./canSave";
 
   let isMenuVisible = false;
   let currentSort = "Initial";
   let sortAscending = true;
+
   const dispatch = createEventDispatcher();
+
+  const selectedIcon = new Map([
+    [1, 10500],
+    [2, 11000],
+    [3, 11500],
+    [4, 12000],
+  ]);
   $: deck = $playerStore.decks[$playerStore.deckId];
+  $: disabledRevert = isDeckSame($deckCache, deck, true);
 
   $: bars = [{
     color: "white",
@@ -57,6 +67,8 @@
     $playerStore.decks[$playerStore.deckId].average.manaCost = 0;
     $playerStore.decks[$playerStore.deckId].average.health = 0;
     soundService.play("click");
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
+
     isMenuVisible = false;
   };
 
@@ -64,6 +76,15 @@
     modalService.open(ChangeDeckNameComponent);
     soundService.play("click");
     isMenuVisible = false;
+  };
+
+  const revertDeck = (): void => {
+    playerStore.update((store) => {
+      store.decks[store.deckId] = JSON.parse(JSON.stringify($deckCache));
+      return store;
+    });
+
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
   };
 
   const saveDeck = (): void => {
@@ -103,6 +124,8 @@
       }
     });
 
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
+
     soundService.play("click");
   };
 
@@ -122,15 +145,10 @@
       }
     });
 
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
+
     soundService.play("click");
   };
-
-  const selectedIcon = new Map([
-    [1, 105000],
-    [2, 110000],
-    [3, 115000],
-    [4, 120000],
-  ]);
 
   const onSortHealth = (): void => {
     if (currentSort === "Health") {
@@ -152,6 +170,8 @@
         return 0; // Cards other than minions are considered equal in terms of sorting
       }
     });
+
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
 
     soundService.play("click");
   };
@@ -330,7 +350,12 @@
     <ProgressBarComponent {bars}/>
 
     <div style="display: flex; justify-content: space-evenly; margin-top: 4px;">
-      <ButtonComponent isIcon on:click="{saveDeck}"><i class="fa-solid fa-floppy-disk"></i></ButtonComponent>
+      <ButtonComponent isIcon disabled="{!$canSave || $playerStore.decks[$playerStore.deckId].cardsInDeck !== 30}" on:click="{saveDeck}">
+        <TextComponent color="{!$canSave || $playerStore.decks[$playerStore.deckId].cardsInDeck !== 30 ? "grey" : "success"}"><i class="fa-solid fa-floppy-disk"></i></TextComponent>
+      </ButtonComponent>
+      <ButtonComponent isIcon disabled={!disabledRevert} on:click="{revertDeck}">
+        <TextComponent color="{!disabledRevert ? "grey" : "white"}"><i class="fa-solid fa-clock-rotate-left"></i></TextComponent>
+      </ButtonComponent>
       <ButtonComponent isIcon on:click="{clearDeck}"><i class="fa-solid fa-trash"></i></ButtonComponent>
       <ButtonComponent isIcon on:click="{switchDeck}"><i class="fa-solid fa-repeat"></i></ButtonComponent>
       <ButtonComponent isIcon on:click="{changeDeckName}"><i class="fa-solid fa-pen"></i></ButtonComponent>

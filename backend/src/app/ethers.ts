@@ -20,15 +20,18 @@ import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
   type: "json"
 };
 
-const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
+const provider = new JsonRpcProvider(
+  "https://testnet.telos.net/evm"
+  // "http://localhost:8545"
+);
 const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
 
 const keys = {
-  ethericEssence: "0xba69ddE1586be3Ab4E101C13f8f9d730082b5BE0",
-  ethericCrystals: "0x5ef70Dd1B3D4BA9D2509C665E63A0aDCbF3EA259",
-  ethericEnergy: "0x4cd0B057577770a5699Be8fefd399035be894F3d",
-  somTokens: "0xD0A76288A6b84059FAf5218AC2420251c6C5b5f8",
-  somGame: "0x90Acf3677114443AF72798a558d5bb56278eb743"
+  ethericEssence: "0xD2c7143A714573f767a9E8acF64315a6Ef418231",
+  ethericCrystals: "0xd393F4A7a9b2937fb8cb30Ae3e03866755c37Ba3",
+  ethericEnergy: "0xa151F99db0d89B9d1D568e56fcE5d7ac84355A5E",
+  somTokens: "0xA857C3e9770dC18ee6a022691cAA62f3Afa777E1",
+  somGame: "0x1dfF35052F1FE01EdB2d767D9e8F644B9c271108"
 };
 
 const ethericEssence = new Contract(keys.ethericEssence, EthericEssence.abi, signer);

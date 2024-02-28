@@ -10,6 +10,7 @@ export {modalStore, notificationsStore, playerStore, tutorialStore} from "./glob
 
 export {ethersStore} from "./ethersStore";
 export {chatStore} from "./chatStore";
+export {deckCache} from "./deckCache";
 export {intervalsStore} from "./intervalsStore";
 export {isAnimating} from "./isAnimating";
 export {queueStore} from "./queueStore";

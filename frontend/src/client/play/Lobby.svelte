@@ -1,7 +1,8 @@
 <script lang="ts">
   import {socketService, soundService} from "services";
   import {lobbyStore, playerStore} from "stores";
-  import {ButtonComponent, PlayerFrameComponent} from "ui";
+  import {ButtonComponent, PlayerFrameComponent, TextComponent} from "ui";
+    import Chat from "./Chat.svelte";
 
   const {socket} = socketService;
 
@@ -24,8 +25,8 @@
 <style>
   .lobby {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    /* flex-direction: column; */
+    /* align-items: center; */
     justify-content: center;
   }
 
@@ -38,6 +39,7 @@
   .players {
     margin: var(--md) 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: space-between;
   }
@@ -45,39 +47,48 @@
   .vs {
     margin: 0 var(--md);
   }
+
+  .lobby-playerz {
+    flex-basis: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 </style>
 
 <div class="lobby">
+  <Chat/>
 
-  <h3>
-    <div>Lobby ID:</div>
-    <div>{$lobbyStore.id}</div>
-  </h3>
+  <div class="lobby-playerz">
 
-  <div class="players">
+    <TextComponent color="primary" size="xl">Lobby ID: {$lobbyStore.id}</TextComponent>
 
-    <PlayerFrameComponent {...$lobbyStore.host}/>
+    <div class="players">
+      <PlayerFrameComponent {...$lobbyStore.host}/>
 
-    <h1 class="vs">VS</h1>
+      <h1 class="vs">VS</h1>
 
-    {#if $lobbyStore.challengee}
-      <PlayerFrameComponent {...$lobbyStore.challengee}/>
-    {:else}
-      <div>Awaiting opponent...</div>
-    {/if}
-  </div>
+      {#if $lobbyStore.challengee}
+        <PlayerFrameComponent {...$lobbyStore.challengee}/>
+      {:else}
+        <div>Awaiting opponent...</div>
+      {/if}
+    </div>
 
-  <div class="lobby__actions">
-    {#if $lobbyStore.host.name === $playerStore.name}
-      <ButtonComponent
-        disabled="{!$lobbyStore.challengee}"
-        on:click="{onStartGame}">
-        START GAME
-      </ButtonComponent>
-      <ButtonComponent on:click="{onCloseLobby}">CLOSE LOBBY</ButtonComponent>
-    {:else}
-      <ButtonComponent on:click="{onLeaveLobby}">LEAVE LOBBY</ButtonComponent>
-    {/if}
+    <div class="lobby__actions">
+      {#if $lobbyStore.host.name === $playerStore.name}
+        <ButtonComponent
+          disabled="{!$lobbyStore.challengee}"
+          on:click="{onStartGame}">
+          START GAME
+        </ButtonComponent>
+        <ButtonComponent on:click="{onCloseLobby}">CLOSE LOBBY</ButtonComponent>
+      {:else}
+        <ButtonComponent on:click="{onLeaveLobby}">LEAVE LOBBY</ButtonComponent>
+      {/if}
+    </div>
+
   </div>
 
 </div>

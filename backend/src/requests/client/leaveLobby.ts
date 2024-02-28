@@ -59,6 +59,7 @@ const leaveLobby: SocketRequest = (socket, error): void => {
 
     socket.emit("leaveLobbySender");
     server.io.to($playerHost.socketId).emit("leaveLobbyReceiver");
+    server.io.emit("updateFriend", {name: $player.name, status: PlayerStatus.ONLINE});
   });
 };
 

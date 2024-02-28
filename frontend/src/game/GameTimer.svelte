@@ -4,6 +4,7 @@
   import {ButtonComponent} from "ui";
 
   $: height = $nodeStore.barHeight;
+  $: disabled = $playerStore.name !== $gameStore.currentPlayer;
 
   const onEndTurn = (): void => {
     $selectedCardStore.field = undefined;
@@ -81,7 +82,7 @@
 <div class="game-timer">
   <div class="info">
     <div class="bgd" class:glow={$gameStore.opponent.name === $gameStore.currentPlayer}>{$gameStore.opponent.name}</div>
-    <ButtonComponent on:click={onEndTurn}>END TURN</ButtonComponent>
+    <ButtonComponent {disabled} on:click={onEndTurn}>END TURN</ButtonComponent>
     <div class="bgd" class:glow={$playerStore.name === $gameStore.currentPlayer}>{$gameStore.player.name}</div>
   </div>
   <div class="bar">

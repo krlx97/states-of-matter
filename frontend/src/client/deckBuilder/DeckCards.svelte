@@ -13,7 +13,8 @@
 
 <style>
   .deck-cards {
-    height: 686px;
+    height: 606px;
+    /* height: 686px; */
     flex-grow: 1;
     width: 288px;
     padding: var(--xs);

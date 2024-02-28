@@ -23,6 +23,7 @@ const startCustomGame: SocketRequest = (socket, error): void => {
     if (!$lobby) {
       return error("Lobby not found.");
     }
+
     if ($player.name !== $lobby.host.name) {
       return error("You are not the host.");
     }

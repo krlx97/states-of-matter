@@ -2,7 +2,6 @@
   import {formatUnits, parseUnits} from "ethers";
   import {ethersService, formService, socketService, soundService} from "services";
   import {modalStore, playerStore, inventoryStore} from "stores";
-    import { onDestroy, onMount } from "svelte";
 
   import {
     InputComponent,
@@ -15,30 +14,23 @@
   const {id} = $modalStore.data;
   const name = id === 1n ? "Etheric Crystals" : id === 2n ? "Etheric Essence" : "Etheric Energy";
   const icon = id === 1n ? "ecr" : id === 2n ? "ees" : "enrg";
-  let balance = id === 1n ? $inventoryStore.approvals.ecr : id === 2n ? $inventoryStore.approvals.ees : $inventoryStore.approvals.enrg;
+
+  let approval = id === 1n ? $inventoryStore.approvals.ecr : id === 2n ? $inventoryStore.approvals.ees : $inventoryStore.approvals.enrg;
+  let totalSupply = id === 1n ? $inventoryStore.total.ecr : id === 2n ? $inventoryStore.total.ees : $inventoryStore.total.enrg
 
   const formStore = formService.create({
-    amount: ["", "approval", balance]
+    amount: ["", "approval", approval]
   });
 
-  const receipt = {
-    balance,
-    remaining: balance
-  };
+  const receipt = {approval};
 
   const onInput = (): void => {
     formService.validate(formStore);
-
-    const {value, error} = $formStore.fields.amount;
-
-    if (!error) {
-      receipt.remaining = balance - parseUnits(value);
-    }
   };
 
   const onSetMax = (): void => {
     soundService.play("click");
-    $formStore.fields.amount.value = formatUnits(id === 1n ? $inventoryStore.total.ecr : id === 2n ? $inventoryStore.total.ees : $inventoryStore.total.enrg);
+    $formStore.fields.amount.value = formatUnits(totalSupply);
     onInput();
   };
 
@@ -62,28 +54,22 @@
 
     await ethersService.reloadUser();
 
-    balance = id === 1n ? $inventoryStore.approvals.ecr : id === 2n ? $inventoryStore.approvals.ees : $inventoryStore.approvals.enrg;
-    receipt.balance = balance;
+    approval = id === 1n ? $inventoryStore.approvals.ecr : id === 2n ? $inventoryStore.approvals.ees : $inventoryStore.approvals.enrg;
+    receipt.approval = approval;
 
     onInput();
 
     $formStore.isLoading = false;
   };
-
-  onMount((): void => {
-    
-  });
-
-  onDestroy((): void => {
-  });
 </script>
 
 <ModalComponent>
 
-  <svelte:fragment slot="title">{name} approval</svelte:fragment>
+  <svelte:fragment slot="title">Approve {name}</svelte:fragment>
 
   <svelte:fragment slot="info">
-    Control how much the game contract can spend tokens on your behalf
+    Control how much the game contract can spend tokens on your behalf. Set to
+    0 to revoke approval.
   </svelte:fragment>
 
   <FormComponent on:submit="{onSubmit}">
@@ -97,8 +83,7 @@
       on:input="{onInput}"/>
 
     <TableComponent items="{[
-      ["Approval", receipt.balance, icon],
-      ["Remaining approval", receipt.remaining, icon]
+      ["Current approval", receipt.approval, icon]
     ]}"/>
 
     <svelte:fragment slot="submit">

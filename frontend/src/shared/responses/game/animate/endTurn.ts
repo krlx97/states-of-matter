@@ -1,8 +1,10 @@
 import { soundService } from "services";
-import { floatingTextStore, nodeStore, playerStore } from "stores";
+import { floatingTextStore, isAnimating, nodeStore, playerStore } from "stores";
 import { get } from "svelte/store";
 
 const endTurn = (animation: any) => {
+  isAnimating.set(true);
+
   const {name} = animation;
 
   nodeStore.update((store) => {
@@ -19,7 +21,8 @@ const endTurn = (animation: any) => {
       store.turn.name = "";
       return store;
     });
-  }, 1200);
+    isAnimating.set(false);
+  }, 3010);
 };
 
 export {endTurn};

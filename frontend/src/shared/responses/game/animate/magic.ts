@@ -1,7 +1,9 @@
 import { soundService } from "services";
-import { nodeStore } from "stores";
+import { isAnimating, nodeStore } from "stores";
 
 const magic = (animations: any) => {
+  isAnimating.set(true);
+
   const {card} = animations;
 
   nodeStore.update((store) => {
@@ -18,7 +20,9 @@ const magic = (animations: any) => {
       store.magic.card = undefined;
       return store;
     });
-  }, 3000);
+
+    isAnimating.set(false);
+  }, 3010);
 };
 
 export {magic};

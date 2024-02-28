@@ -102,7 +102,7 @@ server.io.on("connection", (socket): void => {
 
 server.http.listen(process.env.PORT || 4201);
 
-schedule("0 */6 * * *", async (): Promise<void> => {
+schedule("0 */1 * * *", async (): Promise<void> => {
   for await (let $player of mongo.$players.find()) {
     if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
       $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
@@ -119,15 +119,17 @@ schedule("0 */6 * * *", async (): Promise<void> => {
     $player.tasks.daily = false;
     $player.tasks.dailyAlternative = 0;
 
-    if ($player.elo > 250) {
+    if ($player.elo > 400) {
       $player.elo -= 1;
+    } else if ($player.elo < 400) {
+      $player.elo += 1;
     }
 
-    if ($player.elo >= 250) { // silver
+    if ($player.elo >= 600) { // silver
       $player.rewards.ees = `${BigInt($player.rewards.ees) + 1n * 10n ** 18n}`;
-    } else if ($player.elo >= 500) { // gold
+    } else if ($player.elo >= 800) { // gold
       $player.rewards.ees = `${BigInt($player.rewards.ees) + 3n * 10n ** 18n}`;
-    } else if ($player.elo >= 750) { // master
+    } else if ($player.elo >= 1000) { // master
       $player.rewards.ees = `${BigInt($player.rewards.ees) + 5n * 10n ** 18n}`;
     }
 

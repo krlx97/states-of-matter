@@ -1,8 +1,8 @@
 import { EffectId } from "../enums/index.js";
 const cardEffectNames = new Map([
-    //?
     [EffectId.TAUNT, "Taunt"],
     [EffectId.SHIELD, "Shield"],
+    [EffectId.NEUROTOXIN, "Neurotoxin"],
     [EffectId.SHADOW_SURGE, "Shadow Surge"],
     [EffectId.QUICK_SHOT, "Quick Shot"],
     [EffectId.BLAZE, "Blaze"],

@@ -1,6 +1,6 @@
 import {randomInt} from "crypto";
 import {cards} from "@som/shared/data";
-import {CardType} from "@som/shared/enums";
+import {CardKlass, CardType} from "@som/shared/enums";
 
 import type {
   GameCards,
@@ -61,6 +61,16 @@ const buildDeck = (deck: PlayerDeck): GameCards => {
         current: manaCost,
         default: manaCost
       }};
+    }
+
+    if (deck.klass === CardKlass.SOLID && gameCard.klass === CardKlass.SOLID) {
+      gameCard.manaCost.current -= 1;
+    } else if (deck.klass === CardKlass.LIQUID && gameCard.klass === CardKlass.LIQUID) {
+      gameCard.manaCost.current -= 1;
+    } else if (deck.klass === CardKlass.GAS && gameCard.klass === CardKlass.GAS) {
+      gameCard.manaCost.current -= 1;
+    } else if (deck.klass === CardKlass.PLASMA && gameCard.klass === CardKlass.PLASMA) {
+      gameCard.manaCost.current -= 1;
     }
 
     gameDeck.push(gameCard);

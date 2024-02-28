@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
@@ -8,8 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 contract EthericEnergy is ERC20, ERC20Burnable {
   address private immutable _gameAddress;
 
-  constructor (address gameAddress)
-  ERC20("Etheric Energy", "ENRG") {
+  constructor (address gameAddress) ERC20 ("Etheric Energy", "ENRG") {
     _gameAddress = gameAddress;
   }
 
@@ -21,15 +20,15 @@ contract EthericEnergy is ERC20, ERC20Burnable {
     _mint(to, amount);
   }
 
-  function burn (uint256 value) public override(ERC20Burnable) onlyGame {
-    _burn(msg.sender, value);
+  function burn (uint256 amount) public override(ERC20Burnable) onlyGame {
+    _burn(msg.sender, amount);
   }
 
   function burnFrom (
     address account,
-    uint256 value
+    uint256 amount
   ) public override(ERC20Burnable) onlyGame {
-    _spendAllowance(account, msg.sender, value);
-    _burn(account, value);
+    _spendAllowance(account, msg.sender, amount);
+    _burn(account, amount);
   }
 }

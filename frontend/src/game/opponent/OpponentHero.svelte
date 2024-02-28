@@ -1,22 +1,39 @@
 <script lang="ts">
-  import {socketService, soundService} from "services";
+  import {onMount} from "svelte";
+  import {cardEffectNames} from "@som/shared/data";
+  import {Ability} from "@som/shared/enums";
+  import {socketService} from "services";
   import {gameStore, selectedCardStore, playerStore, floatingTextStore, nodeStore} from "stores";
-  import {CardComponent} from "ui";
-    import FloatingText from "../FloatingText.svelte";
-    import { onMount } from "svelte";
+  import {CardComponent, TextComponent} from "ui";
+  import FloatingTextComponent from "../FloatingText.svelte";
+    import { fly } from "svelte/transition";
 
-  $: isAttackable = $selectedCardStore.field !== undefined;
-  let damageDealtElement: HTMLDivElement;
   let fieldElement: HTMLDivElement;
+  let damageDealtElement: HTMLDivElement;
+
+  $: card = $gameStore.opponent.field.hero;
+
+  $: isAttackable =
+    $selectedCardStore.field !== undefined &&
+    $selectedCardStore.field !== "hero";
+
+  $: isTargetable =
+    ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.NEUROTOXIN || $gameStore.player.field.hero.ability === Ability.OVERCHARGE));
 
   const onAttackHero = (): void => {
-    const attacker = $selectedCardStore.field;
+    if ($gameStore.currentPlayer !== $playerStore.name) {
+      return;
+    }
 
-    if ($gameStore.currentPlayer !== $playerStore.name) { return; }
-    if (!attacker) { return; }
-
-    soundService.play("directAttack");
-    socketService.socket.emit("attackHero", {attacker});
+    if ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.NEUROTOXIN || $gameStore.player.field.hero.ability === Ability.OVERCHARGE)) {
+      socketService.socket.emit("useAbility" as any, {
+        target: "hero"
+      });
+    } else if ($selectedCardStore.field !== "hero") {
+      const attacker = $selectedCardStore.field;
+      socketService.socket.emit("attackHero", {attacker});
+      $selectedCardStore.field = undefined;
+    }
   };
 
   onMount((): void => {
@@ -72,16 +89,66 @@
     visibility: hidden;
     z-index: 5;
   }
+ .buffs {
+    position: absolute;
+    top: calc(100% + 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 144px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(47, 47, 47);
+    border-radius: 8px;
+    line-height: 1.25;
+  }
+
+.floating-text {
+    position: absolute;
+    width: calc(var(--card-width) - 32px);
+    height: 16px;
+    bottom: calc(64px + 24px);
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(var(--dark-grey));
+    border: 1px solid rgb(var(--grey));
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: var(--xs);
+    transform: translateX(-50%);
+    z-index: 1000;
+  }
 </style>
 
 <div class="hero" bind:this={fieldElement} class:isAttackable>
   {#if $floatingTextStore.opponent.hero}
-    <FloatingText field="hero"/>
+    <div class="floating-text" in:fly={{y: 64, duration: 1000, opacity: 1}}>
+      {$floatingTextStore.opponent.hero}
+    </div>
   {/if}
-  <CardComponent
-    {isAttackable}
-    card="{$gameStore.opponent.field.hero}"
-    on:click="{onAttackHero}"/>
-  <div class="damage-dealt" bind:this={damageDealtElement}></div>
 
+  {#key $gameStore.opponent.field.hero.id}
+    <CardComponent
+      {isTargetable}
+      {isAttackable}
+      {card}
+      on:click="{onAttackHero}"/>
+  {/key}
+
+  <div class="buffs">
+    {#each $gameStore.opponent.field.hero.buffs as buff}
+      <TextComponent color="success">
+        {cardEffectNames.get(buff.id)}
+        {#if buff.data}
+          ({Object.values(buff.data)})
+        {/if}
+      </TextComponent>
+    {/each}
+    {#each $gameStore.opponent.field.hero.debuffs as debuff}
+      <TextComponent color="warn">{cardEffectNames.get(debuff.id)}</TextComponent>
+    {/each}
+  </div>
+  <div class="damage-dealt" bind:this={damageDealtElement}></div>
 </div>

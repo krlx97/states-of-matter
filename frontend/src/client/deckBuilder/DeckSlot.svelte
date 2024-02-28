@@ -3,25 +3,28 @@
   import {socketService, soundService} from "services";
   import {LinkComponent, ProgressBarComponent, TextComponent} from "ui";
   import type {PlayerDeckView} from "@som/shared/types/views";
+  import { playerStore } from "stores";
 
   const dispatch = createEventDispatcher();
   let deck: PlayerDeckView;
   const progress = deck.cardsInDeck / 30 * 100;
 
   const selectDeck = (): void => {
-    socketService.socket.emit("selectDeck", {
-      deckId: deck.id
-    });
+    if ($playerStore.deckId !== deck.id) {
+      socketService.socket.emit("selectDeck", {
+        deckId: deck.id
+      });
+    }
 
     dispatch("toggleDeckSlots");
     soundService.play("click");
   };
 
   const selectedIcon = new Map([
-    [1, 105000],
-    [2, 110000],
-    [3, 115000],
-    [4, 120000],
+    [1, 10500],
+    [2, 11000],
+    [3, 11500],
+    [4, 12000],
   ]);
  const klassColors = new Map([
     [0, "neutral"],

@@ -6,8 +6,7 @@ const updateFriend = (): void => {
     const {name} = params;
 
     playerStore.update((store) => {
-      const {friends} = store.social;
-      const friend = friends.find((friend): boolean => friend.name === name);
+      const friend = store.friends.find((friend): boolean => friend.name === name);
 
       if (!friend) {
         return store;
@@ -21,20 +20,24 @@ const updateFriend = (): void => {
         friend.bannerId = params.bannerId;
       }
 
-      if (params.elo) {
+      if (params.elo !== undefined) {
         friend.elo = params.elo;
       }
 
-      if (params.experience) {
+      if (params.experience !== undefined) {
         friend.experience = params.experience;
       }
 
-      if (params.level) {
+      if (params.level !== undefined) {
         friend.level = params.level;
       }
 
-      if (params.status) {
+      if (params.status !== undefined) {
         friend.status = params.status;
+      }
+
+      if (params.games) {
+        friend.games = params.games;
       }
 
       return store;

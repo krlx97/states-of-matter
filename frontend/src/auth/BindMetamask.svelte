@@ -7,12 +7,6 @@
 
   const {ethereum} = window;
 
-  // const $bindStepsStore = {
-  //   one: false,
-  //   two: false,
-  //   three: true
-  // };
-
   const onSelectNetwork = async (): Promise<void> => {
     if (!ethereum) { return; }
 
@@ -54,19 +48,7 @@
     $ethersStore.accounts = accounts;
   };
 
-  // let unsub: Unsubscriber;
-
   onMount(async (): Promise<void> => {
-    // unsub = ethersStore.subscribe((store): void => {
-    //   $bindStepsStore.one = window.ethereum !== undefined;
-    //   $bindStepsStore.two = store.signer?.address !== undefined;
-    //   $bindStepsStore.three = store.chainId === /*1337n*/41n;
-    // });
-
-    // $bindStepsStore.one = window.ethereum !== undefined;
-    // $bindStepsStore.two = $ethersStore.signer?.address !== undefined;
-    // $bindStepsStore.three = $ethersStore.chainId === /*1337n*/41n;
-
     if (ethereum) {
       const accounts = await ethereum.request({
         method: "eth_requestAccounts"
@@ -75,10 +57,6 @@
       $ethersStore.accounts = accounts;
     }
   });
-
-  // onDestroy((): void => {
-  //   unsub();
-  // });
 </script>
 
 <style>

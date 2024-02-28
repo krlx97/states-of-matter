@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
@@ -8,8 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 contract EthericEssence is ERC20, ERC20Burnable {
   address private immutable _gameAddress;
 
-  constructor (address gameAddress)
-  ERC20("Etheric Essence", "EES") {
+  constructor (address gameAddress) ERC20 ("Etheric Essence", "EES") {
     _gameAddress = gameAddress;
   }
 
@@ -19,30 +18,32 @@ contract EthericEssence is ERC20, ERC20Burnable {
 
   function transfer (
     address to,
-    uint256 value
-  ) public override(ERC20) pure returns (bool) {
-    return true;
+    uint256 amount
+  ) public override(ERC20) returns (bool) {
+    revert("disabled");
   }
 
   function transferFrom (
     address from,
     address to,
-    uint256 value
-  ) public override(ERC20) pure returns (bool) {
-    return true;
+    uint256 amount
+  ) public override(ERC20) returns (bool) {
+    revert("disabled");
   }
 
   function mint (address to, uint256 amount) public onlyGame {
     _mint(to, amount);
   }
 
-  function burn (uint256 value) public override(ERC20Burnable) {}
+  function burn (uint256 amount) public override(ERC20Burnable) onlyGame {
+    _burn(msg.sender, amount);
+  }
 
   function burnFrom (
     address account,
-    uint256 value
+    uint256 amount
   ) public override(ERC20Burnable) onlyGame {
-    _spendAllowance(account, msg.sender, value);
-    _burn(account, value);
+    _spendAllowance(account, msg.sender, amount);
+    _burn(account, amount);
   }
 }

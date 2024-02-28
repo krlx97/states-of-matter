@@ -94,6 +94,9 @@ const startGame = async (
     },
     game: generateGameView(game, $playerB.name)
   });
+
+  server.io.emit("updateFriend", {name: $playerA.name, status: PlayerStatus.IN_GAME});
+  server.io.emit("updateFriend", {name: $playerB.name, status: PlayerStatus.IN_GAME});
 };
 
 export {startGame};

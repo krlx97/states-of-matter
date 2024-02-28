@@ -1,18 +1,6 @@
 <script lang="ts">
-  import {onMount} from "svelte";
-  import {socketService} from "services";
   import {leaderboardsStore} from "stores";
   import {PlayerFrameComponent, TextComponent} from "ui";
-
-  const ms2md = new Date().setHours(24,0,0,0) - Date.now();
-
-  onMount((): void => {
-    const {byLevel, byElo} = $leaderboardsStore;
-
-    if (!byLevel.length && !byElo.length) {
-      socketService.socket.emit("getLeaderboards");
-    }
-  });
 </script>
 
 <style>
@@ -75,8 +63,8 @@
 
   <div class="leaderboards">
     <div class="leaderboards__players">
-      {#if $leaderboardsStore.byLevel.length}
-        {#each $leaderboardsStore.byLevel as params, i}
+      {#if $leaderboardsStore.level.length}
+        {#each $leaderboardsStore.level as params, i}
           <div>
             <PlayerFrameComponent {...params} leaderboardPosition="{i + 1}"/>
           </div>
@@ -86,8 +74,8 @@
       {/if}
     </div>
     <div class="leaderboards__players">
-      {#if $leaderboardsStore.byElo.length}
-        {#each $leaderboardsStore.byElo as params, i}
+      {#if $leaderboardsStore.elo.length}
+        {#each $leaderboardsStore.elo as params, i}
           <div>
             <PlayerFrameComponent {...params} leaderboardPosition="{i + 1}"/>
           </div>

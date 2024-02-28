@@ -61,8 +61,6 @@ const gameEnded = (): void => {
 
           return store;
         });
-
-        socketService.socket.emit("updateFriend");
       },
       animations.length * animationDuration
     );

@@ -15,9 +15,10 @@ const leaveLobbySender = (): void => {
         elo: 0,
         avatarId: 0,
         bannerId: 0,
-        games: {casual: {won: 0, lost: 0}, ranked: {won: 0, lost: 0}}
+        games: {casual: {won: 0, lost: 0}, ranked: {won: 0, lost: 0}, custom: {won: 0, lost: 0}}
       },
-      challengee: undefined
+      challengee: undefined,
+      messages: []
     });
 
     playerStore.update((player) => {
@@ -25,8 +26,6 @@ const leaveLobbySender = (): void => {
       player.lobbyId = 0;
       return player;
     });
-
-    socket.emit("updateFriend");
   });
 };
 

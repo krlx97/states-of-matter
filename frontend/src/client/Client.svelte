@@ -74,6 +74,11 @@
   .logo {
     padding-right: var(--xl);
   }
+
+  a {
+    color: rgb(var(--white));
+    text-decoration: none;
+  }
 </style>
 
 <div class="client">
@@ -93,15 +98,16 @@
       {/each}
 
       <div class="client__views__nav__currencies">
-        <div>
+        <!-- <div>
           <TextComponent isBold size="xl">
             v0.4.0
           </TextComponent>
-        </div>
-        <i class="fa-brands fa-discord fa-2x"></i>
-        <i class="fa-brands fa-x-twitter fa-2x"></i>
-        <img src="images/telos.png" alt="TelosZero"/>
-        <img src="images/telosevm.png" alt="TelosEVM"/>
+        </div> -->
+        <a href="https://discord.gg/wD9K74V8mT" target="_blank"><i class="fa-brands fa-discord fa-2x"></i></a>
+        <a href="https://x.com" target="_blank"><i class="fa-brands fa-x-twitter fa-2x"></i></a>
+        <a href="https://github.com/krlx97/states-of-matter" target="_blank"><i class="fa-brands fa-github fa-2x"></i></a>
+        <a href="https://www.telos.net/getting-started-with-zero" target="_blank"><img src="images/telos.png" alt="TelosZero"/></a>
+        <a href="https://www.telos.net/getting-started-with-evm" target="_blank"><img src="images/telosevm.png" alt="TelosEVM"/></a>
       </div>
     </div>
 

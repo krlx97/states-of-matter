@@ -21,9 +21,8 @@ const disconnect: SocketRequest = (socket, error): void => {
       return error("Error updating player.");
     }
 
-    const {name, status, social} = $playerUpdate;
-    const socketIds = await playerHelpers.getSocketIds(social.friends);
-    server.io.to(socketIds).emit("updateFriend", {name, status});
+    const {name, status} = $playerUpdate;
+    server.io.emit("updateFriend", {name, status});
   });
 };
 

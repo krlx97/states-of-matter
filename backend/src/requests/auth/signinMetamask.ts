@@ -1,8 +1,9 @@
 import {verifyMessage} from "ethers";
 import jsonwebtoken from "jsonwebtoken";
-import {mongo} from "app";
+import {mongo, server} from "app";
 import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
+import { PlayerStatus } from "@som/shared/enums";
 
 const signinMetamask: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
@@ -43,6 +44,7 @@ const signinMetamask: SocketRequest = (socket, error): void => {
     }
 
     socket.emit("signin", {...data, token});
+    server.io.emit("updateFriend", {name, status: PlayerStatus.ONLINE});
   });
 };
 

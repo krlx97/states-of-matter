@@ -1,6 +1,6 @@
 import {get} from "svelte/store";
 import {socketService, soundService} from "services";
-import {chatStore, playerStore} from "stores";
+import {chatStore, lobbyStore, playerStore} from "stores";
 
 const sendChatMsgReceiver = (): void => {
   socketService.socket.on("sendChatMessageReceiver", (params): void => {
@@ -8,41 +8,46 @@ const sendChatMsgReceiver = (): void => {
     const chat = get(chatStore);
     const name = sender;
 
-    playerStore.update((store) => {
-      const friend = store
-        .social
-        .friends
-        .find((friend): boolean => friend.name === sender);
-
-      if (!friend) {
-        return store;
-      }
-
-      const {chat} = friend;
-
-      if (chat.lastSender === sender) {
-        chat.unseen += 1;
-      } else {
-        chat.lastSender = sender;
-        chat.unseen = 1;
-      }
-
-      chat.messages.push({name, text, date});
-
+    lobbyStore.update((store) => {
+      store.messages.push({name: sender, text, date});
       return store;
     });
 
-    if (chat.name === sender) {
-      chatStore.update((store) => {
-        // find a better way to update chat?
-        // now it works in real time and has no double-message issues.
-        return store;
-      });
+    // playerStore.update((store) => {
+    //   const friend = store
+    //     .social
+    //     .friends
+    //     .find((friend): boolean => friend.name === sender);
 
-      if (chat.isOpen) {
-        socketService.socket.emit("readChatMessages", {name});
-      }
-    }
+    //   if (!friend) {
+    //     return store;
+    //   }
+
+    //   const {chat} = friend;
+
+    //   if (chat.lastSender === sender) {
+    //     chat.unseen += 1;
+    //   } else {
+    //     chat.lastSender = sender;
+    //     chat.unseen = 1;
+    //   }
+
+    //   chat.messages.push({name, text, date});
+
+    //   return store;
+    // });
+
+    // if (chat.name === sender) {
+    //   chatStore.update((store) => {
+    //     // find a better way to update chat?
+    //     // now it works in real time and has no double-message issues.
+    //     return store;
+    //   });
+
+    //   if (chat.isOpen) {
+    //     socketService.socket.emit("readChatMessages", {name});
+    //   }
+    // }
 
     soundService.play("message");
   });

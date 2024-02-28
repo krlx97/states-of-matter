@@ -28,7 +28,7 @@
     easing: easing || quadInOut,
     css: (t) => `
       opacity: ${t};
-      background-color: rgba(var(--${rgb}), calc(0.3 + ${ t > 0 ? (t / 3).toString() : "0" }));
+      background-color: rgba(var(--${rgb}), calc(0.666 - ${ t > 0 ? (t / 3).toString() : "0" }));
     `
   });
 
@@ -85,7 +85,7 @@
     position: absolute;
     top: 50%;
     left: 0;
-    height: 33%;
+    height: 100%;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -106,7 +106,7 @@
 
 <div class="game">
   {#if $nodeStore.turn.trigger}
-    <div class="trapset-trigger" in:opa="{{duration: 1200, rgb: "black"}}">
+    <div class="trapset-trigger" in:opa="{{duration: 3000, rgb: "black"}}">
       <div style="font-size: 48px">
         {#if $nodeStore.turn.name === $playerStore.name}
           You end your turn
@@ -117,7 +117,7 @@
     </div>
   {/if}
   {#if $nodeStore.trap.trigger}
-    <div class="trap-trigger" in:opa="{{duration: 666, rgb: "warn", easing: quadInOut}}">
+    <div class="trap-trigger" in:opa="{{duration: 3000, rgb: "warn", easing: quadInOut}}">
       <div>
         {#if $nodeStore.trap.name === $playerStore.name}
           Your opponent triggered a trap card
@@ -131,7 +131,7 @@
     </div>
   {/if}
   {#if $nodeStore.magic.trigger}
-    <div class="magic-trigger" in:opa="{{duration: 666, rgb: "success", easing: quadInOut}}">
+    <div class="magic-trigger" in:opa="{{duration: 3000, rgb: "success", easing: quadInOut}}">
       <div>
         {#if $nodeStore.magic.name === $playerStore.name}
           You played a magic card
@@ -145,7 +145,7 @@
     </div>
   {/if}
   {#if $nodeStore.trapset.trigger}
-    <div class="trapset-trigger" in:opa="{{duration: 666, rgb: "black", easing: quadInOut}}">
+    <div class="trapset-trigger" in:opa="{{duration: 3000, rgb: "black", easing: quadInOut}}">
       <div>
         {#if $nodeStore.trapset.name === $playerStore.name}
           You set a trap card

@@ -16,23 +16,20 @@ const playerTemplate = (
   status: PlayerStatus.OFFLINE,
   experience: 0,
   level: 1,
-  elo: 500,
-  avatarId: 1000,
-  bannerId: 2000,
+  elo: 400,
+  avatarId: 100,
+  bannerId: 200,
   deckId: 0, // should be called deckIndex, because this is actually index.
   queueId: QueueId.NONE,
   lobbyId: 0,
   gameId: 0,
   gamePopupId: 0,
   games: {
+    custom: {won: 0, lost: 0},
     casual: {won: 0, lost: 0},
     ranked: {won: 0, lost: 0}
   },
-  social: {
-    friends: [],
-    requests: [],
-    blocked: []
-  },
+  friends: [],
   tasks: {
     daily: false,
     dailyAlternative: 0,
@@ -56,7 +53,7 @@ const playerTemplate = (
   ],
   skins: cards.map((card): PlayerSkin => ({
     cardId: card.id,
-    skinId: parseInt(`1${card.id > 99 ? `${card.id}` : `0${card.id}`}00`)
+    skinId: parseInt(`1${card.id > 99 ? `${card.id}` : `0${card.id}`}0`)
   }))
 });
 

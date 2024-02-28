@@ -3,16 +3,20 @@
   import {cards, cardsView} from "@som/shared/data";
   import {CardId, CardKlass, CardType} from "@som/shared/enums";
   import {modalService, soundService} from "services";
-  import {notificationsStore, playerStore} from "stores";
+  import {deckCache, notificationsStore, playerStore} from "stores";
   import {ClientCardComponent} from "ui";
   import CardLoreComponent from "./modals/CardLore.svelte";
-  import type {Unsubscriber} from "svelte/store";
+  import {get, type Unsubscriber} from "svelte/store";
+    import { isDeckSame } from "./canSave";
+    import type { PlayerDeckView } from "@som/shared/types/views";
 
   let card: any;
   let isGrayscale = false;
   $: deck = $playerStore.decks[$playerStore.deckId];
 
+
   const onAddToDeck = (): void => {
+    
     if (deck.cardsInDeck >= 30) {
       return soundService.play("TAB");
     }
@@ -138,6 +142,8 @@
     if (deckCard?.amount >= 2) {
       isGrayscale = true;
     }
+
+    isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
 
     soundService.play("card");
   };

@@ -1,9 +1,10 @@
 import {writable} from "svelte/store";
+import type {Field, GameCard} from "@som/shared/types/mongo";
 
 interface SelectedCard {
-  field: "a" | "b" | "c" | "d" | undefined;
-  hand: any | undefined;
-  graveyard: any | undefined;
+  field: Field | undefined;
+  hand: GameCard | undefined;
+  graveyard: GameCard | undefined;
 }
 
 const selectedCardStore = writable<SelectedCard>({

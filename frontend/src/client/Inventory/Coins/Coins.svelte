@@ -62,7 +62,7 @@
     ticker: "ees",
     menuItems: [
       ["EXPLORE", onExploreEssence],
-      ["APPROVALS", onApprovalsEssence]
+      ["APPROVE", onApprovalsEssence]
     ]
   }, {
     name: "Etheric Crystals",
@@ -71,7 +71,7 @@
       ["EXPLORE", onExploreCrystals],
       ["TRANSFER", onTransferCrystals],
       ["ENERGIZE", onEnergize],
-      ["APPROVALS", onApprovalsCrystals]
+      ["APPROVE", onApprovalsCrystals]
     ]
   }, {
     name: "Etheric Energy",
@@ -80,7 +80,7 @@
       ["EXPLORE", onExploreEnergy],
       ["TRANSFER", onTransferEnergy],
       ["SOLIDIFY", onSolidify],
-      ["APPROVALS", onApprovalsEnergy]
+      ["APPROVE", onApprovalsEnergy]
     ]
   }];
 </script>

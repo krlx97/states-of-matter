@@ -1,45 +1,63 @@
-import { get } from "svelte/store";
-import {create_in_transition} from "svelte/internal";
-import { soundService } from "services";
-import { nodeStore, playerStore } from "stores";
+import {get} from "svelte/store";
+import {soundService} from "services";
+import {isAnimating, nodeStore, playerStore} from "stores";
 
 const shake = (animation: any): void => {
+  isAnimating.set(true);
+
   const {damageTaken, field, name} = animation;
   const nodes = get(nodeStore);
-  const player = get(playerStore);
+  const $player = get(playerStore);
   const elemId = `${field}Damage`;
   let elem: HTMLElement;
+  let fieldElem: HTMLElement;
 
-  if (name === player.name) {
+  if (name === $player.name) {
+    fieldElem = nodes.player[field];
     elem = nodes.player[elemId];
   } else {
+    fieldElem = nodes.opponent[field];
     elem = nodes.opponent[elemId];
   }
 
   elem.style.visibility = "visible";
-  elem.innerText = `-${damageTaken}`;
 
-  create_in_transition(elem, (node: HTMLDivElement) => {
-    return {
-      duration: 600,
-      css (t: number) {
-        const translation = Math.sin(t * Math.PI) * 15;
-
-        if (Math.floor(t * 100) % 2 === 0) {
-          return `transform: translateX(${translation}px);`;
-        } else {
-          return `transform: translateX(-${translation}px);`;
-        }
-      }
-    };
-  }, {}).start();
-
-  setTimeout(() => {
-    elem.style.visibility = "hidden";
+  if (damageTaken !== 0) {
+    elem.innerText = `-${damageTaken}`;
+  } else {
     elem.innerText = "";
-  }, 600);
+  }
 
-  soundService.play("attack");
+  const start = performance.now();
+  const duration = 666;
+
+  const vibrate = (t: number): void => {
+    const elapsed = t - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const translation = Math.sin(progress * Math.PI) * 10;
+
+    if (Math.floor(progress * 100) % 2 === 0) {
+      fieldElem.style.transform = `translateX(${translation}px)`;
+    } else {
+      fieldElem.style.transform = `translateX(-${translation}px)`;
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(vibrate);
+    } else {
+      fieldElem.style.transform = "translateX(0)";
+      elem.style.visibility = "hidden";
+      isAnimating.set(false);
+    }
+  }
+
+  if (field === "hero") {
+    soundService.play("directAttack");
+  } else {
+    soundService.play("attack");
+  }
+
+  requestAnimationFrame(vibrate);
 };
 
 export {shake};

@@ -60,11 +60,11 @@
 
     $formStore.isLoading = true;
 
-    if ($inventoryStore.approvals.ees < receipt.price + 1n) {
+    if ($inventoryStore.approvals.ees < receipt.price) {
       await ethersService.transact(
         "ethericEssence",
         "approve",
-        [ethersService.keys.somGame, receipt.price + 1n]
+        [ethersService.keys.somGame, receipt.price]
       );
     }
 

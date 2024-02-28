@@ -4,11 +4,13 @@
   import {CardType, CardKlass} from "@som/shared/enums";
   import {gameStore} from "stores";
   import {TextComponent} from "ui";
-  import type {EasingFunction, TransitionConfig} from "svelte/transition";
+  import {fade, type EasingFunction, type TransitionConfig} from "svelte/transition";
   import type {GameCard} from "@som/shared/types/mongo";
+    import { soundService } from "services";
+    import { quadInOut } from "svelte/easing";
 
   let card: GameCard;
-  let isOpponent = false;
+
   let cardView = {
     id: 0,
     name: "",
@@ -17,12 +19,19 @@
     ability: {name: "", description: ""}
   };
   let selectedSkin = {cardId: 0, skinId: 0};
+  let item = items[0];
+
   let klassTooltip: any;
+  let abilityElement: HTMLDivElement;
+
   let isToggled = false;
+
+  let isOpponent = false;
   let isSelected = false;
   let isAttackable = false;
   let isTargetable = false;
-  let item = items[0];
+  let isFriendlyTargetable = false;
+  let isAbilityTooltipToggled = false;
 
   const onToggleKlassTooltip = (): void => {
     isToggled = !isToggled;
@@ -30,7 +39,21 @@
     klassTooltip.style.opacity = isToggled ? "1" : "0";
   };
 
-  export {card, isOpponent, isSelected, isAttackable, isTargetable};
+  const onToggleAbilityTooltip = (): void => {
+    soundService.play("click");
+    isAbilityTooltipToggled = !isAbilityTooltipToggled;
+    abilityElement.style.zIndex = !isAbilityTooltipToggled ? "2" : "10";
+  };
+
+  const onAbility = (node: HTMLDivElement): void => {
+    abilityElement = node;
+  };
+
+  const onAbilityTooltip = (node: HTMLDivElement): void => {
+    node.style.display = !isAbilityTooltipToggled ? "none" : "initial";
+  };
+
+  export {card, isOpponent, isSelected, isAttackable, isTargetable, isFriendlyTargetable};
 
   interface Spin {
     delay: number | undefined;
@@ -45,9 +68,8 @@
     delay,
     duration,
     easing,
-    css: (t) => `transform: scale(${(t + 0.2) / t});`
+    css: (t) => `transform: scale(${(t + 0.4) / t});`
   });
-
 
   onMount((): void => {
     if (isOpponent) {
@@ -55,8 +77,6 @@
     } else {
       selectedSkin = $gameStore.player.skins?.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
     }
-
-    
 
     cardView = cardsView.find(({id}): boolean => card.id === id);
     item = items.find(({id}): boolean => selectedSkin.skinId === id) || items[0];
@@ -72,9 +92,8 @@
     border: 1px solid rgba(var(--grey), var(--opacity-sm));
     border-radius: 8px;
     /* box-sizing: border-box; */
-    overflow: hidden;
+    /* overflow: hidden; */
   }
-
 
   .card:hover {
     cursor: pointer;
@@ -100,7 +119,7 @@
     font-size: 0.8rem;
   }
 
- .card__type:hover .card__type__tooltip {
+  .card__type:hover .card__type__tooltip {
     display: initial;
   }
 
@@ -197,7 +216,7 @@
     align-items: center;
     justify-content: center;
   }
-.card__damage__num {
+  .card__damage__num {
     border-color: rgba(var(--damage), var(--opacity-sm));
   }
   .card__mana__num {
@@ -224,23 +243,28 @@
     z-index: 2;
   }
 
-  .card__ability:hover .card__ability__tooltip {
-    display: initial;
-  }
-
   .card__ability__tooltip {
     position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    height: 136px;
-    width: 108px;
+    top: 0;
+    left: 0;
+    height: var(--card-height);
+    width: var(--card-width);
     padding: var(--xs);
-    display: none;
-    background-color: rgba(32, 32, 32, 0.95);
+    /* opacity: 0; */
+    backdrop-filter: blur(8px);
+    background-color: rgba(var(--dark-grey), 0.9);
     box-sizing: border-box;
-    font-size: 0.8rem;
-    transform: translateX(-50%);
-    z-index: 0;
+    border-radius: 8px;
+    z-index: 10;
+    display: none;
+    /* line-height: 1.25; */
+    font-size: var(--sm);
+    /* transition: opacity 400ms cubic-bezier(var(--ease-in-out-quad)); */
+  }
+
+  .card__ability__tooltip__name {
+    display: flex;
+    justify-content: space-between;
   }
 
   .card__avatar {
@@ -254,59 +278,83 @@
   }
 
   .isSelected {
-    animation: isSelectedBorder 800ms cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+    position: relative;
+    cursor: pointer;
+    animation: selectedBorderGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
   }
-
-  /* .isSelected::after {
-    content: "";
-    position: absolute;
-    border-radius: 8px;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    box-shadow: 0 0 8px 4px rgb(var(--white));
-    animation: glow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
-  } */
-
-  /* @keyframes glow {
-    from {opacity: 0;}
-    to {opacity: 1;}
-  } */
+  .isFriendlyTargetable {
+    position: relative;
+    cursor: pointer;
+    animation: friendlyBorderGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+  }
 
   .isAttackable, .isTargetable {
-    /* position: relative; */
-    animation: isAttackableBorder 800ms cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+    position: relative;
+    animation: attackableBorderGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
   }
 
- /* .isAttackable::after, .isTargetable::after {
+  .isSelected::after {
     content: "";
     position: absolute;
-    border-radius: 8px;
     top: 0;
     left: 0;
-    width: 100%;
     height: 100%;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 16px 1px rgb(var(--white));
     opacity: 0;
-    box-shadow: 0 0 8px 4px rgb(var(--warn));
-    animation: glow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
-  } */
-
-  @keyframes isSelectedBorder {
-    from {border-color: rgba(var(--grey), 0.4);}
-    to {border-color: rgba(var(--white), 1);}
+    animation: shadowGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+  }
+  .isFriendlyTargetable::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 16px 1px rgb(var(--success));
+    opacity: 0;
+    animation: shadowGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
   }
 
-  @keyframes isAttackableBorder {
-    from {border-color: rgba(var(--grey), 0.4);}
-    to {border-color: rgba(var(--warn), 1);}
+ .isAttackable::after, .isTargetable::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 16px 1px rgb(var(--warn));
+    opacity: 0;
+    animation: shadowGlow 1s cubic-bezier(var(--ease-in-out-quad)) infinite alternate;
+  }
+
+  @keyframes shadowGlow {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+
+  @keyframes selectedBorderGlow {
+    from {border-color: rgba(var(--grey), 0.333);}
+    to {border-color: rgba(var(--white), 0.666);}
+  }
+
+  @keyframes attackableBorderGlow {
+    from {border-color: rgba(var(--grey), 0.333);}
+    to {border-color: rgba(var(--warn), 0.666);}
+  }
+
+  @keyframes friendlyBorderGlow {
+    from {border-color: rgba(var(--grey), 0.333);}
+    to {border-color: rgba(var(--success), 0.666);}
   }
 </style>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="card" class:isSelected class:isAttackable class:isTargetable on:click>
+<div class="card" class:isSelected class:isAttackable class:isTargetable class:isFriendlyTargetable on:click>
   <div class="card__type">
     {#if card.type === CardType.HERO}
       <img src="images/card/hero.png" alt="Hero"/>
@@ -359,8 +407,28 @@
     </video>
   {/if}
 
+  {#if isAbilityTooltipToggled}
+    <div class="card__ability__tooltip" use:onAbilityTooltip in:fade="{{duration: 333, easing: quadInOut}}">
+      {#if cardView}
+        <div class="tooltip__name card__ability__tooltip__name">
+          {cardView.ability?.name}
+          <TextComponent color="mana">5</TextComponent>
+        </div>
+        <div class="tooltip__text">
+          {#each cardView.ability.description as chunk}
+            {#if typeof chunk === "string"}
+              {chunk}
+            {:else}
+              <TextComponent color="{chunk[0]}">{chunk[1]}</TextComponent>
+            {/if}
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
+
   {#if card.type === CardType.HERO}
-    <div class="card__ability">
+    <div class="card__ability" use:onAbility on:click|stopPropagation="{onToggleAbilityTooltip}">
       {#if card.ability === 0}
         <img src="images/card/fortify.png" alt="Fortify"/>
       {:else if card.ability === 1}
@@ -383,7 +451,7 @@
       <img src="images/card/mana-capacity.png" alt="Mana"/>
         <div class="card__health__num card__mana__num">
           {#key card.mana.current}
-            <div in:spin={{duration: 600}}>{card.mana.current}</div>
+            <div in:spin={{duration: 100}}>{card.mana.current}</div>
           {/key}
         </div>
     </div>
@@ -391,7 +459,7 @@
       <img src="images/card/health.png" alt="Health"/>
         <div class="card__health__num card__health__num" >
           {#key card.health.current}
-            <div in:spin={{duration: 600}}>{card.health.current}</div>
+            <div in:spin={{duration: 100}}>{card.health.current}</div>
           {/key}
         </div>
     </div>
@@ -400,7 +468,7 @@
       <img src="images/card/health.png" alt="Health"/>
         <div class="card__health__num card__health__num">
           {#key card.health.current}
-            <div in:spin={{duration: 600}}>{card.health.current}</div>
+            <div in:spin={{duration: 100}}>{card.health.current}</div>
           {/key}
         </div>
     </div>
@@ -408,7 +476,7 @@
       <img src="images/card/damage.png" alt="Damage"/>
         <div class="card__health__num card__damage__num">
           {#key card.damage.current}
-            <div in:spin={{duration: 600}}>{card.damage.current}</div>
+            <div in:spin={{duration: 100}}>{card.damage.current}</div>
           {/key}
         </div>
     </div>
@@ -416,7 +484,7 @@
       <img src="images/card/mana-cost.png" alt="Mana cost"/>
         <div class="card__health__num card__mana__num">
         {#key card.manaCost.current}
-          <div in:spin={{duration: 600}}>{card.manaCost.current}</div>  
+          <div in:spin={{duration: 100}}>{card.manaCost.current}</div>
         {/key}
         </div>
     </div>
@@ -425,7 +493,7 @@
       <img src="images/card/mana-cost.png" alt="Mana cost"/>
         <div class="card__health__num card__mana__num">
           {#key card.manaCost.current}
-            <div in:spin={{duration: 600}}>{card.manaCost.current}</div>
+            <div in:spin={{duration: 100}}>{card.manaCost.current}</div>
           {/key}
         </div>
     </div>

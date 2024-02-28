@@ -1,7 +1,9 @@
 import { soundService } from "services";
-import { nodeStore } from "stores";
+import { isAnimating, nodeStore } from "stores";
 
 const trap = (animations: any) => {
+  isAnimating.set(true);
+
   const {name, card} = animations;
 
   nodeStore.update((store) => {
@@ -20,7 +22,9 @@ const trap = (animations: any) => {
       store.trap.name = "";
       return store;
     });
-  }, 3000);
+
+    isAnimating.set(false);
+  }, 3010);
 };
 
 export {trap};

@@ -16,27 +16,6 @@ const endTurn: SocketRequest = (socket, error): void => {
       return error(getGameError);
     }
 
-    // const {$game, player, opponent} = getGameData;
-
-    // await gameHelpers.endTurn({$game, player, opponent});
-
-    // setTimeout(async () => {
-    //   await gameHelpers.endTurn({
-    //     $game,
-    //     player: opponent,
-    //     opponent: player
-    //   });
-
-    //   await gameHelpers.attackMinionSave($game, animations, true);
-
-    // }, 20000);
-
-    // await gameHelpers.attackMinionSave($game, animations, true);
-
-
-
-
-
     const {$game, player, opponent} = getGameData;
 
     if (player.hand.length > 6) {
@@ -71,7 +50,31 @@ const endTurn: SocketRequest = (socket, error): void => {
     }
 
     const manaDelta = howMuchMana - player.field.hero.mana.current;
+    const neurotoxinDebuff = player.field.hero.debuffs.find(
+      (debuff): boolean => debuff.id === EffectId.NEUROTOXIN
+    );
     player.field.hero.mana.current = howMuchMana;
+
+    if (neurotoxinDebuff) {
+      player.field.hero.health.current -= 1;
+
+      animations.push({
+        type: "FLOATING_TEXT",
+        name: player.name,
+        field: "hero",
+        text: "Neurotoxin"
+      }, {
+        type: "HEALTH",
+        name: player.name,
+        field: "hero",
+        increment: undefined,
+        decrement: 1
+      });
+
+      if (await gameHelpers.isGameOver($game, animations)) {
+        return;
+      }
+    }
 
     animations.push({
       type: "END_TURN",
@@ -102,6 +105,10 @@ const endTurn: SocketRequest = (socket, error): void => {
         (buff): boolean => buff.id === EffectId.REGENERATION
       )
 
+      const neurotoxinDebuff = minion.debuffs.find(
+        (debuff): boolean => debuff.id === EffectId.NEUROTOXIN
+      );
+
       if (blazeBuff) {
         animations.push(...gameHelpers.effect.blaze.onEndTurn({
           player,
@@ -112,6 +119,14 @@ const endTurn: SocketRequest = (socket, error): void => {
 
       if (regenerationBuff) {
         animations.push(...gameHelpers.effect.regeneration({player}));
+      }
+
+      if (neurotoxinDebuff) {
+        animations.push(...gameHelpers.deductHealth(player, minion, 1, field));
+
+        if (minion.health.current <= 0) {
+          animations.push(...gameHelpers.moveToGraveyard(player, minion, field));
+        }
       }
     });
 

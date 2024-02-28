@@ -3,7 +3,6 @@ import type { PlayerStatus, QueueId } from "../../../enums/index.js";
 import type { PlayerDecks } from "./PlayerDecks.js";
 import type { PlayerGames } from "./PlayerGames.js";
 import type { PlayerSkins } from "./PlayerSkins.js";
-import type { PlayerSocial } from "./PlayerSocial.js";
 import type { PlayerTutorial } from "./PlayerTutorial.js";
 import type { PlayerQuests } from "./PlayerQuests.js";
 import type { PlayerRewards } from "./PlayerRewards.js";
@@ -25,7 +24,7 @@ interface Player extends Document {
     gamePopupId: number;
     gameId: number;
     deckId: number;
-    social: PlayerSocial;
+    friends: Array<string>;
     games: PlayerGames;
     decks: PlayerDecks;
     skins: PlayerSkins;

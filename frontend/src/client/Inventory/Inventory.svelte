@@ -11,6 +11,7 @@
   import Rewards from "./RewardsHub/RewardsHub.svelte";
     import { fade } from "svelte/transition";
     import { quadInOut } from "svelte/easing";
+    import { ethersService } from "services";
 
   const isInventoryTutorial = $tutorialStore.name === "inventory";
 
@@ -40,9 +41,11 @@
       await ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{
-          chainId: "0x29"
+          chainId: /*"0x29"*/"0x539"
         }]
       });
+
+      // await ethersService.reloadUser();
     } catch (switchError) {
       // This error code indicates that the chain has not been added to MetaMask.
       if (switchError.code === 4902) {
@@ -66,7 +69,9 @@
 
   const onConnect = async (): Promise<void> => {
     const {ethereum} = window;
+
     if (!ethereum) { return; }
+
     const revoke = await ethereum.request({
       method: "wallet_revokePermissions",
       params: [{
@@ -74,12 +79,11 @@
       }]
     });
 
-    console.log(revoke);
     const accounts = await ethereum.request({
       method: "eth_requestAccounts"
     });
 
-    console.log(accounts);
+    $ethersStore.accounts = accounts;
   };
 </script>
 
@@ -139,7 +143,12 @@
 {#if $ethersStore.isLoaded}
   {#if
     !$playerStore.address ||
-    ($playerStore.address && $ethersStore.chainId === 41n && $ethersStore.accounts.includes($playerStore.address.toLowerCase()))}
+    (
+      $playerStore.address &&
+      $ethersStore.chainId === /*1337n*/41n &&
+      $ethersStore.accounts.includes($playerStore.address.toLowerCase())
+    )
+  }
     <div class="inventory">
       <div class="inventory__main">
         <div class:isTutorial>
@@ -157,7 +166,7 @@
     {#if !$playerStore.tutorial.inventory}
       <TutorialComponent tutorial="inventory" {steps}/>
     {/if}
-  {:else if $playerStore.address && $ethersStore.chainId !== 41n}
+  {:else if $playerStore.address && $ethersStore.chainId !== /*1337n*/41n}
     <div class="metamask-error">
       <div>
         Wrong network selected, please switch to TelosEVM.
@@ -174,7 +183,7 @@
     <div class="metamask-error">
       <div>
         <TextComponent isBold color="primary" size="xl">{getAddress($playerStore.address)}</TextComponent><br/><br/>
-        Please connect the game address listed above through metamask.
+        Please connect your game address listed above through metamask.
       </div>
         <ButtonComponent on:click="{onConnect}">
           <img

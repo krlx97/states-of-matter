@@ -13,6 +13,7 @@ const saveDeck: SocketRequest = (socket, error): void => {
     if (deck.name.length >= 12) {
       return error("Maximum 12 characters length allowed for deck name.");
     }
+
     if (deck.klass < 1 || deck.klass > 4) { // prevent decimals?
       return error("Invalid class.");
     }
@@ -55,13 +56,10 @@ const saveDeck: SocketRequest = (socket, error): void => {
     });
 
     if (!$playerUpdate.modifiedCount) {
-      return error("Error saving deck (Most likely you made no changes to it).");
+      return error("Error updating player.");
     }
 
-    socket.emit("notification", {
-      color: "success",
-      message: "Deck saved successfully."
-    });
+    socket.emit("saveDeck", {deck});
   });
 };
 

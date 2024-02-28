@@ -9,11 +9,27 @@ const setBanner: SocketRequest = (socket, error): void => {
   socket.on("setBanner", async (params) => {
     const {bannerId} = params;
 
-    if (bannerId < 2000 || bannerId > 2999) {
+    if (bannerId < 200 || bannerId > 299) {
       return error("Invalid banner.");
     }
 
-    // check whether player owns the avatar here!
+    const $player = await $players.findOne({socketId});
+
+    if (!$player) {
+      return error("Player not found.");
+    }
+
+    if (bannerId === 201 && $player.elo < 600) {
+      return error("Can't select this avatar.");
+    }
+
+    if (bannerId === 202 && $player.elo < 800) {
+      return error("Can't select this avatar.");
+    }
+
+    if (bannerId === 203 && $player.elo < 1000) {
+      return error("Can't select this avatar.");
+    }
 
     const $playerUpdate = await $players.findOneAndUpdate({socketId}, {
       $set: {bannerId}
@@ -25,11 +41,10 @@ const setBanner: SocketRequest = (socket, error): void => {
       return error("Failed to update player.");
     }
 
-    const {name, social} = $playerUpdate;
-    const socketIds = await playerHelpers.getSocketIds(social.friends);
+    const {name} = $playerUpdate;
 
     socket.emit("updatePlayer", {bannerId});
-    server.io.to(socketIds).emit("updateFriend", {name, bannerId});
+    server.io.emit("updateFriend", {name, bannerId});
   });
 };
 

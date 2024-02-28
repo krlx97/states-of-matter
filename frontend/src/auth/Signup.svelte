@@ -149,7 +149,7 @@
           bind:value="{$formStore.fields.password.value}"
           on:input="{onInput}"/>
       {:else}
-        {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId === 41n}
+        {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId === /*1337n*/41n}
           <SelectComponent
             label="Address"
             values={$ethersStore.accounts}

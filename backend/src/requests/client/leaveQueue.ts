@@ -1,5 +1,5 @@
 import {PlayerStatus, QueueId} from "@som/shared/enums";
-import {mongo} from "app";
+import {mongo, server} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const leaveQueue: SocketRequest = (socket, error): void => {
@@ -49,6 +49,7 @@ const leaveQueue: SocketRequest = (socket, error): void => {
     }
 
     socket.emit("leaveQueue");
+    server.io.emit("updateFriend", {name, status: PlayerStatus.ONLINE});
   });
 };
 

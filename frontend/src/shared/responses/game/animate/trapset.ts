@@ -1,7 +1,9 @@
 import { soundService } from "services";
-import { nodeStore } from "stores";
+import { isAnimating, nodeStore } from "stores";
 
 const trapset = (animations: any) => {
+  isAnimating.set(true);
+
   const {name} = animations;
 
   nodeStore.update((store) => {
@@ -18,7 +20,9 @@ const trapset = (animations: any) => {
       store.trapset.name = "";
       return store;
     });
-  }, 3000);
+
+    isAnimating.set(false);
+  }, 3010);
 };
 
 export {trapset};

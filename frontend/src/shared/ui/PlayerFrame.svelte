@@ -1,7 +1,7 @@
 <script lang="ts">
   import {PlayerStatus} from "@som/shared/enums";
   import {onMount} from "svelte";
-  import {ButtonComponent, MenuComponent, ProgressBarComponent} from "ui";
+  import {ButtonComponent, MenuComponent, ProgressBarComponent, TextComponent} from "ui";
 
   let pathElement: SVGPathElement;
   // let pathElement2: SVGPathElement;
@@ -16,6 +16,7 @@
   let games: any;
   let leaderboardPosition = 0;
   let hasUnseenMessages = false;
+  let isMutual = false;
 
   let rank = "Gold";
   let nextRank: string;
@@ -29,9 +30,9 @@
 
   const rankRequirement = new Map([
     ["Bronze", 0],
-    ["Silver", 250],
-    ["Gold", 500],
-    ["Master", 750]
+    ["Silver", 600],
+    ["Gold", 800],
+    ["Master", 1000]
   ]);
   const rankColor = new Map([
     ["Bronze", "#7d5833"],
@@ -46,16 +47,16 @@
     const xpProgressLen = pathElement.getTotalLength();
     // const eloProgressLength = pathElement2.getTotalLength();
 
-    if (elo < 250) {
+    if (elo < 600) {
       rank = "Bronze";
       nextRank = "Silver";
-    } else if (elo >= 250 && elo < 500) {
+    } else if (elo >= 600 && elo < 800) {
       rank = "Silver";
       nextRank = "Gold";
-    } else if (elo >= 500 && elo < 750) {
+    } else if (elo >= 800 && elo < 1000) {
       rank = "Gold";
       nextRank = "Master";
-    } else if (elo >= 750) {
+    } else if (elo >= 1000) {
       rank = "Master";
       nextRank = "You are max rank.";
     }
@@ -68,7 +69,7 @@
     // eloOffset = eloProgressLength - (eloProgressLength * fix / fix2);
   });
 
-  export {name, experience, level, elo, avatarId, bannerId, actions, status, games, leaderboardPosition, hasUnseenMessages};
+  export {name, experience, level, elo, avatarId, bannerId, actions, status, games, leaderboardPosition, hasUnseenMessages, isMutual};
 </script>
 
 <style>
@@ -89,7 +90,7 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* align-items: center; */
     justify-content: space-evenly;
     box-sizing: border-box;
   }
@@ -330,55 +331,39 @@
   <div class="player__info">
 
     <div style="display: flex; align-items: center; gap: var(--xs)">
-      {#if actions.length}
-        <div class="rel">
-          <ButtonComponent isIcon on:click="{() => isMenuToggled = !isMenuToggled}">
-            <div class="bar" class:change="{isMenuToggled}">
-              <div class="bar1"></div>
-              <div class="bar2"></div>
-              <div class="bar3"></div>
-            </div>
-          </ButtonComponent>
-          {#if isMenuToggled}
-            <MenuComponent items="{actions}"/>
-          {/if}
-        </div>
-      {/if}
+
       <div>{name}</div>
-      {#if hasUnseenMessages}
-        🗩
-      {/if}
       {#if leaderboardPosition}
         <div>#{leaderboardPosition}</div>
       {/if}
       {#if status !== undefined}
-        <div style="font-size: 12px;">
-          {#if status === PlayerStatus.OFFLINE}
-            Offline
-          {:else if status === PlayerStatus.ONLINE}
-            Online
-          {:else if status === PlayerStatus.IN_QUEUE}
-            In queue
-          {:else if status === PlayerStatus.IN_LOBBY}
-            In lobby
-          {:else if status === PlayerStatus.IN_GAME}
-            In game
-          {/if}
-        </div>
+        {#if status === PlayerStatus.OFFLINE}
+          <TextComponent color="grey" size="sm">Offline</TextComponent>
+        {:else if status === PlayerStatus.ONLINE}
+          <TextComponent color="success" size="sm">Online</TextComponent>
+        {:else if status === PlayerStatus.IN_QUEUE}
+          <TextComponent color="primary" size="sm">In queue</TextComponent>
+        {:else if status === PlayerStatus.IN_LOBBY}
+          <TextComponent color="primary" size="sm">In lobby</TextComponent>
+        {:else if status === PlayerStatus.IN_GAME}
+          <TextComponent color="primary" size="sm">In game</TextComponent>
+        {/if}
+      {/if}
+      {#if !leaderboardPosition}
+        {#if isMutual}
+          <i class="fa-solid fa-user-check"></i>
+        {:else}
+          <i class="fa-solid fa-user-xmark"></i>
+        {/if}
+      {/if}
+      {#if actions.length}
+        {#each actions as action}
+          <ButtonComponent isIcon on:click="{action[1]}">
+            <i class="fa-solid fa-user-minus"></i>
+          </ButtonComponent>
+        {/each}
       {/if}
     </div>
-
-    <!-- <div class="player__info__name"> -->
-      <!-- {name.slice(0, 6)}
-      {#if name.length > 6}
-        ...
-      {/if} -->
-      <!-- {name} -->
-    <!-- </div> -->
-
-    
-
-    
 
     <div style="width: 100%; display: flex; align-items: center; gap: var(--xs)">
       <div class="theimage">
@@ -416,6 +401,7 @@
         <!-- <ProgressBarComponent {bars}/> -->
       </div>
     </div>
+
   </div>
 
 

@@ -20,9 +20,14 @@
   $: card = $gameStore.player.field.hero;
   $: isSelected = $selectedCardStore.field === "hero";
   $: isCurrentPlayer = $gameStore.currentPlayer === $playerStore.name;
+  $: isGrayscale = card.mana.current < 5;
 
   const onAbilitySelect = (): void => {
     if (!isCurrentPlayer) {
+      return;
+    }
+
+    if (isGrayscale) {
       return;
     }
 
@@ -63,6 +68,7 @@
     font-size: 128px;
     visibility: hidden;
     z-index: 5;
+    pointer-events: none;
   }
 
 .buffs {
@@ -118,7 +124,7 @@
     {/each}
   </div>
   {#key $gameStore.player.field.hero.id}
-    <CardComponent {card} {isSelected} on:click="{onAbilitySelect}"/>
+    <CardComponent {isGrayscale} {card} {isSelected} on:click="{onAbilitySelect}"/>
   {/key}
   <div class="damage-dealt" bind:this={damageDealtElement}></div>
 </div>

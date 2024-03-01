@@ -1,6 +1,11 @@
 import {writable} from "svelte/store";
 
 interface InventoryStore {
+  _ees?: {
+    balance: bigint;
+    supply: bigint;
+    allowance: bigint;
+  };
   ees: bigint;
   ecr: bigint;
   enrg: bigint;

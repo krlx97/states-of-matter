@@ -21,8 +21,6 @@ const generateGameView: GenerateGameView = ({
   gameLogs,
   player: playerA.name === name ? {
     name: playerA.name,
-    // hero: playerA.hero,
-    // minion: playerA.minion,
     field: playerA.field,
     trap: playerA.trap,
     deck: playerA.deck.length,
@@ -31,8 +29,6 @@ const generateGameView: GenerateGameView = ({
     skins: playerA.skins
   } : {
     name: playerB.name,
-    // hero: playerB.hero,
-    // minion: playerB.minion,
     field: playerB.field,
     trap: playerB.trap,
     deck: playerB.deck.length,
@@ -42,8 +38,6 @@ const generateGameView: GenerateGameView = ({
   },
   opponent: playerA.name === name ? {
     name: playerB.name,
-    // hero: playerB.hero,
-    // minion: playerB.minion,
     field: playerB.field,
     trap: playerB.trap ? true : false,
     deck: playerB.deck.length,
@@ -52,8 +46,6 @@ const generateGameView: GenerateGameView = ({
     skins: playerB.skins
   } : {
     name: playerA.name,
-    // hero: playerA.hero,
-    // minion: playerA.minion,
     field: playerA.field,
     trap: playerA.trap ? true : false,
     deck: playerA.deck.length,

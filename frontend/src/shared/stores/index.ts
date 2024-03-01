@@ -1,19 +1,19 @@
 export {animationsQueue} from "./animationsQueue";
-export {bindStepsStore} from "./bindStepsStore";
 export {gamePopupStore} from "./gamePopupStore";
 export {leaderboardsStore} from "./leaderboardsStore";
 export {lobbyStore} from "./lobbyStore";
 export {inventoryStore} from "./inventoryStore";
-
-export {floatingTextStore, gameStore, nodeStore, selectedCardStore} from "./game";
-export {modalStore, notificationsStore, playerStore, tutorialStore} from "./global";
-
+export {floatingTextStore} from "./floatingText";
+export {gameStore} from "./gameStore";
+export {nodeStore} from "./nodeStore";
+export {selectedCardStore} from "./selectedCardStore";
 export {ethersStore} from "./ethersStore";
-export {chatStore} from "./chatStore";
 export {deckCache} from "./deckCache";
-export {intervalsStore} from "./intervalsStore";
 export {isAnimating} from "./isAnimating";
 export {queueStore} from "./queueStore";
 export {snapshotsStore} from "./snapshotsStore";
-
 export {intervals} from "./intervals";
+export {modalStore} from "./modalStore";
+export {notificationsStore} from "./notifications";
+export {playerStore} from "./playerStore";
+export {tutorialStore} from "./tutorialStore";

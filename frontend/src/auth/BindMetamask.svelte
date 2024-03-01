@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte";
   import {ethersService, socketService} from "services";
-  import {bindStepsStore, ethersStore} from "stores";
+  import {ethersStore} from "stores";
   import {ButtonComponent, TextComponent} from "ui";
   import type { Unsubscriber } from "svelte/store";
 

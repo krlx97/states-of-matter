@@ -41,7 +41,7 @@
       await ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{
-          chainId: /*"0x29"*/"0x539"
+          chainId: "0x29"
         }]
       });
 

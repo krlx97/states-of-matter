@@ -1,0 +1,73 @@
+<script lang="ts">
+  import {fade, fly, type FlyParams} from "svelte/transition";
+  import {soundService} from "services";
+  import {notificationsStore} from "stores";
+  import {TextComponent} from "ui";
+
+  const inFly: FlyParams = {
+    x: 128,
+    duration: 333
+  };
+
+  const onCloseNotification = (notification: any): void => {
+    const n = $notificationsStore.find(
+      ({id}): boolean => notification.id === id
+    );
+
+    if (n) {
+      $notificationsStore.splice($notificationsStore.indexOf(n), 1);
+      $notificationsStore = $notificationsStore;
+    }
+
+    soundService.play("click");
+  };
+</script>
+
+<style>
+  .notifications {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 320px;
+  }
+
+  .notification {
+    margin: var(--sm);
+    padding: var(--sm);
+    backdrop-filter: blur(8px);
+    background-color: rgba(var(--dark-grey), 0.9);
+    border: 1px solid rgb(var(--warn));
+    border-radius: 8px;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
+  .isPrimary {
+    border-color: rgb(var(--primary));
+  }
+
+  .isSuccess {
+    border-color: rgb(var(--success));
+  }
+
+  .isWarn {
+    border-color: rgb(var(--warn));
+  }
+</style>
+
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="notifications">
+  {#each $notificationsStore as {id, color, message} (id)}
+    <div
+      class="notification"
+      class:isPrimary="{color === "primary"}"
+      class:isSuccess="{color === "success"}"
+      class:isWarn="{color === "warn"}"
+      in:fly="{inFly}"
+      out:fade
+      on:click="{() => onCloseNotification({id, color, message})}">
+      <TextComponent {color}>{message}</TextComponent>
+    </div>
+  {/each}
+</div>

@@ -95,6 +95,7 @@
     font-size: 128px;
     visibility: hidden;
     z-index: 5;
+    pointer-events: none;
   }
 
   .field-empty {

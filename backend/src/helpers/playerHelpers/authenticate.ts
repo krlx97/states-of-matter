@@ -24,7 +24,7 @@ const authenticate = async (
   let leaderboards = await $leaderboards.findOne({});
 
   if (!leaderboards) {
-    leaderboards = {byLevel: [], byElo: []};
+    leaderboards = {level: [], elo: []};
   }
 
   const $player = await $players.findOneAndUpdate({name}, [{

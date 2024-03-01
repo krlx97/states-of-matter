@@ -1490,8 +1490,6 @@ const generateGameView = ({ id, type, currentPlayer, currentTurn, endTurnTime, g
     gameLogs,
     player: playerA.name === name ? {
         name: playerA.name,
-        // hero: playerA.hero,
-        // minion: playerA.minion,
         field: playerA.field,
         trap: playerA.trap,
         deck: playerA.deck.length,
@@ -1500,8 +1498,6 @@ const generateGameView = ({ id, type, currentPlayer, currentTurn, endTurnTime, g
         skins: playerA.skins
     } : {
         name: playerB.name,
-        // hero: playerB.hero,
-        // minion: playerB.minion,
         field: playerB.field,
         trap: playerB.trap,
         deck: playerB.deck.length,
@@ -1511,8 +1507,6 @@ const generateGameView = ({ id, type, currentPlayer, currentTurn, endTurnTime, g
     },
     opponent: playerA.name === name ? {
         name: playerB.name,
-        // hero: playerB.hero,
-        // minion: playerB.minion,
         field: playerB.field,
         trap: playerB.trap ? true : false,
         deck: playerB.deck.length,
@@ -1521,8 +1515,6 @@ const generateGameView = ({ id, type, currentPlayer, currentTurn, endTurnTime, g
         skins: playerB.skins
     } : {
         name: playerA.name,
-        // hero: playerA.hero,
-        // minion: playerA.minion,
         field: playerA.field,
         trap: playerA.trap ? true : false,
         deck: playerA.deck.length,
@@ -2204,8 +2196,7 @@ const generateGame = (id, type, playerA, playerB) => {
     return {
         id,
         type,
-        endTurnTimeout: 0,
-        endTurnTime: Date.now() + 36000, // account for 6 seconds match started dialog
+        endTurnTime: Date.now() + 90000,
         currentPlayer: playerA.name,
         currentTurn: 0,
         gameLogs: [],
@@ -2561,7 +2552,7 @@ const authenticate$1 = async (socketId, name) => {
     const { $games, $lobbies, $players, $leaderboards } = mongo;
     let leaderboards = await $leaderboards.findOne({});
     if (!leaderboards) {
-        leaderboards = { byLevel: [], byElo: [] };
+        leaderboards = { level: [], elo: [] };
     }
     const $player = await $players.findOneAndUpdate({ name }, [{
             $set: {
@@ -5074,9 +5065,9 @@ const cleanup = async () => {
     // also restart all games timers here as well...
 };
 await cleanup();
-server.app.use(express.static(path.join(process.cwd(), "frontend")));
-server.app.get("/", (req, res) => res.sendFile(`${process.cwd()}/frontend/index.html`));
-server.app.get("*", (req, res) => res.sendFile(`${process.cwd()}/frontend/index.html`));
+server.app.use(express.static(path.join(process.cwd(), "frontend/dist")));
+server.app.get("/", (req, res) => res.sendFile(`${process.cwd()}/frontend/dist/index.html`));
+server.app.get("*", (req, res) => res.sendFile(`${process.cwd()}/frontend/dist/index.html`));
 server.io.on("connection", (socket) => {
     const error = (message) => {
         socket.emit("notification", {

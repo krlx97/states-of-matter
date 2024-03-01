@@ -42,8 +42,7 @@ const generateGame = (
   return {
     id,
     type,
-    endTurnTimeout: 0,
-    endTurnTime: Date.now() + 36000, // account for 6 seconds match started dialog
+    endTurnTime: Date.now() + 90000,
     currentPlayer: playerA.name,
     currentTurn: 0,
     gameLogs: [],

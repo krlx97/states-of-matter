@@ -3,55 +3,53 @@
   import {responses} from "responses";
   import {ethersService, socketService} from "services";
   import {ethersStore, playerStore} from "stores";
-  import ModalsComponent from "./Modals.svelte";
-  import NotificationsComponent from "./Notifications.svelte";
   import AuthComponent from "./auth/Auth.svelte";
   import ClientComponent from "./client/Client.svelte";
   import GameComponent from "./game/Game.svelte";
+  import ModalsComponent from "./global/Modals.svelte";
+  import NotificationsComponent from "./global/Notifications.svelte";
 
   onMount(async (): Promise<void> => {
     const {ethereum} = window;
+    const token = localStorage.getItem("jsonwebtoken");
 
     responses.forEach((response): void => {
       response();
     });
 
-    const token = localStorage.getItem("jsonwebtoken");
-
     if (token) {
       socketService.socket.emit("authenticate", {token});
     }
 
-    if (!ethereum) {
-      return;
-    }
+    if (ethereum) {
+      const {address} = $playerStore;
 
-    const {address} = $playerStore;
+      ethereum.on("accountsChanged", async (accounts): Promise<void> => {
+        $ethersStore.accounts = accounts;
 
-    ethereum.on("accountsChanged", async (accounts) => {
+        await ethersService.init(address);
+        await ethersService.reloadUser();
+      });
+
+      ethereum.on("chainChanged", async (chainId): Promise<void> => {
+        $ethersStore.chainId = BigInt(chainId);
+
+        await ethersService.init(address);
+        await ethersService.reloadUser();
+      });
+
+      const [accounts, chainId] = await Promise.all([
+        ethereum.request({
+          method: "eth_accounts"
+        }),
+        ethereum.request({
+          method: "eth_chainId"
+        })
+      ]);
+
       $ethersStore.accounts = accounts;
-
-      await ethersService.init(address);
-      await ethersService.reloadUser();
-    });
-
-    ethereum.on("chainChanged", async (chainId): Promise<void> => {
       $ethersStore.chainId = BigInt(chainId);
-
-      await ethersService.init(address);
-      await ethersService.reloadUser();
-    });
-
-    const accounts = await window.ethereum?.request({
-      method: "eth_accounts"
-    })
-
-    const chainId = await ethereum.request({
-      method: "eth_chainId"
-    });
-
-    $ethersStore.accounts = accounts;
-    $ethersStore.chainId = BigInt(chainId);
+    }
   });
 </script>
 
@@ -70,10 +68,8 @@
     height: 900px;
     width: 1600px;
     overflow: hidden;
-    border: 1px solid rgba(var(--grey), 0.3);
+    border: 1px solid rgba(var(--grey), var(--opacity-sm));
     border-radius: 8px;
-    /* 1 for 1080p, 1.33 for 2k, 2 for 4k */
-    /* transform: scale(1); */
   }
 </style>
 

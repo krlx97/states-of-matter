@@ -1,5 +1,5 @@
 import {socketService} from "services";
-import {animationsQueue, gameStore, intervals, intervalsStore, isAnimating, nodeStore, playerStore, selectedCardStore} from "stores";
+import {animationsQueue, gameStore, intervals, isAnimating, nodeStore, playerStore, selectedCardStore} from "stores";
 import {animate} from "./animate";
 import { get } from "svelte/store";
 import type {Field, MinionField} from "@som/shared/types/mongo";
@@ -8,6 +8,7 @@ let i = 0;
 const TURN_DURATION_MS = 90000;
 let latestGameState: any;
 
+// this is what happens when you skip math classes kids
 function updateConnectingLine(attackerField: Field, defenderField: Field) {
   let transform: string, height: string, x: number;
 
@@ -205,12 +206,12 @@ const attackMinionSave = (): void => {
             return;
           }
 
-          selectedCardStore.update((store) => {
-            store.field = undefined;
-            store.graveyard = undefined;
-            store.hand = undefined;
-            return store;
-          });
+          // selectedCardStore.update((store) => {
+          //   store.field = undefined;
+          //   store.graveyard = undefined;
+          //   store.hand = undefined;
+          //   return store;
+          // });
 
           animationsQueue.set([]);
           gameStore.set(latestGameState);

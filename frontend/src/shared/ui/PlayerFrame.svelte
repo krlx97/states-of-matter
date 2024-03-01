@@ -16,7 +16,7 @@
   let games: any;
   let leaderboardPosition = 0;
   let hasUnseenMessages = false;
-  let isMutual = false;
+  let isMutual: boolean;
 
   let rank = "Gold";
   let nextRank: string;
@@ -40,6 +40,8 @@
     ["Gold", "#dea34d"],
     ["Master", "#662d91"]
   ]);
+
+  // let isMenuToggled = false;
 
   $: bars = [{color: rank, progress: myEloo}]
 
@@ -69,7 +71,7 @@
     // eloOffset = eloProgressLength - (eloProgressLength * fix / fix2);
   });
 
-  export {name, experience, level, elo, avatarId, bannerId, actions, status, games, leaderboardPosition, hasUnseenMessages, isMutual};
+  export {name, experience, level, elo, avatarId, bannerId, actions, status, games, leaderboardPosition, isMutual};
 </script>
 
 <style>
@@ -330,8 +332,32 @@
 
   <div class="player__info">
 
-    <div style="display: flex; align-items: center; gap: var(--xs)">
-
+    <div style="position: relative; display: flex; align-items: center; gap: var(--xs)">
+      {#if actions.length > 1}
+        <ButtonComponent isIcon on:click="{() => isMenuToggled = !isMenuToggled}">
+          {#if isMenuToggled}
+            <i class="fa-solid fa-times"></i>
+          {:else}
+            <i class="fa-solid fa-bars"></i>
+          {/if}
+        </ButtonComponent>
+      {/if}
+      {#if !leaderboardPosition}
+        {#if isMutual !== undefined}
+          {#if isMutual}
+            <i class="fa-solid fa-user-check"></i>
+          {:else}
+            <i class="fa-solid fa-user-xmark"></i>
+          {/if}
+        {/if}
+      {/if}
+      {#if actions.length === 1}
+        {#each actions as action}
+          <ButtonComponent isIcon on:click="{action[1]}">
+            <i class="fa-solid fa-user-minus"></i>
+          </ButtonComponent>
+        {/each}
+      {/if}
       <div>{name}</div>
       {#if leaderboardPosition}
         <div>#{leaderboardPosition}</div>
@@ -349,19 +375,10 @@
           <TextComponent color="primary" size="sm">In game</TextComponent>
         {/if}
       {/if}
-      {#if !leaderboardPosition}
-        {#if isMutual}
-          <i class="fa-solid fa-user-check"></i>
-        {:else}
-          <i class="fa-solid fa-user-xmark"></i>
-        {/if}
-      {/if}
-      {#if actions.length}
-        {#each actions as action}
-          <ButtonComponent isIcon on:click="{action[1]}">
-            <i class="fa-solid fa-user-minus"></i>
-          </ButtonComponent>
-        {/each}
+      
+      
+      {#if isMenuToggled}
+        <MenuComponent items={actions}></MenuComponent>
       {/if}
     </div>
 

@@ -31,19 +31,7 @@ const death = (animation: any): void => {
   const flyToGraveyard = (currentTime: number): void => {
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    // const opacity = progress <= 0.666 ? 1 : 1 - ((progress - 0.666) / 0.333);
 
-    // card.style.zIndex = "100";
-
-    // if (isPlayer) {
-    //   card.style.transform = `translateX(-${progress * (cardRect.left - graveRect.left)}px)`;
-    // } else {
-    //   const distance = graveRect.left - cardRect.left;
-    //   const translationX = distance * progress;
-    //   card.style.transform = `translateX(${translationX}px)`;
-    // }
-
-    // card.style.opacity = `${opacity}`;
     if (progress <= 1) {
       if (isPlayer) {
         card.style.transform = `translateX(-${(progress / 1) * (cardRect.left - graveRect.left)}px)`;

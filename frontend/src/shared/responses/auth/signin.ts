@@ -1,5 +1,5 @@
 import {ethersService, socketService} from "services";
-import {lobbyStore, gameStore, playerStore, snapshotsStore, intervalsStore, nodeStore, intervals, deckCache, leaderboardsStore, ethersStore} from "stores";
+import {lobbyStore, gameStore, playerStore, snapshotsStore, nodeStore, intervals, deckCache, leaderboardsStore, ethersStore} from "stores";
 import { get } from "svelte/store";
 
 const TURN_DURATION_MS = 90000;

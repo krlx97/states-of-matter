@@ -8,12 +8,18 @@
 
   const {socket} = socketService;
   let card: GameMagicCard | GameMinionCard | GameTrapCard;
+
   $: isSelected = $selectedCardStore.hand && card.gid === $selectedCardStore.hand.gid;
+  $: isGrayscale = card.manaCost.current > $gameStore.player.field.hero.mana.current;
 
   const onSelectCard = (): void => {
     const {gid, type} = card;
 
     if ($gameStore.currentPlayer !== $playerStore.name) {
+      return;
+    }
+
+    if (isGrayscale) {
       return;
     }
 
@@ -63,5 +69,5 @@
 </style>
 
 <div class="hand-card" >
-  <CardComponent {isSelected} {card} on:click="{onSelectCard}"/>
+  <CardComponent {isGrayscale} {isSelected} {card} on:click="{onSelectCard}"/>
 </div>

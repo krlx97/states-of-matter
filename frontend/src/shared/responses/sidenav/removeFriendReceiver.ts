@@ -1,6 +1,5 @@
-import {get} from "svelte/store";
 import {socketService} from "services";
-import {chatStore, playerStore} from "stores";
+import {playerStore} from "stores";
 
 const removeFriendReceiver = (): void => {
   socketService.socket.on("removeFriendReceiver", (params): void => {

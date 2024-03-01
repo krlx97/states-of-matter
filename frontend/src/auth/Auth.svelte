@@ -18,7 +18,7 @@
   .auth {
     height: 100%;
     width: 100%;
-    background-image: url("images/authbg.png");
+    background-image: url("/images/authbg.png");
   }
 
   .nav {

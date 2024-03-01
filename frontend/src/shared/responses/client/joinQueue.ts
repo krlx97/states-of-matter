@@ -1,6 +1,6 @@
 import {PlayerStatus} from "@som/shared/enums";
 import {socketService} from "services";
-import {intervalsStore, playerStore, queueStore} from "stores";
+import {intervals, playerStore, queueStore} from "stores";
 
 const joinQueue = (): void => {
   const {socket} = socketService;
@@ -11,22 +11,18 @@ const joinQueue = (): void => {
       return store;
     });
 
-    intervalsStore.update((store) => {
-      store.queueTimer = setInterval((): void => {
+    intervals[2] = setInterval((): void => {
+      queueStore.update((store) => {
+        const date = new Date(Date.now() - store.joinedAt);
+        const minutes = date.getMinutes();
+        const seconds = date.getSeconds();
 
-        queueStore.update((store) => {
-          const date = new Date(Date.now() - store.joinedAt);
-          const minutes = date.getMinutes();
-          const seconds = date.getSeconds();
-          store.timeInQueue = `${minutes < 10 ? `0${minutes}` : minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
-          document.title = `${store.timeInQueue} | States of Matter`;
-          return store;
-        });
+        store.timeInQueue = `${minutes < 10 ? `0${minutes}` : minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
+        document.title = `${store.timeInQueue} | States of Matter`;
 
-      }, 1000);
-
-      return store;
-    });
+        return store;
+      });
+    }, 1000);
 
     playerStore.update((store) => {
       store.status = PlayerStatus.IN_QUEUE;

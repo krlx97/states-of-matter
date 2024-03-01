@@ -26,15 +26,23 @@
 
   .bars {
     height: 4px;
-    border-radius: 8px;
+    /* border-radius: 8px; */
     overflow: hidden;
-    background-color: rgb(15, 15, 15);
+    background-color: rgb(var(--dark-grey));
   }
 
   .progress {
-    /* transition: width 250ms linear; */
     height: 4px;
-    /* border-radius: 8px; */
+  }
+
+  .progress:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
+
+  .progress:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
   }
 
   .white {background-color: rgb(var(--neutral));}
@@ -67,8 +75,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="progress-bar">
- 
- {#if isValueVisible}
+  {#if isValueVisible}
     <div class="texts">
       {#each bars as bar}
         <div class="text" style:width="{bar.progress}%" class:white={bar.color === "white"}
@@ -99,17 +106,16 @@
       </div>
     {/each}
   </div>
- {#if isPercentVisible}
-  <div class="texts">
-    {#each bars as bar}
-      <div class="text" style:width="{bar.progress}%" class:white={bar.color === "white"}
-      class:fgreen={bar.color === "green"}
-      class:fblue={bar.color === "blue"}
-      class:fpurple={bar.color === "purple"}
-      class:fred={bar.color === "red"}
-      class:forange={bar.color === "orange"}>{bar.progress.toFixed()}%</div>
-    {/each}
-  </div>
+  {#if isPercentVisible}
+    <div class="texts">
+      {#each bars as bar}
+        <div class="text" style:width="{bar.progress}%" class:white={bar.color === "white"}
+        class:fgreen={bar.color === "green"}
+        class:fblue={bar.color === "blue"}
+        class:fpurple={bar.color === "purple"}
+        class:fred={bar.color === "red"}
+        class:forange={bar.color === "orange"}>{bar.progress.toFixed()}%</div>
+      {/each}
+    </div>
   {/if}
- 
 </div>

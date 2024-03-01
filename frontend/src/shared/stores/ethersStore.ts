@@ -14,7 +14,7 @@ interface EthersStore {
   };
 }
 
-let ethersStore = writable<EthersStore>({
+const ethersStore = writable<EthersStore>({
   accounts: [],
   chainId: 0n,
   isLoaded: false,

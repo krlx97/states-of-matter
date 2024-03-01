@@ -1,11 +1,10 @@
 import {PlayerStatus, QueueId} from "@som/shared/enums";
 import {modalService, socketService} from "services";
-import {gameStore, intervals, intervalsStore, nodeStore, playerStore} from "stores";
+import {gameStore, intervals, nodeStore, playerStore} from "stores";
 import GameStartedComponent from "../../../client/Play/modals/GameStarted.svelte";
 import { get } from "svelte/store";
 
 const TURN_DURATION_MS = 90000;
-
 
 const startGame = (): void => {
   const {socket} = socketService;

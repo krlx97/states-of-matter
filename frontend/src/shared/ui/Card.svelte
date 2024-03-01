@@ -23,6 +23,7 @@
 
   let klassTooltip: any;
   let abilityElement: HTMLDivElement;
+  let isGrayscale = false;
 
   let isToggled = false;
 
@@ -53,7 +54,7 @@
     node.style.display = !isAbilityTooltipToggled ? "none" : "initial";
   };
 
-  export {card, isOpponent, isSelected, isAttackable, isTargetable, isFriendlyTargetable};
+  export {card, isOpponent, isSelected, isAttackable, isTargetable, isFriendlyTargetable, isGrayscale};
 
   interface Spin {
     delay: number | undefined;
@@ -84,6 +85,9 @@
 </script>
 
 <style>
+ .isGrayscale {
+    filter: grayscale(1);
+  }
   .card {
     position: relative;
     height: var(--card-height);
@@ -400,9 +404,9 @@
   <img class="card__front" src="images/card/card-front.png" alt="Card Border"/>
 
   {#if item.rarity === 0 || item.rarity === 3}
-    <img class="card__avatar" src="images/items/{selectedSkin.skinId}.png" height=136 width=108 alt="Card skin"/>
+    <img class="card__avatar" class:isGrayscale src="images/items/{selectedSkin.skinId}.png" height=136 width=108 alt="Card skin"/>
   {:else}
-    <video class="card__avatar" autoplay loop muted>
+    <video class="card__avatar" class:isGrayscale autoplay loop muted>
       <source src="images/items/{selectedSkin.skinId}.webm" type="video/webm"/> {selectedSkin.skinId}
     </video>
   {/if}
@@ -484,7 +488,7 @@
       <img src="images/card/mana-cost.png" alt="Mana cost"/>
         <div class="card__health__num card__mana__num">
         {#key card.manaCost.current}
-          <div in:spin={{duration: 100}}>{card.manaCost.current}</div>
+          <div in:spin="{{duration: 100}}">{card.manaCost.current}</div>
         {/key}
         </div>
     </div>

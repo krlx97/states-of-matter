@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {Ability, CardId, CardType} from "@som/shared/enums";
+  import {Ability, CardId, CardType, EffectId} from "@som/shared/enums";
   import {cardEffectNames, cards} from "@som/shared/data";
   import {socketService, soundService} from "services";
   import {floatingTextStore, gameStore, selectedCardStore, playerStore, nodeStore} from "stores";
@@ -29,6 +29,8 @@
   $: isTargetable =
     ($selectedCardStore.hand && $selectedCardStore.hand.id === CardId.QUICK_SAND) ||
     ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.FORTIFY || $gameStore.player.field.hero.ability === Ability.HEAL));
+
+  $: isGrayscale = card && !card.canAttack && !card?.buffs.find((buff) => buff.id === EffectId.BLAZE)?.data.hasAttackedTwice;
 
   const onEmptyFieldClick = (): void => {
     if (!isCurrentPlayer) {
@@ -62,6 +64,10 @@
 
   const onMinionFieldClick = (): void => {
     if (!isCurrentPlayer) {
+      return;
+    }
+
+    if (isGrayscale) {
       return;
     }
 
@@ -153,6 +159,7 @@
     font-size: 128px;
     visibility: hidden;
     z-index: 5;
+    pointer-events: none;
   }
 
   .field-empty {
@@ -249,6 +256,7 @@
     <div use:summon in:scale="{{duration: 333, opacity: 0, start: 4}}">
       <!-- out:fade="{{duration: 333}}" -->
       <CardComponent
+        {isGrayscale}
         {isSelected}
         isFriendlyTargetable={isTargetable}
         {card}

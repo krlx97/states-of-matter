@@ -515,11 +515,11 @@
 			]
 		},
 		"contracts/Game/Game.sol": {
-			"keccak256": "0xaa3afed286af9a2eb5c14044fcb66bfc7b02717c4c346ec89ad7097210ca59be",
+			"keccak256": "0x3a82f5ade96b314701646aacb90efe356f626e3daf1db26889071ce62a3ed6bd",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://0b0c3a12509bdd021e8870159b83895ca92d68f165c79f7886d4fc42ef0a8072",
-				"dweb:/ipfs/QmUUrA2KQtPJNdUgGGw1nHAbEUC47bZQRyG4RP8D4yvVFo"
+				"bzz-raw://8d8d8767b3e48b90bf8704f8b2d5a435a1883a177c60ff6273fce6ac649fa99e",
+				"dweb:/ipfs/QmdJPdRivH7wqPnzTtpRxtmW82TExPP28hmDR4aSX3tdQF"
 			]
 		},
 		"contracts/Items/Items.sol": {

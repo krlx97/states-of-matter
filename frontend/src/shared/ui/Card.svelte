@@ -452,7 +452,7 @@
       </div> -->
     </div>
     <div class="card__mana">
-      <img src="images/card/mana-capacity.png" alt="Mana"/>
+      <img src="images/card/mana.png" alt="Mana"/>
         <div class="card__health__num card__mana__num">
           {#key card.mana.current}
             <div in:spin={{duration: 100}}>{card.mana.current}</div>

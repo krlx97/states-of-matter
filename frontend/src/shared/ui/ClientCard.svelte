@@ -389,7 +389,7 @@
     </div>
 
     <div class="card__mana">
-      <img src="images/card/mana-capacity.png" alt="Mana capacity"/>
+      <img src="images/card/mana.png" alt="Mana capacity"/>
       <div class="card__health__num card__mana__num">{card.mana}</div>
       <div class="card__mana__tooltip">Mana capacity</div>
     </div>

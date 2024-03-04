@@ -24,11 +24,11 @@ import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
 };
 
 const keys = {
-  ethericEssence: "0xD2c7143A714573f767a9E8acF64315a6Ef418231",
-  ethericCrystals: "0xd393F4A7a9b2937fb8cb30Ae3e03866755c37Ba3",
-  ethericEnergy: "0xa151F99db0d89B9d1D568e56fcE5d7ac84355A5E",
-  somTokens: "0xA857C3e9770dC18ee6a022691cAA62f3Afa777E1",
-  somGame: "0x1dfF35052F1FE01EdB2d767D9e8F644B9c271108"
+  ethericEssence: "0xd00beff17b23C7e4141D31bbc293bF289D639Bba",
+  ethericCrystals: "0xFFb2D5E4Dc49C0d87425c7E0902C4cf2F8Dc0c0a",
+  ethericEnergy: "0x753Fc3e1c6dde746EB32385D33Fa4f9b43e41832",
+  somTokens: "0x1a0171E24D2a1e5487a8b5e40391694C187Be46C",
+  somGame: "0x8Bbc4e54Eb45E58C400678B03E8A098da64793ED"
 };
 
 const init = async (address: string): Promise<void> => {

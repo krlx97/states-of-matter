@@ -29,26 +29,26 @@
   the following attributes:
   <TextComponent color="health">health</TextComponent>,
   <TextComponent color="damage">damage</TextComponent>,
-  <TextComponent color="mana">mana cost</TextComponent>,
-  <TextComponent color="mana">mana capacity</TextComponent>.
+  <TextComponent color="mana">mana</TextComponent>,
+  <TextComponent color="mana">mana cost</TextComponent>.
   <hr/>
   Classes:
   <br/>
   <div class="icon">
-    <img src="images/card/0.png" alt="Neutral"/>
+    <img src="images/card/neutral.png" alt="Neutral"/>
     Neutral (General Purpose)<br/>
   </div>
   <div class="icon">
-    <img src="images/card/1.png" alt="Solid"/> Solid (Durability)<br/>
+    <img src="images/card/solid.png" alt="Solid"/> Solid (Durability)<br/>
   </div>
   <div class="icon">
-    <img src="images/card/2.png" alt="Liquid"/> Liquid (Utility)<br/>
+    <img src="images/card/liquid.png" alt="Liquid"/> Liquid (Utility)<br/>
   </div>
   <div class="icon">
-    <img src="images/card/3.png" alt="Gas"/> Gas (Damage over time)<br/>
+    <img src="images/card/gas.png" alt="Gas"/> Gas (Damage over time)<br/>
   </div>
   <div class="icon">
-    <img src="images/card/4.png" alt="Plasma"/> Plasma (Burst Damage)<br/>
+    <img src="images/card/plasma.png" alt="Plasma"/> Plasma (Burst Damage)<br/>
   </div>
   Types:<br/>
   <div class="attrs">
@@ -68,16 +68,16 @@
   Attributes:<br/>
   <div class="attrs">
     <div class="icon">
-      <img src="images/card/healthx.png" alt="Health"/> Health<br/>
+      <img src="images/card/health.png" alt="Health"/> Health<br/>
     </div>
     <div class="icon">
-      <img src="images/card/damagex.png" alt="Damage"/> Damage<br/>
+      <img src="images/card/damage.png" alt="Damage"/> Damage<br/>
     </div>
     <div class="icon">
-      <img src="images/card/manacostx.png" alt="Mana"/> Mana Capacity<br/>
+      <img src="images/card/mana-cost.png" alt="Mana cost"/> Mana cost<br/>
     </div>
     <div class="icon">
-      <img src="images/card/manax.png" alt="Mana Cost"/> Mana Cost<br/>
+      <img src="images/card/mana.png" alt="Mana"/> Mana<br/>
     </div>
   </div>
   <hr/>

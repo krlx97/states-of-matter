@@ -83,6 +83,7 @@
   .isTutorial1, .isTutorial2, .isTutorial3 {
     position: relative;
     z-index: 101;
+    animation: opa 1s linear infinite alternate;
   }
 
   .abs {
@@ -92,6 +93,11 @@
     transform: translateX(-50%);
     width: 100%;
     text-align: center;
+  }
+
+  @keyframes opa {
+   from {opacity: 0.333;}
+    to {opacity: 1;}
   }
 </style>
 

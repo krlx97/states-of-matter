@@ -37,6 +37,8 @@
     }
 
     if ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.NEUROTOXIN || $gameStore.player.field.hero.ability === Ability.OVERCHARGE)) {
+      $selectedCardStore.field = undefined;
+
       socketService.socket.emit("useAbility" as any, {
         target: field
       });

@@ -1,5 +1,5 @@
 import {EffectId} from "@som/shared/enums";
-import {heartOfSteel} from "./effect/heartOfSteel";
+// import {heartOfSteel} from "./effect/heartOfSteel";
 import type {Field, GameMinionCard, GamePlayer} from "@som/shared/types/mongo";
 import type {Animations} from "@som/shared/types/game";
 
@@ -9,32 +9,38 @@ const deductHealth = (
   damage: number,
   field: Field
 ): Animations => {
+  const {name} = player;
+  const animations: Animations = [];
+
   const shieldBuff = minion.buffs.find(
     (buff): boolean => buff.id === EffectId.SHIELD
   );
 
-  const animations: Animations = [];
+  const resilientBuff = minion.buffs.find(
+    (buff): boolean => buff.id === EffectId.RESILIENT
+  );
 
   if (shieldBuff) { // has shield
-    const amt = shieldBuff.data.amount;
+    const {amount} = shieldBuff.data;
 
-    if (amt > damage) { // shield reduced
-      shieldBuff.data.amount -= damage
+    if (amount > damage) { // shield reduced
+      shieldBuff.data.amount -= damage;
+
       animations.push({
         type: "FLOATING_TEXT",
-        field: field,
-        name: player.name,
+        field,
+        name,
         text: `-${damage} Shield`
       });
-    } else if (amt <= damage) { // shield broken
-      if (player.trap && player.trap.effect === EffectId.HEART_OF_STEEL) {
-        animations.push(...heartOfSteel({opponentMinion: minion, opponent: player, opponentTrap: player.trap, field}));
-      }
+    } else if (amount <= damage) { // shield broken
+      // if (player.trap && player.trap.effect === EffectId.HEART_OF_STEEL) {
+      //   animations.push(...heartOfSteel({opponentMinion: minion, opponent: player, opponentTrap: player.trap, field}));
+      // }
 
       const remaining = damage - shieldBuff.data.amount;
 
-      if (remaining < 0) {
-        if (minion.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
+      if (remaining > 0) {
+        if (resilientBuff && remaining > 1) {
           minion.health.current -= 1;
         } else {
           minion.health.current -= remaining;
@@ -43,13 +49,13 @@ const deductHealth = (
 
       animations.push({
         type: "FLOATING_TEXT",
-        field: field,
-        name: player.name,
+        field,
+        name,
         text: `-${shieldBuff.data.amount} Shield`
       }, {
         type: "HEALTH",
-        field: field,
-        name: player.name,
+        field,
+        name,
         decrement: remaining,
         increment: undefined,
       });
@@ -57,7 +63,7 @@ const deductHealth = (
       minion.buffs.splice(minion.buffs.indexOf(shieldBuff), 1);
     }
   } else { // no shield
-    if (minion.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
+    if (resilientBuff && damage > 1) {
       minion.health.current -= 1;
     } else {
       minion.health.current -= damage;
@@ -65,8 +71,8 @@ const deductHealth = (
 
     animations.push({
       type: "HEALTH",
-      field: field,
-      name: player.name,
+      field,
+      name,
       decrement: damage,
       increment: undefined,
     });

@@ -34,8 +34,8 @@ const deductHeroHealth = (
 
       const remaining = damage - shieldBuff.data.amount;
 
-      if (remaining < 0) {
-        if (hero.buffs.find((buff) => buff.id === EffectId.RESILIENT)) {
+      if (remaining > 0) {
+        if (hero.buffs.find((buff) => buff.id === EffectId.RESILIENT) && remaining > 1) {
           hero.health.current -= 1;
         } else {
           hero.health.current -= remaining;

@@ -175,7 +175,7 @@ contract Game {
 
   function _enrgValue () private view returns (uint256 value) {
     uint256 baseValue = 1 * POW;
-    uint256 rewardPerSecond = 1000000;
+    uint256 rewardPerSecond = 1000000000;
     value = baseValue + ((block.timestamp - deployTimestamp) * rewardPerSecond);
   }
 

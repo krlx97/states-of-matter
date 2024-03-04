@@ -30,7 +30,21 @@
     ($selectedCardStore.hand && $selectedCardStore.hand.id === CardId.QUICK_SAND) ||
     ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.FORTIFY || $gameStore.player.field.hero.ability === Ability.HEAL));
 
-  $: isGrayscale = card && !card.canAttack && !card?.buffs.find((buff) => buff.id === EffectId.BLAZE)?.data.hasAttackedTwice;
+  $: blazeBuff = card?.buffs.find((buff): boolean => buff.id === EffectId.BLAZE)
+  $: isGrayscale =
+    // card &&
+    // !card.canAttack &&
+    // card.buffs.find((buff): boolean => buff.id === EffectId.BLAZE)?.data.hasAttackedTwice === true
+    (
+      card &&
+      !card.canAttack &&
+      !blazeBuff
+    ) || (
+      card &&
+      !card.canAttack &&
+      blazeBuff &&
+      blazeBuff.data.hasAttackedTwice === true
+    );
 
   const onEmptyFieldClick = (): void => {
     if (!isCurrentPlayer) {
@@ -67,11 +81,12 @@
       return;
     }
 
-    if (isGrayscale) {
+    if (isGrayscale && $selectedCardStore.field !== "hero") {
       return;
     }
 
     if ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.FORTIFY || $gameStore.player.field.hero.ability === Ability.HEAL)) {
+      $selectedCardStore.field = undefined;
       socket.emit("useAbility" as any, {
         target: field
       });

@@ -1,9 +1,26 @@
 .vscode
 !.vscode/extensions.json
+
 node_modules
+package-lock.json
+
 backend/dist
-contracts/EthericCrystals/artifacts/*
+# backend/node_modules
+#backend/package-lock.json
+
 frontend/dist
 frontend/node_modules
+#frontend/package-lock.json
+
 shared/dist
-package-lock.json
+# shared/node_modules
+#shared/package-lock.json
+
+# contracts/node_modules
+#contracts/package-lock.json
+
+# contracts/EthericCrystals/artifacts
+# contracts/EthericEnergy/artifacts
+# contracts/EthericEssence/artifacts
+# contracts/Game/artifacts
+# contracts/Items/artifacts

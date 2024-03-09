@@ -1,7 +1,7 @@
 <script lang="ts">
   import {formatUnits} from "ethers"
 
-  let name: "ees" | "ecr" | "enrg";
+  let name: "ees" | "ecr" | "enrg" | "shard";
   let number: bigint;
   let isIconVisible = true;
   let iconSize = "xs";
@@ -44,19 +44,19 @@
 </style>
 
 <div class="currency" style="{iconSize === "sm" ? "font-size: 20px" : ""}">
-  <!-- {#if name === "ees"}
+  {#if name === "shard"}
     {number}
-  {:else} -->
+  {:else}
     {fix(number)}
-  <!-- {/if} -->
+  {/if}
   {#if isIconVisible}
     <img src="images/currencies/{iconSize}/{name}.png" alt="{name}"/>
   {/if}
   <div class="currency__full">
-    <!-- {#if name === "ees"}
+    {#if name === "shard"}
       {number}
-    {:else} -->
+    {:else}
       {formatUnits(number.toString())}
-    <!-- {/if} -->
+    {/if}
   </div>
 </div>

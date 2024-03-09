@@ -9,8 +9,9 @@
   const {socket} = socketService;
   let card: GameMagicCard | GameMinionCard | GameTrapCard;
 
+  $: isCurrentPlayer = $gameStore.currentPlayer === $playerStore.name;
   $: isSelected = $selectedCardStore.hand && card.gid === $selectedCardStore.hand.gid;
-  $: isGrayscale = card.manaCost.current > $gameStore.player.field.hero.mana.current;
+  $: isGrayscale = !isCurrentPlayer || (card.manaCost.current > $gameStore.player.field.hero.mana.current);
 
   const onSelectCard = (): void => {
     const {gid, type} = card;

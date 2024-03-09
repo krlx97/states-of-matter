@@ -347,7 +347,7 @@
   <div class="card__name">{cardView ? cardView.name : "nema"}</div>
   <img class="card__front" src="images/card/card-front.png" alt="Card Border"/>
 
-  {#if item.rarity === 0 || item.rarity === 3}
+  {#if item.rarity === 0 || item.rarity === 2}
     <img class:isGrayscale class="card__avatar" src="images/items/{selectedSkin.skinId}.png" height=136 width=108 alt="Card skin"/>
   {:else}
     <video class:isGrayscale class="card__avatar" autoplay loop muted>

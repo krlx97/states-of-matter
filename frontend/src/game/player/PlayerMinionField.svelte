@@ -31,7 +31,7 @@
     ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.FORTIFY || $gameStore.player.field.hero.ability === Ability.HEAL));
 
   $: blazeBuff = card?.buffs.find((buff): boolean => buff.id === EffectId.BLAZE)
-  $: isGrayscale =
+  $: isGrayscale = !isCurrentPlayer || (card && card.damage.current < 1) || (
     // card &&
     // !card.canAttack &&
     // card.buffs.find((buff): boolean => buff.id === EffectId.BLAZE)?.data.hasAttackedTwice === true
@@ -44,7 +44,7 @@
       !card.canAttack &&
       blazeBuff &&
       blazeBuff.data.hasAttackedTwice === true
-    );
+    ));
 
   const onEmptyFieldClick = (): void => {
     if (!isCurrentPlayer) {
@@ -81,9 +81,10 @@
       return;
     }
 
-    if (isGrayscale && $selectedCardStore.field !== "hero") {
-      return;
-    }
+    // if (isGrayscale && ($selectedCardStore.field !== "hero" || ($selectedCardStore.hand &&
+    //   $selectedCardStore.hand.id !== CardId.QUICK_SAND))) {
+    //   return;
+    // }
 
     if ($selectedCardStore.field === "hero" && ($gameStore.player.field.hero.ability === Ability.FORTIFY || $gameStore.player.field.hero.ability === Ability.HEAL)) {
       $selectedCardStore.field = undefined;
@@ -102,9 +103,11 @@
     } else if ($selectedCardStore.field === field) {
       $selectedCardStore.field = undefined;
     } else if ($selectedCardStore.hand) {
+      if (isGrayscale) { return; }
       $selectedCardStore.hand = undefined;
       $selectedCardStore.field = field;
     } else {
+      if (isGrayscale) { return; }
       $selectedCardStore.field = field;
     }
   };

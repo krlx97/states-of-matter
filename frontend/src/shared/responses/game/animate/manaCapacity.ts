@@ -13,6 +13,16 @@ const manaCapacity = (animation: any): void => {
   let start: number;
   let end: number;
 
+  if (increment !== undefined && increment === 0) {
+    isAnimating.set(false);
+    return;
+  }
+
+  if (decrement !== undefined && decrement === 0) {
+    isAnimating.set(false);
+    return;
+  }
+
   const attributeAnimation = (timestamp: number): void => {
     if (startTimestamp === undefined) {
       startTimestamp = timestamp;

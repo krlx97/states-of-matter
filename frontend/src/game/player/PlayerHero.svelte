@@ -20,7 +20,7 @@
   $: card = $gameStore.player.field.hero;
   $: isSelected = $selectedCardStore.field === "hero";
   $: isCurrentPlayer = $gameStore.currentPlayer === $playerStore.name;
-  $: isGrayscale = card.mana.current < 5;
+  $: isGrayscale = !isCurrentPlayer || card.mana.current < 5;
 
   const onAbilitySelect = (): void => {
     if (!isCurrentPlayer) {

@@ -35,22 +35,21 @@ const attackMinion: SocketRequest = (socket, error): void => {
       return error("Opponents minion not found.");
     }
 
-    // ---------------- TAUNT CHECK ----------------------
-    const fields: ["hero", "a", "b", "c", "d"] = ["hero", "a", "b", "c", "d"];
-    const selected = fields.find((field) => field === attacked);
-
-    if (!selected) {
-      return error("Error");
+    if (playerMinion.damage.current < 1) {
+      return error("This unit can't attack.");
     }
 
-    fields.splice(fields.indexOf(selected), 1);
-
+    // ---------------- TAUNT CHECK ----------------------
+    const fields: ["hero", "a", "b", "c", "d"] = ["hero", "a", "b", "c", "d"];
     let tauntFields = [];
+
     for (const field of fields) {
       const fieldCard = opponent.field[field];
 
       if (fieldCard) {
-        const taunt = fieldCard.buffs.find((buff) => buff.id === EffectId.TAUNT);
+        const taunt = fieldCard.buffs.find(
+          (buff): boolean => buff.id === EffectId.TAUNT
+        );
 
         if (taunt) {
           tauntFields.push(field);
@@ -58,12 +57,13 @@ const attackMinion: SocketRequest = (socket, error): void => {
       }
     }
 
-    // tauntFields = [a, c]
     if (tauntFields.length) {
-      const marksmanship = playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
+      const marksmanship = playerMinion.buffs.find(
+        (buff): boolean => buff.id === EffectId.MARKSMANSHIP
+      );
 
-      if (tauntFields.includes(attacked)) {
-        return error("Cannot attack this minion, other has taunt.");
+      if (!marksmanship && !tauntFields.includes(attacked)) {
+        return error("Cannot attack this unit, other has taunt.");
       }
     }
     // -----------------------------------------------------

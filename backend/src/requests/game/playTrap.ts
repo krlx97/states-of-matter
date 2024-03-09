@@ -42,7 +42,8 @@ const playTrap: SocketRequest = (socket, error): void => {
 
     animations.push({
       type: "TRAP_SET",
-      name
+      name,
+      gid: card.gid
     });
 
     // socket.emit("playTrap", {name});

@@ -28,27 +28,34 @@ const attackHero: SocketRequest = (socket, error): void => {
       return error("Heroes can't attack");
     }
 
+    // ---------------- TAUNT CHECK ----------------------
     const fields: ["hero", "a", "b", "c", "d"] = ["hero", "a", "b", "c", "d"];
-    const selected = fields.find((field) => field === "hero");
-
-    if (!selected) {
-      return error("Error");
-    }
-
-    fields.splice(fields.indexOf(selected), 1);
+    let tauntFields = [];
 
     for (const field of fields) {
       const fieldCard = opponent.field[field];
 
       if (fieldCard) {
-        const taunt = fieldCard.buffs.find((buff) => buff.id === EffectId.TAUNT);
-        const marksmanship = playerMinion.buffs.find((buff) => buff.id === EffectId.MARKSMANSHIP);
+        const taunt = fieldCard.buffs.find(
+          (buff): boolean => buff.id === EffectId.TAUNT
+        );
 
-        if (taunt && !marksmanship) {
-          return error("Cannot attack this minion, other has taunt.");
+        if (taunt) {
+          tauntFields.push(field);
         }
       }
     }
+
+    if (tauntFields.length) {
+      const marksmanship = playerMinion.buffs.find(
+        (buff): boolean => buff.id === EffectId.MARKSMANSHIP
+      );
+
+      if (!marksmanship && !tauntFields.includes("hero")) {
+        return error("Cannot attack this unit, other has taunt.");
+      }
+    }
+    // -----------------------------------------------------
 
     if (!playerMinion.canAttack) {
       const blazeBuff = playerMinion.buffs.find(

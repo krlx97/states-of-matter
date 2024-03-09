@@ -54,19 +54,31 @@
 </script>
 
 <style>
+  @media only screen and (min-width: 640px) {}
+
+  @media only screen and (min-width: 1280px) {
+    .app {
+      height: 900px;
+      width: 1600px;
+    }
+
+    .app-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
   .app-wrapper {
     height: 100vh;
     width: 100vw;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background-color: rgb(var(--dark-grey));
   }
 
   .app {
+    /* height: 100%;
+    width: 100%; */
     position: relative;
-    height: 900px;
-    width: 1600px;
     overflow: hidden;
     border: 1px solid rgba(var(--grey), var(--opacity-sm));
     border-radius: 8px;

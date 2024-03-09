@@ -17,7 +17,7 @@ const unity = {
     const {player, playerMinion, playerMinionField} = params;
 
     playerMinion.buffs.push({
-      id: EffectId.TAUNT,
+      id: EffectId.UNITY,
       data: {}
     });
 
@@ -53,7 +53,7 @@ const unity = {
 
     return [{
       type: "FLOATING_TEXT",
-      name: name,
+      name,
       field: "hero",
       text: "UNITY"
     }];

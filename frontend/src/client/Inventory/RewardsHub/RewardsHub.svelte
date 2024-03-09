@@ -43,5 +43,6 @@
   <div class="rewards__currencies">
     <CurrencyComponent iconSize="sm" name="ees" number="{ees}"/>
     <CurrencyComponent iconSize="sm" name="ecr" number="{ecr}"/>
+    <!-- <CurrencyComponent iconSize="sm" name="shard" number="{1n}"/> -->
   </div>
 </div>

@@ -76,147 +76,126 @@ const items: Items = [{
   rarity: ItemRarity.COMMON,
   disenchantReward: 0
 }, {
-  id: 10130,
+  id: 10110,
   name: "Seafarer",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.SEAFARER
+}, {
+  id: 10111,
+  name: "Seafarer",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.UNCOMMON,
+  disenchantReward: 100,
+  cardId: CardId.SEAFARER
+}, {
+  id: 10112,
+  name: "Seafarer",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.RARE,
+  disenchantReward: 500,
+  cardId: CardId.SEAFARER
+}, {
+  id: 10113,
+  name: "Seafarer",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.EPIC,
+  disenchantReward: 2500,
+  cardId: CardId.SEAFARER
+}, {
+  id: 10114,
+  name: "Seafarer",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.LEGENDARY,
+  disenchantReward: 12500,
+  cardId: CardId.SEAFARER
+}, {
+  id: 10120,
+  name: "Avet",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.COMMON,
+  disenchantReward: 0,
+  cardId: CardId.AVET
+}, {
+  id: 10121,
+  name: "Avet",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.UNCOMMON,
+  disenchantReward: 100,
+  cardId: CardId.AVET
+}, {
+  id: 10122,
+  name: "Avet",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.RARE,
+  disenchantReward: 500,
+  cardId: CardId.AVET
+}, {
+  id: 10123,
+  name: "Avet",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.EPIC,
+  disenchantReward: 2500,
+  cardId: CardId.AVET
+}, {
+  id: 10124,
+  name: "Avet",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.LEGENDARY,
+  disenchantReward: 12500,
+  cardId: CardId.AVET
+}, {
+  id: 10130,
+  name: "Guiding Lights",
+  type: ItemType.SKIN,
+  rarity: ItemRarity.COMMON,
+  disenchantReward: 0,
+  cardId: CardId.GUIDING_LIGHTS
 }, {
   id: 10131,
-  name: "Seafarer",
+  name: "Guiding Lights",
   type: ItemType.SKIN,
   rarity: ItemRarity.UNCOMMON,
   disenchantReward: 100,
-  cardId: CardId.SEAFARER
+  cardId: CardId.GUIDING_LIGHTS
 }, {
   id: 10132,
-  name: "Seafarer",
+  name: "Guiding Lights",
   type: ItemType.SKIN,
   rarity: ItemRarity.RARE,
   disenchantReward: 500,
-  cardId: CardId.SEAFARER
+  cardId: CardId.GUIDING_LIGHTS
 }, {
   id: 10133,
-  name: "Seafarer",
+  name: "Guiding Lights",
   type: ItemType.SKIN,
   rarity: ItemRarity.EPIC,
   disenchantReward: 2500,
-  cardId: CardId.SEAFARER
+  cardId: CardId.GUIDING_LIGHTS
 }, {
   id: 10134,
-  name: "Seafarer",
+  name: "Guiding Lights",
   type: ItemType.SKIN,
   rarity: ItemRarity.LEGENDARY,
   disenchantReward: 12500,
-  cardId: CardId.SEAFARER
-}, {
-  id: 10135,
-  name: "Seafarer",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.MYTHIC,
-  disenchantReward: 62500,
-  cardId: CardId.SEAFARER
+  cardId: CardId.GUIDING_LIGHTS
 }, {
   id: 10140,
-  name: "Avet",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.COMMON,
-  disenchantReward: 0,
-  cardId: CardId.AVET
-}, {
-  id: 10141,
-  name: "Avet",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.UNCOMMON,
-  disenchantReward: 100,
-  cardId: CardId.AVET
-}, {
-  id: 10142,
-  name: "Avet",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.RARE,
-  disenchantReward: 500,
-  cardId: CardId.AVET
-}, {
-  id: 10143,
-  name: "Avet",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.EPIC,
-  disenchantReward: 2500,
-  cardId: CardId.AVET
-}, {
-  id: 10144,
-  name: "Avet",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.LEGENDARY,
-  disenchantReward: 12500,
-  cardId: CardId.AVET
-}, {
-  id: 10145,
-  name: "Avet",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.MYTHIC,
-  disenchantReward: 62500,
-  cardId: CardId.AVET
-},{
-  id: 10150,
-  name: "Guiding Lights",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.COMMON,
-  disenchantReward: 0,
-  cardId: CardId.GUIDING_LIGHTS
-}, {
-  id: 10151,
-  name: "Guiding Lights",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.UNCOMMON,
-  disenchantReward: 100,
-  cardId: CardId.GUIDING_LIGHTS
-}, {
-  id: 10152,
-  name: "Guiding Lights",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.RARE,
-  disenchantReward: 500,
-  cardId: CardId.GUIDING_LIGHTS
-}, {
-  id: 10153,
-  name: "Guiding Lights",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.EPIC,
-  disenchantReward: 2500,
-  cardId: CardId.GUIDING_LIGHTS
-}, {
-  id: 10154,
-  name: "Guiding Lights",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.LEGENDARY,
-  disenchantReward: 12500,
-  cardId: CardId.GUIDING_LIGHTS
-}, {
-  id: 10155,
-  name: "Guiding Lights",
-  type: ItemType.SKIN,
-  rarity: ItemRarity.MYTHIC,
-  disenchantReward: 62500,
-  cardId: CardId.GUIDING_LIGHTS
-}, {
-  id: 10160,
   name: "Vessels",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.VESSELS
 }, {
-  id: 10170,
+  id: 10150,
   name: "Sleeper",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.SLEEPER
 }, {
-  id: 10180,
+  id: 10160,
   name: "Pilgrims",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
@@ -272,42 +251,42 @@ const items: Items = [{
   disenchantReward: 0,
   cardId: CardId.BOEDICEA
 }, {
-  id: 10630,
+  id: 10610,
   name: "Dendrites",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.DENDRITES
 }, {
-  id: 10640,
+  id: 10620,
   name: "Gnomes",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.GNOMES
 }, {
-  id: 10650,
+  id: 10630,
   name: "Mud Spirit",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.MUD_SPIRIT
 }, {
-  id: 10660,
+  id: 10640,
   name: "Peacemaker",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.PEACEMAKER
 }, {
-  id: 10670,
+  id: 10650,
   name: "Golemica",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.GOLEMICA
 }, {
-  id: 10680,
+  id: 10660,
   name: "Cave Lion",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
@@ -355,10 +334,7 @@ const items: Items = [{
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.FURY
-},
-
-
-{
+}, {
   id: 11000,
   name: "Liquid Hero",
   type: ItemType.SKIN,
@@ -366,42 +342,42 @@ const items: Items = [{
   disenchantReward: 0,
   cardId: CardId.LIQUID_HERO
 }, {
-  id: 11130,
+  id: 11110,
   name: "Liquid 1",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.LIQUID_1
 }, {
-  id: 11140,
+  id: 11120,
   name: "Liquid 2",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.LIQUID_2
 }, {
-  id: 11150,
+  id: 11130,
   name: "Liquid 3",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.LIQUID_3
 }, {
-  id: 11160,
+  id: 11140,
   name: "Liquid 4",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.LIQUID_4
 }, {
-  id: 11170,
+  id: 11150,
   name: "Liquid 5",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.LIQUID_5
 }, {
-  id: 11180,
+  id: 11160,
   name: "Liquid 6",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
@@ -449,9 +425,7 @@ const items: Items = [{
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.LIQUID_12
-},
-
-{
+}, {
   id: 11500,
   name: "Gas Hero",
   type: ItemType.SKIN,
@@ -459,42 +433,42 @@ const items: Items = [{
   disenchantReward: 0,
   cardId: CardId.GAS_HERO
 }, {
-  id: 11630,
+  id: 11610,
   name: "Gas 1",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.GAS_1
 }, {
-  id: 11640,
+  id: 11620,
   name: "Gas 2",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.GAS_2
 }, {
-  id: 11650,
+  id: 11630,
   name: "Gas 3",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.GAS_3
 }, {
-  id: 11660,
+  id: 11640,
   name: "Gas 4",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.GAS_4
 }, {
-  id: 11670,
+  id: 11650,
   name: "Gas 5",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.GAS_5
 }, {
-  id: 11680,
+  id: 11660,
   name: "Gas 6",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
@@ -542,9 +516,7 @@ const items: Items = [{
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.GAS_12
-},
-
-{
+}, {
   id: 12000,
   name: "Plasma Hero",
   type: ItemType.SKIN,
@@ -552,42 +524,42 @@ const items: Items = [{
   disenchantReward: 0,
   cardId: CardId.PLASMA_HERO
 }, {
-  id: 12130,
+  id: 12110,
   name: "Plasma 1",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.PLASMA_1
 }, {
-  id: 12140,
+  id: 12120,
   name: "Plasma 2",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.PLASMA_2
 }, {
-  id: 12150,
+  id: 12130,
   name: "Plasma 3",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.PLASMA_3
 }, {
-  id: 12160,
+  id: 12140,
   name: "Plasma 4",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.PLASMA_4
 }, {
-  id: 12170,
+  id: 12150,
   name: "Plasma 5",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,
   disenchantReward: 0,
   cardId: CardId.PLASMA_5
 }, {
-  id: 12180,
+  id: 12160,
   name: "Plasma 6",
   type: ItemType.SKIN,
   rarity: ItemRarity.COMMON,

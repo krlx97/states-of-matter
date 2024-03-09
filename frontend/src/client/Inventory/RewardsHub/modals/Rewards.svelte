@@ -26,7 +26,7 @@
       ["Top 100 elo", 3n * 10n ** 18n, "ecr"],
       ["Top 100 level", 1n * 10n ** 18n, "ecr"],
       ["Daily task", 1n * 10n ** 18n, "ecr"],
-      ["Weekly task", 3n * 10n ** 18n, "ecr"],
+      ["Weekly task", 1n, "shard"],
       ["Silver", 1n * 10n ** 18n, "ees"],
       ["Gold", 3n * 10n ** 18n, "ees"],
       ["Master", 5n * 10n ** 18n, "ees"]

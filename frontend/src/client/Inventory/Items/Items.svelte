@@ -1,6 +1,6 @@
 <script lang="ts">
   import {items} from "@som/shared/data";
-  import {ButtonComponent, LinkComponent, SelectComponent} from "ui";
+  import {ButtonComponent, CurrencyComponent, LinkComponent, SelectComponent} from "ui";
   import ItemComponent from "./Item.svelte";
     import { modalService, soundService } from "services";
     import Unlock from "./modals/Unlock.svelte";
@@ -8,11 +8,11 @@
     import { onDestroy, onMount } from "svelte";
 
 const inDevelopment = [
-    11130, 11140, 11150, 11160, 11170, 11180,
+    11110, 11120, 11130, 11140, 11150, 11160,
     11300, 11310, 11320, 11400, 11410, 11420,
-    11630, 11640, 11650, 11660, 11670, 11680,
+    11610, 11620, 11630, 11640, 11650, 11660,
     11800, 11810, 11820, 11900, 11910, 11920,
-    12130, 12140, 12150, 12160, 12170, 12180,
+    12110, 12120, 12130, 12140, 12150, 12160,
     12300, 12310, 12320, 12400, 12410, 12420
   ];
   let currentSort = "Initial";
@@ -221,8 +221,7 @@ const inDevelopment = [
           "Uncommon",
           "Rare",
           "Epic",
-          "Legendary",
-          "Mythic",
+          "Legendary"
         ]}"
         label="Rarity"
         bind:selected="{selectedRarity}"
@@ -255,6 +254,8 @@ const inDevelopment = [
         {/if}
       </LinkComponent>
     </div>
+    <!-- <CurrencyComponent iconSize="sm" name="shard" number="{12n}"/> -->
+
     <ButtonComponent on:click={onRandomItem}>CRAFT RANDOM</ButtonComponent>
   </div>
 

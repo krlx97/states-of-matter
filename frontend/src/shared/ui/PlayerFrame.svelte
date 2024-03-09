@@ -1,7 +1,9 @@
 <script lang="ts">
   import {PlayerStatus} from "@som/shared/enums";
+    import { socketService } from "services";
   import {onMount} from "svelte";
   import {ButtonComponent, MenuComponent, ProgressBarComponent, TextComponent} from "ui";
+    import { playerStore } from "stores";
 
   let pathElement: SVGPathElement;
   // let pathElement2: SVGPathElement;
@@ -44,6 +46,10 @@
   // let isMenuToggled = false;
 
   $: bars = [{color: rank, progress: myEloo}]
+
+  const onAddFriend = (): void => {
+    socketService.socket.emit("addFriend", {name});
+  };
 
   onMount((): void => {
     const xpProgressLen = pathElement.getTotalLength();
@@ -358,8 +364,13 @@
           </ButtonComponent>
         {/each}
       {/if}
-      <div>{name}</div>
+      <TextComponent color="{$playerStore.name === name && leaderboardPosition ? "primary" : "white"}">{name}</TextComponent>
       {#if leaderboardPosition}
+        {#if $playerStore.name !== name && $playerStore.friends.find((friend) => friend.name === name) === undefined}
+          <ButtonComponent isIcon on:click="{onAddFriend}">
+            <i class="fa-solid fa-user-plus"></i>
+          </ButtonComponent>
+        {/if}
         <div>#{leaderboardPosition}</div>
       {/if}
       {#if status !== undefined}

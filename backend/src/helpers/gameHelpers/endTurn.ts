@@ -57,31 +57,7 @@ const endTurn = async (name: string): Promise<any> => {
   }
 
   const manaDelta = howMuchMana - player.field.hero.mana.current;
-  const neurotoxinDebuff = player.field.hero.debuffs.find(
-    (debuff): boolean => debuff.id === EffectId.NEUROTOXIN
-  );
   player.field.hero.mana.current = howMuchMana;
-
-  if (neurotoxinDebuff) {
-    player.field.hero.health.current -= 1;
-
-    animations.push({
-      type: "FLOATING_TEXT",
-      name: player.name,
-      field: "hero",
-      text: "Neurotoxin"
-    }, {
-      type: "HEALTH",
-      name: player.name,
-      field: "hero",
-      increment: undefined,
-      decrement: 1
-    });
-
-    if (await isGameOver($game, animations)) {
-      return;
-    }
-  }
 
   animations.push({
     type: "END_TURN",
@@ -93,53 +69,79 @@ const endTurn = async (name: string): Promise<any> => {
     decrement: undefined
   });
 
+  const neurotoxinDebuff = opponent.field.hero.debuffs.find(
+    (debuff): boolean => debuff.id === EffectId.NEUROTOXIN
+  );
+
+  if (neurotoxinDebuff) {
+    opponent.field.hero.health.current -= 1;
+
+    animations.push({
+      type: "FLOATING_TEXT",
+      name: opponent.name,
+      field: "hero",
+      text: "Neurotoxin"
+    }, {
+      type: "HEALTH",
+      name: opponent.name,
+      field: "hero",
+      increment: undefined,
+      decrement: 1
+    });
+
+    if (await isGameOver($game, animations)) {
+      return;
+    }
+  }
+
   const playerMinionFields: ["a", "b", "c", "d"] = ["a", "b", "c", "d"];
 
   playerMinionFields.forEach((field): void => {
     const minion = player.field[field];
+    const oppMinion = opponent.field[field];
 
-    if (!minion) {
-      return;
+    if (minion) {
+      const blazeBuff = minion.buffs.find(
+          (buff): boolean => buff.id === EffectId.BLAZE
+        );
+
+      const regenerationBuff = minion.buffs.find(
+        (buff): boolean => buff.id === EffectId.REGENERATION
+      );
+
+      if (blazeBuff) {
+        animations.push(...gameHelpers.effect.blaze.onEndTurn({
+          player,
+          playerMinionField: field,
+          blazeBuff
+        }));
+      }
+
+      if (regenerationBuff) {
+        animations.push(...gameHelpers.effect.regeneration({player}));
+      }
+
+      minion.canAttack = true;
     }
 
-    minion.canAttack = true;
+    if (oppMinion) {
+      const neurotoxinDebuff = oppMinion.debuffs.find(
+        (debuff): boolean => debuff.id === EffectId.NEUROTOXIN
+      );
 
-    const blazeBuff = minion.buffs.find(
-      (buff): boolean => buff.id === EffectId.BLAZE
-    );
+      if (neurotoxinDebuff) {
+        animations.push({
+          type: "FLOATING_TEXT",
+          name: player.name,
+          field,
+          text: "Neurotoxin"
+        });
 
-    const regenerationBuff = minion.buffs.find(
-      (buff): boolean => buff.id === EffectId.REGENERATION
-    )
+        animations.push(...gameHelpers.deductHealth(player, oppMinion, 1, field));
 
-    const neurotoxinDebuff = minion.debuffs.find(
-      (debuff): boolean => debuff.id === EffectId.NEUROTOXIN
-    );
-
-    if (blazeBuff) {
-      animations.push(...blaze.onEndTurn({
-        player,
-        playerMinionField: field,
-        blazeBuff
-      }));
-    }
-
-    if (regenerationBuff) {
-      animations.push(...regeneration({player}));
-    }
-
-    if (neurotoxinDebuff) {
-      animations.push({
-        type: "FLOATING_TEXT",
-        name: player.name,
-        field,
-        text: "Neurotoxin"
-      });
-
-      animations.push(...deductHealth(player, minion, 1, field));
-
-      if (minion.health.current <= 0) {
-        animations.push(...moveToGraveyard(player, minion, field));
+        if (oppMinion.health.current <= 0) {
+          animations.push(...gameHelpers.moveToGraveyard(player, oppMinion, field));
+        }
       }
     }
   });

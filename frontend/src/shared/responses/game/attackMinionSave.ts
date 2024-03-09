@@ -137,13 +137,18 @@ const animy = (animation: any) => {
   } else if (type === "MAGIC") {
     animate.magic(animation);
   } else if (type === "SHAKE") {
-    if (get(playerStore).name === animation.playerA) {
+    if (animation.playerA !== undefined && animation.playerB !== undefined && get(playerStore).name === animation.playerA) {
       updateConnectingLine(animation.playerAField, animation.playerBField);
-    } else {
+    } else if (animation.playerB !== undefined && animation.playerA !== undefined && get(playerStore).name === animation.playerB) {
       updateConnectingLine(animation.playerBField, animation.playerAField);
     }
-    animate.shake({damageTaken: animation.playerANumber, field: animation.playerAField, name: animation.playerA});
-    animate.shake({damageTaken: animation.playerBNumber, field: animation.playerBField, name: animation.playerB});
+
+    if (animation.playerA !== undefined) {
+      animate.shake({damageTaken: animation.playerANumber, field: animation.playerAField, name: animation.playerA});
+    }
+    if (animation.playerB !== undefined) {
+      animate.shake({damageTaken: animation.playerBNumber, field: animation.playerBField, name: animation.playerB});
+    }
   } else if (type === "TRAP_SET") {
     animate.trapset(animation);
   } else if (type === "END_TURN") {
@@ -206,17 +211,10 @@ const attackMinionSave = (): void => {
             return;
           }
 
-          // selectedCardStore.update((store) => {
-          //   store.field = undefined;
-          //   store.graveyard = undefined;
-          //   store.hand = undefined;
-          //   return store;
-          // });
-
           animationsQueue.set([]);
           gameStore.set(latestGameState);
 
-          latestGameState = undefined;
+          // latestGameState = undefined;
           i = 0;
         } else {
           animy($animationsQueue[i]);

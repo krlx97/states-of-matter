@@ -40,14 +40,22 @@ const useAbility: SocketRequest = (socket, error): void => {
         decrement: 5
       });
 
-      const shieldBuff = minion.buffs.find((buff) => buff.id === EffectId.SHIELD);
+      const shieldBuff = minion.buffs.find(
+        (buff): boolean => buff.id === EffectId.SHIELD
+      );
+
+      const unbreakableBuff = minion.buffs.find(
+        (buff): boolean => buff.id === EffectId.UNBREAKABLE
+      );
+
+      const amount = unbreakableBuff ? 2 : 1;
 
       if (shieldBuff) {
-        shieldBuff.data.amount += 1;
+        shieldBuff.data.amount += amount;
       } else {
         minion.buffs.push({
           id: EffectId.SHIELD,
-          data: {amount: 1}
+          data: {amount}
         });
       }
 
@@ -55,7 +63,7 @@ const useAbility: SocketRequest = (socket, error): void => {
         type: "FLOATING_TEXT",
         name: player.name,
         field: target,
-        text: "+1 Shield"
+        text: `+${amount} Shield`
       });
     } else if (hero.ability === Ability.HEAL) {
       const minion = player.field[target];

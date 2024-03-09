@@ -112,6 +112,10 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       $playerB.rewards.ees = newEes.toString();
     }
 
+    const { eloPlayerA, eloPlayerB } = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerA');
+    $playerA.elo += eloPlayerA;
+    $playerB.elo -= eloPlayerB;
+
     if ($game.type === GameType.CUSTOM) {
       $playerA.games.custom.won += 1;
       $playerB.games.custom.lost += 1;
@@ -125,10 +129,6 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     if ($game.type === GameType.RANKED) {
       $playerA.games.ranked.won += 1;
       $playerB.games.ranked.lost += 1;
-
-      const { eloPlayerA, eloPlayerB } = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerA');
-      $playerA.elo += eloPlayerA;
-      $playerB.elo -= eloPlayerB;
     }
 
     const $playerAReplace = await $players.replaceOne({
@@ -143,7 +143,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       isWinner: true,
       gameType: $game.type,
       experience: aXp,
-      elo: $game.type === GameType.RANKED ? 20 : 0,
+      elo: $game.type === GameType.RANKED ? eloPlayerA : 0,
       eesReward: playerAEesReward.toString(),
       playerDaily: playerADaily,
       animations
@@ -153,7 +153,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       isWinner: false,
       gameType: $game.type,
       experience: bXp,
-      elo: $game.type === GameType.RANKED ? -20 : 0,
+      elo: $game.type === GameType.RANKED ? eloPlayerB : 0,
       eesReward: playerBEesReward.toString(),
       playerDaily: playerBDaily,
       animations
@@ -273,6 +273,10 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       $playerA.rewards.ees = newEes.toString();
     }
 
+    const { eloPlayerA, eloPlayerB } = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerB');
+    $playerA.elo -= eloPlayerA;
+    $playerB.elo += eloPlayerB;
+
     if ($game.type === GameType.CUSTOM) {
       $playerB.games.custom.won += 1;
       $playerA.games.custom.lost += 1;
@@ -282,10 +286,6 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     } else if ($game.type === GameType.RANKED) {
       $playerB.games.ranked.won += 1;
       $playerA.games.ranked.lost += 1;
-      
-      const { eloPlayerA, eloPlayerB } = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerB');
-      $playerA.elo -= eloPlayerA;
-      $playerB.elo += eloPlayerB;
     }
 
     const $playerBeplace = await $players.replaceOne({
@@ -300,7 +300,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       isWinner: true,
       gameType: $game.type,
       experience: bXp,
-      elo: $game.type === GameType.RANKED ? 20 : 0,
+      elo: $game.type === GameType.RANKED ? eloPlayerB : 0,
       playerDaily: playerBDaily,
       eesReward: playerBEesReward.toString(),
       animations
@@ -310,7 +310,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       isWinner: false,
       gameType: $game.type,
       experience: aXp,
-      elo: $game.type === GameType.RANKED ? -20 : 0,
+      elo: $game.type === GameType.RANKED ? eloPlayerA : 0,
       playerDaily: playerADaily,
       eesReward: playerAEesReward.toString(),
       animations

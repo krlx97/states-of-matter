@@ -1,14 +1,30 @@
 import { soundService } from "services";
-import { isAnimating, nodeStore } from "stores";
+import { gameStore, isAnimating, nodeStore } from "stores";
 
 const trapset = (animations: any) => {
   isAnimating.set(true);
 
-  const {name} = animations;
+  const {name, gid} = animations;
 
   nodeStore.update((store) => {
     store.trapset.trigger = true;
     store.trapset.name = name;
+    return store;
+  });
+
+  gameStore.update((store) => {
+    if (store.player.name === name) {
+      const handCard = store.player.hand.find((card) => card.gid === gid);
+
+      if (!handCard) {
+        return store;
+      }
+
+      store.player.hand.splice(store.player.hand.indexOf(handCard), 1);
+    } else {
+      store.opponent.hand -= 1;
+    }
+
     return store;
   });
 

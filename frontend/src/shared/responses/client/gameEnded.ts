@@ -1,6 +1,6 @@
 import {GameType, PlayerStatus} from "@som/shared/enums";
 import {modalService, socketService} from "services";
-import {animationsQueue, intervals, playerStore} from "stores";
+import {animationsQueue, intervals, isAnimating, playerStore} from "stores";
 import GameEndedComponent from "../../../client/Play/modals/GameEnded.svelte"
 import { animate } from "../game/animate";
 import { get } from "svelte/store";
@@ -14,40 +14,8 @@ const gameEnded = (): void => {
       return store;
     });
 
-    // const animationDuration = 800;
-
-    // animations.forEach((animation, i): void => {
-    //   const {type} = animation;
-    //   const ms = animationDuration * i;
-
-    //   if (type === "DAMAGE") {
-    //     setTimeout((): void => animate.damage(animation), ms);
-    //   } else if (type === "HEALTH") {
-    //     setTimeout((): void => animate.health(animation), ms);
-    //   } else if (type === "MANA_CAPACITY") {
-    //     setTimeout((): void => animate.manaCapacity(animation), ms);
-    //   } else if (type === "DEATH") {
-    //     setTimeout((): void => animate.death(animation), ms);
-    //   } else if (type === "FLOATING_TEXT") {
-    //     setTimeout((): void => animate.floatingText(animation), ms);
-    //   } else if (type === "SUMMON") {
-    //     setTimeout((): void => animate.summon(animation), ms);
-    //   } else if (type === "TRAP") {
-    //     setTimeout((): void => animate.trap(animation), ms);
-    //   } else if (type === "MAGIC") {
-    //     setTimeout((): void => animate.magic(animation), ms);
-    //   } else if (type === "SHAKE") {
-    //     setTimeout((): void => {
-    //       animate.shake({damageTaken: animation.playerANumber, field: animation.playerAField, name: animation.playerA});
-    //       animate.shake({damageTaken: animation.playerBNumber, field: animation.playerBField, name: animation.playerB});
-    //     }, ms)
-    //   } else if (type === "TRAP_SET") {
-    //     setTimeout((): void => animate.trapset(animation), ms);
-    //   }
-    // });
-
     let int = setInterval((): void => {
-      if (get(animationsQueue).length) { return; }
+      if (get(isAnimating) || get(animationsQueue).length) { return; }
 
       clearInterval(int);
       clearInterval(intervals[0]); // game timer

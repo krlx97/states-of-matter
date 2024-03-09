@@ -206,7 +206,7 @@
   on:mousemove={onMousemove}
   on:mouseleave={onMouseleave}>
 
-  {#if item.rarity === 0 || item.rarity === 3}
+  {#if item.rarity === 0 || item.rarity === 2}
     <div class="item__img">
       {#if item.type === 0}
         <img src="images/items/{item.id}.png" alt="{item.name}" style:border-radius="50%">

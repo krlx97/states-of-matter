@@ -19,8 +19,13 @@ const summon = (animation: any): void => {
 
   gameStore.update((store) => {
     if (store.player.name === name) {
-      const index = store.player.hand.indexOf(minion);
-      store.player.hand.splice(index, 1);
+      const handCard = store.player.hand.find((card) => card.gid === minion.gid);
+
+      if (!handCard) {
+        return store;
+      }
+
+      store.player.hand.splice(store.player.hand.indexOf(handCard), 1);
       store.player.field[field] = minion;
     } else {
       store.opponent.hand -= 1;

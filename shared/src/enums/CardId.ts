@@ -1,6 +1,6 @@
 enum CardId {
   // Neutral
-  SEAFARER = 13,
+  SEAFARER = 11,
   AVET,
   GUIDING_LIGHTS,
   VESSELS,
@@ -14,7 +14,7 @@ enum CardId {
   SPELLBANE,
   // Solid
   BOEDICEA = 50,
-  DENDRITES = 63,
+  DENDRITES = 61,
   GNOMES,
   MUD_SPIRIT,
   PEACEMAKER,
@@ -28,7 +28,7 @@ enum CardId {
   FURY,
   // Liquid
   LIQUID_HERO = 100,
-  LIQUID_1 = 113,
+  LIQUID_1 = 111,
   LIQUID_2,
   LIQUID_3,
   LIQUID_4,
@@ -42,7 +42,7 @@ enum CardId {
   LIQUID_12,
   // Gas
   GAS_HERO = 150,
-  GAS_1 = 163,
+  GAS_1 = 161,
   GAS_2,
   GAS_3,
   GAS_4,
@@ -56,7 +56,7 @@ enum CardId {
   GAS_12,
   // Plasma
   PLASMA_HERO = 200,
-  PLASMA_1 = 213,
+  PLASMA_1 = 211,
   PLASMA_2,
   PLASMA_3,
   PLASMA_4,

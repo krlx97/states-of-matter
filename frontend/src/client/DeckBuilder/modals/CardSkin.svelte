@@ -34,6 +34,7 @@
   };
 
   onMount(() => {
+    console.log($playerStore.skins);
     selectedSkin = $playerStore.skins.find(({cardId}): boolean => skin.cardId === cardId);
     item = items.find((item): boolean => selectedSkin.skinId === item.id);
     isSelected = selectedSkin.skinId === skin.id;
@@ -158,7 +159,7 @@
     {#if balance < 1}
       <div class="skin--disabled">🔒</div>
     {/if}
-    {#if skin.rarity === 3 || skin.rarity === 0}
+    {#if skin.rarity === 2 || skin.rarity === 0}
       <img class:isGrey="{balance < 1}" src="images/items/{skin.id}.png" alt="{skin.id}">
     {:else}
       <video class:isGrey="{balance < 1}" autoplay loop muted>

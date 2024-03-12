@@ -41,14 +41,21 @@ const valor = (params: Valor): Animations => {
 
   animations.push({
     type: "SHAKE",
-    playerA: opponent.name,
-    playerANumber: -damage,
-    playerAField: "hero"
+    attacker: undefined,
+    attacked: {
+      name: opponent.name,
+      decrement: damage,
+      field: "hero"
+    }
+    // playerB: opponent.name,
+    // playerBNumber: damage,
+    // playerBField: "hero"
   }, {
     type: "HEALTH",
     field: "hero",
     name: opponent.name,
-    increment: -damage
+    decrement: damage,
+    increment: undefined
   });
 
   return animations;

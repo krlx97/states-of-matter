@@ -112,9 +112,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       $playerB.rewards.ees = newEes.toString();
     }
 
-    const { eloPlayerA, eloPlayerB } = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerA');
-    $playerA.elo += eloPlayerA;
-    $playerB.elo -= eloPlayerB;
+    const {eloPlayerA, eloPlayerB} = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerA');
 
     if ($game.type === GameType.CUSTOM) {
       $playerA.games.custom.won += 1;
@@ -129,6 +127,8 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     if ($game.type === GameType.RANKED) {
       $playerA.games.ranked.won += 1;
       $playerB.games.ranked.lost += 1;
+      $playerA.elo += eloPlayerA;
+      $playerB.elo -= eloPlayerB;
     }
 
     const $playerAReplace = await $players.replaceOne({
@@ -273,9 +273,7 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       $playerA.rewards.ees = newEes.toString();
     }
 
-    const { eloPlayerA, eloPlayerB } = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerB');
-    $playerA.elo -= eloPlayerA;
-    $playerB.elo += eloPlayerB;
+    const {eloPlayerA, eloPlayerB} = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerB');
 
     if ($game.type === GameType.CUSTOM) {
       $playerB.games.custom.won += 1;
@@ -286,6 +284,8 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     } else if ($game.type === GameType.RANKED) {
       $playerB.games.ranked.won += 1;
       $playerA.games.ranked.lost += 1;
+      $playerA.elo -= eloPlayerA;
+      $playerB.elo += eloPlayerB;
     }
 
     const $playerBeplace = await $players.replaceOne({
@@ -335,7 +335,8 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     });
   }
 
-  delete endTurnTimeouts[gameId];
+  clearTimeout(endTurnTimeouts[gameId]);
+  endTurnTimeouts[gameId] = undefined;
   await $games.deleteOne({id: gameId});
 };
 

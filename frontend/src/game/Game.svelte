@@ -77,8 +77,10 @@
 
   .connecting-line {
     position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
     border: 1px solid red;
-    z-index: 1;
+    z-index: 100;
   }
 
   .trap-trigger, .magic-trigger, .trapset-trigger {

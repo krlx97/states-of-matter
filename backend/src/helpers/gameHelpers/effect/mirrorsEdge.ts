@@ -30,9 +30,21 @@ const mirrorsEdge = (params: MirrorsEdge): Animations => {
     field: "hero",
     text: "MIRROR'S EDGE"
   }, {
+    type: "SHAKE",
+    attacker: undefined,
+    attacked: {
+      name: player.name,
+      decrement: playerMinion.damage.current,
+      field: "hero"
+    }
+    // playerB: player.name,
+    // playerBNumber: playerMinion.damage.current,
+    // playerBField: "hero"
+  }, {
     type: "HEALTH",
     field: "hero",
-    increment: -playerMinion.damage.current,
+    decrement: playerMinion.damage.current,
+    increment: undefined,
     name: player.name
   }];
 };

@@ -78,6 +78,26 @@ const attackHero: SocketRequest = (socket, error): void => {
     const elusiveBuff = playerMinion.buffs.find((buff) => buff.id === EffectId.ELUSIVE);
 
     if (trap && trap.effect === EffectId.MIRRORS_EDGE && !elusiveBuff) {
+      animations.push({
+        type: "SHAKE",
+        attacker: {
+          name: player.name,
+          decrement: 0,
+          field: attacker
+        },
+        attacked: {
+          name: opponent.name,
+          decrement: playerMinion.damage.current,
+          field: "hero"
+        }
+        // playerA: player.name,
+        // playerANumber: 0,
+        // playerAField: attacker,
+        // playerB: opponent.name,
+        // playerBNumber: playerMinion.damage.current,
+        // playerBField: "hero"
+      });
+
       animations.push(...effect.mirrorsEdge({
         player,
         playerMinion,
@@ -92,6 +112,26 @@ const attackHero: SocketRequest = (socket, error): void => {
 
 
     if (opponent.trap && opponent.trap.effect === EffectId.RICOCHET && !elusiveBuff) {
+      animations.push({
+        type: "SHAKE",
+        attacker: {
+          name: player.name,
+          decrement: 0,
+          field: attacker
+        },
+        attacked: {
+          name: opponent.name,
+          decrement: playerMinion.damage.current,
+          field: "hero"
+        }
+        // playerA: player.name,
+        // playerANumber: 0,
+        // playerAField: attacker,
+        // playerB: opponent.name,
+        // playerBNumber: playerMinion.damage.current,
+        // playerBField: "hero"
+      });
+
       animations.push(...effect.ricochet({
         player,
         playerMinion,
@@ -145,12 +185,22 @@ const attackHero: SocketRequest = (socket, error): void => {
     if (!isAttackNegated) {
       animations.push({
         type: "SHAKE",
-        playerA: player.name,
-        playerANumber: 0,
-        playerAField: attacker,
-        playerB: opponent.name,
-        playerBNumber: playerMinion.damage.current,
-        playerBField: "hero"
+        attacker: {
+          name: player.name,
+          decrement: 0,
+          field: attacker
+        },
+        attacked: {
+          name: opponent.name,
+          decrement: playerMinion.damage.current,
+          field: "hero"
+        }
+        // playerA: player.name,
+        // playerANumber: 0,
+        // playerAField: attacker,
+        // playerB: opponent.name,
+        // playerBNumber: playerMinion.damage.current,
+        // playerBField: "hero"
       });
 
       animations.push(

@@ -110,7 +110,7 @@ const endTurn = async (name: string): Promise<any> => {
       );
 
       if (blazeBuff) {
-        animations.push(...gameHelpers.effect.blaze.onEndTurn({
+        animations.push(...blaze.onEndTurn({
           player,
           playerMinionField: field,
           blazeBuff
@@ -118,7 +118,7 @@ const endTurn = async (name: string): Promise<any> => {
       }
 
       if (regenerationBuff) {
-        animations.push(...gameHelpers.effect.regeneration({player}));
+        animations.push(...regeneration({player}));
       }
 
       minion.canAttack = true;
@@ -137,10 +137,10 @@ const endTurn = async (name: string): Promise<any> => {
           text: "Neurotoxin"
         });
 
-        animations.push(...gameHelpers.deductHealth(player, oppMinion, 1, field));
+        animations.push(...deductHealth(player, oppMinion, 1, field));
 
         if (oppMinion.health.current <= 0) {
-          animations.push(...gameHelpers.moveToGraveyard(player, oppMinion, field));
+          animations.push(...moveToGraveyard(player, oppMinion, field));
         }
       }
     }

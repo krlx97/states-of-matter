@@ -35,22 +35,39 @@ const signin = (): void => {
     if (gameView) {
       gameStore.set(gameView);
 
-      const endTurnTime = gameView.endTurnTime;
+      cancelAnimationFrame(intervals[0]);
 
-      clearInterval(intervals[0]);
+      const barAnimation: FrameRequestCallback = (): void => {
+        const currentTime = Date.now();
+        const remaining = gameView.endTurnTime - currentTime;
+        const height = (remaining / TURN_DURATION_MS) * 100;
 
-      intervals[0] = setInterval(() => {
-        const time = Date.now();
-        let rem = endTurnTime - time;
-        let x = (rem / TURN_DURATION_MS) * 100;
+        nodeStore.update((store) => {
+          store.barHeight = `${height}%`;
+          return store;
+        });
 
-        if (time <= endTurnTime) {
-          nodeStore.update((store) => {
-            store.barHeight = `${x}%`;
-            return store;
-          });
-        }
-      }, 1000 / 60);
+        intervals[0] = requestAnimationFrame(barAnimation);
+      };
+
+      intervals[0] = requestAnimationFrame(barAnimation);
+
+      // const endTurnTime = gameView.endTurnTime;
+
+      // clearInterval(intervals[0]);
+
+      // intervals[0] = setInterval(() => {
+      //   const time = Date.now();
+      //   let rem = endTurnTime - time;
+      //   let x = (rem / TURN_DURATION_MS) * 100;
+
+      //   if (time <= endTurnTime) {
+      //     nodeStore.update((store) => {
+      //       store.barHeight = `${x}%`;
+      //       return store;
+      //     });
+      //   }
+      // }, 1000 / 60);
     }
   });
 };

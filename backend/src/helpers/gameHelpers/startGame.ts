@@ -47,9 +47,10 @@ const startGame = async (
   if (!isInserted.insertedId) { return; }
 
   clearTimeout(endTurnTimeouts[game.id]);
+
   endTurnTimeouts[game.id] = setTimeout(async (): Promise<void> => {
     await endTurn(game.currentPlayer);
-  }, 30000);
+  }, 90000);
 
   io.to($playerA.socketId).emit("startGame" as any, {
     playerA: {

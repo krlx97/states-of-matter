@@ -50,6 +50,17 @@ const ricochet = (params: Ricochet): Animations => {
       field: key,
       name: player.name,
       text: "Ricochet"
+    }, {
+      type: "SHAKE",
+      attacker: undefined,
+      attacked: {
+        name: player.name,
+        decrement: playerMinion.damage.current,
+        field: key
+      }
+      // playerA: player.name,
+      // playerANumber: playerMinion.damage.current,
+      // playerAField: key
     });
 
     animations.push(...deductHealth(player, minion, playerMinion.damage.current, key));

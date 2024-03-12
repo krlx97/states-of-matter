@@ -98,6 +98,26 @@ const attackMinion: SocketRequest = (socket, error): void => {
     );
 
     if (opponentTrap?.effect === EffectId.MIRRORS_EDGE && !elusiveBuff) {
+      animations.push({
+        type: "SHAKE",
+        attacker: {
+          name: player.name,
+          decrement: opponentMinion.damage.current,
+          field: attacker
+        },
+        attacked: {
+          name: opponent.name,
+          decrement: playerMinion.damage.current,
+          field: attacked
+        }
+        // playerA: player.name,
+        // playerANumber: opponentMinion.damage.current,
+        // playerAField: attacker,
+        // playerB: opponent.name,
+        // playerBNumber: playerMinion.damage.current,
+        // playerBField: attacked
+      });
+
       animations.push(
         ...effect.mirrorsEdge({player, playerMinion, opponent, opponentTrap})
       );
@@ -110,6 +130,26 @@ const attackMinion: SocketRequest = (socket, error): void => {
     }
 
     if (opponentTrap?.effect === EffectId.RICOCHET && !elusiveBuff) {
+      animations.push({
+        type: "SHAKE",
+        attacker: {
+          name: player.name,
+          decrement: opponentMinion.damage.current,
+          field: attacker
+        },
+        attacked: {
+          name: opponent.name,
+          decrement: playerMinion.damage.current,
+          field: attacked
+        }
+        // playerA: player.name,
+        // playerANumber: opponentMinion.damage.current,
+        // playerAField: attacker,
+        // playerB: opponent.name,
+        // playerBNumber: playerMinion.damage.current,
+        // playerBField: attacked
+      });
+
       animations.push(
         ...effect.ricochet({player, playerMinion, opponent, opponentMinionField: attacked, opponentTrap})
       );
@@ -193,15 +233,26 @@ const attackMinion: SocketRequest = (socket, error): void => {
     }
 
     if (!isAttackNegated) {
-      // shake should play both animations simultaneously
       animations.push({
         type: "SHAKE",
-        playerA: player.name,
-        playerANumber: opponentMinion.damage.current,
-        playerAField: attacker,
-        playerB: opponent.name,
-        playerBNumber: playerMinion.damage.current,
-        playerBField: attacked
+        attacker: {
+          name: player.name,
+          decrement: opponentMinion.damage.current,
+          field: attacker
+        },
+        attacked: {
+          name: opponent.name,
+          decrement: playerMinion.damage.current,
+          field: attacked
+        }
+
+
+        // playerA: player.name,
+        // playerANumber: opponentMinion.damage.current,
+        // playerAField: attacker,
+        // playerB: opponent.name,
+        // playerBNumber: playerMinion.damage.current,
+        // playerBField: attacked
       });
 
       animations.push(...gameHelpers.deductHealth(player, playerMinion, opponentMinion.damage.current, attacker));

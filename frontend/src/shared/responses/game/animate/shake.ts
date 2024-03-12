@@ -48,6 +48,12 @@ const shake = (animation: any): void => {
       fieldElem.style.transform = "translateX(0)";
       elem.style.visibility = "hidden";
       isAnimating.set(false);
+nodeStore.update((store) => {
+    store.lineCss = "";
+    store.showLine = false;
+
+    return store;
+  });
     }
   }
 

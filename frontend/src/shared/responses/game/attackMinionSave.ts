@@ -263,7 +263,7 @@ const animy = (animation: any) => {
           field: animation.attacked.field,
           name: animation.attacked.name
         });
-      }, 676)
+      }, 766);
 
       line(
         animation.attacker.field,

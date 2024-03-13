@@ -42,7 +42,7 @@ const magic = (animations: any) => {
     });
 
     isAnimating.set(false);
-  }, 3010);
+  }, 3100);
 };
 
 export {magic};

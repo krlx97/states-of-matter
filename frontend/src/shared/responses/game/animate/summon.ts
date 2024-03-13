@@ -37,7 +37,7 @@ const summon = (animation: any): void => {
 
   setTimeout((): void => {
     isAnimating.set(false);
-  }, 343);
+  }, 433);
 
   soundService.play("summon");
 };

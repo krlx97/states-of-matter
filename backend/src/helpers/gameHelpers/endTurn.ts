@@ -42,17 +42,17 @@ const endTurn = async (name: string): Promise<any> => {
 
   $game.currentTurn += 1;
 
-  if ($game.currentTurn === 0 || $game.currentTurn === 1) {
+  if ($game.currentTurn === 0) {
     howMuchMana = 5;
-  } else if ($game.currentTurn === 2 || $game.currentTurn === 3) {
+  } else if ($game.currentTurn === 1 || $game.currentTurn === 2) {
     howMuchMana = 6;
-  } else if ($game.currentTurn === 4 || $game.currentTurn === 5) {
+  } else if ($game.currentTurn === 3 || $game.currentTurn === 4) {
     howMuchMana = 7;
-  } else if ($game.currentTurn === 6 || $game.currentTurn === 7) {
+  } else if ($game.currentTurn === 5 || $game.currentTurn === 6) {
     howMuchMana = 9;
-  } else if ($game.currentTurn === 8 || $game.currentTurn === 9) {
+  } else if ($game.currentTurn === 7 || $game.currentTurn === 8) {
     howMuchMana = 9;
-  } else if ($game.currentTurn >= 10) {
+  } else if ($game.currentTurn >= 9) {
     howMuchMana = 10;
   }
 

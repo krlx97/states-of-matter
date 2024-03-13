@@ -40,7 +40,7 @@ server.io.on("connection", (socket): void => {
 
 server.http.listen(process.env.PORT || 4201);
 
-schedule("0 */1 * * *", async (): Promise<void> => {
+schedule("0 */8 * * *", async (): Promise<void> => {
   for await (let $player of mongo.$players.find()) {
     if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
       $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;

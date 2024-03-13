@@ -22,7 +22,7 @@ const endTurn = (animation: any) => {
       return store;
     });
     isAnimating.set(false);
-  }, 3010);
+  }, 3100);
 };
 
 export {endTurn};

@@ -13,7 +13,7 @@ interface ShadowSurge {
 }
 
 const shadowSurge = {
-  onNormalSummon: function (params: ShadowSurge): Animations {
+  onNormalSummon (params: ShadowSurge): Animations {
     const {player, playerMinion, playerMinionField} = params;
 
     playerMinion.canAttack = true;
@@ -25,7 +25,7 @@ const shadowSurge = {
       text: "SHADOW SURGE"
     }];
   },
-  onSpecialSummon: function (params: ShadowSurge): Animations {
+  onSpecialSummon (params: ShadowSurge): Animations {
     const {player, playerMinion, playerMinionField} = params;
 
     playerMinion.canAttack = true;

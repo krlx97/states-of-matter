@@ -51,8 +51,8 @@ const cardsView = [{ // ----- NEUTRAL -----
   effect: {
     name: "Quick Shot",
     description: colorTooltip`
-      Deal ${["damage", "2 damage"]} to a random enemy minion when normal
-      summoned.
+      Avet shoots a shadow arrow when it is normal summoned, reducing the ${["health", "health"]} of a
+      random enemy minion by ${["health", "2"]}.
     `
   },
 }, {
@@ -200,11 +200,11 @@ const cardsView = [{ // ----- NEUTRAL -----
   id: CardId.BOEDICEA, // ----- SOLID -----
   name: "Boedicea",
   lore: `
-    She understood it all. What once was unseen now is seen. To see inner
-    geography of her body meant understanding others. Thoughts navigate through
-    network of lymphatic rivers, bloodstreams and all that flows and oozes
-    inside and outside. Her body became smaller, not unlike that prophetess of
-    the Old. No longer I hear anything, except the music of the veins.
+    Immortality in form was deemed possible. Created from metal, earth and
+    stone, she stood waiting for somebody to breathe and to add soul to the
+    husk. When it finally came to pass, it was no human breathe, but that of the
+    vast mineral kingdom, which knew she was a part of it. Now she moves and
+    defends immovable. You are from above, I am from below.
   `,
   effect: {
     name: "Eternal Aura",
@@ -390,13 +390,13 @@ const cardsView = [{ // ----- NEUTRAL -----
   },
 }, { // ----- LIQUID -----
   id: CardId.LIQUID_HERO,
-  name: "Liquid Hero",
+  name: "Olatea",
   lore: `
-    Immortality in form was deemed possible. Created from metal, earth and
-    stone, she stood waiting for somebody to breathe and to add soul to the
-    husk. When it finally came to pass, it was no human breathe, but that of the
-    vast mineral kingdom, which knew she was a part of it. Now she moves and
-    defends immovable. You are from above, I am from below.
+    She understood it all. What once was unseen now is seen. To see inner
+    geography of her body meant understanding others. Thoughts navigate through
+    network of lymphatic rivers, bloodstreams and all that flows and oozes
+    inside and outside. Her body became smaller, not unlike that prophetess of
+    the Old. No longer I hear anything, except the music of the veins.
   `,
   effect: {
     name: "Life Aura",
@@ -568,7 +568,7 @@ const cardsView = [{ // ----- NEUTRAL -----
 
 {
   id: CardId.GAS_HERO,
-  name: "Gas Hero",
+  name: "Isaac",
   lore: `
     He was, after all, just a human in the world where human was a word almost
     forgotten. No longer finding his purpose after the Rapture, he wanted to
@@ -688,7 +688,7 @@ const cardsView = [{ // ----- NEUTRAL -----
   },
 }, {
   id: CardId.PLASMA_HERO,
-  name: "Plasma Hero",
+  name: "Zendario",
   lore: `
     Disfigured, disigruntled, dispossesed. For a long time he prayed that fiery
     ghosts might take him away, for he was old and he could no longer bathe

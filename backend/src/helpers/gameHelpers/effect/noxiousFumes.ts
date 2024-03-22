@@ -1,8 +1,8 @@
 import {EffectId} from "@som/shared/enums";
-import type {Field, GameMinionCard, GamePlayer, GameTrapCard, MinionField} from "@som/shared/types/mongo";
-import { deductHealth } from "../deductHealth";
-import { moveToGraveyard } from "../moveToGraveyard";
+import {deductHealth} from "../deductHealth";
+import {moveToGraveyard} from "../moveToGraveyard";
 import type { Animations } from "@som/shared/types/game";
+import type {Field, GameMinionCard, GamePlayer, GameTrapCard, MinionField} from "@som/shared/types/mongo";
 
 interface NoxiousFumes {
   player: GamePlayer;
@@ -45,19 +45,13 @@ const noxiousFumes = (params: NoxiousFumes): Animations => {
   });
 
   if (playerMinion.health.current <= 0) {
-    moveToGraveyard(player, playerMinion, playerMinionField);
-
-    animations.push({
-      type: "DEATH",
-      field: playerMinionField,
-      name: player.name
-    });
+    animations.push(...moveToGraveyard(player, playerMinion, playerMinionField));
   }
 
   opponent.graveyard.push(opponentTrap);
   opponent.trap = undefined;
 
-  return [];
+  return animations;
 };
 
 export {noxiousFumes};

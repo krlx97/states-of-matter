@@ -1,21 +1,45 @@
 import {EffectId} from "@som/shared/enums";
-import {insertDebuff} from "../insertDebuff";
-import type {GameMinionCard, GamePlayer, GameTrapCard} from "@som/shared/types/mongo";
+import type {Animations} from "@som/shared/types/game";
+
+import type {
+  GameMinionCard,
+  GamePlayer,
+  GameTrapCard,
+  MinionField
+} from "@som/shared/types/mongo";
 
 interface PoisonedGround {
   player: GamePlayer;
-  minion: GameMinionCard;
-  trap: GameTrapCard;
+  playerMinion: GameMinionCard;
+  playerMinionField: MinionField;
+  opponent: GamePlayer;
+  opponentTrap: GameTrapCard;
 }
 
-const poisonedGround = (params: PoisonedGround) => {
-  const {player, minion, trap} = params;
+const poisonedGround = (params: PoisonedGround): Animations => {
+  const {player, playerMinion, playerMinionField, opponent, opponentTrap} = params;
+  const animations: Animations = [];
 
-  insertDebuff(minion, EffectId.NEUROTOXIN);
-  player.graveyard.push(trap);
-  player.trap = undefined;
+  animations.push({
+    type: "TRAP",
+    name: opponent.name,
+    card: opponentTrap
+  }, {
+    type: "FLOATING_TEXT",
+    name: player.name,
+    field: playerMinionField,
+    text: "Neurotoxin"
+  });
 
-  return [true, ""];
+  playerMinion.debuffs.push({
+    id: EffectId.NEUROTOXIN,
+    data: {}
+  });
+
+  opponent.graveyard.push(opponentTrap);
+  opponent.trap = undefined;
+
+  return animations;
 };
 
 export {poisonedGround};

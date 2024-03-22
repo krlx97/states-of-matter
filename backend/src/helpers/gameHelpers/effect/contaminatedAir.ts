@@ -1,5 +1,5 @@
 import {CardType, EffectId} from "@som/shared/enums";
-import {insertDebuff} from "../insertDebuff";
+import type {Animations} from "@som/shared/types/game";
 import type {GamePlayer} from "@som/shared/types/mongo";
 
 interface ContaminatedAir {
@@ -7,8 +7,9 @@ interface ContaminatedAir {
   opponent: GamePlayer;
 }
 
-const contaminatedAir = (params: ContaminatedAir) => {
+const contaminatedAir = (params: ContaminatedAir): Animations => {
   const {player, opponent} = params;
+  const animations: Animations = [];
   const minionKeys = Object.keys(player.field) as Array<keyof typeof player.field>;
   const opponentMinionKeys = Object.keys(player.field) as Array<keyof typeof player.field>;
 
@@ -23,7 +24,17 @@ const contaminatedAir = (params: ContaminatedAir) => {
           minion.damage.current -= 1;
         }
 
-        insertDebuff(minion, EffectId.CONTAMINATED_AIR);
+        minion.debuffs.push({
+          id: EffectId.CONTAMINATED_AIR,
+          data: {}
+        });
+
+        animations.push({
+          type: "FLOATING_TEXT",
+          name: player.name,
+          field: key,
+          text: "Contaminated air"
+        });
       }
     }
   });
@@ -39,12 +50,22 @@ const contaminatedAir = (params: ContaminatedAir) => {
           minion.damage.current -= 1;
         }
 
-        insertDebuff(minion, EffectId.CONTAMINATED_AIR);
+        minion.debuffs.push({
+          id: EffectId.CONTAMINATED_AIR,
+          data: {}
+        });
+
+        animations.push({
+          type: "FLOATING_TEXT",
+          name: opponent.name,
+          field: key,
+          text: "Contaminated air"
+        });
       }
     }
   });
 
-  return [true, ""];
+  return animations;
 };
 
 export {contaminatedAir};

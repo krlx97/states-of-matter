@@ -336,7 +336,7 @@
             {#if typeof chunk === "string"}
               {chunk}
             {:else}
-              <TextComponent color="{chunk[0]}">{chunk[1]}</TextComponent>
+              <TextComponent color="{chunk[0]}" size="sm">{chunk[1]}</TextComponent>
             {/if}
           {/each}
         </div>
@@ -367,7 +367,7 @@
             {#if typeof chunk === "string"}
               {chunk}
             {:else}
-              <TextComponent color="{chunk[0]}">{chunk[1]}</TextComponent>
+              <TextComponent color="{chunk[0]}" size="sm">{chunk[1]}</TextComponent>
             {/if}
           {/each}
         </div>

@@ -49,9 +49,11 @@
   {:else}
     {fix(number)}
   {/if}
+
   {#if isIconVisible}
     <img src="images/currencies/{iconSize}/{name}.png" alt="{name}"/>
   {/if}
+
   <div class="currency__full">
     {#if name === "shard"}
       {number}

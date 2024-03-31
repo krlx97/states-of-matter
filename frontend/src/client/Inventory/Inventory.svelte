@@ -9,23 +9,20 @@
   import WalletTutorial3 from "./Tutorial/WalletTutorial3.svelte";
   import WalletTutorial4 from "./Tutorial/WalletTutorial4.svelte";
   import Rewards from "./RewardsHub/RewardsHub.svelte";
-    import { fade } from "svelte/transition";
-    import { quadInOut } from "svelte/easing";
-    import { ethersService } from "services";
 
-  const isInventoryTutorial = $tutorialStore.name === "inventory";
+  $: isInventoryTutorial = $tutorialStore.name === "inventory";
 
   const steps = [{
     position: "top: 50%; left: 50%; transform: translate(-50%, -50%)",
     component: WalletTutorial1
   }, {
-    position: "top: 246px; left: 490px;",
+    position: "top: 250px; left: 360px;",
     component: WalletTutorial2
   }, {
     position: "top: 266px; left: 1274px;",
     component: WalletTutorial3
   }, {
-    position: "top: 266px; left: 900px;",
+    position: "top: 250px; left: 840px;",
     component: WalletTutorial4
   }];
 
@@ -35,6 +32,7 @@
 
   const onTelosEvm = async (): Promise<void> => {
     const {ethereum} = window;
+
     if (!ethereum) { return; }
 
     try {
@@ -44,10 +42,7 @@
           chainId: "0x29"
         }]
       });
-
-      // await ethersService.reloadUser();
-    } catch (switchError) {
-      // This error code indicates that the chain has not been added to MetaMask.
+    } catch (switchError: any) {
       if (switchError.code === 4902) {
         await ethereum.request({
           method: "wallet_addEthereumChain",
@@ -131,11 +126,11 @@
   .isTutorial, .isTutorial2, .isTutorial3 {
     position: relative;
     z-index: 101;
-    animation: opa 800ms linear infinite alternate;
+    animation: flash 1s linear infinite alternate;
   }
 
-  @keyframes opa {
-   from {opacity: 0.5;}
+  @keyframes flash {
+    from {opacity: 0.5;}
     to {opacity: 1;}
   }
 </style>
@@ -145,7 +140,7 @@
     !$playerStore.address ||
     (
       $playerStore.address &&
-      $ethersStore.chainId === /*1337n*/41n &&
+      $ethersStore.chainId === 41n &&
       $ethersStore.accounts.includes($playerStore.address.toLowerCase())
     )
   }
@@ -166,7 +161,7 @@
     {#if !$playerStore.tutorial.inventory}
       <TutorialComponent tutorial="inventory" {steps}/>
     {/if}
-  {:else if $playerStore.address && $ethersStore.chainId !== /*1337n*/41n}
+  {:else if $playerStore.address && $ethersStore.chainId !== 41n}
     <div class="metamask-error">
       <div>
         Wrong network selected, please switch to TelosEVM.
@@ -182,16 +177,19 @@
   {:else if $playerStore.address && !$ethersStore.accounts.includes(getAddress($playerStore.address))}
     <div class="metamask-error">
       <div>
-        <TextComponent isBold color="primary" size="xl">{getAddress($playerStore.address)}</TextComponent><br/><br/>
+        <TextComponent isBold color="primary" size="xl">
+          {getAddress($playerStore.address)}
+        </TextComponent>
+        <br/><br/>
         Please connect your game address listed above through metamask.
       </div>
-        <ButtonComponent on:click="{onConnect}">
-          <img
-            src="images/metamask.png"
-            alt="Metamask"
-            style="margin-right: var(--xs)"/>
-          Metamask
-        </ButtonComponent>
+      <ButtonComponent on:click="{onConnect}">
+        <img
+          src="images/metamask.png"
+          alt="Metamask"
+          style="margin-right: var(--xs)"/>
+        Metamask
+      </ButtonComponent>
     </div>
   {/if}
 {:else}

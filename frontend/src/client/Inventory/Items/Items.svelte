@@ -1,30 +1,30 @@
 <script lang="ts">
   import {items} from "@som/shared/data";
   import {ButtonComponent, CurrencyComponent, LinkComponent, SelectComponent} from "ui";
+  import { modalService, soundService } from "services";
+  import { inventoryStore } from "stores";
+  import { onDestroy, onMount } from "svelte";
   import ItemComponent from "./Item.svelte";
-    import { modalService, soundService } from "services";
-    import Unlock from "./modals/Unlock.svelte";
-    import { inventoryStore } from "stores";
-    import { onDestroy, onMount } from "svelte";
+  import Unlock from "./modals/Unlock.svelte";
 
-const inDevelopment = [
-    11110, 11120, 11130, 11140, 11150, 11160,
-    11300, 11310, 11320, 11400, 11410, 11420,
-    11610, 11620, 11630, 11640, 11650, 11660,
-    11800, 11810, 11820, 11900, 11910, 11920,
-    12110, 12120, 12130, 12140, 12150, 12160,
-    12300, 12310, 12320, 12400, 12410, 12420
+  const inDevelopment = [
+    11110n, 11120n, 11130n, 11140n, 11150n, 11160n,
+    11300n, 11310n, 11320n, 11400n, 11410n, 11420n,
+    11610n, 11620n, 11630n, 11640n, 11650n, 11660n,
+    11800n, 11810n, 11820n, 11900n, 11910n, 11920n,
+    12110n, 12120n, 12130n, 12140n, 12150n, 12160n,
+    12300n, 12310n, 12320n, 12400n, 12410n, 12420n
   ];
+
   let currentSort = "Initial";
   let sortAscending = true;
-
   let selectedRarity = "All";
   let selectedType = "All";
-    const x = items.filter((itm) => !inDevelopment.includes(itm.id));
-
+  const x = $inventoryStore.collectibles.items.filter((itm) => !inDevelopment.includes(itm.id));
   let filteredItems = x;
   let scrollTimeout: NodeJS.Timeout;
   let inc = 0;
+  let unsub: any;
 
   const onScroll = () => {
     // item hover animation quick fix, find a better way
@@ -53,9 +53,9 @@ const inDevelopment = [
             return true;
           } else if (selectedRarity === "Legendary" && item.rarity === 4) {
             return true;
-          } else if (selectedRarity === "Mythic" && item.rarity === 5) {
+          } /*else if (selectedRarity === "Mythic" && item.rarity === 5) {
             return true;
-          } else {
+          } */else {
             return false;
           }
         }
@@ -80,7 +80,7 @@ const inDevelopment = [
   const onSortInitial = (): void => {
     currentSort = "Initial";
     sortAscending = true;
-    filteredItems = filteredItems.sort((a, b) => a.id - b.id);
+    filteredItems = filteredItems.sort((a, b) => parseInt(a.id.toString()) - parseInt(b.id.toString()));
 
     soundService.play("click");
   };
@@ -96,54 +96,15 @@ const inDevelopment = [
     filteredItems = filteredItems.sort((a, b) => {
       if (a.rarity === 0 && b.rarity !== 0) {
         return 1; // Common rarity (0) always comes after others
-      }
-      if (b.rarity === 0 && a.rarity !== 0) {
+      } else if (b.rarity === 0 && a.rarity !== 0) {
         return -1; // Common rarity (0) always comes after others
-      }
-      if (a.rarity === 0 && b.rarity === 0) {
+      } else if (a.rarity === 0 && b.rarity === 0) {
         return 0; // Both are common rarity, leave them as is
+      } else if (a.rarity !== 0 && b.rarity !== 0) {
+        return sortAscending ? Number(a.balance - b.balance) : Number(b.balance - a.balance);
       }
 
-      let aInventory = $inventoryStore.items.find((item): boolean => item.id === BigInt(a.id));
-      let bInventory = $inventoryStore.items.find((item): boolean => item.id === BigInt(b.id));
-
-      if (!aInventory || !bInventory) {
-        return 0;
-      }
-
-      return sortAscending ? Number(aInventory.balance - bInventory.balance) : Number(bInventory.balance - aInventory.balance);
-    });
-
-    soundService.play("click");
-  };
-
-  const onSortSupply = (): void => {
-    if (currentSort === "Supply") {
-      sortAscending = !sortAscending;
-    } else {
-      sortAscending = true;
-      currentSort = "Supply";
-    }
-
-    filteredItems = filteredItems.sort((a, b) => {
-      if (a.rarity === 0 && b.rarity !== 0) {
-        return 1; // Common rarity (0) always comes after others
-      }
-      if (b.rarity === 0 && a.rarity !== 0) {
-        return -1; // Common rarity (0) always comes after others
-      }
-      if (a.rarity === 0 && b.rarity === 0) {
-        return 0; // Both are common rarity, leave them as is
-      }
-
-      let aInventory = $inventoryStore.items.find((item): boolean => item.id === BigInt(a.id));
-      let bInventory = $inventoryStore.items.find((item): boolean => item.id === BigInt(b.id));
-
-      if (!aInventory || !bInventory) {
-        return 0;
-      }
-
-      return sortAscending ? Number(aInventory.supply - bInventory.supply) : Number(bInventory.supply - aInventory.supply);
+      return 0;
     });
 
     soundService.play("click");
@@ -153,7 +114,6 @@ const inDevelopment = [
     modalService.open(Unlock);
   };
 
-  let unsub;
   onMount(() => {
     unsub = inventoryStore.subscribe((store) => {
       onFilterItems();
@@ -237,6 +197,7 @@ const inDevelopment = [
         bind:selected="{selectedType}"
         on:change="{onFilterItems}"/>
     </div>
+
     <div style="display: flex; gap: var(--md);">
       <LinkComponent color="{currentSort === "Initial" ? "primary" : "white"}" on:click="{onSortInitial}">
         Initial
@@ -247,16 +208,12 @@ const inDevelopment = [
           <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
         {/if}
       </LinkComponent>
-      <LinkComponent color="{currentSort === "Supply" ? "primary" : "white"}" on:click="{onSortSupply}">
-        Supply
-        {#if currentSort === "Supply"}
-          <i class="fa-solid fa-sort-{sortAscending ? "up" : "down"}"></i>
-        {/if}
-      </LinkComponent>
     </div>
-    <!-- <CurrencyComponent iconSize="sm" name="shard" number="{12n}"/> -->
 
-    <ButtonComponent on:click={onRandomItem}>CRAFT RANDOM</ButtonComponent>
+    <ButtonComponent on:click="{onRandomItem}">
+      <img src="images/currencies/sm/shard.png" alt="Shard Pack"/>
+      SHARD PACKS {$inventoryStore.collectibles.shardPacks}
+    </ButtonComponent>
   </div>
 
   <div class="container" on:scroll="{onScroll}">

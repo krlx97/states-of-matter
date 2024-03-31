@@ -1,18 +1,17 @@
 <script lang="ts">
   import {onMount} from "svelte";
-  import {fade} from "svelte/transition";
   import {GameType} from "@som/shared/enums";
   import {modalStore, playerStore} from "stores";
-  import {ButtonComponent, CurrencyComponent, ModalComponent, PlayerFrameComponent, TextComponent} from "ui";
-  import { modalService } from "services";
+  import {ButtonComponent, ModalComponent, PlayerFrameComponent, TextComponent} from "ui";
+  import {modalService} from "services";
 
   let {
     isWinner,
     gameType,
     experience,
     elo,
-    playerDaily,
-    eesReward,
+    levelUp,
+    win,
     animations
   } = $modalStore.data;
 
@@ -78,33 +77,6 @@
     font-size: var(--xl);
     text-align: center;
   }
-
-  .levelup {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--md);
-    margin-top: var(--md);
-  }
-
-  .assets {
-    display: flex;
-    justify-content: center;
-    gap: var(--md);
-    width: 100%;
-  }
-
-  .reward-asset {
-    padding: var(--md);
-    border: 1px solid rgb(127, 127, 127);
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    font-size: var(--font-lg);
-    border-radius: 8px;
-    flex-basis: 50%;
-  }
 </style>
 
 <ModalComponent dark isClosable="{false}" width="400px">
@@ -118,21 +90,17 @@
       {/if}
     </div>
 
-    <!-- {#if gameType === GameType.CASUAL || gameType === GameType.RANKED} -->
-      <div>gained {experience} experience</div>
-      {#if gameType === GameType.RANKED}
-        <div>{isWinner ? "gained" : "lost"} {Math.abs(elo)} elo</div>
-      {/if}
-      {#if playerDaily}
-        <div>Daily task complete!</div>
-      {/if}
-      {#if BigInt(eesReward) > 0n}
-        <div>Level up!</div>
-        <div style="display: flex; align-items: center;">
-          + <CurrencyComponent iconSize="sm" name="ees" number="{eesReward}"/>
-        </div>
-      {/if}
-    <!-- {/if} -->
+    <div>gained {experience} experience</div>
+
+    {#if gameType === GameType.RANKED}
+      <div>{isWinner ? "gained" : "lost"} {Math.abs(elo)} elo</div>
+    {/if}
+    {#if win}
+      <div>First win daily task complete!</div>
+    {/if}
+    {#if levelUp}
+      <div>Level up daily task complete!</div>
+    {/if}
 
     {#key $playerStore.experience || $playerStore.elo}
       <PlayerFrameComponent
@@ -147,6 +115,6 @@
   </div>
 
   <div style="display: flex; justify-content: center;">
-    <ButtonComponent type="button" on:click="{onClose}">CLOSE</ButtonComponent>
+    <ButtonComponent on:click="{onClose}">CLOSE</ButtonComponent>
   </div>
 </ModalComponent>

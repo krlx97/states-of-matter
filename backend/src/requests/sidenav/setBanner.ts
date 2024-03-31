@@ -1,5 +1,4 @@
 import {mongo, server} from "app";
-import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const setBanner: SocketRequest = (socket, error): void => {

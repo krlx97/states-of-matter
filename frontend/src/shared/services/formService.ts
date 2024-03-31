@@ -181,11 +181,11 @@ const validateCraft2 = (
   }
 
   if (balance !== undefined && isSufficientBalance(balance, amt * price)) {
-    return "Insufficient EES balance";
+    return "Insufficient ECR balance";
   }
 
   if (balance2 !== undefined && isSufficientBalance(balance2, amt * price2)) {
-    return "Insufficient ECR balance";
+    return "Insufficient Shards balance";
   }
 
   return "";

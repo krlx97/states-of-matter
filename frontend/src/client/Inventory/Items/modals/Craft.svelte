@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {items} from "@som/shared/data";
+  import {contractAddress} from "@som/shared/data";
   import {ethersService, formService, soundService} from "services";
   import {modalStore, inventoryStore} from "stores";
 
@@ -11,47 +11,65 @@
     TableComponent
   } from "ui";
 
-  const {id} = $modalStore.data;
-  const item = items.find((item): boolean => item.id === id);
-  let eesPrice = 0n;
+  const {item} = $modalStore.data;
+  let ecrPrice = 100n * 10n ** 18n;
+  let reqShards = 0n;
 
   if (item?.rarity === 1) {
-    eesPrice = 200n * 10n ** 18n;
+    reqShards = 1n;
   } else if (item?.rarity === 2) {
-    eesPrice = 800n * 10n ** 18n;
+    reqShards = 10n;
   } else if (item?.rarity === 3) {
-    eesPrice = 3200n * 10n ** 18n;
+    reqShards = 100n;
   } else if (item?.rarity === 4) {
-    eesPrice = 12800n * 10n ** 18n;
-  } else if (item?.rarity === 5) {
-    eesPrice = 51200n * 10n ** 18n;
+    reqShards = 1000n;
   }
 
   const formStore = formService.create({
-    amount: ["", "craft", $inventoryStore.ees, eesPrice],
+    amount: ["", "craft2", $inventoryStore.ecr.balance, ecrPrice, item.shards, reqShards],
   });
 
   const receipt = {
-    price: 0n,
-    balance: $inventoryStore.ees,
-    remaining: $inventoryStore.ees
+    price: ecrPrice,
+    total: 0n,
+    balance: $inventoryStore.ecr.balance,
+    remaining: $inventoryStore.ecr.balance,
+    price2: reqShards,
+    total2: 0n,
+    balance2: item.shards,
+    remaining2: item.shards
   };
 
   const onInput = (): void => {
     formService.validate(formStore);
 
     if (!$formStore.fields.amount.error) {
-      receipt.price = eesPrice * BigInt($formStore.fields.amount.value);
-      receipt.remaining = $inventoryStore.ees - BigInt(receipt.price);
+      receipt.total = receipt.price * BigInt($formStore.fields.amount.value);
+      receipt.remaining = $inventoryStore.ecr.balance - BigInt(receipt.total);
+
+      receipt.total2 = reqShards * BigInt($formStore.fields.amount.value);
+      receipt.remaining2 = item.shards - reqShards * BigInt($formStore.fields.amount.value)
     } else {
-      receipt.price = 0n;
-      receipt.remaining = $inventoryStore.ees;
+      receipt.total = 0n;
+      receipt.remaining = $inventoryStore.ecr.balance;
+
+      receipt.total2 = 0n;
+      receipt.remaining2 = item.shards;
     }
   };
 
   const onSetMax = (): void => {
     soundService.play("click");
-    $formStore.fields.amount.value = `${$inventoryStore.ees / eesPrice}`;
+
+    const val1 = item.shards / reqShards;
+    const val2 = $inventoryStore.ecr.balance / ecrPrice;
+
+    if (val1 > val2) {
+      $formStore.fields.amount.value = `${val2}`;
+    } else {
+      $formStore.fields.amount.value = `${val1}`;
+    }
+
     onInput();
   };
 
@@ -60,32 +78,58 @@
 
     $formStore.isLoading = true;
 
-    if ($inventoryStore.approvals.ees < receipt.price) {
-      await ethersService.transact(
-        "ethericEssence",
+    if ($inventoryStore.ecr.allowance < receipt.total) {
+      const isConfirmed = await ethersService.transact(
+        "ethericCrystals",
         "approve",
-        [ethersService.keys.somGame, receipt.price]
+        [contractAddress.game, receipt.total]
       );
+
+      if (!isConfirmed) {
+        $formStore.isLoading = false;
+        return;
+      }
+    }
+
+    if (!$inventoryStore.collectibles.approved) {
+      const isConfirmed = await ethersService.transact(
+        "collectibles",
+        "setApprovalForAll",
+        [contractAddress.game, true]
+      );
+
+      if (!isConfirmed) {
+        $formStore.isLoading = false;
+        return;
+      }
     }
 
     const isConfirmed = await ethersService.transact(
-      "somGame",
+      "game",
       "craftItem",
-      [id, $formStore.fields.amount.value]
+      [item.id, $formStore.fields.amount.value]
     );
 
-    if (isConfirmed) {
-      await ethersService.reloadUser();
-      onInput();
+    if (!isConfirmed) {
+      $formStore.isLoading = false;
+      return;
     }
+
+    await ethersService.reloadUser();
+
+    receipt.balance = $inventoryStore.ecr.balance;
+    receipt.remaining = $inventoryStore.ecr.balance;
+    receipt.balance2 = item.shards;
+    receipt.remaining2 = item.shards;
+
+    onInput();
 
     $formStore.isLoading = false;
   };
-
 </script>
 
 <style>
-.commona {
+  .commona {
     color: rgb(var(--common));
     text-shadow: 0px 2px 8px rgb(var(--common));
   }
@@ -110,28 +154,27 @@
     text-shadow: 0px 2px 8px rgb(var(--legendary));
   }
 
-  .mythica {
+  /* .mythica {
     color: rgb(var(--mythic));
     text-shadow: 0px 2px 8px rgb(var(--mythic));
-  }
+  } */
 </style>
 
 <ModalComponent>
   <svelte:fragment slot="title">
     Craft
     <span
-      class:commona={item?.rarity === 0}
-      class:uncommona={item?.rarity === 1}
-      class:rarea={item?.rarity === 2}
-      class:epica={item?.rarity === 3}
-      class:legendarya={item?.rarity === 4}
-      class:mythica={item?.rarity === 5}>
-      {item?.name || ""}
+      class:commona={item.rarity === 0}
+      class:uncommona={item.rarity === 1}
+      class:rarea={item.rarity === 2}
+      class:epica={item.rarity === 3}
+      class:legendarya={item.rarity === 4}>
+      {item.name || ""}
     </span>
   </svelte:fragment>
 
   <svelte:fragment slot="info">
-    Spend Etheric Essence to craft specified amount of items.
+    Pay Etheric Crystals to convert Shards into an Item.
   </svelte:fragment>
 
   <svelte:fragment slot="content">
@@ -144,10 +187,17 @@
         on:input="{onInput}"/>
 
       <TableComponent items="{[
-        ["Item price", eesPrice, "ees"],
-        ["Total price", receipt.price, "ees"],
-        ["Balance", receipt.balance, "ees"],
-        ["Remaining balance", receipt.remaining, "ees"]
+        ["Price", receipt.price, "ecr"],
+        ["Total", receipt.total, "ecr"],
+        ["Balance", receipt.balance, "ecr"],
+        ["Remaining", receipt.remaining, "ecr"]
+      ]}"/>
+
+      <TableComponent items="{[
+        ["Shards required", receipt.price2],
+        ["Shards total", receipt.total2],
+        ["Balance", receipt.balance2],
+        ["Remaining", receipt.remaining2]
       ]}"/>
 
       <svelte:fragment slot="submit">

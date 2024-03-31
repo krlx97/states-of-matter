@@ -1,6 +1,5 @@
 import {PlayerStatus} from "@som/shared/enums";
 import {mongo, server} from "app";
-import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
 
 const disconnect: SocketRequest = (socket, error): void => {

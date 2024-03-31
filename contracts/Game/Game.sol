@@ -1,69 +1,59 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "../Collectibles/Collectibles.sol";
 import "../EthericCrystals/EthericCrystals.sol";
 import "../EthericEnergy/EthericEnergy.sol";
-import "../EthericEssence/EthericEssence.sol";
-import "../Items/Items.sol";
 
 /// @custom:security-contact krlebyte@gmail.com
-contract Game {
-  enum Rarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHIC}
+contract Game is Ownable {
+  enum Rarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY}
+
+  error InsufficientAmount ();
+  error ItemListEmpty ();
 
   event Energize (uint256 ecrAmount, uint256 enrgAmount);
   event Solidify (uint256 ecrAmount, uint256 enrgAmount);
-  event RandomItem (address indexed player, uint256 id);
+  event OpenShardPack (address indexed player, uint256[] ids);
   event CraftItem (uint256 totalEes, uint256 id, uint256 amount);
-  event DisenchantItem (uint256 totalEes, uint256 id, uint256 amount);
+  event TradeupItems (uint256 id);
 
-  mapping(Rarity => uint256) public craftPrice;
-  mapping(Rarity => uint256) public disenchantReward;
+  mapping(Rarity => uint256) private _shardsRequired;
   mapping(Rarity => uint256[]) private _chestItems;
   mapping(uint256 => Rarity) private _itemRarity;
 
-  uint256 private constant POW = 10 ** 18;
-  address private immutable _adminAddress;
+  uint256 private constant DECIMALS = 10 ** 18;
+  uint256 private constant SHARD_PACK_ID = 1;
   uint256 public immutable deployTimestamp;
-  uint256 public randomSkinPrice = 100 * POW;
+  uint256 public craftPrice = 100 * DECIMALS;
 
-  EthericEssence public immutable eesToken;
+  Collectibles public immutable collectibles;
   EthericCrystals public immutable ecrToken;
   EthericEnergy public immutable enrgToken;
-  Items public immutable items;
 
-  constructor (address adminAddress) {
-    eesToken = new EthericEssence(address(this));
+  constructor (address initialOwner) Ownable(initialOwner) {
+    collectibles = new Collectibles(address(this));
     ecrToken = new EthericCrystals(address(this));
     enrgToken = new EthericEnergy(address(this));
-    items = new Items(address(this));
 
-    craftPrice[Rarity.UNCOMMON] = 200 * POW;
-    craftPrice[Rarity.RARE] = 800 * POW;
-    craftPrice[Rarity.EPIC] = 3200 * POW;
-    craftPrice[Rarity.LEGENDARY] = 12800 * POW;
-    craftPrice[Rarity.MYTHIC] = 51200 * POW;
+    _shardsRequired[Rarity.UNCOMMON] = 1;
+    _shardsRequired[Rarity.RARE] = 10;
+    _shardsRequired[Rarity.EPIC] = 100;
+    _shardsRequired[Rarity.LEGENDARY] = 1000;
 
-    disenchantReward[Rarity.UNCOMMON] = 20 * POW;
-    disenchantReward[Rarity.RARE] = 80 * POW;
-    disenchantReward[Rarity.EPIC] = 320 * POW;
-    disenchantReward[Rarity.LEGENDARY] = 1280 * POW;
-    disenchantReward[Rarity.MYTHIC] = 5120 * POW;
-
-    _adminAddress = adminAddress;
     deployTimestamp = block.timestamp;
-  }
-
-  modifier onlyAdmin {
-    require(_adminAddress == msg.sender, "Only admin can call.");_;
   }
 
   // ---------- S T A K I N G ----------
 
   function energize (uint256 ecrAmount) external {
-    require(ecrAmount > 0, "Must be greater than 0.");
+    if (ecrAmount < 1) {
+      revert InsufficientAmount();
+    }
 
     uint256 enrgValue = _enrgValue();
-    uint256 enrgAmount = ecrAmount * POW / enrgValue;
+    uint256 enrgAmount = ecrAmount * DECIMALS / enrgValue;
 
     ecrToken.burnFrom(msg.sender, ecrAmount);
     enrgToken.mint(msg.sender, enrgAmount);
@@ -72,10 +62,12 @@ contract Game {
   }
 
   function solidify (uint256 enrgAmount) external {
-    require(enrgAmount > 0, "Must be greater than 0.");
+    if (enrgAmount < 1) {
+      revert InsufficientAmount();
+    }
 
     uint256 enrgValue = _enrgValue();
-    uint256 ecrAmount = (enrgAmount * enrgValue) / POW;
+    uint256 ecrAmount = enrgAmount * enrgValue / DECIMALS;
 
     enrgToken.burnFrom(msg.sender, enrgAmount);
     ecrToken.mint(msg.sender, ecrAmount);
@@ -85,64 +77,79 @@ contract Game {
 
   // ---------- ITEMS ----------
 
-  function randomItem () external {
-    uint256 rarityRng = _randomNumber(1000); // 0-999
-    Rarity rarity;
+  function openShardPack () external {
+    uint256[] memory ids = new uint256[](4);
+    uint256[] memory amounts = new uint256[](4);
 
-    if (rarityRng < 800) { // 0-799
-      rarity = Rarity.UNCOMMON;
-    } else if (rarityRng >= 800 && rarityRng < 950) { // 800-949
-      rarity = Rarity.RARE;
-    } else if (rarityRng >= 951 && rarityRng < 980) { // 950-979
-      rarity = Rarity.EPIC;
-    } else if (rarityRng >= 981 && rarityRng < 999) { // 981-998
-      rarity = Rarity.LEGENDARY;
-    } else { // 999
-      rarity = Rarity.MYTHIC;
+    for (uint256 i = 0; i < 4; i += 1) {
+      Rarity rarity = Rarity(i + 1);
+
+      if (_chestItems[rarity].length < 1) {
+        revert ItemListEmpty();
+      }
+
+      uint256 id = _randomNumber(_chestItems[rarity].length);
+      uint256 shardId = _getShardId(_chestItems[rarity][id]);
+
+      ids[i] = shardId;
+      amounts[i] = 1;
     }
 
-    uint256[] memory chestItemsRarity = _chestItems[rarity];
+    collectibles.burn(msg.sender, SHARD_PACK_ID, 1);
+    collectibles.mintBatch(msg.sender, ids, amounts, "");
 
-    require(chestItemsRarity.length > 0, "No items in the list yet.");
-
-    uint256 skinRng = _randomNumber(chestItemsRarity.length);
-    uint256 itemId = chestItemsRarity[skinRng];
-    uint256 amount = 1;
-    bytes memory data = "";
-
-    ecrToken.burnFrom(msg.sender, randomSkinPrice);
-    items.mint(msg.sender, itemId, amount, data);
-
-    emit RandomItem(msg.sender, itemId);
+    emit OpenShardPack(msg.sender, ids);
   }
 
   function craftItem (uint256 id, uint256 amount) external {
-    Rarity rarity = _itemRarity[id];
-    uint256 price = craftPrice[rarity];
+    uint256 shardId = _getShardId(id);
+    uint256 shardsRequired = _shardsRequired[_itemRarity[id]] * amount;
+    uint256 totalPrice = craftPrice * amount;
 
-    require(price > 0, "Invalid item.");
+    ecrToken.burnFrom(msg.sender, totalPrice);
+    collectibles.burn(msg.sender, shardId, shardsRequired);
+    collectibles.mint(msg.sender, id, amount, "");
 
-    uint256 total = price * amount;
-    bytes memory data = "";
-
-    eesToken.burnFrom(msg.sender, total);
-    items.mint(msg.sender, id, amount, data);
-
-    emit CraftItem(total, id, amount);
+    emit CraftItem(craftPrice, id, amount);
   }
 
-  function disenchantItem (uint256 id, uint256 amount) external {
-    Rarity rarity = _itemRarity[id];
-    uint256 reward = disenchantReward[rarity];
+  function tradeupItems (uint256[] memory ids, uint256[] memory amounts) external {
+    require(ids.length == amounts.length, "Arrays length mismatch.");
 
-    require(reward > 0, "Invalid item.");
+    Rarity _rarity;
+    uint256 totalAmount;
 
-    uint256 total = reward * amount;
+    for (uint256 i = 0; i < ids.length; i += 1) {
+      if (i == 0) {
+        _rarity = _itemRarity[ids[i]];
+      } else {
+        require(_itemRarity[ids[i]] == _rarity, "Rarities must be same.");
+      }
 
-    eesToken.mint(msg.sender, total);
-    items.burn(msg.sender, id, amount);
+      require(amounts[i] > 0, "Must trade up positive amount.");
+      totalAmount += amounts[i];
+    }
 
-    emit DisenchantItem(total, id, amount);
+    require(totalAmount == 10, "Must trade up exactly 10 items.");
+    require(_rarity != Rarity.LEGENDARY, "Cannot trade up legendary items.");
+
+    Rarity nextRarity;
+
+    if (_rarity == Rarity.UNCOMMON) {
+      nextRarity = Rarity.RARE;
+    } else if (_rarity == Rarity.RARE) {
+      nextRarity = Rarity.EPIC;
+    } else if (_rarity == Rarity.EPIC) {
+      nextRarity = Rarity.LEGENDARY;
+    }
+
+    uint256 id = _chestItems[nextRarity][_randomNumber(_chestItems[nextRarity].length)];
+
+    ecrToken.burnFrom(msg.sender, craftPrice);
+    collectibles.burnBatch(msg.sender, ids, amounts);
+    collectibles.mint(msg.sender, id, 1, "");
+
+    emit TradeupItems(id);
   }
 
   // ---------- A D M I N ----------
@@ -150,7 +157,7 @@ contract Game {
   function addItems (
     uint256[] memory ids,
     Rarity[] memory rarities
-  ) external onlyAdmin {
+  ) external onlyOwner {
     require(ids.length == rarities.length, "Lists need to be the same length");
 
     for (uint256 i = 0; i < ids.length; i += 1) {
@@ -164,17 +171,26 @@ contract Game {
 
   function claimRewards (
     address player,
-    uint256 eesAmount,
-    uint256 ecrAmount
-  ) external onlyAdmin {
-    eesToken.mint(player, eesAmount);
+    uint256 ecrAmount,
+    uint256 shardPackAmount
+  ) external onlyOwner {
     ecrToken.mint(player, ecrAmount);
+    collectibles.mint(player, SHARD_PACK_ID, shardPackAmount, "");
+  }
+
+  function updateCraftPrice () external onlyOwner {
+    uint256 ecrSupply = ecrToken.totalSupply();
+    craftPrice = ecrSupply / 100000;
   }
 
   // ---------- P R I V A T E ----------
 
+  function _getShardId (uint256 skinId) private pure returns (uint256 value) {
+    value = skinId * 10;
+  }
+
   function _enrgValue () private view returns (uint256 value) {
-    uint256 baseValue = 1 * POW;
+    uint256 baseValue = 1 * DECIMALS;
     uint256 rewardPerSecond = 1000000000;
     value = baseValue + ((block.timestamp - deployTimestamp) * rewardPerSecond);
   }

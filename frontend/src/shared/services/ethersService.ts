@@ -1,37 +1,9 @@
 import {get} from "svelte/store";
-import {Contract, BrowserProvider, JsonRpcProvider, JsonRpcSigner} from "ethers";
-import {items} from "@som/shared/data";
+import {BrowserProvider, JsonRpcProvider, JsonRpcSigner} from "ethers";
+import {items, contractAddress} from "@som/shared/data";
 import {playerStore, ethersStore, inventoryStore} from "stores";
 
-import EthericEssence from "@som/contracts/EthericEssence/artifacts/EthericEssence.json" assert {
-  type: "json"
-};
-
-import EthericCrystals from "@som/contracts/EthericCrystals/artifacts/EthericCrystals.json" assert {
-  type: "json"
-};
-
-import EthericEnergy from "@som/contracts/EthericEnergy/artifacts/EthericEnergy.json" assert {
-  type: "json"
-};
-
-import SomGame from "@som/contracts/Game/artifacts/Game.json" assert {
-  type: "json"
-};
-
-import SomTokens from "@som/contracts/Items/artifacts/Items.json" assert {
-  type: "json"
-};
-
-const keys = {
-  ethericEssence: "0xd00beff17b23C7e4141D31bbc293bF289D639Bba",
-  ethericCrystals: "0xFFb2D5E4Dc49C0d87425c7E0902C4cf2F8Dc0c0a",
-  ethericEnergy: "0x753Fc3e1c6dde746EB32385D33Fa4f9b43e41832",
-  somTokens: "0x1a0171E24D2a1e5487a8b5e40391694C187Be46C",
-  somGame: "0x8Bbc4e54Eb45E58C400678B03E8A098da64793ED"
-};
-
-const init = async (address: string): Promise<void> => {
+const init = (address: string): void => {
   if (window.ethereum) {
     let provider = new BrowserProvider(window.ethereum);
     let signer: JsonRpcSigner | undefined;
@@ -41,13 +13,12 @@ const init = async (address: string): Promise<void> => {
     }
 
     ethersStore.update((store) => {
-      store.contracts = {
-        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, signer ? signer : provider),
-        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, signer ? signer : provider),
-        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, signer ? signer : provider),
-        somTokens: new Contract(keys.somTokens, SomTokens.abi, signer ? signer : provider),
-        somGame: new Contract(keys.somGame, SomGame.abi, signer ? signer : provider)
-      };
+      const runner = signer ? signer : provider;
+      const contractsKeys = Object.keys(store.contracts) as Array<keyof typeof store.contracts>;
+
+      for (const key of contractsKeys) {
+        store.contracts[key] = store.contracts[key].connect(runner);
+      }
 
       return store;
     });
@@ -55,13 +26,11 @@ const init = async (address: string): Promise<void> => {
     const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
 
     ethersStore.update((store) => {
-      store.contracts = {
-        ethericEssence: new Contract(keys.ethericEssence, EthericEssence.abi, provider),
-        ethericCrystals: new Contract(keys.ethericCrystals, EthericCrystals.abi, provider),
-        ethericEnergy: new Contract(keys.ethericEnergy, EthericEnergy.abi, provider),
-        somTokens: new Contract(keys.somTokens, SomTokens.abi, provider),
-        somGame: new Contract(keys.somGame, SomGame.abi, provider)
-      };
+      const contractsKeys = Object.keys(store.contracts) as Array<keyof typeof store.contracts>;
+
+      for (const key of contractsKeys) {
+        store.contracts[key] = store.contracts[key].connect(provider);
+      }
 
       return store;
     });
@@ -69,17 +38,12 @@ const init = async (address: string): Promise<void> => {
 };
 
 const transact = async (
-  contractName: keyof typeof keys,
+  address: keyof typeof contractAddress,
   action: string,
-  params: Array<string | bigint>
+  params: Array<string | bigint | boolean>
 ): Promise<boolean> => {
   const $ethersStore = get(ethersStore);
-  const contract = $ethersStore.contracts[contractName];
-
-  if (!contract) {
-    return false;
-  }
-
+  const contract = $ethersStore.contracts[address];
   const transaction = await contract[action](...params).catch(console.log);
 
   if (!transaction) {
@@ -98,6 +62,7 @@ const transact = async (
 const sign = async (message: string): Promise<{signature: string, address: string} | void> => {
   // const store = get(ethersStore);
   // const {signer} = store;
+  if (!window.ethereum) { return; }
   const provider = new BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
 
@@ -113,17 +78,16 @@ const sign = async (message: string): Promise<{signature: string, address: strin
 
 const reloadUser = async (): Promise<void> => {
   const {
-    ethericEssence,
+    collectibles,
     ethericCrystals,
     ethericEnergy,
-    somTokens,
-    somGame
+    game
   } = get(ethersStore).contracts;
 
   const $ethersStore = get(ethersStore);
   const {address, elo} = get(playerStore);
 
-  if ($ethersStore.chainId !== /*1337n*/41n) {
+  if ($ethersStore.chainId !== 41n) {
     ethersStore.update((store) => {
       store.isLoaded = true;
       return store;
@@ -158,172 +122,141 @@ const reloadUser = async (): Promise<void> => {
       .filter((item): boolean => item.rarity !== 0)
       .map((item): bigint => BigInt(item.id));
 
-    const query = itemIds.map(() => address);
-    const bal = await somTokens.balanceOfBatch(query, itemIds);
-    const balances = [];
+    const shardIds = itemIds.map((id): bigint => id * 10n);
+    const query = itemIds.map((): string => address);
+
+    const [
+      bal,
+      srd,
+      collectiblesApproval,
+      shardPacks,
+      ecrBalance,
+      ecrSupply,
+      ecrAllowance,
+      enrgBalance,
+      enrgSupply,
+      enrgAllowance,
+      deployTimestamp
+    ] = await Promise.all([
+      collectibles.balanceOfBatch(query, itemIds),
+      collectibles.balanceOfBatch(query, shardIds),
+      collectibles.isApprovedForAll(address, contractAddress.game),
+      collectibles.balanceOf(address, 1),
+      ethericCrystals.balanceOf(address),
+      ethericCrystals.totalSupply(),
+      ethericCrystals.allowance(address, contractAddress.game),
+      ethericEnergy.balanceOf(address),
+      ethericEnergy.totalSupply(),
+      ethericEnergy.allowance(address, contractAddress.game),
+      game.deployTimestamp(),
+    ]);
+
+    const stats: Array<{id: bigint, balance: bigint, shards: bigint}> = [];
 
     itemIds.forEach((id, i) => {
-      balances.push({id, balance: bal[i]});
+      stats.push({
+        id,
+        balance: bal[i],
+        shards: srd[i]
+      });
     });
 
     for (const item of items) {
-      const {id, rarity} = item;
+      const {rarity, name, type} = item;
+      const id = BigInt(item.id)
 
-      if (id === 100 || id === 200) { // bronze
-        theItems.push({
-          id: BigInt(id),
-          balance: 1n,
-          supply: 0n
-        });
-      } else if (id === 101 || id === 201) { // silver
-        theItems.push({
-          id: BigInt(id),
-          balance: elo >= 600 ? 1n : 0n,
-          supply: 0n
-        });
-      } else if (id === 102 || id === 202) { // gold
-        theItems.push({
-          id: BigInt(id),
-          balance: elo >= 800 ? 1n : 0n,
-          supply: 0n
-        });
-      } else if (id === 103 || id === 203) { // master
-        theItems.push({
-          id: BigInt(id),
-          balance: elo >= 1000 ? 1n : 0n,
-          supply: 0n
-        });
-      } else {
-        if (rarity === 0) {
-          theItems.push({
-            id: BigInt(id),
-            balance: 1n,
-            supply: 0n
-          });
-        } else {
-          const balance = balances.find((b) => b.id === BigInt(id));
+      if (rarity === 0) {
+        let owned = true;
 
-          theItems.push({
-            id: BigInt(id),
-            balance: balance.balance,
-            supply: /*await somTokens["totalSupply(uint256)"](id)*/0n
-          });
+        if (id === 101n || id === 201n) { // silver
+          owned = elo >= 600 ? true : false;
+        } else if (id === 102n || id === 202n) { // gold
+          owned = elo >= 800 ? true : false;
+        } else if (id === 103n || id === 203n) { // master
+          owned = elo >= 1000 ? true : false;
         }
+
+        theItems.push({id, name, type, rarity, owned});
+      } else {
+        const stat = stats.find((b): boolean => b.id === id);
+        let balance = 0n;
+        let shards = 0n;
+
+        if (stat) {
+          balance = stat.balance;
+          shards = stat.shards;
+        }
+
+        theItems.push({id, name, type, rarity, balance, shards});
       }
     }
 
-    const [
-      eesBalance,
-      ecrBalance,
-      enrgBalance,
-      itemApproval,
-      eesApproval,
-      ecrApproval,
-      enrgApproval,
-      eesSupply,
-      ecrSupply,
-      enrgSupply,
-      deployTimestamp,
-      chests
-    ] = await Promise.all([
-      ethericEssence.balanceOf(address),
-      ethericCrystals.balanceOf(address),
-      ethericEnergy.balanceOf(address),
-      somTokens.isApprovedForAll(address, keys.somGame),
-      ethericEssence.allowance(address, keys.somGame),
-      ethericCrystals.allowance(address, keys.somGame),
-      ethericEnergy.allowance(address, keys.somGame),
-      ethericEssence.totalSupply(),
-      ethericCrystals.totalSupply(),
-      ethericEnergy.totalSupply(),
-      somGame.deployTimestamp(),
-      somTokens.balanceOf(address, 1)
-    ]);
-
     inventoryStore.set({
-      ees: eesBalance,
-      ecr: ecrBalance,
-      enrg: enrgBalance,
-      approvals: {
-        items: itemApproval,
-        ees: eesApproval,
-        ecr: ecrApproval,
-        enrg: enrgApproval
+      ecr: {
+        balance: ecrBalance,
+        totalSupply: ecrSupply,
+        allowance: ecrAllowance
       },
-      total: {
-        ees: eesSupply,
-        ecr: ecrSupply,
-        enrg: enrgSupply
+      enrg: {
+        balance: enrgBalance,
+        totalSupply: enrgSupply,
+        allowance: enrgAllowance
       },
-      deployTimestamp: deployTimestamp,
-      chests: chests,
-      items: theItems
+      collectibles: {
+        approved: collectiblesApproval,
+        shardPacks,
+        items: theItems
+      },
+      deployTimestamp
     });
   } else {
     const theItems = [];
+    const [ecrSupply, enrgSupply, deployTimestamp] = await Promise.all([
+      ethericCrystals.totalSupply(),
+      ethericEnergy.totalSupply(),
+      game.deployTimestamp()
+    ]);
 
     for (const item of items) {
-      const {id} = item;
+      const {rarity, name, type} = item;
+      const id = BigInt(item.id);
 
-      if (id === 100 || id === 200) { // bronze
-        theItems.push({
-          id: BigInt(id),
-          balance: 1n,
-          supply: 0n
-        });
-      } else if (id === 101 || id === 201) { // silver
-        theItems.push({
-          id: BigInt(id),
-          balance: elo >= 600 ? 1n : 0n,
-          supply: 0n
-        });
-      } else if (id === 102 || id === 202) { // gold
-        theItems.push({
-          id: BigInt(id),
-          balance: elo >= 800 ? 1n : 0n,
-          supply: 0n
-        });
-      } else if (id === 103 || id === 203) { // master
-        theItems.push({
-          id: BigInt(id),
-          balance: elo >= 1000 ? 1n : 0n,
-          supply: 0n
-        });
-      } else {
-        if (item.rarity === 0) {
-          theItems.push({
-            id: BigInt(id),
-            balance: 1n,
-            supply: 0n
-          });
-        } else {
-          theItems.push({
-            id: BigInt(id),
-            balance: 0n,
-            supply: /*await somTokens["totalSupply(uint256)"](id)*/0n
-          });
+      if (rarity === 0) {
+        let owned = true;
+
+        if (id === 101n || id === 201n) { // silver
+          owned = elo >= 600 ? true : false;
+        } else if (id === 102n || id === 202n) { // gold
+          owned = elo >= 800 ? true : false;
+        } else if (id === 103n || id === 203n) { // master
+          owned = elo >= 1000 ? true : false;
         }
+
+        theItems.push({id, name, type, rarity, owned});
+      } else {
+        const balance = 0n;
+        const shards = 0n;
+        theItems.push({id, name, type, rarity, balance, shards});
       }
     }
 
     inventoryStore.set({
-      ees: 0n,
-      ecr: 0n,
-      enrg: 0n,
-      approvals: {
-        items: false,
-        ees: 0n,
-        ecr: 0n,
-        enrg: 0n
+      ecr: {
+        balance: 0n,
+        totalSupply: ecrSupply,
+        allowance: 0n
       },
-      total: {
-        ees: await ethericEssence.totalSupply(),
-        ecr: await ethericCrystals.totalSupply(),
-        enrg: await ethericEnergy.totalSupply()
+      enrg: {
+        balance: 0n,
+        totalSupply: enrgSupply,
+        allowance: 0n
       },
-      deployTimestamp: await somGame.deployTimestamp(),
-      chests: 0n,
-      items: theItems
+      collectibles: {
+        approved: false,
+        shardPacks: 0n,
+        items: theItems
+      },
+      deployTimestamp
     });
   }
 
@@ -333,6 +266,6 @@ const reloadUser = async (): Promise<void> => {
   });
 };
 
-const ethersService = {keys, init, transact, sign, reloadUser};
+const ethersService = {keys: contractAddress, init, transact, sign, reloadUser};
 
 export {ethersService};

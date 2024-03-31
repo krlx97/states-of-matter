@@ -1,19 +1,16 @@
 <script lang="ts">
-  import {fly, scale} from "svelte/transition";
-  import {CardId, CardKlass, CardType} from "@som/shared/enums";
+  import {CardKlass, CardType} from "@som/shared/enums";
   import {soundService} from "services";
-  import {deckCache, notificationsStore, playerStore} from "stores";
+  import {deckCache, playerStore} from "stores";
   import {TextComponent} from "ui";
-  import type {PlayerDeckCardView, PlayerDeckView} from "@som/shared/types/views";
-    import { cards, cardsView } from "@som/shared/data";
-    import { onMount } from "svelte";
-    import { isDeckSame } from "./canSave";
-    import { get } from "svelte/store";
+  import type {PlayerDeckCardView} from "@som/shared/types/views";
+  import { cards, cardsView } from "@som/shared/data";
+  import { onMount } from "svelte";
+  import { isDeckSame } from "./canSave";
 
   let deckCard: PlayerDeckCardView;
   $: deck = $playerStore.decks[$playerStore.deckId];
   let cardView = cardsView.find(({id}): boolean => deckCard.id === id);
-
 
   const onRemoveFromDeck = (): void => {
     const x = $playerStore.decks[$playerStore.deckId].cards.find((x) => x.id === deckCard.id);
@@ -255,44 +252,11 @@
     flex-direction: column;
     flex-grow: 1;
   }
-
-  .deck-card__tooltip {
-    padding: 4px;
-    position: absolute;
-    /* top: 0; */
-    top: calc(100%);
-    left: 0;
-    width: 100%;
-    /* height: 100%; */
-    display: none;
-    box-sizing: border-box;
-    background-color: rgb(var(--dark-grey));
-    border: 1px solid rgb(var(--grey));
-    border-radius: 4px;
-    /* border-bottom-left-radius: 32px;
-    border-top-left-radius: 32px; */
-    font-size: var(--xs);
-    z-index: 100;
-  }
-
-  .deck-card:hover .deck-card__tooltip {
-    display: initial;
-  }
 </style>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="deck-card" on:click="{onRemoveFromDeck}" on:contextmenu|preventDefault="{onAddToDeck}">
-
-  <!-- <div class="deck-card__tooltip">
-    {#each cardView.effect.description as chunk}
-      {#if typeof chunk === "string"}
-        {chunk}
-      {:else}
-        <TextComponent color="{chunk[0]}">{chunk[1]}</TextComponent>
-      {/if}
-    {/each}
-  </div> -->
 
   <img
     class="deck-card__img"

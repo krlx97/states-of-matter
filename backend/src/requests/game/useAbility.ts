@@ -6,7 +6,7 @@ import { Animations } from "@som/shared/types/game";
 const useAbility: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
 
-  socket.on("useAbility", async (params) => {
+  socket.on("useAbility" as any, async (params: any) => {
     const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
     const animations: Animations = [];
 

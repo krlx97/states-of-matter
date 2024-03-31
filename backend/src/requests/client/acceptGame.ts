@@ -54,8 +54,8 @@ const acceptGame: SocketRequest = (socket, error): void => {
           return error("Error fetching players in game popup.");
         }
 
-        socket.emit("acceptGame", {who: "player"});
-        server.io.to($playerB.socketId).emit("acceptGame", {who: "opponent"});
+        socket.emit("acceptGame" as any, {who: "player"});
+        server.io.to($playerB.socketId).emit("acceptGame" as any, {who: "opponent"});
       }
     } else if (playerB.name === $player.name) {
       if (playerB.hasAccepted) {
@@ -89,8 +89,8 @@ const acceptGame: SocketRequest = (socket, error): void => {
           return error("Error fetching players in game popup.");
         }
 
-        socket.emit("acceptGame", {who: "player"});
-        server.io.to($playerA.socketId).emit("acceptGame", {who: "opponent"});
+        socket.emit("acceptGame" as any, {who: "player"});
+        server.io.to($playerA.socketId).emit("acceptGame" as any, {who: "opponent"});
       }
     }
   });

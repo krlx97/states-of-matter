@@ -2,19 +2,21 @@
   import {playerStore} from "stores";
   import {ModalComponent, TableComponent} from "ui";
 
-  // const ms2md = new Date().setHours(24,0,0,0) - Date.now();
+  $: items = [
+    ["Win one game", $playerStore.tasks.win ? "✅" : "❌"],
+    ["Level up", $playerStore.tasks.levelUp ? "✅" : "❌"]
+  ];
 </script>
 
 <ModalComponent width="360px">
   <svelte:fragment slot="title">Tasks</svelte:fragment>
+
   <svelte:fragment slot="info">
-    Finish the daily task by winning one game or playing three games. Doing so
-    seven days in a row completes the weekly task. Weekly task will be reset if
-    you miss the daily task.
+    Finish the daily tasks by winning one game and leveling up. Rewards are
+    flushed once per day.
   </svelte:fragment>
-  <TableComponent items="{[
-    ["Daily task", $playerStore.tasks.daily || $playerStore.tasks.dailyAlternative > 2 ? "Yes" : "No"],
-    ["Weekly task", $playerStore.tasks.weekly],
-    // ["Reset", `${new Date(Date.now() + ms2md).toLocaleDateString()} ${new Date(Date.now() + ms2md).toLocaleTimeString()}`]
-  ]}"/>
+
+  <svelte:fragment slot="content">
+    <TableComponent {items}/>
+  </svelte:fragment>
 </ModalComponent>

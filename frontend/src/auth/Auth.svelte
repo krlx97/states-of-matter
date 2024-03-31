@@ -65,6 +65,7 @@
     <div class="nav">
       {#each views as view}
         <LinkComponent
+          color="white"
           isActive="{view.name === currentView.name}"
           on:click="{() => currentView = view}">
           {view.name}

@@ -21,7 +21,8 @@ const lastStand = (params: LastStand): Animations => {
     type: "HEALTH",
     field: opponentMinionField,
     name: opponent.name,
-    increment: 1 - opponentMinion.health.current
+    increment: 1 - opponentMinion.health.current,
+    decrement: undefined
   }, {
     type: "FLOATING_TEXT",
     field: opponentMinionField,

@@ -5,7 +5,7 @@
 
   let coin: any;
   let isMenuToggled = false;
-  $: number = $inventoryStore[coin.ticker as "ecr" | "enrg"];
+  $: number = $inventoryStore[coin.ticker as "ecr" | "enrg"].balance;
 
   const onToggleMenu = (): void => {
     soundService.play("click");

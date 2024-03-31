@@ -42,20 +42,17 @@ server.http.listen(process.env.PORT || 4201);
 
 schedule("0 */8 * * *", async (): Promise<void> => {
   for await (let $player of mongo.$players.find()) {
-    if ($player.tasks.daily || $player.tasks.dailyAlternative >= 3) {
-      $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
-      $player.tasks.weekly += 1;
+    const {name} = $player;
 
-      if ($player.tasks.weekly >= 7) {
-        $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 3n * 10n ** 18n}`;
-        $player.tasks.weekly = 0;
-      }
-    } else {
-      $player.tasks.weekly = 0;
+    if ($player.tasks.win) {
+      $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 18n}`;
+      $player.tasks.win = false;
     }
 
-    $player.tasks.daily = false;
-    $player.tasks.dailyAlternative = 0;
+    if ($player.tasks.levelUp) {
+      $player.rewards.shardPacks = `${BigInt($player.rewards.shardPacks) + 1n}`;
+      $player.tasks.levelUp = false;
+    }
 
     if ($player.elo > 400) {
       $player.elo -= 1;
@@ -64,33 +61,28 @@ schedule("0 */8 * * *", async (): Promise<void> => {
     }
 
     if ($player.elo >= 600) { // silver
-      $player.rewards.ees = `${BigInt($player.rewards.ees) + 1n * 10n ** 18n}`;
+      $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 1n * 10n ** 17n}`;
     } else if ($player.elo >= 800) { // gold
-      $player.rewards.ees = `${BigInt($player.rewards.ees) + 3n * 10n ** 18n}`;
+      $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 2n * 10n ** 17n}`;
     } else if ($player.elo >= 1000) { // master
-      $player.rewards.ees = `${BigInt($player.rewards.ees) + 5n * 10n ** 18n}`;
+      $player.rewards.ecr = `${BigInt($player.rewards.ecr) + 3n * 10n ** 17n}`;
     }
 
-    await mongo.$players.replaceOne({name: $player.name}, $player);
+    await mongo.$players.replaceOne({name}, $player);
   }
 
-  const [deployTimestamp, ees, ecr, enrg] = await Promise.all([
-    contracts.somGame.deployTimestamp(),
-    contracts.ethericEssence.totalSupply(),
-    contracts.ethericCrystals.totalSupply(),
-    contracts.ethericEnergy.totalSupply()
+  const [deployTimestamp, enrg, ecr] = await Promise.all([
+    contracts.game.deployTimestamp(),
+    contracts.ethericEnergy.totalSupply(),
+    contracts.ethericCrystals.totalSupply()
   ]);
-
 
   const snapshots = await Promise.all([
     mongo.$supplySnapshots.findOne({
-      name: "ees"
+      name: "enrg"
     }),
     mongo.$supplySnapshots.findOne({
       name: "ecr"
-    }),
-    mongo.$supplySnapshots.findOne({
-      name: "enrg"
     })
   ]);
 
@@ -100,12 +92,8 @@ schedule("0 */8 * * *", async (): Promise<void> => {
   const ecrStaked = (enrg * (1n * POW + ((BigInt(date) - deployTimestamp * 1000n) * REWARD_PER_MS))) / POW;
   const supply = ecr + ecrStaked;
 
-  if (!snapshots[0] && !snapshots[1] && !snapshots[2]) {
+  if (!snapshots[0] && !snapshots[1]) {
     await Promise.all([
-      mongo.$supplySnapshots.insertOne({
-        name: "ees",
-        snapshots: [{date, supply: `${ees}`}]
-      }),
       mongo.$supplySnapshots.insertOne({
         name: "ecr",
         snapshots: [{date, supply: `${supply}`}]
@@ -117,13 +105,6 @@ schedule("0 */8 * * *", async (): Promise<void> => {
     ]);
   } else {
     await Promise.all([
-      mongo.$supplySnapshots.updateOne({
-        name: "ees"
-      }, {
-        $push: {
-          "snapshots": {date, supply: `${ees}`}
-        }
-      }),
       mongo.$supplySnapshots.updateOne({
         name: "ecr"
       }, {
@@ -181,7 +162,7 @@ schedule("0 */8 * * *", async (): Promise<void> => {
     const $player = await mongo.$players.findOne({name});
 
     if ($player) {
-      const newValue = `${BigInt($player.rewards.ecr) + (1n * (10n ** 18n))}`
+      const newValue = `${BigInt($player.rewards.ecr) + (2n * (10n ** 18n))}`
       $player.rewards.ecr = newValue;
       await mongo.$players.replaceOne({name}, $player);
     }

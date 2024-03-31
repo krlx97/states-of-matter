@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {items} from "@som/shared/data"
+  import {inventoryStore} from "stores";
   import {ModalComponent} from "ui";
   import AvatarComponent from "./Avatar.svelte";
 </script>
@@ -13,7 +13,7 @@
 
 <ModalComponent>
   <div class="avatars">
-    {#each items as item}
+    {#each $inventoryStore.collectibles.items as item}
       {#if item.type === 0}
         <AvatarComponent avatar="{item}"/>
       {/if}

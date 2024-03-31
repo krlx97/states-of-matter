@@ -21,7 +21,6 @@
   .message {
     width: 80%;
     line-height: 1.25;
-    /* box-sizing: border-box; */
   }
 
   .isSender {
@@ -39,7 +38,6 @@
   }
 
   .message__date {
-    /* margin-bottom: var(--xs); */
     display: flex;
     gap: var(--xs);
     font-family: monospace;
@@ -55,6 +53,7 @@
   .right {
     text-align-last: right;
   }
+
   .left {
     text-align-last: left;
   }

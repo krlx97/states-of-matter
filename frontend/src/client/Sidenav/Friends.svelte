@@ -109,7 +109,7 @@
       </div>
     {/if}
     <div class="friends__toolbar__actions">
-      <ButtonComponent type="button" isIcon on:click="{onAddFriend}">
+      <ButtonComponent isIcon on:click="{onAddFriend}">
         <i class="fa-solid fa-user-plus"></i>
       </ButtonComponent>
     </div>

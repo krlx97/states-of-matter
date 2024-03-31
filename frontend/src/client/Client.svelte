@@ -1,6 +1,6 @@
 <script lang="ts">
   import {soundService} from "services";
-  import {LinkComponent, TextComponent} from "ui";
+  import {LinkComponent} from "ui";
   import DeckBuilderComponent from "./DeckBuilder/DeckBuilder.svelte";
   import InventoryComponent from "./Inventory/Inventory.svelte";
   import LeaderboardsComponent from "./Leaderboards/Leaderboards.svelte";
@@ -98,11 +98,6 @@
       {/each}
 
       <div class="client__views__nav__currencies">
-        <!-- <div>
-          <TextComponent isBold size="xl">
-            v0.4.0
-          </TextComponent>
-        </div> -->
         <a href="https://discord.gg/wD9K74V8mT" target="_blank"><i class="fa-brands fa-discord fa-2x"></i></a>
         <a href="https://twitter.com/EternitasGames" target="_blank"><i class="fa-brands fa-x-twitter fa-2x"></i></a>
         <a href="https://github.com/krlx97" target="_blank"><i class="fa-brands fa-github fa-2x"></i></a>

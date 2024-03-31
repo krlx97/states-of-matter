@@ -83,7 +83,7 @@ const sendChatMessage: SocketRequest = (socket, error): void => {
     //   socketIds = getSocketIds([a.socketId]);
     // }
 
-    server.io.to([a.socketId, b.socketId]).emit("sendChatMessageSender", {sender, text, date});
+    server.io.to([a.socketId, b?.socketId || ""]).emit("sendChatMessageSender" as any, {sender, text, date});
     // socket.emit("sendChatMessageSender", {sender, text, date});
 
     // if ($lobby.challengee) {

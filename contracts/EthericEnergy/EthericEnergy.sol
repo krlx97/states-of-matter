@@ -1,34 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+// Compatible with OpenZeppelin Contracts ^5.0.0
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @custom:security-contact krlebyte@gmail.com
-contract EthericEnergy is ERC20, ERC20Burnable {
-  address private immutable _gameAddress;
+contract EthericEnergy is ERC20, ERC20Burnable, Ownable {
+  constructor (address initialOwner)
+    ERC20("Etheric Energy", "ENRG")
+    Ownable(initialOwner) {}
 
-  constructor (address gameAddress) ERC20 ("Etheric Energy", "ENRG") {
-    _gameAddress = gameAddress;
-  }
-
-  modifier onlyGame {
-    require(msg.sender == _gameAddress, "Only game contract can call.");_;
-  }
-
-  function mint (address to, uint256 amount) public onlyGame {
+  function mint (address to, uint256 amount) public onlyOwner {
     _mint(to, amount);
-  }
-
-  function burn (uint256 amount) public override(ERC20Burnable) onlyGame {
-    _burn(msg.sender, amount);
-  }
-
-  function burnFrom (
-    address account,
-    uint256 amount
-  ) public override(ERC20Burnable) onlyGame {
-    _spendAllowance(account, msg.sender, amount);
-    _burn(account, amount);
   }
 }

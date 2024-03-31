@@ -36,12 +36,14 @@ const startCustomGame: SocketRequest = (socket, error): void => {
 
     const {host, challengee} = $lobby;
 
-    await gameHelpers.startGame(
-      $lobby.id,
-      GameType.CUSTOM,
-      host.name,
-      challengee.name
-    );
+    if (challengee) {
+      await gameHelpers.startGame(
+        $lobby.id,
+        GameType.CUSTOM,
+        host.name,
+        challengee.name
+      );
+    }
   });
 };
 

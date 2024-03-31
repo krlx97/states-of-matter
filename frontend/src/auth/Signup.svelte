@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte";
   import {ethersService, formService, socketService} from "services";
   import {ButtonComponent, InputComponent, FormComponent, FormSubmitComponent, SelectComponent} from "ui";
   import BindMetamask from "./BindMetamask.svelte";
@@ -15,15 +14,8 @@
   let isPasswordVisible = false;
   let step = 1;
   let accountType = "password";
-  // let disabled = true;
 
   const onInput = (): void => {
-    // if (accountType === "password") {
-    //   disabled = $formStore.fields.name.error !== "" || $formStore.fields.password.error !== "";
-    // } else {
-    //   disabled = $formStore.fields.name.error !== "" || selectedAddress !== undefined
-    // }
-
     formService.validate(formStore);
   };
 
@@ -38,13 +30,6 @@
   const onPreviousStep = (): void => {
     step -= 1;
   };
-
-
-  // $: if (accountType === "password") {
-  //   disabled = !$formStore.fields.name.error && !$formStore.fields.password.error
-  // } else {
-  //   disabled = !$formStore.fields.name.error && selectedAddress !== undefined
-  // }
 
   const onSignup = async (): Promise<void> => {
     if (accountType === "metamask") {
@@ -66,28 +51,6 @@
       });
     }
   };
-
-  // let sub;
-  // onMount(async () => {
-  //   sub = ethersStore.subscribe((store) => {
-  //     selectedAddress = store.accounts[0];
-  //     onInput();
-  //   });
-
-    // window.ethereum.on("accountsChanged", (accounts: any) => {
-    //   address = accounts[0];
-    // });
-
-    // const accounts = await window.ethereum.request({
-    //   method: "eth_accounts"
-    // });
-
-    // address = accounts[0];
-  // });
-
-  // onDestroy(() => {
-  //   sub();
-  // })
 </script>
 
 <style>
@@ -124,7 +87,7 @@
       </div>
 
       <div class="form__submit">
-        <ButtonComponent type="button" on:click="{onNextStep}">
+        <ButtonComponent on:click="{onNextStep}">
           NEXT
         </ButtonComponent>
       </div>
@@ -149,16 +112,11 @@
           bind:value="{$formStore.fields.password.value}"
           on:input="{onInput}"/>
       {:else}
-        {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId === /*1337n*/41n}
+        {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId === 41n}
           <SelectComponent
             label="Address"
             values={$ethersStore.accounts}
             bind:selected="{selectedAddress}"/>
-          <!-- {selectedAddress} -->
-          <!-- <InputComponent
-            label="Address"
-            value="{$ethersStore.accounts[0]}"
-            disabled/> -->
         {:else}
           <BindMetamask/>
         {/if}
@@ -168,7 +126,7 @@
         <ButtonComponent on:click="{onPreviousStep}">
           PREVIOUS
         </ButtonComponent>
-        <ButtonComponent type="submit">SIGNUP</ButtonComponent>
+        <ButtonComponent isSubmit>SIGNUP</ButtonComponent>
       </div>
     {/if}
 

@@ -17,13 +17,14 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
   if (winnerName === playerA.name) {
 
 
-
-    const $playerA = await $players.findOne({
-      name: playerA.name
-    });
-    const $playerB = await $players.findOne({
-      name: playerB.name
-    });
+    const [$playerA, $playerB] = await Promise.all([
+      $players.findOne({
+        name: playerA.name
+      }),
+      $players.findOne({
+        name: playerB.name
+      })
+    ]);
 
     if (!$playerA || !$playerB) { return; }
 
@@ -33,21 +34,15 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     $playerB.status = PlayerStatus.ONLINE;
     $playerB.gameId = 0;
 
-    let playerAEesReward = 0n;
-    let playerADaily = false;
-    let playerBEesReward = 0n;
-    let playerBDaily = false;
+    let playerALevelUp = false;
+    let playerAWin = false;
 
-    if (!$playerA.tasks.daily) {
-      $playerA.tasks.daily = true;
-      playerADaily = true;
-    }
+    let playerBLevelUp = false;
+    let playerBWin = false;
 
-    if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative < 2) {
-      $playerB.tasks.dailyAlternative += 1;
-    } else if (!$playerB.tasks.daily && $playerB.tasks.dailyAlternative >= 2) {
-      $playerB.tasks.daily = true;
-      playerBDaily = true
+    if (!$playerA.tasks.win) {
+      $playerA.tasks.win = true;
+      playerAWin = true;
     }
 
     let aXp = 0;
@@ -67,7 +62,6 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     }
 
     const XP_REQUIRED = 1000;
-    const POW = 10n ** 18n;
 
     $playerA.experience += aXp;
     $playerB.experience += bXp;
@@ -77,39 +71,19 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
 
       $playerA.level += 1;
       $playerA.experience = remaining;
-      playerAEesReward = 1n * POW;
+      $playerA.tasks.levelUp = true;
 
-      if ($playerA.level % 2 === 0) {   playerAEesReward += 2n * POW; }
-      if ($playerA.level % 4 === 0) {   playerAEesReward += 4n * POW; }
-      if ($playerA.level % 8 === 0) {   playerAEesReward += 8n * POW; }
-      if ($playerA.level % 16 === 0) {  playerAEesReward += 16n * POW; }
-      if ($playerA.level % 32 === 0) {  playerAEesReward += 32n * POW; }
-      if ($playerA.level % 64 === 0) {  playerAEesReward += 64n * POW; }
-
-      let currentEes = BigInt($playerA.rewards.ees);
-      let newEes = currentEes + playerAEesReward;
-
-      $playerA.rewards.ees = newEes.toString();
+      playerALevelUp = true;
     }
 
     if ($playerB.experience >= XP_REQUIRED) {
-      const rem = $playerB.experience - XP_REQUIRED;
+      const remaining = $playerB.experience - XP_REQUIRED;
 
       $playerB.level += 1;
-      $playerB.experience = rem;
-      playerBEesReward = 1n * POW;
+      $playerB.experience = remaining;
+      $playerB.tasks.levelUp = true;
 
-      if ($playerB.level % 2 === 0) {   playerBEesReward += 2n * POW; }
-      if ($playerB.level % 4 === 0) {   playerBEesReward += 4n * POW; }
-      if ($playerB.level % 8 === 0) {   playerBEesReward += 8n * POW; }
-      if ($playerB.level % 16 === 0) {  playerBEesReward += 16n * POW; }
-      if ($playerB.level % 32 === 0) {  playerBEesReward += 32n * POW; }
-      if ($playerB.level % 64 === 0) {  playerBEesReward += 64n * POW; }
-
-      let currentEes = BigInt($playerB.rewards.ees);
-      let newEes = currentEes + playerBEesReward;
-
-      $playerB.rewards.ees = newEes.toString();
+      playerBLevelUp = true;
     }
 
     const {eloPlayerA, eloPlayerB} = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerA');
@@ -131,21 +105,18 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       $playerB.elo -= eloPlayerB;
     }
 
-    const $playerAReplace = await $players.replaceOne({
-      name: playerA.name
-    }, $playerA);
-
-    const $playerBReplace = await $players.replaceOne({
-      name: playerB.name
-    }, $playerB);
+    await Promise.all([
+      $players.replaceOne({name: playerA.name}, $playerA),
+      $players.replaceOne({name: playerB.name}, $playerB)
+    ]);
 
     io.to($playerA.socketId).emit("gameEnded" as any, {
       isWinner: true,
       gameType: $game.type,
       experience: aXp,
       elo: $game.type === GameType.RANKED ? eloPlayerA : 0,
-      eesReward: playerAEesReward.toString(),
-      playerDaily: playerADaily,
+      levelUp: playerALevelUp,
+      win: playerAWin,
       animations
     });
 
@@ -154,8 +125,8 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: bXp,
       elo: $game.type === GameType.RANKED ? eloPlayerB : 0,
-      eesReward: playerBEesReward.toString(),
-      playerDaily: playerBDaily,
+      levelUp: playerBLevelUp,
+      win: playerBWin,
       animations
     });
 
@@ -194,21 +165,15 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     $playerA.status = PlayerStatus.ONLINE;
     $playerA.gameId = 0;
 
-    let playerADaily = false;
-    let playerBDaily = false;
-    let playerAEesReward = 0n;
-    let playerBEesReward = 0n;
+    let playerALevelUp = false;
+    let playerAWin = false;
 
-    if (!$playerB.tasks.daily) {
-      $playerB.tasks.daily = true;
-      playerBDaily = true;
-    }
+    let playerBLevelUp = false;
+    let playerBWin = false;
 
-    if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative < 2) {
-      $playerA.tasks.dailyAlternative += 1;
-    } else if (!$playerA.tasks.daily && $playerA.tasks.dailyAlternative >= 2) {
-      $playerA.tasks.daily = true;
-      playerADaily = true;
+    if (!$playerB.tasks.win) {
+      $playerB.tasks.win = true;
+      playerBWin = true;
     }
 
     let aXp = 0;
@@ -228,7 +193,6 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     }
 
     const XP_REQUIRED = 1000;
-    const POW = 10n ** 18n;
 
     $playerB.experience += bXp;
     $playerA.experience += aXp;
@@ -238,19 +202,9 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
 
       $playerB.level += 1;
       $playerB.experience = remaining;
-      playerBEesReward = 1n * POW;
+      $playerB.tasks.levelUp = true;
 
-      if ($playerB.level % 2 === 0) {   playerBEesReward += 2n * POW; }
-      if ($playerB.level % 4 === 0) {   playerBEesReward += 4n * POW; }
-      if ($playerB.level % 8 === 0) {   playerBEesReward += 8n * POW; }
-      if ($playerB.level % 16 === 0) {  playerBEesReward += 16n * POW; }
-      if ($playerB.level % 32 === 0) {  playerBEesReward += 32n * POW; }
-      if ($playerB.level % 64 === 0) {  playerBEesReward += 64n * POW; }
-
-      let currentEes = BigInt($playerB.rewards.ees);
-      let newEes = currentEes + playerBEesReward;
-
-      $playerB.rewards.ees = newEes.toString();
+      playerBLevelUp = true;
     }
 
     if ($playerA.experience >= XP_REQUIRED) {
@@ -258,19 +212,9 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
 
       $playerA.level += 1;
       $playerA.experience = remaining;
-      playerAEesReward = 1n * POW;
+      $playerA.tasks.levelUp = true;
 
-      if ($playerA.level % 2 === 0) {   playerAEesReward += 2n * POW; }
-      if ($playerA.level % 4 === 0) {   playerAEesReward += 4n * POW; }
-      if ($playerA.level % 8 === 0) {   playerAEesReward += 8n * POW; }
-      if ($playerA.level % 16 === 0) {  playerAEesReward += 16n * POW; }
-      if ($playerA.level % 32 === 0) {  playerAEesReward += 32n * POW; }
-      if ($playerA.level % 64 === 0) {  playerAEesReward += 64n * POW; }
-
-      let currentEes = BigInt($playerA.rewards.ees);
-      let newEes = currentEes + playerAEesReward;
-
-      $playerA.rewards.ees = newEes.toString();
+      playerALevelUp = true;
     }
 
     const {eloPlayerA, eloPlayerB} = calculateEloPointsForPlayers($playerA.elo, $playerB.elo, 'playerB');
@@ -278,10 +222,14 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
     if ($game.type === GameType.CUSTOM) {
       $playerB.games.custom.won += 1;
       $playerA.games.custom.lost += 1;
-    } else if ($game.type === GameType.CASUAL) {
+    }
+
+    if ($game.type === GameType.CASUAL) {
       $playerB.games.casual.won += 1;
       $playerA.games.casual.lost += 1;
-    } else if ($game.type === GameType.RANKED) {
+    }
+
+    if ($game.type === GameType.RANKED) {
       $playerB.games.ranked.won += 1;
       $playerA.games.ranked.lost += 1;
       $playerA.elo -= eloPlayerA;
@@ -301,8 +249,8 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: bXp,
       elo: $game.type === GameType.RANKED ? eloPlayerB : 0,
-      playerDaily: playerBDaily,
-      eesReward: playerBEesReward.toString(),
+      levelUp: playerBLevelUp,
+      win: playerBWin,
       animations
     });
 
@@ -311,8 +259,8 @@ const endGame = async (gameId: number, winnerName: string, animations: Animation
       gameType: $game.type,
       experience: aXp,
       elo: $game.type === GameType.RANKED ? eloPlayerA : 0,
-      playerDaily: playerADaily,
-      eesReward: playerAEesReward.toString(),
+      levelUp: playerALevelUp,
+      win: playerAWin,
       animations
     });
 

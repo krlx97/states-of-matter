@@ -8,7 +8,7 @@ import { endTurnTimeouts } from "helpers/gameHelpers/endTurnTimeouts";
 const surrender: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
 
-  socket.on("surrender", async () => {
+  socket.on("surrender" as any, async () => {
     const [getGameData, getGameError] = await gameHelpers.getGame(socketId);
     const animations: Animations = [];
 

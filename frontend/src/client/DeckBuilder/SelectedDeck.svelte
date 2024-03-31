@@ -2,11 +2,11 @@
   import {createEventDispatcher} from "svelte";
   import {modalService, socketService, soundService} from "services";
   import {deckCache, playerStore} from "stores";
-  import {ButtonComponent, LinkComponent, MenuComponent, ProgressBarComponent, TextComponent} from "ui";
+  import {ButtonComponent, LinkComponent, ProgressBarComponent, TextComponent} from "ui";
   import ChangeDeckNameComponent from "./modals/ChangeDeckName.svelte";
   import { CardType } from "@som/shared/enums";
   import { canSave, isDeckSame } from "./canSave";
-    import { fade } from "svelte/transition";
+  import { fade } from "svelte/transition";
 
   let isMenuVisible = false;
   let currentSort = "Initial";
@@ -141,11 +141,11 @@
     }
 
     $playerStore.decks[$playerStore.deckId].cards = $playerStore.decks[$playerStore.deckId].cards.sort((a, b) => {
-      if (a.type !== CardType.HERO && b.type !== CardType.HERO) {
+      // if (a.type !== CardType.HERO && b.type !== CardType.HERO) {
         return sortAscending ? a.manaCost - b.manaCost : b.manaCost - a.manaCost;
-      } else {
-        return 0;
-      }
+      // } else {
+        // return 0;
+      // }
     });
 
     isDeckSame($deckCache, $playerStore.decks[$playerStore.deckId]);
@@ -298,19 +298,19 @@
 
       <div class="deck__stats">
         <div class="deck__stat">
-          <img src="images/card/minion.png" height="16" width="16"/>
+          <img src="images/card/minion.png" height="16" width="16" alt="Minion"/>
           <div style="display: flex; flex-direction: column;">
             <div>{deck.attribute.minion}</div>
           </div>
         </div>
         <div class="deck__stat">
-          <img src="images/card/magic.png" height="16" width="16"/>
+          <img src="images/card/magic.png" height="16" width="16" alt="Magic"/>
           <div style="display: flex; flex-direction: column;">
             <div>{deck.attribute.magic}</div>
           </div>
         </div>
         <div class="deck__stat">
-          <img src="images/card/trap.png" height="16" width="16"/>
+          <img src="images/card/trap.png" height="16" width="16" alt="Trap"/>
           <div style="display: flex; flex-direction: column;">
             <div>{deck.attribute.trap}</div>
           </div>

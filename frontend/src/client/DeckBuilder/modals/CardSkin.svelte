@@ -1,44 +1,29 @@
 <script lang="ts">
   import {onMount} from "svelte";
-  import {cardsView, items} from "@som/shared/data";
   import {socketService, soundService} from "services";
-  import {modalStore, inventoryStore, playerStore} from "stores";
-  import {CardComponent, ModalComponent} from "ui";
+  import {inventoryStore, playerStore} from "stores";
 
   const {socket} = socketService;
-
-  let selectedSkin = $playerStore.skins[0];
-  let item = items[0];
-  let isSelected = selectedSkin.skinId === item.id;
   let skin: any;
-  let balance = 0n;
-
-  const doesOwn = (): boolean => {
-    // if ($inventoryStore.items.find((item) => item.id === skin.id).balance.gt(0)) {
-    //   return true;
-    // } else {
-    //   return false;
-    // }
-    return true;
-  };
+  let selectedSkin: any = $playerStore.skins[0];
+  let invitem: any = $inventoryStore.collectibles.items.find((i) => i.id === BigInt(skin.id));
+  let isSelected = BigInt(selectedSkin.skinId) === invitem?.id;
 
   const onSelectSkin = (): void => {
-    if (balance < 1) { return; }
+    if (invitem.rarity !== 0 && invitem.balance < 1) { return; }
 
-    socket.emit("selectSkin", {
+    soundService.play("click");
+
+    socket.emit("selectSkin" as any, {
       cardId: skin.cardId,
       skinId: skin.id
     });
-
-    soundService.play("click");
   };
 
   onMount(() => {
-    console.log($playerStore.skins);
     selectedSkin = $playerStore.skins.find(({cardId}): boolean => skin.cardId === cardId);
-    item = items.find((item): boolean => selectedSkin.skinId === item.id);
+    invitem = $inventoryStore.collectibles.items.find((i) => i.id === BigInt(skin.id));
     isSelected = selectedSkin.skinId === skin.id;
-    balance = $inventoryStore.items.find((i) => i.id === BigInt(skin.id))?.balance || 0n;
   });
 
   export {skin};
@@ -81,10 +66,7 @@
     border-color: rgb(var(--legendary));
     box-shadow: 0 2px 8px 0 rgb(var(--legendary));
   }
-  .mythic:hover {
-    border-color: rgb(var(--mythic));
-    box-shadow: 0 2px 8px 0 rgb(var(--mythic));
-  }
+
   .commonx {
     border-color: rgb(var(--common));
     box-shadow: 0 2px 8px 0 rgb(var(--common));
@@ -105,10 +87,6 @@
     border-color: rgb(var(--legendary));
     box-shadow: 0 2px 8px 0 rgb(var(--legendary));
   }
-  .mythicx {
-    border-color: rgb(var(--mythic));
-    box-shadow: 0 2px 8px 0 rgb(var(--mythic));
-  }
 
   .skin--disabled {
     position: absolute;
@@ -121,15 +99,10 @@
     justify-content: center;
     z-index: 10;
     cursor: not-allowed;
-    /* filter: grayscale(1); */
   }
 
   .isGrey {
     filter: grayscale(1);
-  }
-
-  .isSelected {
-    border-color: white;
   }
 
   img, video {
@@ -139,32 +112,32 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- {#key $playerStore} -->
-  <div
-    class="skin"
-    class:common="{skin.rarity === 0 && balance > 0}"
-    class:uncommon="{skin.rarity === 1 && balance > 0}"
-    class:rare="{skin.rarity === 2 && balance > 0}"
-    class:epic="{skin.rarity === 3 && balance > 0}"
-    class:legendary="{skin.rarity === 4 && balance > 0}"
-    class:mythic="{skin.rarity === 5 && balance > 0}"
-    class:commonx={skin.rarity === 0 && isSelected}
-    class:uncommonx={skin.rarity === 1 && isSelected}
-    class:rarex={skin.rarity === 2 && isSelected}
-    class:epicx={skin.rarity === 3 && isSelected}
-    class:legendaryx={skin.rarity === 4 && isSelected}
-    class:mythicx={skin.rarity === 5 && isSelected}
-    on:click="{onSelectSkin}">
+<div
+  class="skin"
+  class:common="{invitem.rarity === 0 && invitem.balance > 0}"
+  class:uncommon="{invitem.rarity === 1 && invitem.balance > 0}"
+  class:rare="{invitem.rarity === 2 && invitem.balance > 0}"
+  class:epic="{invitem.rarity === 3 && invitem.balance > 0}"
+  class:legendary="{invitem.rarity === 4 && invitem.balance > 0}"
+  class:commonx={invitem.rarity === 0 && isSelected}
+  class:uncommonx={invitem.rarity === 1 && isSelected}
+  class:rarex={invitem.rarity === 2 && isSelected}
+  class:epicx={invitem.rarity === 3 && isSelected}
+  class:legendaryx={invitem.rarity === 4 && isSelected}
+  on:click="{onSelectSkin}">
 
-    {#if balance < 1}
+  {#if invitem.rarity === 0}
+    <img src="images/items/{invitem.id}.png" alt="{invitem.id}">
+  {:else}
+    {#if invitem.balance < 1n}
       <div class="skin--disabled">🔒</div>
     {/if}
-    {#if skin.rarity === 2 || skin.rarity === 0}
-      <img class:isGrey="{balance < 1}" src="images/items/{skin.id}.png" alt="{skin.id}">
+    {#if invitem.rarity === 2 || invitem.rarity === 0}
+      <img class:isGrey="{invitem.balance < 1n}" src="images/items/{invitem.id}.png" alt="{invitem.id}">
     {:else}
-      <video class:isGrey="{balance < 1}" autoplay loop muted>
-        <source src="images/items/{skin.id}.webm" type="video/webm"/>
+      <video class:isGrey="{invitem.balance < 1n}" autoplay loop muted>
+        <source src="images/items/{invitem.id}.webm" type="video/webm"/>
       </video>
     {/if}
-  </div>
-<!-- {/key} -->
+  {/if}
+</div>

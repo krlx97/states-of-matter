@@ -6,8 +6,6 @@
   import CardSkinComponent from "./CardSkin.svelte";
 
   const {id} = $modalStore.data;
-  console.log(id);
-
   let cardView = cardsView.find((card): boolean => card.id === id);
   $: skins = items.filter((item): boolean => item.type === 2 && item.cardId === id);
 
@@ -56,7 +54,7 @@
     </div>
 
     <div class="lore__info">
-      <div class="lore__info__text">{cardView.lore}</div>
+      <div class="lore__info__text">{cardView?.lore}</div>
 
       <div class="skins">
         {#key $playerStore}

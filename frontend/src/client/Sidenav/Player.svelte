@@ -61,13 +61,12 @@
       friends: [],
       mutualFriends: [],
       tasks: {
-        daily: false,
-        weekly: 0,
-        dailyAlternative: 0
+        win: false,
+        levelUp: false
       },
       rewards: {
         ecr: "0",
-        ees: "0"
+        shardPacks: "0"
       },
       tutorial: {
         deckBuilder: false,

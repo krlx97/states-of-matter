@@ -6,17 +6,14 @@
   import {deckCache, notificationsStore, playerStore} from "stores";
   import {ClientCardComponent} from "ui";
   import CardLoreComponent from "./modals/CardLore.svelte";
-  import {get, type Unsubscriber} from "svelte/store";
-    import { isDeckSame } from "./canSave";
-    import type { PlayerDeckView } from "@som/shared/types/views";
+  import type {Unsubscriber} from "svelte/store";
+  import { isDeckSame } from "./canSave";
 
   let card: any;
   let isGrayscale = false;
   $: deck = $playerStore.decks[$playerStore.deckId];
 
-
   const onAddToDeck = (): void => {
-    
     if (deck.cardsInDeck >= 30) {
       return soundService.play("TAB");
     }

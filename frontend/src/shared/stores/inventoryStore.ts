@@ -1,52 +1,58 @@
 import {writable} from "svelte/store";
 
+interface InventoryStoreToken {
+  balance: bigint;
+  totalSupply: bigint;
+  allowance: bigint;
+}
+
+interface Common {
+  id: bigint;
+  name: string;
+  type: number; // ItemType;
+  rarity: 0; // ItemRarity;
+  owned: boolean;
+}
+
+interface Other {
+  id: bigint;
+  name: string;
+  type: number; // ItemType;
+  rarity: 1 | 2 | 3 | 4; // ItemRarity;
+  balance: bigint;
+  shards: bigint;
+}
+
+type InventoryStoreItems = Array<Common | Other>;
+
 interface InventoryStore {
-  _ees?: {
-    balance: bigint;
-    supply: bigint;
-    allowance: bigint;
+  ecr: InventoryStoreToken;
+  enrg: InventoryStoreToken;
+  collectibles: {
+    approved: boolean;
+    shardPacks: bigint;
+    items: InventoryStoreItems;
   };
-  ees: bigint;
-  ecr: bigint;
-  enrg: bigint;
-  approvals: {
-    items: boolean;
-    ees: bigint;
-    ecr: bigint;
-    enrg: bigint;
-  };
-  total: {
-    ees: bigint;
-    ecr: bigint;
-    enrg: bigint;
-  };
-  deployTimestamp: number;
-  chests: bigint;
-  items: Array<{
-    id: bigint;
-    balance: bigint;
-    supply: bigint;
-  }>;
+  deployTimestamp: bigint;
 }
 
 const inventoryStore = writable<InventoryStore>({
-  ees: 0n,
-  ecr: 0n,
-  enrg: 0n,
-  approvals: {
-    items: false,
-    ees: 0n,
-    ecr: 0n,
-    enrg: 0n
+  ecr: {
+    balance: 0n,
+    totalSupply: 0n,
+    allowance: 0n
   },
-  total: {
-    ees: 0n,
-    ecr: 0n,
-    enrg: 0n
+  enrg: {
+    balance: 0n,
+    totalSupply: 0n,
+    allowance: 0n
   },
-  deployTimestamp: 0,
-  chests: 0n,
-  items: []
+  collectibles: {
+    approved: false,
+    shardPacks: 0n,
+    items: [],
+  },
+  deployTimestamp: 0n
 });
 
 export {inventoryStore};

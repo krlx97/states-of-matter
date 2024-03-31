@@ -1,25 +1,24 @@
 <script lang="ts">
+  import {onMount} from "svelte";
   import {socketService, soundService} from "services";
-  import {inventoryStore} from "stores";
-    import { onMount } from "svelte";
 
   let avatar: any;
-  let bal = 0n;
+  let isLocked = true;
 
   const onSetAvatar = (): void => {
-    const balance = $inventoryStore.items.find((item) => item.id === BigInt(avatar.id))?.balance;
-    bal = balance || 0n;
-
-    if (balance && balance > 0) {
-      const avatarId = avatar.id;
-      socketService.socket.emit("setAvatar", {avatarId});
+    if (!isLocked) {
       soundService.play("click");
+      const avatarId = parseInt(avatar.id.toString());
+      socketService.socket.emit("setAvatar", {avatarId});
     }
   };
 
   onMount((): void => {
-    const balance = $inventoryStore.items.find((item) => item.id === BigInt(avatar.id))?.balance;
-    bal = balance || 0n;
+    if (avatar && avatar.rarity === 0 && avatar.owned) {
+      isLocked = false;
+    } else if (avatar && avatar.rarity !== 0 && avatar.balance > 0) {
+      isLocked = false;
+    }
   });
 
   export {avatar};
@@ -29,13 +28,11 @@
   .avatar {
     position: relative;
     cursor: pointer;
-    /* filter: grayscale(0.5); */
     transition: filter 400ms ease-in-out;
   }
 
   .avatar:hover img {
     border: 1px solid rgb(var(--grey));
-    /* filter: grayscale(0); */
   }
 
   img {
@@ -61,11 +58,11 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-  class:avatar="{bal > 0}"
-  class:locked="{bal < 1}"
+  class:avatar="{!isLocked}"
+  class:locked="{isLocked}"
   on:click="{onSetAvatar}">
   <img src="images/items/{avatar.id}.png" alt="Avatar {avatar.id}"/>
-  {#if bal < 1}
+  {#if isLocked}
     <i class="lock">🔒</i>
   {/if}
 </div>

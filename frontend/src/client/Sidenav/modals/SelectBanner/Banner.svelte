@@ -1,25 +1,24 @@
 <script lang="ts">
+  import {onMount} from "svelte";
   import {socketService, soundService} from "services";
-  import {inventoryStore} from "stores";
-    import { onMount } from "svelte";
 
   let banner: any;
-  let balance = $inventoryStore.items.find((item) => item.id === BigInt(banner.id))?.balance;
-  let bal = 0n;
+  let isLocked = true;
 
   const onSetBanner = (): void => {
-    const balance = $inventoryStore.items.find((item) => item.id === BigInt(banner.id))?.balance;
-
-    if (balance && balance > 0) {
-      const bannerId = banner.id;
-      socketService.socket.emit("setBanner", {bannerId});
+    if (!isLocked) {
       soundService.play("click");
+      const bannerId = parseInt(banner.id.toString());
+      socketService.socket.emit("setBanner", {bannerId});
     }
   };
 
   onMount((): void => {
-    const balance = $inventoryStore.items.find((item) => item.id === BigInt(banner.id))?.balance;
-    bal = balance || 0n;
+    if (banner && banner.rarity === 0 && banner.owned) {
+      isLocked = false;
+    } else if (banner && banner.rarity !== 0 && banner.balance > 0) {
+      isLocked = false;
+    }
   });
 
   export {banner};
@@ -54,11 +53,11 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-  class:banner="{bal > 0}"
-  class:locked="{bal < 1}"
+  class:banner="{!isLocked}"
+  class:locked="{isLocked}"
   on:click="{onSetBanner}">
   <img src="images/items/{banner.id}.png" alt="Banner {banner.id}"/>
-  {#if bal < 1}
+  {#if isLocked}
     <i class="lock">🔒</i>
   {/if}
 </div>

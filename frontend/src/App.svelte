@@ -26,15 +26,13 @@
 
       ethereum.on("accountsChanged", async (accounts): Promise<void> => {
         $ethersStore.accounts = accounts;
-
-        await ethersService.init(address);
+        ethersService.init(address);
         await ethersService.reloadUser();
       });
 
       ethereum.on("chainChanged", async (chainId): Promise<void> => {
         $ethersStore.chainId = BigInt(chainId);
-
-        await ethersService.init(address);
+        ethersService.init(address);
         await ethersService.reloadUser();
       });
 
@@ -54,7 +52,7 @@
 </script>
 
 <style>
-  @media only screen and (min-width: 640px) {}
+  /* @media only screen and (min-width: 640px) {}
 
   @media only screen and (min-width: 1280px) {
     .app {
@@ -67,17 +65,20 @@
       align-items: center;
       justify-content: center;
     }
-  }
+  } */
 
   .app-wrapper {
     height: 100vh;
     width: 100vw;
-    background-color: rgb(var(--dark-grey));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(23, 23, 23);
   }
 
   .app {
-    /* height: 100%;
-    width: 100%; */
+    height: 900px;
+    width: 1600px;
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(var(--grey), var(--opacity-sm));

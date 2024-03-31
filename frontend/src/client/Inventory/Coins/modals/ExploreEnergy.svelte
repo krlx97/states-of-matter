@@ -76,12 +76,18 @@
 
 <ModalComponent width="640px">
   <svelte:fragment slot="title">Etheric Energy</svelte:fragment>
-  <svelte:fragment slot="info">Lore coming soon...</svelte:fragment>
+  <svelte:fragment slot="info">
+    When the energy from the shard is taken out by a powerful mage or a hero,
+    it becomes only a shell, a somewhat beautiful stone. Drained energy can be
+    converted by humans and other beings so they become stronger and more
+    powerful, or it can be stored in other containers. Then it can be used as
+    an amulet or a magical weapon or tool.
+  </svelte:fragment>
   <svelte:fragment slot="content">
     <div class="worth">
       <div class="worth__token">1.000000000000000000 <img src="images/currencies/sm/enrg.png" alt="Etheric Energy"/></div>
       <div>=</div>
-      <div class="worth__token">{val2} <img src="images/currencies/sm/ecr.png" alt="Etheric Energy"/></div>
+      <div class="worth__token">{val2} <img src="images/currencies/sm/ecr.png" alt="Etheric Crystals"/></div>
     </div>
 
     <canvas bind:this="{chartCanvas}"></canvas>
@@ -90,7 +96,7 @@
     {/if}
 
     <TableComponent items="{[
-      ["Supply", $inventoryStore.total.enrg, "enrg"]
+      ["Supply", $inventoryStore.enrg.totalSupply, "enrg"]
     ]}"/>
   </svelte:fragment>
 </ModalComponent>

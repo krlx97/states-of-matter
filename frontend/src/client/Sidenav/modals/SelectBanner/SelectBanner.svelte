@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {items} from "@som/shared/data"
+  import {inventoryStore} from "stores";
   import {ModalComponent} from "ui";
   import BannerComponent from "../SelectBanner/Banner.svelte";
 </script>
@@ -14,7 +14,7 @@
 
 <ModalComponent width="384px">
   <div class="banners">
-    {#each items as item}
+    {#each $inventoryStore.collectibles.items as item}
       {#if item.type === 1}
         <BannerComponent banner="{item}"/>
       {/if}

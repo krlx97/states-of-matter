@@ -1,7 +1,6 @@
 interface PlayerQuests {
-  daily: boolean;
-  dailyAlternative: number;
-  weekly: number;
+  win: boolean;
+  levelUp: boolean;
 }
 
 export type {PlayerQuests};

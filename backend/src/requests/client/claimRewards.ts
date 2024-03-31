@@ -16,13 +16,13 @@ const claimRewards: SocketRequest = (socket, error): void => {
       return error("Can't claim, address not set.");
     }
 
-    if (BigInt($player.rewards.ecr) < 1 && BigInt($player.rewards.ees) < 1) {
+    if (BigInt($player.rewards.ecr) < 1n && BigInt($player.rewards.shardPacks) < 1n) {
       return error("No rewards to claim");
     }
 
     const $playerUpdate = await mongo.$players.updateOne({socketId}, {
       $set: {
-        "rewards.ees": "0",
+        "rewards.shardPacks": "0",
         "rewards.ecr": "0"
       }
     });
@@ -31,10 +31,10 @@ const claimRewards: SocketRequest = (socket, error): void => {
       return error("Error updating player.");
     }
 
-    const tx = await contracts.somGame.claimRewards(
+    const tx = await contracts.game.claimRewards(
       $player.address,
-      BigInt($player.rewards.ees),
-      BigInt($player.rewards.ecr)
+      BigInt($player.rewards.ecr),
+      BigInt($player.rewards.shardPacks),
     ).catch(console.log);
 
     if (!tx) {
@@ -47,6 +47,7 @@ const claimRewards: SocketRequest = (socket, error): void => {
       return error("Error transacting.");
     }
 
+    socket.emit("claimRewards" as any);
     socket.emit("notification", {
       color: "success",
       message: "Claimed rewards."

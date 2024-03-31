@@ -59,7 +59,7 @@ const saveDeck: SocketRequest = (socket, error): void => {
       return error("Error updating player.");
     }
 
-    socket.emit("saveDeck", {deck});
+    socket.emit("saveDeck" as any, {deck});
   });
 };
 

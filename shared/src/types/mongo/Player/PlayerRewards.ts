@@ -1,6 +1,6 @@
 interface PlayerRewards {
   ecr: string;
-  ees: string;
+  shardPacks: string;
 }
 
 export type {PlayerRewards};

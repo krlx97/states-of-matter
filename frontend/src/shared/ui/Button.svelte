@@ -1,9 +1,9 @@
 <script lang="ts">
   let disabled = false;
-  let type: "button" | "submit";
+  let isSubmit = false;
   let isIcon = false;
   let badge: string = "";
-  export {disabled, type, isIcon, badge};
+  export {disabled, isSubmit, isIcon, badge};
 </script>
 
 <style>
@@ -75,8 +75,8 @@
   }
 </style>
 
-{#if type}
-  <button {disabled} {type} class:isIcon on:click>
+{#if isSubmit}
+  <button {disabled} type="submit" class:isIcon on:click>
     <slot/>
     {#if badge.length}
       <div class="button__badge">
@@ -85,7 +85,7 @@
     {/if}
   </button>
 {:else}
-  <button {disabled} class:isIcon on:click>
+  <button {disabled} type="button" class:isIcon on:click>
     <slot/>
     {#if badge.length}
       <div class="button__badge">

@@ -39,7 +39,7 @@ const addFriend: SocketRequest = (socket, error): void => {
       return error("Error updating player.");
     }
 
-    socket.emit("addFriendSender", {
+    socket.emit("addFriendSender" as any, {
       isMutual: $playerReceiver.friends.includes($playerSender.name),
       name: $playerReceiver.name,
       avatarId: $playerReceiver.avatarId,
@@ -52,7 +52,7 @@ const addFriend: SocketRequest = (socket, error): void => {
     });
 
     if ($playerReceiver.friends.includes($playerSender.name)) {
-      server.io.to($playerReceiver.socketId).emit("addFriendReceiver", {
+      server.io.to($playerReceiver.socketId).emit("addFriendReceiver" as any, {
         // isMutual: $playerSender.friends.includes($playerReceiver.name),
         name: $playerSender.name
       });

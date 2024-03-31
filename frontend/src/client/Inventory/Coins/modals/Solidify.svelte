@@ -1,17 +1,25 @@
 <script lang="ts">
   import {formatUnits, parseUnits} from "ethers";
+  import {contractAddress} from "@som/shared/data";
   import {ethersService, formService, soundService} from "services";
   import {inventoryStore} from "stores";
-  import {InputComponent, ModalComponent, FormSubmitComponent, FormComponent, TableComponent} from "ui";
 
-  let balance = $inventoryStore.enrg;
+  import {
+    FormComponent,
+    FormSubmitComponent,
+    InputComponent,
+    ModalComponent,
+    TableComponent
+  } from "ui";
+
+  const {balance, allowance} = $inventoryStore.enrg;
 
   const formStore = formService.create({
     amount: ["", "currency", balance]
   });
 
   const receipt = {
-    staked: balance,
+    balance,
     remaining: balance
   };
 
@@ -21,13 +29,15 @@
     const {value, error} = $formStore.fields.amount;
 
     if (!error) {
-      receipt.remaining = balance - parseUnits(value);
+      receipt.remaining = receipt.balance - parseUnits(value);
+    } else {
+      receipt.remaining = receipt.balance;
     }
   };
 
   const onSetMax = (): void => {
     soundService.play("click");
-    $formStore.fields.amount.value = formatUnits(balance);
+    $formStore.fields.amount.value = formatUnits(receipt.balance);
     onInput();
   };
 
@@ -38,11 +48,11 @@
 
     const amount = parseUnits($formStore.fields.amount.value);
 
-    if ($inventoryStore.approvals.enrg < amount) {
+    if (allowance < amount) {
       const isConfirmed = await ethersService.transact(
         "ethericEnergy",
         "approve",
-        [ethersService.keys.somGame, amount]
+        [contractAddress.game, amount]
       );
 
       if (!isConfirmed) {
@@ -52,7 +62,7 @@
     }
 
     const isConfirmed = await ethersService.transact(
-      "somGame",
+      "game",
       "solidify",
       [amount]
     );
@@ -64,8 +74,7 @@
 
     await ethersService.reloadUser();
 
-    balance = $inventoryStore.enrg;
-    receipt.staked = balance;
+    receipt.balance = $inventoryStore.enrg.balance;
 
     onInput();
 
@@ -77,7 +86,7 @@
   <svelte:fragment slot="title">Solidify</svelte:fragment>
 
   <svelte:fragment slot="info">
-    Solidify your Etheric Energy and convert it back to Etheric Crystals
+    Solidify your Etheric Energy and convert it back to Etheric Crystals.
   </svelte:fragment>
 
   <FormComponent on:submit="{onSubmit}">
@@ -91,8 +100,8 @@
       on:input="{onInput}"/>
 
     <TableComponent items="{[
-      ["Balance", receipt.staked, "enrg"],
-      ["Remaining balance", receipt.remaining, "enrg"]
+      ["Balance", receipt.balance, "enrg"],
+      ["Remaining", receipt.remaining, "enrg"]
     ]}"/>
 
     <svelte:fragment slot="submit">

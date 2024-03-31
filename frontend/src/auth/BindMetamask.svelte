@@ -17,7 +17,7 @@
           chainId: "0x29"
         }],
       });
-    } catch (switchError) {
+    } catch (switchError: any) {
       // This error code indicates that the chain has not been added to MetaMask.
       if (switchError.code === 4902) {
         try {
@@ -41,7 +41,7 @@
   };
 
   const onConnectMetamask = async (): Promise<void> => {
-    const accounts = await ethereum.request({
+    const accounts = await ethereum?.request({
       method: "eth_requestAccounts"
     });
 
@@ -65,32 +65,16 @@
     display: flex;
     flex-direction: column;
     gap: var(--md);
-    /* text-align: justify; */
   }
 
   .signin__step {
     display: flex;
     flex-direction: column;
     gap: var(--md);
-    /* padding: var(--md) 0; */
-/* border: 0 solid;
-    border-bottom-width: 1px;
-    border-image: linear-gradient(
-      90deg,
-      rgba(31, 31, 31, 1) 0%,
-      rgba(255, 255, 255, 1) 50%,
-      rgba(31, 31, 31, 1) 100%
-    ) 1; */
   }
 
   .signin__step__title {
     font-size: var(--font-lg);
-    /* margin-bottom: var(--md); */
-  }
-
-  .signin__step__info {
-    line-height: 1.25;
-    text-align: justify;
   }
 
   .a {
@@ -111,7 +95,7 @@
 
     {#if window.ethereum === undefined}
       <a class="a" href="https://metamask.io/" target="_blank">
-        <ButtonComponent type="button">
+        <ButtonComponent>
           <img src="images/metamask.png" alt="Metamask" height="32" width="32"/>
           METAMASK.IO
         </ButtonComponent>
@@ -132,7 +116,7 @@
 
     {#if window.ethereum !== undefined && !$ethersStore.accounts.length}
       <div>
-        <ButtonComponent type="button" on:click="{onConnectMetamask}">
+        <ButtonComponent on:click="{onConnectMetamask}">
           CONNECT
         </ButtonComponent>
       </div>
@@ -152,7 +136,7 @@
 
     {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId !== 41n}
       <div>
-        <ButtonComponent type="button" on:click="{onSelectNetwork}">
+        <ButtonComponent on:click="{onSelectNetwork}">
           <img src="images/telosevm.png" alt="Telos EVM" height="32" width="32"/> TELOS EVM
         </ButtonComponent>
       </div>

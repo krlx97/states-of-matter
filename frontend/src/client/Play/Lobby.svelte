@@ -2,7 +2,7 @@
   import {socketService, soundService} from "services";
   import {lobbyStore, playerStore} from "stores";
   import {ButtonComponent, PlayerFrameComponent, TextComponent} from "ui";
-    import Chat from "./Chat.svelte";
+  import Chat from "./Chat.svelte";
 
   const {socket} = socketService;
 
@@ -25,8 +25,6 @@
 <style>
   .lobby {
     display: flex;
-    /* flex-direction: column; */
-    /* align-items: center; */
     justify-content: center;
   }
 
@@ -65,12 +63,12 @@
     <TextComponent color="primary" size="xl">Lobby ID: {$lobbyStore.id}</TextComponent>
 
     <div class="players">
-      <PlayerFrameComponent {...$lobbyStore.host}/>
+      <PlayerFrameComponent {...$lobbyStore.host} isMutual={false}/>
 
       <h1 class="vs">VS</h1>
 
       {#if $lobbyStore.challengee}
-        <PlayerFrameComponent {...$lobbyStore.challengee}/>
+        <PlayerFrameComponent {...$lobbyStore.challengee} isMutual={false}/>
       {:else}
         <div>Awaiting opponent...</div>
       {/if}

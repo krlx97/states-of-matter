@@ -4,7 +4,7 @@
   import {CurrencyComponent, TextComponent} from "ui";
   import RewardsComponent from "./modals/Rewards.svelte";
 
-  $: ees = BigInt($playerStore.rewards.ees);
+  $: shardPacks = BigInt($playerStore.rewards.shardPacks);
   $: ecr = BigInt($playerStore.rewards.ecr);
 
   let onViewRewards = (): void => {
@@ -41,8 +41,7 @@
 <div class="rewards" on:click="{onViewRewards}">
   <TextComponent isBold>REWARDS</TextComponent>
   <div class="rewards__currencies">
-    <CurrencyComponent iconSize="sm" name="ees" number="{ees}"/>
     <CurrencyComponent iconSize="sm" name="ecr" number="{ecr}"/>
-    <!-- <CurrencyComponent iconSize="sm" name="shard" number="{1n}"/> -->
+    <CurrencyComponent iconSize="sm" name="shard" number="{shardPacks}"/>
   </div>
 </div>

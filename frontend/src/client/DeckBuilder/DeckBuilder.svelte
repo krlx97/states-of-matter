@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {fly} from "svelte/transition";
   import {playerStore, tutorialStore} from "stores";
   import {TutorialComponent} from "ui";
   import DeckCardsComponent from "./DeckCards.svelte";
@@ -11,9 +12,6 @@
   import DeckBuilderTutorial3 from "./tutorial/DeckBuilderTutorial3.svelte";
   import DeckBuilderTutorial4 from "./tutorial/DeckBuilderTutorial4.svelte";
   import DeckBuilderTutorial5 from "./tutorial/DeckBuilderTutorial5.svelte";
-    import { slide, fly } from "svelte/transition";
-    import { onDestroy } from "svelte";
-    import { socketService } from "services";
 
   $: isTutorial = $tutorialStore.name === "deckBuilder" && $tutorialStore.currentStep === 4;
 
@@ -22,14 +20,6 @@
   const onToggleDeckSlots = (): void => {
     areDeckSlotsVisible = !areDeckSlotsVisible;
   };
-
-  // onDestroy((): void => {
-  //   const {id, name, klass} = $playerStore.decks[$playerStore.deckId];
-  //   const cards = $playerStore.decks[$playerStore.deckId].cards.map(({id, amount}) => ({id, amount}));
-  //   const deck = {id, name, klass, cards};
-
-  //   socketService.socket.emit("saveDeck", {deck});
-  // });
 </script>
 
 <style>
@@ -50,17 +40,11 @@
     z-index: 101;
     animation: opa 1500ms linear infinite alternate
   }
-  @keyframes opa {
-    from {opacity: 0.333}
-    to {opacity: 1}
-  }
 
   .borderce {
     height: 768px;
     display: flex;
     flex-direction: column;
-    /* border: 1px solid rgb(var(--grey)); */
-    /* border-radius: 8px; */
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -70,6 +54,11 @@
     flex-direction: column;
     align-items: center;
     gap: var(--md);
+  }
+
+  @keyframes opa {
+    from {opacity: 0.333}
+    to {opacity: 1}
   }
 </style>
 

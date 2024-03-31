@@ -1,7 +1,7 @@
 import {CardId} from "../enums/index.js";
 
 enum ItemType {AVATAR, BANNER, SKIN};
-enum ItemRarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, MYTHIC};
+enum ItemRarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY};
 
 interface Item {
   id: number;

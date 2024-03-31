@@ -1,13 +1,12 @@
 <script lang="ts">
   import {modalService, soundService} from "services";
   import {ItemComponent, MenuComponent} from "ui";
-  import DisenchantComponent from "./modals/Disenchant.svelte";
   import TransferComponent from "./modals/Transfer.svelte";
   import CraftComponent from "./modals/Craft.svelte";
+  import TransferShard from "./modals/TransferShard.svelte";
 
   let item: any;
   let isMenuToggled = false;
-  const {id} = item;
 
   const onToggleMenu = (): void => {
     if (item.rarity === 0) {
@@ -18,18 +17,18 @@
     soundService.play("click");
   };
 
-  const onTransfer = (): void => {
-    modalService.open(TransferComponent, {id});
+  const onTransferItem = (): void => {
+    modalService.open(TransferComponent, {item});
     soundService.play("click");
   };
 
   const onCraft = (): void => {
-    modalService.open(CraftComponent, {id});
+    modalService.open(CraftComponent, {item});
     soundService.play("click");
   };
 
-  const onDisenchant = (): void => {
-    modalService.open(DisenchantComponent, {id});
+  const onTransferShard = (): void => {
+    modalService.open(TransferShard, {item});
     soundService.play("click");
   };
 
@@ -45,12 +44,12 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="item" on:click="{onToggleMenu}">
-  <ItemComponent {item}/>
+  <ItemComponent isGrayscaled {item}/>
   {#if isMenuToggled}
     <MenuComponent items="{[
-      ["TRANSFER", onTransfer],
+      ["TRANSFER ITEM", onTransferItem],
+      ["TRANSFER SHARD", onTransferShard],
       ["CRAFT", onCraft],
-      ["DISENCHANT", onDisenchant]
     ]}"/>
   {/if}
 </div>

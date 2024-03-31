@@ -1,17 +1,25 @@
 <script lang="ts">
   import {formatUnits, parseUnits} from "ethers";
+  import {contractAddress} from "@som/shared/data";
   import {ethersService, formService, soundService} from "services";
   import {inventoryStore} from "stores";
-  import {InputComponent, ModalComponent, FormSubmitComponent, FormComponent, TableComponent} from "ui";
 
-  let balance = $inventoryStore.ecr;
+  import {
+    FormComponent,
+    FormSubmitComponent,
+    InputComponent,
+    ModalComponent,
+    TableComponent
+  } from "ui";
+
+  const {balance, allowance} = $inventoryStore.ecr;
 
   const formStore = formService.create({
     amount: ["", "currency", balance]
   });
 
   const receipt = {
-    balance: balance,
+    balance,
     remaining: balance
   };
 
@@ -21,13 +29,15 @@
     const {value, error} = $formStore.fields.amount;
 
     if (!error) {
-      receipt.remaining = balance - parseUnits(value);
+      receipt.remaining = receipt.balance - parseUnits(value);
+    } else {
+      receipt.remaining = receipt.balance;
     }
   };
 
   const onSetMax = (): void => {
     soundService.play("click");
-    $formStore.fields.amount.value = formatUnits(balance);
+    $formStore.fields.amount.value = formatUnits(receipt.balance);
     onInput();
   };
 
@@ -38,11 +48,11 @@
 
     const amount = parseUnits($formStore.fields.amount.value);
 
-    if ($inventoryStore.approvals.ecr < amount) {
+    if (allowance < amount) {
       const isConfirmed = await ethersService.transact(
         "ethericCrystals",
         "approve",
-        [ethersService.keys.somGame, amount]
+        [contractAddress.game, amount]
       );
 
       if (!isConfirmed) {
@@ -52,7 +62,7 @@
     }
 
     const isConfirmed = await ethersService.transact(
-      "somGame",
+      "game",
       "energize",
       [amount]
     );
@@ -64,8 +74,7 @@
 
     await ethersService.reloadUser();
 
-    balance = $inventoryStore.ecr;
-    receipt.balance = balance;
+    receipt.balance = $inventoryStore.ecr.balance;
 
     onInput();
 
@@ -93,7 +102,7 @@
 
     <TableComponent items="{[
       ["Balance", receipt.balance, "ecr"],
-      ["Remaining balance", receipt.remaining, "ecr"]
+      ["Remaining", receipt.remaining, "ecr"]
     ]}"/>
 
     <svelte:fragment slot="submit">

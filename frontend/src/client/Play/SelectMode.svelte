@@ -4,9 +4,7 @@
   import {playerStore, tutorialStore, queueStore, deckCache} from "stores";
   import {ButtonComponent, TextComponent} from "ui";
   import JoinLobbyComponent from "./modals/JoinLobby.svelte";
-  import GameEnded from "./modals/GameEnded.svelte";
-    import { isDeckSame } from "../DeckBuilder/canSave";
-  // import GameEndedComponent from "./modals/GameEnded.svelte";
+  import { isDeckSame } from "../DeckBuilder/canSave";
 
   $: isInCasualQueue = $playerStore.queueId === QueueId.CASUAL;
   $: isInRankedQueue = $playerStore.queueId === QueueId.RANKED;
@@ -46,11 +44,6 @@
   const onLeaveQueue = (): void => {
     soundService.play("click");
     socketService.socket.emit("leaveQueue");
-  };
-
-  const onDeckBuilder = (): void => {
-    soundService.play("click");
-
   };
 </script>
 

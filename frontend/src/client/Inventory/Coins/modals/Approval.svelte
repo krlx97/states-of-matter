@@ -1,7 +1,8 @@
 <script lang="ts">
   import {formatUnits, parseUnits} from "ethers";
-  import {ethersService, formService, socketService, soundService} from "services";
-  import {modalStore, playerStore, inventoryStore} from "stores";
+  import {contractAddress} from "@som/shared/data";
+  import {ethersService, formService, soundService} from "services";
+  import {modalStore, inventoryStore} from "stores";
 
   import {
     InputComponent,
@@ -11,18 +12,14 @@
     TableComponent
   } from "ui";
 
-  const {id} = $modalStore.data;
-  const name = id === 1n ? "Etheric Crystals" : id === 2n ? "Etheric Essence" : "Etheric Energy";
-  const icon = id === 1n ? "ecr" : id === 2n ? "ees" : "enrg";
-
-  let approval = id === 1n ? $inventoryStore.approvals.ecr : id === 2n ? $inventoryStore.approvals.ees : $inventoryStore.approvals.enrg;
-  let totalSupply = id === 1n ? $inventoryStore.total.ecr : id === 2n ? $inventoryStore.total.ees : $inventoryStore.total.enrg
+  const {name, ticker}: {name: string, ticker: "ecr" | "enrg"} = $modalStore.data;
+  const {allowance, totalSupply} = $inventoryStore[ticker];
 
   const formStore = formService.create({
-    amount: ["", "approval", approval]
+    amount: ["", "approval", allowance]
   });
 
-  const receipt = {approval};
+  const receipt = {allowance};
 
   const onInput = (): void => {
     formService.validate(formStore);
@@ -39,12 +36,10 @@
 
     $formStore.isLoading = true;
 
-    const amount = parseUnits($formStore.fields.amount.value);
-
     const isConfirmed = await ethersService.transact(
-      id === 1n ? "ethericCrystals" : id === 2n ? "ethericEssence" : "ethericEnergy",
+      ticker === "ecr" ? "ethericCrystals" : "ethericEnergy",
       "approve",
-      [ethersService.keys.somGame, amount]
+      [contractAddress.game, parseUnits($formStore.fields.amount.value)]
     );
 
     if (!isConfirmed) {
@@ -54,8 +49,7 @@
 
     await ethersService.reloadUser();
 
-    approval = id === 1n ? $inventoryStore.approvals.ecr : id === 2n ? $inventoryStore.approvals.ees : $inventoryStore.approvals.enrg;
-    receipt.approval = approval;
+    receipt.allowance = $inventoryStore[ticker].allowance;
 
     onInput();
 
@@ -76,18 +70,18 @@
 
     <InputComponent
       label="Amount"
-      icon="{icon}"
+      icon="{ticker}"
       error="{$formStore.fields.amount.error}"
       action="{["MAX", onSetMax]}"
       bind:value="{$formStore.fields.amount.value}"
       on:input="{onInput}"/>
 
     <TableComponent items="{[
-      ["Current approval", receipt.approval, icon]
+      ["Allowance", receipt.allowance, ticker]
     ]}"/>
 
     <svelte:fragment slot="submit">
-      <FormSubmitComponent {formStore}>SET</FormSubmitComponent>
+      <FormSubmitComponent {formStore}>ALLOW</FormSubmitComponent>
     </svelte:fragment>
 
   </FormComponent>

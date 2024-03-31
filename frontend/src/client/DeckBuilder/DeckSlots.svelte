@@ -12,13 +12,12 @@
 
 <style>
   .deck-slots {
-    /* height: 644px;  */
+    /* height: 644px; */
     width: 288px;
     padding: var(--md);
     display: flex;
     flex-direction: column;
     gap: var(--md);
-    /* background-color: rgb(var(--dark-grey)); */
     box-sizing: border-box;
   }
 </style>

@@ -5,7 +5,7 @@ const selectSkin: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
   const {$players} = mongo;
 
-  socket.on("selectSkin", async (params) => {
+  socket.on("selectSkin" as any, async (params: any): Promise<void> => {
     const {cardId, skinId} = params;
 
     // if (!item || item.type !== 2) {

@@ -1,4 +1,5 @@
 import {acceptGame} from "./acceptGame";
+import {claimRewards} from "./claimRewards";
 import {closeLobby} from "./closeLobby";
 import {createLobby} from "./createLobby";
 import {declineGame} from "./declineGame";
@@ -18,6 +19,7 @@ import {startGame} from "./startGame";
 
 const clientResponses = [
   acceptGame,
+  claimRewards,
   closeLobby,
   createLobby,
   declineGame,

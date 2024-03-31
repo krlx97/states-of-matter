@@ -62,19 +62,17 @@
 <ModalComponent isClosable={false} dark>
   <div class="game-popup">
 
-      <div class="game-popup__title">Game found</div>
-    <!-- <div>
+    <div class="game-popup__title">Game found</div>
 
-    </div> -->
-      <div>
-        {#if !$gamePopupStore.hasPlayerAccepted && !$gamePopupStore.hasOpponentAccepted}
-          Please accept the match.
-        {:else if $gamePopupStore.hasPlayerAccepted && !$gamePopupStore.hasOpponentAccepted}
-          Waiting for opponent...
-        {:else if !$gamePopupStore.hasPlayerAccepted && $gamePopupStore.hasOpponentAccepted}
-          Opponent has accepted the match.
-        {/if}
-      </div>
+    <div>
+      {#if !$gamePopupStore.hasPlayerAccepted && !$gamePopupStore.hasOpponentAccepted}
+        Please accept the match.
+      {:else if $gamePopupStore.hasPlayerAccepted && !$gamePopupStore.hasOpponentAccepted}
+        Waiting for opponent...
+      {:else if !$gamePopupStore.hasPlayerAccepted && $gamePopupStore.hasOpponentAccepted}
+        Opponent has accepted the match.
+      {/if}
+    </div>
 
     {#if !$gamePopupStore.hasPlayerAccepted}
       <div class="game-popup__actions">

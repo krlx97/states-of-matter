@@ -1,8 +1,8 @@
 <script lang="ts">
   import {formatUnits, parseUnits} from "ethers";
+  import {onDestroy, onMount} from "svelte";
   import {ethersService, formService, socketService, soundService} from "services";
-  import {modalStore, playerStore, inventoryStore} from "stores";
-    import { onDestroy, onMount } from "svelte";
+  import {modalStore, inventoryStore} from "stores";
 
   import {
     InputComponent,
@@ -12,10 +12,8 @@
     TableComponent
   } from "ui";
 
-  const {id} = $modalStore.data;
-  const name = id === 1n ? "Etheric Crystals" : "Etheric Energy";
-  const icon = id === 1n ? "ecr" : "enrg";
-  let balance = id === 1n ? $inventoryStore.ecr : $inventoryStore.enrg;
+  const {name, ticker}: {name: string, ticker: "ecr" | "enrg"} = $modalStore.data;
+  const {balance} = $inventoryStore[ticker];
 
   const formStore = formService.create({
     name: ["", "name"],
@@ -33,47 +31,53 @@
     const {value, error} = $formStore.fields.amount;
 
     if (!error) {
-      receipt.remaining = balance - parseUnits(value);
+      receipt.remaining = receipt.balance - parseUnits(value);
+    } else {
+      receipt.remaining = receipt.balance;
     }
   };
 
   const onSetMax = (): void => {
+    soundService.play("click");
     $formStore.fields.amount.value = formatUnits(balance);
     onInput();
-    soundService.play("click");
   };
 
   const onSubmit = async (): Promise<void> => {
     soundService.play("click");
 
-    socketService.socket.emit("getAddress", {name: $formStore.fields.name.value});
+    socketService.socket.emit("getAddress" as any, {
+      name: $formStore.fields.name.value
+    });
   };
 
   onMount((): void => {
-    socketService.socket.on("getAddress", async (params: any): Promise<void> => {
+    socketService.socket.on("getAddress" as any, async (params: any): Promise<void> => {
       $formStore.isLoading = true;
 
       const isConfirmed = await ethersService.transact(
-        id === 1n ? "ethericCrystals" : "ethericEnergy",
+        ticker === "ecr" ? "ethericCrystals" : "ethericEnergy",
         "transfer",
         [params.address, parseUnits($formStore.fields.amount.value)]
       );
 
-      if (isConfirmed) {
-        await ethersService.reloadUser();
-
-        balance = id === 1n ? $inventoryStore.ecr : $inventoryStore.enrg;
-        receipt.balance = balance;
-
-        onInput();
+      if (!isConfirmed) {
+        $formStore.isLoading = false;
+        return;
       }
+
+      await ethersService.reloadUser();
+
+      receipt.balance = $inventoryStore[ticker].balance;
+
+      onInput();
 
       $formStore.isLoading = false;
     });
   });
 
   onDestroy((): void => {
-    socketService.socket.off("getAddress");
+    socketService.socket.off("getAddress" as any);
   });
 </script>
 
@@ -95,15 +99,15 @@
 
     <InputComponent
       label="Amount"
-      icon="{icon}"
+      icon="{ticker}"
       error="{$formStore.fields.amount.error}"
       action="{["MAX", onSetMax]}"
       bind:value="{$formStore.fields.amount.value}"
       on:input="{onInput}"/>
 
     <TableComponent items="{[
-      ["Balance", receipt.balance, icon],
-      ["Remaining balance", receipt.remaining, icon]
+      ["Balance", receipt.balance, ticker],
+      ["Remaining", receipt.remaining, ticker]
     ]}"/>
 
     <svelte:fragment slot="submit">

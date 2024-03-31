@@ -1,22 +1,13 @@
 <script lang="ts">
   import {afterUpdate} from "svelte";
-  import {quadInOut} from "svelte/easing";
-  import {fade, fly, slide, type FlyParams} from "svelte/transition";
-  import {PlayerStatus} from "@som/shared/enums";
-  import {socketService, soundService} from "services";
+  import {socketService} from "services";
   import {lobbyStore} from "stores";
-  import {ButtonComponent, InputComponent} from "ui";
+  import {InputComponent} from "ui";
   import MessageComponent from "./Message.svelte";
 
   let text = "";
   let messagesElement: HTMLElement;
 
-  const flyAnimation: FlyParams = {
-    duration: 400,
-    easing: quadInOut,
-    y: 900,
-    opacity: 1
-  };
 
   const onSendMessage = (): void => {
     if (text) {
@@ -33,9 +24,6 @@
 
 <style>
   .chat {
-    /* position: absolute;
-    bottom: 0;
-    right: 428px; */
     height: calc(900px - 64px);
     width: 50%;
     display: flex;
@@ -49,24 +37,7 @@
       rgba(var(--grey), 0.3333) 50%,
       rgb(var(--dark-grey)) 100%
     ) 1;
-    /* border: 1px solid rgb(var(--grey));
-    border-radius: 8px; */
-    /* z-index: 20; */
     box-sizing: border-box;
-  }
-
-  .chat__header {
-    padding: var(--xs);
-    display: flex;
-    justify-content: space-between;
-    border: 0 solid;
-    border-bottom-width: 1px;
-    border-image: linear-gradient(
-      90deg,
-      rgba(63, 63, 63, 1) 0%,
-      rgba(255, 255, 255, 1) 50%,
-      rgba(63, 63, 63, 1) 100%
-    ) 1;
   }
 
   .chat__msgs {
@@ -98,14 +69,6 @@
     width: 100%;
     padding: var(--xs);
     box-sizing: border-box;
-    /* border: 0 solid;
-    border-top-width: 1px;
-    border-image: linear-gradient(
-      90deg,
-      rgba(63, 63, 63, 1) 0%,
-      rgba(255, 255, 255, 1) 50%,
-      rgba(63, 63, 63, 1) 100%
-    ) 1; */
   }
 </style>
 

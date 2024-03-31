@@ -1,22 +1,34 @@
 <script lang="ts">
-  import {items} from "@som/shared/data";
-  import {ethersService, formService, socketService, soundService} from "services";
-  import {modalStore, playerStore, inventoryStore} from "stores";
-    import { onDestroy, onMount } from "svelte";
-  import {FormComponent, InputComponent, FormSubmitComponent, TableComponent, ModalComponent} from "ui";
+  import {onDestroy, onMount} from "svelte";
+  import {contractAddress} from "@som/shared/data";
 
-  const {id} = $modalStore.data;
-  const item = id !== 1 ? items.find((item) => item.id === id) : {name: "Chest", rarity: 0};
-  const itemWallet = id !== 1 ? $inventoryStore.items.find((item) => item.id === BigInt(id)).balance : $inventoryStore.chests;
+  import {
+    ethersService,
+    formService,
+    socketService,
+    soundService
+  } from "services";
+
+  import {modalStore, playerStore, inventoryStore} from "stores";
+
+  import {
+    FormComponent,
+    InputComponent,
+    FormSubmitComponent,
+    TableComponent,
+    ModalComponent
+  } from "ui";
+
+  const {item} = $modalStore.data;
 
   const formStore = formService.create({
     address: ["", "name"],
-    amount: ["", "item", itemWallet],
+    amount: ["", "item", item.balance],
   });
 
   const receipt = {
-    owned: itemWallet,
-    remaining: itemWallet
+    owned: item.balance,
+    remaining: item.balance
   };
 
   const onInput = (): void => {
@@ -30,52 +42,60 @@
   };
 
   const onSetMax = (): void => {
+    soundService.play("click");
     $formStore.fields.amount.value = `${receipt.owned}`;
     onInput();
-    soundService.play("click");
   };
 
   const onTransfer = async (): Promise<void> => {
-    $formStore.isLoading = true;
     soundService.play("click");
+    $formStore.isLoading = true;
 
-    socketService.socket.emit("getAddress", {name: $formStore.fields.address.value});
+    socketService.socket.emit("getAddress" as any, {
+      name: $formStore.fields.address.value
+    });
   };
 
   onMount((): void => {
-    socketService.socket.on("getAddress", async (params: any): Promise<void> => {
-      const {somGame} = ethersService.keys;
+    socketService.socket.on("getAddress" as any, async (params: any): Promise<void> => {
+      if (!$inventoryStore.collectibles.approved) {
+        const isConfirmed = await ethersService.transact(
+          "collectibles",
+          "setApprovalForAll",
+          [contractAddress.game, true]
+        );
 
-      // if (!$inventoryStore.isApprovedForAll) {
-        const isConfirmed = await ethersService.transact("somTokens", "setApprovalForAll", [somGame, true]);
-
-        if (isConfirmed) {
-          const isConfirmed = await ethersService.transact(
-            "somTokens",
-            "safeTransferFrom",
-            [$playerStore.address, params.address, id, $formStore.fields.amount.value, "0x"]
-          );
-
-          if (!isConfirmed) {
-            await ethersService.reloadUser();
-            // receipt.owned = id !== 1 ? $inventoryStore.items.find((item) => item.id === id)?.balance : 1n;
-            receipt.owned = 1n;
-            onInput();
-          }
+        if (!isConfirmed) {
+          $formStore.isLoading = false;
+          return;
         }
-      // }
+      }
 
+      const isConfirmed = await ethersService.transact(
+        "collectibles",
+        "safeTransferFrom",
+        [$playerStore.address, params.address, item.id, $formStore.fields.amount.value, "0x"]
+      );
+
+      if (!isConfirmed) {
+        $formStore.isLoading = false;
+        return;
+      }
+
+      await ethersService.reloadUser();
+      receipt.owned = item.balance;
+      onInput();
       $formStore.isLoading = false;
     });
   });
 
   onDestroy((): void => {
-    socketService.socket.off("getAddress");
+    socketService.socket.off("getAddress" as any);
   });
 </script>
 
 <style>
-.commona {
+  .commona {
     color: rgb(var(--common));
     text-shadow: 0px 2px 8px rgb(var(--common));
   }
@@ -100,26 +120,29 @@
     text-shadow: 0px 2px 8px rgb(var(--legendary));
   }
 
-  .mythica {
+  /* .mythica {
     color: rgb(var(--mythic));
     text-shadow: 0px 2px 8px rgb(var(--mythic));
-  }
+  } */
 </style>
 
 <ModalComponent>
-  <svelte:fragment slot="title">Transfer
+  <svelte:fragment slot="title">
+    Transfer
     <span
       class:commona={item?.rarity === 0}
       class:uncommona={item?.rarity === 1}
       class:rarea={item?.rarity === 2}
       class:epica={item?.rarity === 3}
-      class:legendarya={item?.rarity === 4}
-      class:mythica={item?.rarity === 5}>
+      class:legendarya={item?.rarity === 4}>
       {item?.name || ""}
-    </span></svelte:fragment>
-  <svelte:fragment slot="info">
-    Transfer an item to another player
+    </span>
   </svelte:fragment>
+
+  <svelte:fragment slot="info">
+    Transfer items to another player.
+  </svelte:fragment>
+
   <FormComponent on:submit="{onTransfer}">
     <InputComponent
       label="Name"
@@ -136,7 +159,7 @@
 
     <TableComponent items="{[
       ["Balance", receipt.owned],
-      ["Remaining balance", receipt.remaining]
+      ["Remaining", receipt.remaining]
     ]}"/>
 
     <svelte:fragment slot="submit">

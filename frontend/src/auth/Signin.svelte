@@ -2,7 +2,6 @@
   import { onDestroy, onMount } from "svelte";
   import {ethersService, formService, socketService} from "services";
   import {ButtonComponent, InputComponent, FormComponent, FormSubmitComponent, SelectComponent} from "ui";
-  import { getAddress } from "ethers";
   import { ethersStore } from "stores";
   import BindMetamask from "./BindMetamask.svelte";
 
@@ -35,8 +34,8 @@
     });
   };
 
-  const onMetamask = async (): Promise<void> => {
-    await ethersService.init(selectedAddress);
+  const onMetamask = (): void => {
+    ethersService.init(selectedAddress);
     socketService.socket.emit("getNonce", {address: selectedAddress});
   };
 
@@ -64,11 +63,6 @@
 </script>
 
 <style>
-  button img {
-    display: inline;
-    margin-right: var(--md);
-  }
-
   .alt-auth {
     display: flex;
     flex-direction: column;
@@ -140,23 +134,14 @@
     <FormComponent on:submit="{onMetamask}">
       <div>Metamask signin</div>
 
-      {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId === /*1337n*/41n}
-          <SelectComponent
-            label="Address"
-            values={$ethersStore.accounts}
-            bind:selected="{selectedAddress}"/>
-          <!-- {selectedAddress} -->
-          <!-- <InputComponent
-            label="Address"
-            value="{$ethersStore.accounts[0]}"
-            disabled/> -->
-        {:else}
-          <BindMetamask/>
-        {/if}
-      <!-- <InputComponent
-        label="Address"
-        value="{$ethersStore.signer?.address}"
-        disabled/> -->
+      {#if window.ethereum !== undefined && $ethersStore.accounts.length && $ethersStore.chainId === 41n}
+        <SelectComponent
+          label="Address"
+          values={$ethersStore.accounts}
+          bind:selected="{selectedAddress}"/>
+      {:else}
+        <BindMetamask/>
+      {/if}
 
       <InputComponent
         label="Remember me"

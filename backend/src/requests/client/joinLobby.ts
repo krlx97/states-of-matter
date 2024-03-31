@@ -77,7 +77,7 @@ const joinLobby: SocketRequest = (socket, error): void => {
     const lobby: LobbyView = {id, host, challengee, messages};
 
     socket.emit("joinLobbySender", {lobby});
-    server.io.to($playerHost.socketId).emit("joinLobbyReceiver", {challengee});
+    server.io.to($playerHost.socketId).emit("joinLobbyReceiver" as any, {challengee});
     server.io.emit("updateFriend", {name, status: PlayerStatus.IN_LOBBY});
   });
 };

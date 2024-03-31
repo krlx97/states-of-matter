@@ -23,9 +23,10 @@ const signin = (): void => {
 
     const $ethersStore = get(ethersStore);
 
-    if ($ethersStore.chainId === /*1337n*/41n && $ethersStore.accounts.length) {
-      await ethersService.init(playerView.address);
+    if ($ethersStore.chainId === 41n && $ethersStore.accounts.length) {
+      ethersService.init(playerView.address);
     }
+
     await ethersService.reloadUser();
 
     if (lobbyView) {
@@ -51,23 +52,6 @@ const signin = (): void => {
       };
 
       intervals[0] = requestAnimationFrame(barAnimation);
-
-      // const endTurnTime = gameView.endTurnTime;
-
-      // clearInterval(intervals[0]);
-
-      // intervals[0] = setInterval(() => {
-      //   const time = Date.now();
-      //   let rem = endTurnTime - time;
-      //   let x = (rem / TURN_DURATION_MS) * 100;
-
-      //   if (time <= endTurnTime) {
-      //     nodeStore.update((store) => {
-      //       store.barHeight = `${x}%`;
-      //       return store;
-      //     });
-      //   }
-      // }, 1000 / 60);
     }
   });
 };

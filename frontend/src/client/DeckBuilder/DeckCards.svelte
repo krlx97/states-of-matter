@@ -1,14 +1,8 @@
 <script lang="ts">
-  import {afterUpdate} from "svelte";
   import {playerStore} from "stores";
   import DeckCardComponent from "./DeckCard.svelte";
 
-  let deckCardsElement: HTMLDivElement;
   $: deck = $playerStore.decks[$playerStore.deckId];
-
-  afterUpdate((): void => {
-    // deckCardsElement.scrollTo(0, deckCardsElement.scrollHeight);
-  });
 </script>
 
 <style>

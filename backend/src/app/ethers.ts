@@ -15,7 +15,7 @@ import Game from "@som/contracts/Game/artifacts/Game.json" assert {
 };
 
 const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
-const signer = new Wallet("7053f96c59a053fad62bfa8bc197e3fabbaa5a021381c956576c2c4ebdf76186", provider);
+const signer = new Wallet("0xc5ebf1171e9f76c728795be3fb75620e9e7888404e461099f6b4b916283b540b", provider);
 
 const contracts = {
   collectibles: new Contract(contractAddress.collectibles, Collectibles.abi, signer),

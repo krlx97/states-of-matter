@@ -25,5 +25,5 @@ shared/dist
 # contracts/Game/artifacts
 # contracts/Items/artifacts
 
-.deploys/*
+.deploys
 dev.txt

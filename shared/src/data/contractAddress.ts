@@ -1,8 +1,8 @@
 const contractAddress = {
-  collectibles: "0x0632E0cbC3b0D6EBfA35Cf41948D01F0c4E82a50",
-  ethericCrystals: "0x2bA16ef0fB608DeC7a70B8b75c7Cd8F972120430",
-  ethericEnergy: "0x8c4b65Df4e7402436B305f2Ff76afB4e4926b609",
-  game: "0x0ee71bF6c7346C7F55B407024e67aEa07E727e8F"
+  collectibles: "0x17A7788740F115807e6D629b54fe038E995fE08a",
+  ethericCrystals: "0xf0E1255b1e1ECDb8b18E5b8118872f7C78070d57",
+  ethericEnergy: "0x361F7F8A626a25492B676947788331B2aF007299",
+  game: "0x78715f950D9539Feb1b48c7838C07DD2522190A3"
 };
 
 export {contractAddress};

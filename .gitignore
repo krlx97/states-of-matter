@@ -24,3 +24,6 @@ shared/dist
 # contracts/EthericEssence/artifacts
 # contracts/Game/artifacts
 # contracts/Items/artifacts
+
+.deploys/*
+dev.txt

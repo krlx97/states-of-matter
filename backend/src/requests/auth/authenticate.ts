@@ -6,7 +6,7 @@ import type {SocketRequest} from "@som/shared/types/backend";
 
 const authenticate: SocketRequest = (socket, error): void => {
   socket.on("authenticate", async (params) => {
-    const decoded: any = jsonwebtoken.verify(params.token, settings.bcrypt);
+    const decoded: any = jsonwebtoken.verify(params.token, settings.jwt);
     const {name} = decoded;
     const auth = await playerHelpers.authenticate(socket.id, name);
     const [data, errorMessage] = auth;

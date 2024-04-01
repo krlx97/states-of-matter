@@ -198,9 +198,9 @@ const authenticate = async (
         klass: deck.klass,
         cardsInDeck: deck.cards.reduce((acc, {amount}) => acc += amount, 0),
         average: {
-          health: gen(deckCardsView, "health"),
-          damage: gen(deckCardsView, "damage"),
-          manaCost: gen(deckCardsView, "manaCost")
+          health: gen(deckCardsView, "health") || 0,
+          damage: gen(deckCardsView, "damage") || 0,
+          manaCost: gen(deckCardsView, "manaCost") || 0
         },
         attribute: {
           minion: totalType(deckCardsView, CardType.MINION),

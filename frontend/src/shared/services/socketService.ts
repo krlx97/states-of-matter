@@ -4,7 +4,7 @@ import type {Requests} from "@som/shared/types/requests";
 
 const socket: Socket<Responses, Requests> = io(
   // "wss://som.eternitas.games",
-  "ws://localhost:4201",
+  "ws://localhost:4200",
   {
     transports: ["websocket"],
     upgrade: false,

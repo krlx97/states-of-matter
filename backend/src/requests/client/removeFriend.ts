@@ -23,6 +23,10 @@ const removeFriend: SocketRequest = (socket, error): void => {
       return error("Player receiver not found.");
     }
 
+    if (!$playerSender.friends.includes(name)) {
+      return error("Player receiver is not your friend.");
+    }
+
     const $playerSenderUpdate = await $players.findOneAndUpdate({
       name: $playerSender.name
     }, {
@@ -31,10 +35,10 @@ const removeFriend: SocketRequest = (socket, error): void => {
       } as UpdateFilter<Player> | Partial<Player>
     }, {
       returnDocument: "after"
-    })
+    });
 
     if (!$playerSenderUpdate) {
-      return error("Account sender not found.");
+      return error("Error updating player.");
     }
 
     socket.emit("removeFriendSender", {name});

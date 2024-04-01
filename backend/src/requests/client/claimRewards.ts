@@ -38,16 +38,17 @@ const claimRewards: SocketRequest = (socket, error): void => {
     ).catch(console.log);
 
     if (!tx) {
-      return error("Couldn't push transaction, no tokens were minted.");
+      return error("Transaction error.");
     }
 
     const fin = await tx.wait();
 
     if (!fin) {
-      return error("Error transacting.");
+      return error("Transaction error.");
     }
 
     socket.emit("claimRewards" as any);
+
     socket.emit("notification", {
       color: "success",
       message: "Claimed rewards."

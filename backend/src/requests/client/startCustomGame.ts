@@ -11,8 +11,9 @@ const startCustomGame: SocketRequest = (socket, error): void => {
     const $player = await $players.findOne({socketId});
 
     if (!$player) {
-      return error("Player not found, please relog.");
+      return error("Player not found.");
     }
+
     if (!$player.lobbyId) {
       return error("You are not in a lobby.");
     }

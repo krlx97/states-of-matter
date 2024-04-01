@@ -37,7 +37,7 @@ const setAvatar: SocketRequest = (socket, error): void => {
     });
 
     if (!$playerUpdate) {
-      return error("Failed to update player.");
+      return error("Error updating player.");
     }
 
     const {name} = $playerUpdate;

@@ -1,12 +1,11 @@
 import {verifyMessage} from "ethers";
 import jsonwebtoken from "jsonwebtoken";
-import {mongo, server} from "app";
+import {mongo, server, settings} from "app";
 import {playerHelpers} from "helpers";
+import {PlayerStatus} from "@som/shared/enums";
 import type {SocketRequest} from "@som/shared/types/backend";
-import { PlayerStatus } from "@som/shared/enums";
 
 const signinMetamask: SocketRequest = (socket, error): void => {
-  const socketId = socket.id;
   const {$players} = mongo;
 
   socket.on("signinMetamask", async (params) => {
@@ -35,8 +34,8 @@ const signinMetamask: SocketRequest = (socket, error): void => {
 
     const expiresIn = rememberMe ? "30d" : "2h";
     const {name} = $player;
-    const token = jsonwebtoken.sign({name}, "som", {expiresIn});
-    const auth = await playerHelpers.authenticate(socketId, $player.name);
+    const token = jsonwebtoken.sign({name}, settings.jwt, {expiresIn});
+    const auth = await playerHelpers.authenticate(socket.id, $player.name);
     const [data, errorMessage] = auth;
 
     if (!data) {

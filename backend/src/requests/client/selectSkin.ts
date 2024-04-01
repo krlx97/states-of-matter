@@ -7,16 +7,20 @@ const selectSkin: SocketRequest = (socket, error): void => {
 
   socket.on("selectSkin" as any, async (params: any): Promise<void> => {
     const {cardId, skinId} = params;
+    const $player = await $players.findOne({socketId});
 
+    if (!$player) {
+      return error("Player not found.");
+    }
     // if (!item || item.type !== 2) {
     //   return error("Selected item isn't a skin.");
     // }
 
-    // const balance = await contracts.skins.balanceOf($player.address, id);
+    const balance = await contracts.collectibles.balanceOf($player.address, skinId);
 
-    // if (balance.lte(0)) {
-    //   return error("You do not own the skin.");
-    // }
+    if (balance < 1n) {
+      return error("You do not own the skin.");
+    }
 
     const $playerUpdate = await $players.updateOne({
       socketId,

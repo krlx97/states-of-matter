@@ -21,11 +21,11 @@ const saveDeck: SocketRequest = (socket, error): void => {
     const $player = await $players.findOne({socketId});
 
     if (!$player) {
-      return error("Player not found, try relogging.");
+      return error("Player not found.");
     }
 
     for (const deckCard of deck.cards) {
-      const card = cards.find((card) => card.id === deckCard.id);
+      const card = cards.find((card): boolean => card.id === deckCard.id);
 
       if (!card) {
         return error("One of the cards in your deck is invalid.");
@@ -36,7 +36,7 @@ const saveDeck: SocketRequest = (socket, error): void => {
       }
 
       if (deckCard.amount > 2 || deckCard.amount < 1) { // prevent decimals?
-        return error("Invalid amount of same cards added.");
+        return error("Invalid amount of cards added.");
       }
     }
 

@@ -1,10 +1,8 @@
+import {getAddress} from "ethers";
+import {mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
-import { mongo } from "app";
-import { getAddress } from "ethers";
 
 const getNonce: SocketRequest = (socket, error): void => {
-  const {$players} = mongo;
-
   socket.on("getNonce", async (params) => {
     const address = getAddress(params.address);
 
@@ -12,7 +10,7 @@ const getNonce: SocketRequest = (socket, error): void => {
       return error("Invalid address.");
     }
 
-    const $player = await $players.findOne({address});
+    const $player = await mongo.$players.findOne({address});
 
     if (!$player) {
       return error("Player not found.");
@@ -21,7 +19,7 @@ const getNonce: SocketRequest = (socket, error): void => {
     const {nonce} = $player;
 
     socket.emit("getNonce", {nonce});
-  })
+  });
 };
 
 export {getNonce};

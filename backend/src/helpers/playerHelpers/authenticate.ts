@@ -2,10 +2,13 @@ import {mongo} from "app";
 import {gameHelpers} from "helpers/gameHelpers";
 import {cards, cardsView} from "@som/shared/data";
 import {CardKlass, CardType, PlayerStatus} from "@som/shared/enums";
+import type {PlayerDeck} from "@som/shared/types/mongo";
 
 import type {
   GameView,
   LobbyView,
+  PlayerDeckCardView,
+  PlayerDeckView,
   PlayerSocialFriendsView,
   PlayerView
 } from "@som/shared/types/views";
@@ -21,7 +24,11 @@ const authenticate = async (
   name: string
 ): Promise<[AuthData | undefined, string]> => {
   const {$games, $lobbies, $players, $leaderboards} = mongo;
+  const friendsView: PlayerSocialFriendsView = [];
   let leaderboards = await $leaderboards.findOne({});
+  let lobbyView: LobbyView | undefined;
+  let gameView: GameView | undefined;
+  let mutualFriends = [];
 
   if (!leaderboards) {
     leaderboards = {level: [], elo: []};
@@ -56,8 +63,6 @@ const authenticate = async (
   }
 
   const {lobbyId, gameId} = $player;
-  let lobbyView: LobbyView | undefined;
-  let gameView: GameView | undefined;
 
   if (lobbyId) {
     const id = lobbyId;
@@ -82,21 +87,88 @@ const authenticate = async (
     gameView = gameHelpers.generateGameView($game, $player.name);
   }
 
-  const friendsView: PlayerSocialFriendsView = [];
-  let mutualFriends = [];
-
   for (const name of $player.friends) {
     const $friend = await $players.findOne({name});
 
-    if ($friend) {
-      if ($friend.friends.includes($player.name)) {
-        mutualFriends.push(name);
+    if (!$friend) {
+      continue;
+    }
+
+    if ($friend.friends.includes($player.name)) {
+      mutualFriends.push(name);
+    }
+
+    const {avatarId, bannerId, experience, level, elo, status, games} = $friend;
+    friendsView.push({name, avatarId, bannerId, experience, level, elo, status, games});
+  }
+
+  const gen = (deck: Array<PlayerDeckCardView>, attr: "health" | "damage" | "manaCost"): number => {
+    let totalCards: number
+    let totalAttr: number;
+
+    if (attr === "health" || attr === "damage") {
+      totalAttr = deck.reduce((acc, deckCard) => {
+        if (deckCard.type !== CardType.MINION) {
+          return acc;
+        } else {
+          return acc += deckCard[attr] * deckCard.amount;
+        }
+      }, 0);
+
+      totalCards = deck.reduce((acc, deckCard) => {
+        if (deckCard.type !== CardType.MINION) {
+          return acc;
+        } else {
+          return acc += deckCard.amount;
+        }
+      }, 0);
+    } else {
+      totalAttr = deck.reduce((acc, deckCard) => {
+        return acc += deckCard[attr] * deckCard.amount;
+      }, 0);
+      totalCards = deck.reduce((acc, deckCard) => acc += deckCard.amount, 0);
+    }
+
+    return totalAttr / totalCards;
+  };
+
+  const totalType = (
+    deckCardsView: Array<PlayerDeckCardView>,
+    type: CardType
+  ) => deckCardsView.reduce(
+    (acc, deckCard) => deckCard.type !== type ? acc : acc += deckCard.amount
+  , 0);
+
+  const totalKlass = (
+    deckCardsView: Array<PlayerDeckCardView>,
+    klass: CardKlass
+  ) => deckCardsView.reduce(
+    (acc, deckCard) => deckCard.klass !== klass ? acc : acc += deckCard.amount
+  , 0);
+
+  const genDeckCardsView = (deck: PlayerDeck): Array<PlayerDeckCardView> => {
+    const mapp = deck.cards.map((deckCard) => {
+      const {id, amount} = deckCard;
+      const card = cards.find((card): boolean => card.id === id);
+      const cardView = cardsView.find((card): boolean => card.id === id);
+
+      if (!card || !cardView || card.type === CardType.HERO) {
+        return {id, name: "", klass: 0, type: CardType.MINION, damage: 0, health: 0, manaCost: 0, amount: 1};
       }
 
-      const {avatarId, bannerId, experience, level, elo, status, games} = $friend;
-      friendsView.push({name, avatarId, bannerId, experience, level, elo, status, games});
-    }
-  }
+      const {name} = cardView;
+
+      if (card.type === CardType.MINION) {
+        const {health, damage, klass, type, manaCost} = card;
+        return {id, name, klass, type, health, damage, manaCost, amount};
+      } else {
+        const {klass, type, manaCost} = card;
+        return {id, name, klass, type, manaCost, amount};
+      }
+    });
+
+    return mapp;
+  };
 
   const playerView: PlayerView = {
     name: $player.name,
@@ -117,152 +189,32 @@ const authenticate = async (
     friends: friendsView,
     mutualFriends,
     games: $player.games,
-    decks: $player.decks.map((deck) => ({
-      id: deck.id,
-      name: deck.name,
-      klass: deck.klass,
-      cardsInDeck: deck.cards.reduce((acc, {amount}) => acc += amount, 0),
-      average: {
-        health: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
+    decks: $player.decks.map((deck) => {
+      const deckCardsView = genDeckCardsView(deck);
 
-          if (
-            !card ||
-            card.type === CardType.HERO ||
-            card.type === CardType.MAGIC ||
-            card.type === CardType.TRAP
-          ) {
-            return acc;
-          }
-
-          return acc += card.health * deckCard.amount;
-        }, 0) / deck.cards.reduce((acc, deckCard) => acc += deckCard.amount, 0) || 0,
-        damage: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (
-            !card ||
-            card.type === CardType.HERO ||
-            card.type === CardType.MAGIC ||
-            card.type === CardType.TRAP
-          ) {
-            return acc;
-          }
-
-          return acc += card.damage * deckCard.amount;
-        }, 0) / deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if ( !card || card.type !== CardType.MINION) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0) || 0,
-        manaCost: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.type === CardType.HERO) {
-            return acc;
-          }
-
-          return acc += card.manaCost * deckCard.amount;
-        }, 0) / deck.cards.reduce((acc, deckCard) => acc += deckCard.amount, 0) || 0
-      },
-      attribute: {
-        minion: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.type !== CardType.MINION) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0),
-        magic: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.type !== CardType.MAGIC) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0),
-        trap: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.type !== CardType.TRAP) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0),
-        neutral: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.klass !== CardKlass.NEUTRAL) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0),
-        solid: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.klass !== CardKlass.SOLID) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0),
-        liquid: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.klass !== CardKlass.LIQUID) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0),
-        gas: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.klass !== CardKlass.GAS) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0),
-        plasma: deck.cards.reduce((acc, deckCard) => {
-          const card = cards.find((card): boolean => deckCard.id === card.id);
-
-          if (!card || card.klass !== CardKlass.PLASMA) {
-            return acc;
-          }
-
-          return acc += deckCard.amount;
-        }, 0),
-      },
-      cards: deck.cards.map((deckCard) => {
-        const {id, amount} = deckCard;
-        const card = cards.find((card): boolean => card.id === id);
-        const cardView = cardsView.find((card): boolean => card.id === id);
-
-        if (!card || !cardView || card.type === CardType.HERO) {
-          return {id, name: "", type: 1, damage: 0, health: 0, manaCost: 0, amount: 1};
-        }
-
-        const {klass, type, manaCost} = card;
-        const {name} = cardView;
-
-        if (card.type === CardType.MINION) {
-          const {health, damage} = card;
-          return {id, name, klass, type, health, damage, manaCost, amount};
-        } else {
-          return {id, name, klass, type, manaCost, amount};
-        }
-      })
-    })),
+      return {
+        id: deck.id,
+        name: deck.name,
+        klass: deck.klass,
+        cardsInDeck: deck.cards.reduce((acc, {amount}) => acc += amount, 0),
+        average: {
+          health: gen(deckCardsView, "health"),
+          damage: gen(deckCardsView, "damage"),
+          manaCost: gen(deckCardsView, "manaCost")
+        },
+        attribute: {
+          minion: totalType(deckCardsView, CardType.MINION),
+          magic: totalType(deckCardsView, CardType.MAGIC),
+          trap: totalType(deckCardsView, CardType.TRAP),
+          neutral: totalKlass(deckCardsView, CardKlass.NEUTRAL),
+          solid: totalKlass(deckCardsView, CardKlass.SOLID),
+          liquid: totalKlass(deckCardsView, CardKlass.LIQUID),
+          gas: totalKlass(deckCardsView, CardKlass.GAS),
+          plasma: totalKlass(deckCardsView, CardKlass.PLASMA)
+        },
+        cards: deckCardsView
+      }
+    }),
     skins: $player.skins,
     tutorial: $player.tutorial,
     tasks: $player.tasks,

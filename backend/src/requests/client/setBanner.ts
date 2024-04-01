@@ -19,15 +19,15 @@ const setBanner: SocketRequest = (socket, error): void => {
     }
 
     if (bannerId === 201 && $player.elo < 600) {
-      return error("Can't select this avatar.");
+      return error("Can't select this banner.");
     }
 
     if (bannerId === 202 && $player.elo < 800) {
-      return error("Can't select this avatar.");
+      return error("Can't select this banner.");
     }
 
     if (bannerId === 203 && $player.elo < 1000) {
-      return error("Can't select this avatar.");
+      return error("Can't select this banner.");
     }
 
     const $playerUpdate = await $players.findOneAndUpdate({socketId}, {
@@ -37,7 +37,7 @@ const setBanner: SocketRequest = (socket, error): void => {
     });
 
     if (!$playerUpdate) {
-      return error("Failed to update player.");
+      return error("Error updating player.");
     }
 
     const {name} = $playerUpdate;

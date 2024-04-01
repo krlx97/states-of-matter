@@ -1,16 +1,14 @@
 import jsonwebtoken from "jsonwebtoken";
+import {PlayerStatus} from "@som/shared/enums";
+import {server, settings} from "app";
 import {playerHelpers} from "helpers";
 import type {SocketRequest} from "@som/shared/types/backend";
-import { PlayerStatus } from "@som/shared/enums";
-import { server } from "app";
 
 const authenticate: SocketRequest = (socket, error): void => {
-  const socketId = socket.id;
-
   socket.on("authenticate", async (params) => {
-    const decoded: any = jsonwebtoken.verify(params.token, "som");
+    const decoded: any = jsonwebtoken.verify(params.token, settings.bcrypt);
     const {name} = decoded;
-    const auth = await playerHelpers.authenticate(socketId, name);
+    const auth = await playerHelpers.authenticate(socket.id, name);
     const [data, errorMessage] = auth;
 
     if (!data) {

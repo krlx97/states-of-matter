@@ -12,6 +12,7 @@ const leaveQueue: SocketRequest = (socket, error): void => {
     if (!$player) {
       return error("Player not found.");
     }
+
     if (!$player.queueId) {
       return error("You are not in a queue.");
     }

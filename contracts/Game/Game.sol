@@ -174,8 +174,13 @@ contract Game is Ownable {
     uint256 ecrAmount,
     uint256 shardPackAmount
   ) external onlyOwner {
-    ecrToken.mint(player, ecrAmount);
-    collectibles.mint(player, SHARD_PACK_ID, shardPackAmount, "");
+    if (ecrAmount > 0) {
+      ecrToken.mint(player, ecrAmount);
+    }
+
+    if (shardPackAmount > 0) {
+      collectibles.mint(player, SHARD_PACK_ID, shardPackAmount, "");
+    }
   }
 
   function updateCraftPrice () external onlyOwner {

@@ -21,8 +21,16 @@ const signupMetamask: SocketRequest = (socket, error): void => {
       return error("Invalid address");
     }
 
-    const $player = await $players.findOne({name});
-    const $player2 = await $players.findOne({address});
+    const recoveredAddress = verifyMessage("signup", signature);
+
+    if (recoveredAddress !== address) {
+      return error("Invalid signature.");
+    }
+
+    const [$player, $player2] = await Promise.all([
+      $players.findOne({name}),
+      $players.findOne({address})
+    ]);
 
     if ($player) {
       return error("Name taken.");
@@ -30,12 +38,6 @@ const signupMetamask: SocketRequest = (socket, error): void => {
 
     if ($player2) {
       return error("Address taken.");
-    }
-
-    const recoveredAddress = verifyMessage("signup", signature);
-
-    if (recoveredAddress !== address) {
-      return error("Invalid signature.");
     }
 
     const insertPlayer = await $players.insertOne(

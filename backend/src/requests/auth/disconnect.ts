@@ -4,10 +4,9 @@ import type {SocketRequest} from "@som/shared/types/backend";
 
 const disconnect: SocketRequest = (socket, error): void => {
   const socketId = socket.id;
-  const {$players} = mongo;
 
   socket.on("disconnect", async () => {
-    const $playerUpdate = await $players.findOneAndUpdate({socketId}, {
+    const $playerUpdate = await mongo.$players.findOneAndUpdate({socketId}, {
       $set: {
         socketId: "",
         status: PlayerStatus.OFFLINE

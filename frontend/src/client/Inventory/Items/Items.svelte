@@ -1,6 +1,5 @@
 <script lang="ts">
-  import {items} from "@som/shared/data";
-  import {ButtonComponent, CurrencyComponent, LinkComponent, SelectComponent} from "ui";
+  import {ButtonComponent, LinkComponent, SelectComponent} from "ui";
   import { modalService, soundService } from "services";
   import { inventoryStore } from "stores";
   import { onDestroy, onMount } from "svelte";
@@ -20,8 +19,8 @@
   let sortAscending = true;
   let selectedRarity = "All";
   let selectedType = "All";
-  const x = $inventoryStore.collectibles.items.filter((itm) => !inDevelopment.includes(itm.id));
-  let filteredItems = x;
+  // const x = $inventoryStore.collectibles.items.filter((itm) => !inDevelopment.includes(itm.id));
+  let filteredItems = $inventoryStore.collectibles.items.filter((itm) => !inDevelopment.includes(itm.id));
   let scrollTimeout: NodeJS.Timeout;
   let inc = 0;
   let unsub: any;
@@ -38,7 +37,7 @@
   };
 
   const onFilterItems = (): void => {
-    filteredItems = x
+    filteredItems = $inventoryStore.collectibles.items.filter((itm) => !inDevelopment.includes(itm.id))
       .filter((item) => {
         if (selectedRarity === "All") {
           return true;

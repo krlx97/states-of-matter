@@ -24,9 +24,13 @@ process.on("uncaughtException", (error, origin): void => {
 const {app, http, io} = server;
 const dir = process.cwd();
 const file = `${dir}/frontend/dist/index.html`;
+const file2 = `${dir}/frontend/dist/images/currencies/ecr.png`;
+const file3 = `${dir}/frontend/dist/images/currencies/enrg.png`;
 
 app.use(express.static(join(dir, "frontend/dist")));
 app.get("/", (request, response): void => response.sendFile(file));
+app.get("/ecr.png", (request, response): void => response.sendFile(file2));
+app.get("/enrg.png", (request, response): void => response.sendFile(file3));
 app.get("*", (request, response): void => response.sendFile(file));
 
 io.on("connection", (socket): void => {

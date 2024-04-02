@@ -74,9 +74,9 @@
 
   onMount((): void => {
     if (isOpponent) {
-      selectedSkin = $gameStore.opponent.skins?.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
+      selectedSkin = $gameStore.opponent.skins.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
     } else {
-      selectedSkin = $gameStore.player.skins?.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
+      selectedSkin = $gameStore.player.skins.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
     }
 
     cardView = cardsView.find(({id}): boolean => card.id === id);
@@ -403,7 +403,7 @@
   <div class="card__name">{cardView ? cardView.name : "nema"}</div>
   <img class="card__front" src="images/card/card-front.png" alt="Card Border"/>
 
-  {#if item.rarity === 0 || item.rarity === 3}
+  {#if item.rarity === 0 || item.rarity === 2}
     <img class="card__avatar" class:isGrayscale src="images/items/{selectedSkin.skinId}.png" height=136 width=108 alt="Card skin"/>
   {:else}
     <video class="card__avatar" class:isGrayscale autoplay loop muted>

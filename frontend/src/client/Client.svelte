@@ -99,7 +99,7 @@
 
       <div class="client__views__nav__currencies">
         <a href="https://discord.gg/wD9K74V8mT" target="_blank"><i class="fa-brands fa-discord fa-2x"></i></a>
-        <a href="https://twitter.com/EternitasGames" target="_blank"><i class="fa-brands fa-x-twitter fa-2x"></i></a>
+        <a href="https://twitter.com/eternitas_som" target="_blank"><i class="fa-brands fa-x-twitter fa-2x"></i></a>
         <a href="https://github.com/krlx97" target="_blank"><i class="fa-brands fa-github fa-2x"></i></a>
         <a href="https://www.telos.net/getting-started-with-zero" target="_blank"><img src="images/telos.png" alt="TelosZero"/></a>
         <a href="https://www.telos.net/getting-started-with-evm" target="_blank"><img src="images/telosevm.png" alt="TelosEVM"/></a>

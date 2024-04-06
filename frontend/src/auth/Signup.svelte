@@ -122,7 +122,7 @@
         {/if}
       {/if}
 
-      <div style="display: flex; justify-content: space-between">
+      <div style="display: flex; justify-content: space-between; margin-top: 48px">
         <ButtonComponent on:click="{onPreviousStep}">
           PREVIOUS
         </ButtonComponent>

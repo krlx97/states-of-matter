@@ -20,10 +20,10 @@ interface EthersStore {
   chainId: bigint;
   isLoaded: boolean;
   contracts: {
-    collectibles: Contract;
-    ethericCrystals: Contract;
-    ethericEnergy: Contract;
-    game: Contract;
+    collectibles: any;
+    ethericCrystals: any;
+    ethericEnergy: any;
+    game: any;
   };
 }
 
@@ -32,10 +32,10 @@ const ethersStore = writable<EthersStore>({
   chainId: 0n,
   isLoaded: false,
   contracts: {
-    collectibles: new Contract(contractAddress.collectibles, Collectibles.abi),
-    ethericCrystals: new Contract(contractAddress.ethericCrystals, EthericCrystals.abi),
-    ethericEnergy: new Contract(contractAddress.ethericEnergy, EthericEnergy.abi),
-    game: new Contract(contractAddress.game, Game.abi)
+    collectibles: undefined,
+    ethericCrystals: undefined,
+    ethericEnergy: undefined,
+    game: undefined
   }
 });
 

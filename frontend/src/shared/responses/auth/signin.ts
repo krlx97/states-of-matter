@@ -23,9 +23,9 @@ const signin = (): void => {
 
     const $ethersStore = get(ethersStore);
 
-    if ($ethersStore.chainId === 41n && $ethersStore.accounts.length) {
+    // if ($ethersStore.chainId === 41n && $ethersStore.accounts.length) {
       ethersService.init(playerView.address);
-    }
+    // }
 
     await ethersService.reloadUser();
 

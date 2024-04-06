@@ -22,6 +22,7 @@
   }
 
   .nav {
+    margin-top: 16px;
     display: flex;
     justify-content: space-evenly;
   }

@@ -1,7 +1,22 @@
 import {get} from "svelte/store";
-import {BrowserProvider, JsonRpcProvider, JsonRpcSigner} from "ethers";
+import {BrowserProvider, Contract, JsonRpcProvider, JsonRpcSigner} from "ethers";
 import {items, contractAddress} from "@som/shared/data";
 import {playerStore, ethersStore, inventoryStore} from "stores";
+
+
+import Collectibles from "@som/contracts/Collectibles/artifacts/Collectibles.json" assert {
+  type: "json"
+};
+import EthericCrystals from "@som/contracts/EthericCrystals/artifacts/EthericCrystals.json" assert {
+  type: "json"
+};
+import EthericEnergy from "@som/contracts/EthericEnergy/artifacts/EthericEnergy.json" assert {
+  type: "json"
+};
+import Game from "@som/contracts/Game/artifacts/Game.json" assert {
+  type: "json"
+};
+
 
 const init = (address: string): void => {
   if (window.ethereum) {
@@ -12,13 +27,21 @@ const init = (address: string): void => {
       signer = new JsonRpcSigner(provider, address);
     }
 
-    ethersStore.update((store) => {
-      const runner = signer ? signer : provider;
-      const contractsKeys = Object.keys(store.contracts) as Array<keyof typeof store.contracts>;
+    const runner = signer ? signer : provider;
 
-      for (const key of contractsKeys) {
-        store.contracts[key] = store.contracts[key].connect(runner);
+    ethersStore.update((store) => {
+      // const contractsKeys = Object.keys(store.contracts) as Array<keyof typeof store.contracts>;
+
+      store.contracts = {
+        collectibles: new Contract(contractAddress.collectibles, Collectibles.abi, runner),
+        ethericCrystals: new Contract(contractAddress.ethericCrystals, EthericCrystals.abi, runner),
+        ethericEnergy: new Contract(contractAddress.ethericEnergy, EthericEnergy.abi, runner),
+        game: new Contract(contractAddress.game, Game.abi, runner)
       }
+      // for (const key of contractsKeys) {
+        // store.contracts[key] = store.contracts[key].connect(runner);
+        // store.contracts[key].connect(runner);
+      // }
 
       return store;
     });
@@ -26,11 +49,18 @@ const init = (address: string): void => {
     const provider = new JsonRpcProvider("https://testnet.telos.net/evm");
 
     ethersStore.update((store) => {
-      const contractsKeys = Object.keys(store.contracts) as Array<keyof typeof store.contracts>;
-
-      for (const key of contractsKeys) {
-        store.contracts[key] = store.contracts[key].connect(provider);
+      // const contractsKeys = Object.keys(store.contracts) as Array<keyof typeof store.contracts>;
+      store.contracts = {
+        collectibles: new Contract(contractAddress.collectibles, Collectibles.abi, provider),
+        ethericCrystals: new Contract(contractAddress.ethericCrystals, EthericCrystals.abi, provider),
+        ethericEnergy: new Contract(contractAddress.ethericEnergy, EthericEnergy.abi, provider),
+        game: new Contract(contractAddress.game, Game.abi, provider)
       }
+
+      // for (const key of contractsKeys) {
+        // store.contracts[key] = store.contracts[key].connect(provider);
+        // store.contracts[key].connect
+      // }
 
       return store;
     });
@@ -77,26 +107,28 @@ const sign = async (message: string): Promise<{signature: string, address: strin
 };
 
 const reloadUser = async (): Promise<void> => {
+  const $playerStore = get(playerStore);
+  const $ethersStore = get(ethersStore);
+
+  const {address, elo} = $playerStore;
+
   const {
     collectibles,
     ethericCrystals,
     ethericEnergy,
     game
-  } = get(ethersStore).contracts;
-
-  const $ethersStore = get(ethersStore);
-  const {address, elo} = get(playerStore);
-
-  if ($ethersStore.chainId !== 41n) {
-    ethersStore.update((store) => {
-      store.isLoaded = true;
-      return store;
-    });
-
-    return;
-  }
+  } = $ethersStore.contracts;
 
   if (address) {
+    if ($ethersStore.chainId !== 41n) {
+      ethersStore.update((store) => {
+        store.isLoaded = true;
+        return store;
+      });
+
+      return;
+    }
+
     const accounts = await window.ethereum?.request({
       method: "eth_accounts"
     })

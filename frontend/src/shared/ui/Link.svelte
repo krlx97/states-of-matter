@@ -41,6 +41,7 @@
 
   .isActive {
     text-shadow: 0 0 8px rgba(var(--white), 1);
+    text-decoration: underline;
   }
 
   .neutral {color: rgb(var(--neutral));}

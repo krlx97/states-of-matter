@@ -86,7 +86,7 @@
   <div class="client__views">
 
     <div class="client__views__nav">
-      <img class="logo" src="images/logo.png" alt="Logo" height="32"/>
+      <img class="logo" src="images/logo.png" alt="Logo"/>
 
       {#each views as view}
         <LinkComponent

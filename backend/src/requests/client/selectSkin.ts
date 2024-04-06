@@ -1,3 +1,4 @@
+import {items} from "@som/shared/data";
 import {contracts, mongo} from "app";
 import type {SocketRequest} from "@som/shared/types/backend";
 
@@ -12,14 +13,19 @@ const selectSkin: SocketRequest = (socket, error): void => {
     if (!$player) {
       return error("Player not found.");
     }
-    // if (!item || item.type !== 2) {
-    //   return error("Selected item isn't a skin.");
-    // }
 
-    const balance = await contracts.collectibles.balanceOf($player.address, skinId);
+    const item = items.find((item): boolean => item.id === skinId);
 
-    if (balance < 1n) {
-      return error("You do not own the skin.");
+    if (!item) {
+      return error("Invalid skin.");
+    }
+
+    if (item.rarity !== 0) {
+      const balance = await contracts.collectibles.balanceOf($player.address, skinId);
+
+      if (balance < 1n) {
+        return error("You do not own the skin.");
+      }
     }
 
     const $playerUpdate = await $players.updateOne({

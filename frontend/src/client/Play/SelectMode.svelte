@@ -88,6 +88,8 @@
     text-align: center;
   }
 
+  .fixx {height: 14px;}
+
   @keyframes opa {
    from {opacity: 0.333;}
     to {opacity: 1;}
@@ -116,6 +118,7 @@
       <h2>Queue time: {$queueStore.timeInQueue}</h2>
     {:else}
       <h2>CASUAL</h2>
+      <div class="fixx"></div>
     {/if}
     <div class="mode__actions">
       {#if isInCasualQueue}
@@ -156,6 +159,7 @@
 
   <div class="mode custom" class:isTutorial3>
     <h2>CUSTOM LOBBY</h2>
+    <div class="fixx"></div>
     <div class="mode__actions">
       <ButtonComponent
         on:click="{onMakeLobby}"

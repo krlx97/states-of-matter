@@ -29,16 +29,17 @@
     height: 100%;
     width: 100%;
     display: flex;
-    background-image: url("/images/clientbg.png");
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
+    
   }
 
   .client__views {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+background-image: url("/images/clientbg.png");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
   }
 
   .client__views__nav {

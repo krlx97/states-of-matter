@@ -116,6 +116,7 @@
   <div class="mode casual" class:isTutorial1>
     {#if isInCasualQueue}
       <h2>Queue time: {$queueStore.timeInQueue}</h2>
+      <div class="fixx"></div>
     {:else}
       <h2>CASUAL</h2>
       <div class="fixx"></div>
@@ -136,6 +137,7 @@
   <div class="mode ranked" class:isTutorial2>
     {#if isInRankedQueue}
       <h2>Queue time: {$queueStore.timeInQueue}</h2>
+      <div class="fixx"></div>
     {:else}
       <h2>RANKED</h2>
       {#if $playerStore.elo < 20}

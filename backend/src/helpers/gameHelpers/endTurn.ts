@@ -152,8 +152,8 @@ const endTurn = async (name: string): Promise<any> => {
   await attackMinionSave($game, animations, true);
 
   clearTimeout(endTurnTimeouts[$game.id]);
-  endTurnTimeouts[$game.id] = setTimeout(async (): Promise<void> => {
-    await endTurn($game.currentPlayer);
+  endTurnTimeouts[$game.id] = setTimeout((): void => {
+    endTurn($game.currentPlayer);
   }, 90000);
 };
 

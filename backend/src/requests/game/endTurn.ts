@@ -144,8 +144,8 @@ const endTurn: SocketRequest = (socket, error): void => {
     await gameHelpers.attackMinionSave($game, animations, true);
 
     clearTimeout(endTurnTimeouts[$game.id]);
-    endTurnTimeouts[$game.id] = setTimeout(async (): Promise<void> => {
-      await gameHelpers.endTurn($game.currentPlayer);
+    endTurnTimeouts[$game.id] = setTimeout((): void => {
+      gameHelpers.endTurn($game.currentPlayer);
     }, 90000);
   });
 };

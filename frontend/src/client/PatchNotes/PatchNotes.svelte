@@ -12,9 +12,19 @@
 <div class="patch-notes">
   Patch notes:
   <div>
-    <TextComponent color="primary">v0.4.0</TextComponent> Open Beta release - 28 cards playable.
+    <TextComponent color="primary">v0.4.0 [8th of April, 2024]</TextComponent> Open Beta release - 28 cards playable.
   </div>
   <br/>
+  <div>
+    <TextComponent color="primary">v0.4.1 [6th of May, 2024]</TextComponent> Important bugfixes.<br/>
+    <TextComponent color="success">BUGFIXES</TextComponent><br/>
+    <ul>
+      <li>Game turn timer won't break anymore, which caused players to be stuck in an infinite game.</li>
+      <li>Re-logging while you're in game wont break the UI anymore, making the game unplayable.</li>
+    </ul>
+  </div>
+  <br/>
+
   Roadmap:
   <div>
     <TextComponent color="primary">[Q2 2024] v1.0.0</TextComponent> Official release - all 64 cards playable. <TextComponent color="success">Airdrop: 5% players</TextComponent><br/>

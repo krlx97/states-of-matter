@@ -48,8 +48,8 @@ const startGame = async (
 
   clearTimeout(endTurnTimeouts[game.id]);
 
-  endTurnTimeouts[game.id] = setTimeout(async (): Promise<void> => {
-    await endTurn(game.currentPlayer);
+  endTurnTimeouts[game.id] = setTimeout((): void => {
+    endTurn(game.currentPlayer);
   }, 90000);
 
   io.to($playerA.socketId).emit("startGame" as any, {

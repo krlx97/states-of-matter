@@ -73,10 +73,14 @@
   });
 
   onMount((): void => {
-    if (isOpponent) {
-      selectedSkin = $gameStore.opponent.skins.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
-    } else {
-      selectedSkin = $gameStore.player.skins.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
+    // This check $gameStore.id shouldn't exist though
+    // skins are disabled until bug is fixed!
+    if ($gameStore.id) {
+      if (isOpponent) {
+        selectedSkin = $gameStore.opponent.skins.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
+      } else {
+        selectedSkin = $gameStore.player.skins.find((skin): boolean => skin.cardId === card.id) || {cardId: 0, skinId: 0};
+      }
     }
 
     cardView = cardsView.find(({id}): boolean => card.id === id);

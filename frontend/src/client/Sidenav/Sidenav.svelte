@@ -116,7 +116,7 @@
       <div>
         Version
         <TextComponent size="lg" color="grey">
-          0.4.0
+          0.4.1
         </TextComponent>
       </div>
     </div>

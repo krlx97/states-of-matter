@@ -10,6 +10,7 @@ import {generateGame} from "./generateGame";
 import {generateGameView} from "./generateGameView";
 import {getAdjacentMinions} from "./getAdjacentMinions";
 import {getGame} from "./getGame";
+import {getGameName} from "./getGameName";
 import {getRandomMinion} from "./getRandomMinion";
 import {insertBuff} from "./insertBuff";
 import {insertDebuff} from "./insertDebuff";
@@ -33,6 +34,7 @@ deductHeroHealth,
   getAdjacentMinions,
 endTurnTimeouts,
   getGame,
+getGameName,
   getRandomMinion,
   insertBuff,
   insertDebuff,

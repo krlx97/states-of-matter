@@ -10,10 +10,11 @@ import { regeneration } from "./effect/regeneration";
 import { deductHealth } from "./deductHealth";
 import { moveToGraveyard } from "./moveToGraveyard";
 import { isGameOver } from "./isGameOver";
+import { getGameName } from "./getGameName";
 
 const endTurn = async (name: string): Promise<any> => {
   const $player = await mongo.$players.findOne({name});
-  const [getGameData, getGameError] = await getGame($player.socketId);
+  const [getGameData, getGameError] = await getGameName($player.name);
   const animations: Animations = [];
 
   if (!getGameData) {

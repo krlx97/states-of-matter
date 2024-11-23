@@ -1,0 +1,14 @@
+{
+  "name": "@som/root",
+  "private": true,
+  "engines": {
+    "node": "20.11.0",
+    "npm": "10.2.4"
+  },
+  "workspaces": [
+    "backend",
+    "contracts",
+    "frontend",
+    "shared"
+  ]
+}

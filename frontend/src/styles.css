@@ -1,0 +1,56 @@
+:root {
+  --neutral: 239, 218, 219;
+  --solid: 255, 108, 108;
+  --liquid: 176, 231, 255;
+  --gas: 170, 224, 85;
+  --plasma: 179, 105, 244;
+
+  --health: 133, 201, 2;
+  --damage: 255, 139, 0;
+  --mana: 0, 175, 193;
+
+  --common: 224, 224, 224;
+  --uncommon: 30, 255, 0;
+  --rare: 0, 112, 221;
+  --epic: 163, 53, 238;
+  --legendary: 255, 128, 0;
+  --mythic: 255, 0, 191;
+
+  --bronze: 125, 88, 51;
+  --silver: 113, 118, 127;
+  --gold: 222, 163, 77;
+  --master: 102, 45, 145;
+
+  --primary: 121, 108, 255;
+  --success: 16, 195, 92;
+  --warn: 239, 47, 47;
+
+  --dark-grey: 32, 32, 32;
+  --grey: 128, 128, 128;
+  --white: 224, 224, 224;
+  --black: 0, 0, 0;
+
+  --xs: 12px;
+  --sm: 14px;
+  --md: 16px;
+  --lg: 18px;
+  --xl: 20px;
+
+  --opacity-none: 0;
+  --opacity-sm: 0.25;
+  --opacity-md: 0.5;
+  --opacity-md: 0.75;
+  --opacity-full: 1;
+
+  --card-height: 216px;
+  --card-width: 144px;
+
+  --ease-in-out-quart: 0.76, 0, 0.24, 1;
+  --ease-in-out-quad: 0.45, 0, 0.55, 1;
+}
+
+body {
+  margin: 0;
+  font: var(--md)/1 "Nunito";
+  color: rgb(var(--white));
+}
